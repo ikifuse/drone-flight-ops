@@ -2,77 +2,121 @@
 
 最終更新: 2026-09-14
 プロジェクト: `drone-flight-ops`
-フェーズ: Phase B2 / B2.1（詳細アーキテクチャ・監査・実装前設計）
+フェーズ: Phase B設計反映（ADR-0007 承認済）
 
 ---
 
 ## 1. ドメインモデル全体関連図（ER概要）
 
+本モデルは、個人の小規模運用から業務利用・法人フリート運用までを視野に入れた**正規化データモデル**です。
+「実在する管理対象（**Master**）」「入力再利用セット（**Preset**）」「実際の運航・提出結果（**History**）」「参照ビュー（**Projection**）」の4領域に明確に分離しています。
+
 ```text
-  ┌────────────────┐ *        * ┌────────────────┐
-  │   Aircraft     ├────────────┤    Battery     │
-  │   (機体台帳)   │            │   (バッテリー) │
-  └───────┬────────┘            └───────┬────────┘
-          │ 1                           │ 1
-          │                             │
-          │ 1                           │ *
-  ┌───────┴────────┐ 1        * ┌───────┴────────┐
-  │   Mission      ├────────────┤  BatteryUsage  │
-  │ (一連の運航束) │            │ (バッテリー使用)│
-  └───┬───┬───┬────┘            └────────────────┘
-      │1  │1  │1
-      │   │   │
-      │   │   ├─────────────────────────┐
-      │   │   │                         │ 1
-      │   │ * │                 ┌───────┴──────────────┐
-      │ ┌─┴───┼──────────┐      │ PreflightInspection  │
-      │ │     Flight     │      │   (飛行前日常点検)   │
-      │ │ (個々の離着陸) │      └──────────────────────┘
-      │ └────────────────┘
-      │1                        ┌──────────────────────┐
-      ├─────────────────────────┤  PostflightInspection│
-      │1                        │     (飛行後点検)     │
-      │                         └──────────────────────┘
-      │ *
-    ┌─┴────────────────────────┐
-    │     AircraftSwitch       │
-    │      (機体交代記録)      │
-    └──────────────────────────┘
+  ┌──────────────────┐
+  │   Organization   │ (運用主体・法人/事業主スコープ)
+  └────────┬─────────┘
+           │ 1
+     ┌─────┴───────────────────────────────────────────┐
+     │ *                                               │ *
+┌────┴────────────┐                               ┌────┴────────────┐
+│     Client      │                               │   Personnel     │
+│   (顧客企業)    │                               │  (人員マスター) │
+└────┬────────────┘                               └────┬────────────┘
+     │ 1                                               │ 1
+     │ *                                               │
+┌────┴────────────┐                                    │
+│     Project     │                                    │
+│   (業務案件)    │                                    │
+└────┬────────────┘                                    │
+     │ 1                                               │
+     │ *                                               │
+     │   ┌────────────────┐ 1       * ┌──────────────┐ │
+     │   │ AircraftModel  ├───────────┤   Aircraft   │ │
+     │   │  (機種マスター)│           │ (機体台帳)   │ │
+     │   └───────┬────────┘           └──────┬───────┘ │
+     │           │ 1                         │ 1       │
+     │           │ *                         │         │
+     │   ┌───────┴──────────────┐            │         │
+     │   │ BatteryCompatibility │            │         │
+     │   │  (機材型式互換関係)  │            │         │
+     │   └───────┬──────────────┘            │         │
+     │           │ *                         │         │
+     │           │ 1                         │         │
+     │   ┌───────┴────────┐ 1       * ┌──────┴───────┐ │
+     │   │  BatteryModel  ├───────────┤   Battery    │ │
+     │   │(バッテリー型式)│           │ (バッテリー) │ │
+     │   └────────────────┘           └──────┬───────┘ │
+     │                                       │ 1       │
+     │ * (任意参照)                          │         │
+┌────┴────────────┐ 1               *        │         │
+│   FlightPlan    ├──────────────────────────┼─────────┤
+│ (内部飛行計画)  │ (primary / aircraft_ids) │         │
+└────┬────────────┘                          │         │
+     │ 1                                     │         │
+     ├──────────────┐ 1       * ┌────────────┴─────────┴─────────┐
+     │ 1            ├───────────┤         DipsSubmission         │
+     │              │           │    (提出SSoT不変スナップショット)│
+     │              ▼           └──────────────────┬─────────────┘
+     │        ┌────────────────┐                   │ (台帳行同期)
+     │        │DipsNotification│                   ▼
+     │        │ (通報状態集約) │         ┌───────────────────────┐
+     │        └────────────────┘         │ Googleスプレッドシート│
+     ▼                                   │ 「DIPS飛行計画台帳」  │
+┌────────────────┐ 1          *          └───────────────────────┘
+│    Location    ├──────────────┐
+│  (場所マスター)│              │
+└────┬───────────┘              ▼
+     │ 1 *              ┌────────────────┐
+     ├─────────────────►│FlightAreaPreset│
+     │                  │ (範囲プリセット)│
+     ▼                  └────────────────┘
+┌────────────────┐
+│OperationTemplate
+│(運航テンプレート
+└────┬───────────┘
+     │ (コピーソース)
+     ▼ (新規作成時値コピー)
+┌────────────────┐ 1                         *
+│   FlightPlan   ├──────────────────────────────┐
+└────┬───────────┘                              │
+     │ 1 (任意紐付け)                           │
+     ▼                                          │
+┌────────────────┐ 1                          * │
+│    Mission     ├──────────────────────────────┘
+│(現場セッション)│ (planned_submission_id / flight_plan_id)
+└────┬───┬───┬───┘
+     │1  │1  │1
+     │   │   │
+     │   │   ├─────────────────────────┐
+     │   │   │                         │ 1
+     │   │ * │                 ┌───────┴──────────────┐
+     │ ┌─┴───┼──────────┐      │ PreflightInspection  │
+     │ │     Flight     │      │   (飛行前日常点検)   │
+     │ │ (個々の離着陸) │      └──────────────────────┘
+     │ └─────┬──┬───────┘
+     │       │  │              ┌──────────────────────┐
+     │       │  └─────────────►│ PostflightInspection │
+     │       │                 │     (飛行後点検)     │
+     │       │                 └──────────────────────┘
+     │       ├─────────────────┐
+     │       │ (aircraft_id)   │ (battery_id)
+     │       ▼                 ▼
+     │   [Aircraft]        [Battery]
+     │
+     │ *
+   ┌─┴────────────────────────┐
+   │     AircraftSwitch       │
+   │      (機体交代記録)      │
+   └──────────────────────────┘
 
-  ┌────────────────┐ *        * ┌────────────────┐
-  │   FlightPlan   ├────────────┤    Aircraft    │
-  │ (内部飛行計画) │            │   (複数機紐付) │
-  └───────┬────────┘            └────────────────┘
-          │ 1
-          │
-          ├──────────────┐ 1        * ┌──────────────────────┐
-          │ 1            ├────────────┤    DipsSubmission    │
-          │              │            │(不変提出スナップショット)│
-          │              ▼            └──────────┬───────────┘
-          │        ┌────────────────┐            │ (台帳行同期)
-          │        │DipsNotification│            ▼
-          │        │ (通報状態管理) │  ┌──────────────────────┐
-          │        └────────────────┘  │ Googleスプレッドシート │
-          ▼                            │  「DIPS飛行計画台帳」  │
-  ┌────────────────┐                   └──────────────────────┘
-  │   FlightArea   │                              ▲
-  │ (飛行範囲形状) │                              │
-  └────────────────┘                              │
-          ▲                                       │ 計画紐付け
-          │ 計画参照                              │ (予定と実績の結合)
-  ┌───────┴────────┐ 1                          * │
-  │   Mission      ├──────────────────────────────┘
-  │ (一連の運航束) │ (planned_submission_id / flight_plan_id)
-  └───┬───┬───┬────┘
-
-  【独立台帳・管理エンティティ】
+  【独立台帳・管理・監査エンティティ】
   ┌────────────────┐  ┌────────────────┐  ┌────────────────────┐
-  │     Pilot      │  │   Permission   │  │ MaintenanceRecord  │
-  │  (操縦者情報)  │  │ (許可承認情報) │  │  (点検整備台帳)    │
+  │   Permission   │  │  BatteryUsage  │  │ MaintenanceRecord  │
+  │ (許可承認情報) │  │(充放電/保管/点検│  │  (点検整備台帳)    │
   └────────────────┘  └────────────────┘  └────────────────────┘
   ┌────────────────┐  ┌────────────────┐  ┌────────────────────┐
-  │   Assistant    │  │   SyncQueue    │  │     AuditEvent     │
-  │ (補助者情報)   │  │ (外部同期制御) │  │  (監査変更履歴)    │
+  │ ReportSnapshot │  │   SyncQueue    │  │     AuditEvent     │
+  │(帳票発行スナップ│  │ (外部同期制御) │  │  (監査変更履歴)    │
   └────────────────┘  └────────────────┘  └────────────────────┘
 ```
 
@@ -80,320 +124,341 @@
 
 ## 2. 主要エンティティ詳細仕様
 
-### 2.1 Aircraft（機体台帳）
-- **ID**: `aircraft_id` (UUID v4)
-- **分類**: 独立エンティティ
+### 2.1 Organization（運用主体・企業/個人事業主マスター）
+- **ID**: `organization_id` (UUID v4)
+- **分類**: **Master**
+- **役割**: ドローン運航の所有・法的管理主体。C1初期は単一デフォルト組織（UUID固定値）で動作し、将来の複数組織・企業利用に備えたデータスコープ境界を提供する。
 - **主な属性**:
-  - `nickname`: 表示名（例: "EVO Lite+"）
-  - `manufacturer`: 製造者（例: "Autel Robotics"）
-  - `model`: 型式（例: "EVO Lite Series"）
+  - `name`: 組織・事業者名称（例: "個人事業主 吉田", "〇〇建設株式会社"）
+  - `operator_code`: DIPS事業者コード / 法人番号（任意）
+  - `contact_email`: 代表連絡先メールアドレス
+  - `contact_phone`: 代表緊急連絡先
+  - `status`: 状態（`ACTIVE`, `INACTIVE`）
+  - 共通監査メタデータ（`created_at`, `updated_at`, `version`）
+
+### 2.2 Client & Project（顧客・案件マスター - 業務利用対応）
+- **Client ID**: `client_id` (UUID v4) / **Project ID**: `project_id` (UUID v4)
+- **分類**: **Master**（業務利用任意マスター）
+- **役割**: 商業空撮・測量・点検業務における発注元顧客および案件管理。個人練習時は未入力可。
+- **主な属性 (Client)**:
+  - `name`: 顧客企業名・個人名（例: "〇〇建設株式会社"）
+  - `contact_person`: 担当者名
+  - `contact_phone`: 連絡先
+- **主な属性 (Project)**:
+  - `client_id`: 発注顧客ID
+  - `name`: 案件名称（例: "新東名第3工区進捗空撮"）
+  - `start_date` / `end_date`: 案件期間
+  - `notes`: 案件特記事項
+- **リレーション**: `FlightPlan`, `Mission`, `OperationTemplate` から任意参照。
+
+### 2.3 AircraftModel（機種・型式マスター）
+- **ID**: `model_id` (UUID v4)
+- **分類**: **Master**
+- **役割**: ドローン製品の型式仕様。同一機種の複数機（A号機、B号機等）を所有する場合も本マスターを参照して仕様情報の重複を防ぐ。
+- **主な属性**:
+  - `manufacturer`: 製造者（例: "Autel Robotics", "DJI"）
+  - `model_name`: 型式名（例: "EVO Lite Series", "Matrice 350 RTK"）
+  - `model_code`: メーカー型番・記号（例: "MD-EVOLITE"）
+  - `maker_type`: 区分（マルチコプター、固定翼、VTOL等）
+  - `weight_grams`: 機体標準自重（g、バッテリー込）
+  - `max_flight_time_minutes`: カタログ最大飛行時間（分）
+  - `status`: 状態（`ACTIVE`, `DISCONTINUED`）
+
+### 2.4 Aircraft（機体個別台帳）
+- **ID**: `aircraft_id` (UUID v4)
+- **分類**: **Master**
+- **役割**: 実在する1機のドローン。
+- **主な属性**:
+  - `model_id`: 機種マスターID（`AircraftModel` 参照）
+  - `nickname`: 機体呼称・愛称（例: "EVO Lite+ A号機"）
   - `registration_mark`: DIPS登録記号（例: "JU324XXXXXXX"）
-  - `serial_number`: 機体製造番号
-  - `weight_grams`: 機体重量（例: 835）
+  - `serial_number`: 機体固有製造番号
   - `cumulative_flight_minutes`: 累計飛行時間（分）
   - `cumulative_flight_count`: 累計飛行回数
   - `management_start_date`: 管理開始日
-  - `status`: 状態（`active`, `maintenance`, `retired`）
+  - `status`: 状態（`ACTIVE`, `MAINTENANCE`, `RETIRED`, `LOST`）
   - **期限管理属性**:
     - `registration_expires_at`: 機体登録有効期限日時 (ISO8601)
     - `registration_warning_days`: 期限前警告日数（初期値: 30日）
     - `maintenance_due_date`: 次回点検予定日
     - `maintenance_due_flight_minutes`: 次回点検飛行時間閾値（例: 20時間/100時間）
-- **リレーション**: Battery (N:M互換モデル), Mission (1:N), MaintenanceRecord (1:N), FlightPlan (N:M)
-- **ライフサイクル**: マスターデータ。削除不可（論理削除 `retired` のみ）。
+- **リレーション**: `AircraftModel` (N:1), `Flight` (1:N), `MaintenanceRecord` (1:N)
 
-### 2.2 Battery（バッテリー個体台帳）
+### 2.5 BatteryModel（バッテリー型式マスター）
+- **ID**: `battery_model_id` (UUID v4)
+- **分類**: **Master**
+- **役割**: バッテリーの製品型番仕様。実物個体とは分離して仕様を定義。
+- **主な属性**:
+  - `manufacturer`: 製造者
+  - `model_number`: バッテリー製品型番（例: "AUTEL-LITE-BAT"）
+  - `nominal_capacity_mah`: 公称容量（mAh、例: 6175）
+  - `nominal_voltage_v`: 公称電圧（V、例: 11.13）
+  - `cell_count`: セル数（例: 3S）
+
+### 2.6 BatteryCompatibility（機材型式互換マッピング）
+- **ID**: `compatibility_id` (UUID v4) または複合キー `(model_id, battery_model_id)`
+- **分類**: **Master (関連)**
+- **役割**: どの機種にどのバッテリー型式が装着可能かを定義する多対多（N:M）互換マスター。
+- **例**:
+  - `(EVO Lite Series, AUTEL-LITE-BAT)`
+  - `(EVO Lite+ Series, AUTEL-LITE-BAT)`
+  - これにより、同一モデルの複数機体間だけでなく、互換性のある異機種間でも同一バッテリー個体を安全・適正に共有可能。
+
+### 2.7 Battery（実物バッテリー個体台帳）
 - **ID**: `battery_id` (UUID v4)
-- **分類**: 独立エンティティ
+- **分類**: **Master**
+- **役割**: 実在するバッテリー1本。**特定機体の所有物としない**。
 - **主な属性**:
-  - `slot_number`: 管理スロット番号（1〜7、将来任意拡張）
-  - `display_name`: 表示名（例: "BAT-01"）
-  - `compatible_aircraft_models`: 互換機種名配列（例: `["EVO Lite", "EVO Lite+"]`）
-  - `default_aircraft_id`: 主使用機体ID（任意・優先表示用）
-  - `serial_number`: 個体シリアル番号
+  - `battery_model_id`: バッテリー型式ID（`BatteryModel` 参照）
+  - `display_name`: 現場管理用表示名（例: "BAT-01", "BAT-02"）
+  - `serial_number`: バッテリー個体シリアル番号
   - `purchase_date`: 購入日
-  - `condition_at_start`: 管理開始時状態（`new`, `used`）
+  - `condition_at_start`: 管理開始時状態（`NEW`, `USED`）
   - `cumulative_cycle_count`: 累計充電サイクル数
-  - `cumulative_flight_minutes`: 累計飛行時間（分）
-  - `status`: 状態（`ready`, `in_use`, `discharged`, `error`, `retired`）
-  - `last_health_note`: 直近の異常・所感
-- **リレーション**: BatteryUsage (1:N)
-- **多重度方針**: 同一シリーズ・互換機種間でバッテリーを共有利用できるよう、機体とは1:N固定とせず、互換モデル配列および実績側（BatteryUsage/Flight）の機体記録で紐づけます。
+  - `cumulative_flight_minutes`: 累計飛行時間（分、全機体での飛行合算）
+  - `status`: 状態（`ACTIVE`, `IN_USE`, `DISCHARGED`, `MAINTENANCE`, `RETIRED`, `DISPOSED`）
+  - `last_health_note`: 直近の異常・所感・セル電圧バランスメモ
 
-### 2.3 FlightArea（飛行範囲・空域定義）
-- **ID**: `flight_area_id` (UUID v4)
-- **分類**: エンティティ（またはFlightPlan付属Value Object）
+### 2.8 Personnel（人員マスター）& ユーザーアカウント分離
+- **ID**: `personnel_id` (UUID v4)
+- **分類**: **Master**
+- **役割**: 操縦者、日常点検者、立入管理補助者等を1人物1レコードとして一元管理。
+- **ユーザーアカウントとの分離原則**: 運航記録に登場する人物（`Personnel`）と、アプリを操作するログインアカウント（`UserAccount`）を概念上分離し、補助者や同行パイロットがアプリアカウントを持たない場合でも適正に記録可能とする。
 - **主な属性**:
-  - `shape_type`: 形状タイプ（`circle` または `polygon`）
-  - `center_latitude`: 中心の緯度（10進表記）
-  - `center_longitude`: 中心の経度（10進表記）
+  - `name`: 氏名（漢字）
+  - `kana`: フリガナ
+  - `contact_phone`: 緊急連絡先電話番号
+  - `contact_email`: 連絡先メール
+  - `roles`: 担当可能役割配列（`['pilot', 'inspector', 'assistant', 'administrator', 'viewer']`）
+  - **操縦者プロファイル（`roles` に `pilot` を含む場合のみ有効）**:
+    - `license_number`: 技能証明書番号 / 技能認証番号
+    - `certificate_type`: 区分（一等、二等、民間修了等）
+    - `certificate_expires_at`: 有効期限 (ISO8601)
+    - `warning_days`: 期限前警告日数（初期値: 30日）
+  - `is_default_pilot`: 既定の主操縦者フラグ
+  - `is_default_inspector`: 既定の日常点検者フラグ
+  - `status`: 状態（`ACTIVE`, `INACTIVE`, `RETIRED`）
+
+### 2.9 Location（場所マスター）
+- **ID**: `location_id` (UUID v4)
+- **分類**: **Master**
+- **役割**: 登録済みの飛行現場。頻繁に飛行する現場の基本情報・注意事項を再利用。
+- **主な属性**:
+  - `name`: 現場地点名・施設名（例: "金岡公園", "〇〇浄水場"）
+  - `address`: 住所・地番
+  - `latitude` / `longitude`: 現場代表基準座標（10進表記）
+  - `site_contact`: 現地管理者・連絡先
+  - `land_manager_notes`: 土地管理者との調整事項・許可条件メモ
+  - `parking_entry_notes`: 駐車場・搬入・立入注意事項
+  - `is_favorite`: お気に入りフラグ
+  - `status`: 状態（`ACTIVE`, `INACTIVE`, `ARCHIVED`）
+
+### 2.10 FlightAreaPreset（飛行範囲プリセット）
+- **ID**: `flight_area_preset_id` (UUID v4)
+- **分類**: **Preset**
+- **役割**: `Location 1:N FlightAreaPreset`。同一現場内の具体的な飛行範囲形状・高度。
+- **主な属性**:
+  - `location_id`: 属する場所マスターID
+  - `name`: エリア呼称（例: "野球場外野エリア", "南側練習範囲", "30m円形基本枠"）
+  - `shape_type`: 形状区分（`circle` / `polygon`）
   - `radius_meters`: 半径（m、円形時）
-  - `geojson_geometry`: 形状GeoJSON（多角形ポリゴン時）
-  - `planned_altitude_agl_meters`: 計画対地高度（m、実運航値、例: 30m, 50m）
-  - `max_altitude_agl_meters`: 運用上限対地高度（m、安全マージン込み）
-  - `planned_altitude_msl_meters`: 計画海抜高度（m、任意）
-  - `altitude_source`: 高度算出元（`manual_input`, `dem_elevation`, `dips_imported`）
-  - `name`: 現場地点名・呼称
-- **高度設計の原則**: 150m AGLは航空法上の許可承認要否を分ける空域規制境界であり、既定の飛行計画高度ではありません。実際の計画対地高度を保存し、150m以上であるか否かは空域規制評価エンジンで判定します。
+  - `geojson_geometry`: 多角形ポリゴンGeoJSON（ポリゴン時）
+  - `default_altitude_agl_meters`: 既定計画対地高度（m、例: 30m）
+  - `max_altitude_agl_meters`: 運用上限高度（m）
 
-### 2.4 FlightPlan（飛行計画）
-- **ID**: `flight_plan_id` (UUID v4)
-- **分類**: 独立エンティティ
+### 2.11 入力プリセット群（FlightPurposePreset / SafetyMeasurePreset）
+- **分類**: **Preset**
+- **`FlightPurposePreset`**: 飛行目的マスター（"練習", "空撮", "点検", "測量", "農薬散布" 等）。
+- **`SafetyMeasurePreset`**: 安全措置プリセット（"補助者1名配置", "カラーコーン区画設定", "監視員配置", "第三者立入禁止周知" 等）。
+- 現場での定型入力をドロップダウンおよびチェックボックスで1タップ選択可能とする。
+
+### 2.12 OperationTemplate（運航テンプレート - Copy Source原則）
+- **ID**: `template_id` (UUID v4)
+- **分類**: **Preset**
+- **役割**: 頻繁に行う運航条件の組み合わせセット。
 - **主な属性**:
-  - `revision`: 現在のリビジョン番号（整数、1から開始。変更確定時にインクリメント）
-  - `mission_id`: 紐づくミッションID（任意、計画先行作成可、実運航開始時に紐付け）
+  - `template_name`: テンプレート名（例: "金岡公園 定例練習", "〇〇現場 進捗空撮"）
+  - `location_id`: 場所マスターID
+  - `flight_area_preset_id`: 飛行範囲プリセットID
+  - `flight_purpose`: 飛行目的プリセット値
+  - `planned_altitude_agl`: 既定計画高度
+  - `default_aircraft_id`: **任意（nullable）**（機体まで固定したテンプレート、または機体は現場で決める汎用テンプレートの両方に対応）
+  - `pilot_id`: 既定操縦者ID
+  - `assistant_id`: 既定補助者ID（任意）
+  - `safety_measures`: 適用する安全措置配列
+  - `permission_id`: 適用する包括許可承認ID（任意）
+- **コピーソース原則（Copy Source Principle）**:
+  - テンプレートから新規計画（`FlightPlan`）を作成する際、テンプレートの値は**計画Draftへ独立してコピー（実体化）**される。
+  - **後日テンプレートを編集・更新・削除しても、過去の計画・通報・運航実績データは一切改変されない。**
+
+### 2.13 Permission（飛行許可・承認台帳）
+- **ID**: `permission_id` (UUID v4)
+- **分類**: **Master**
+- **役割**: 国交省包括許可・個別許可承認書情報。
+- **主な属性**:
+  - `permit_number`: 許可承認番号（例: "国空航第XXXXX号"）
+  - `permit_type`: 許可区分（DID、夜間、目視外、30m等）
+  - `valid_from` / `valid_to`: 有効期間
+  - `issuing_authority`: 発行機関
+  - `conditions`: 付加条件メモ / 飛行マニュアル区分
+  - `status`: 状態（`ACTIVE`, `EXPIRED`, `SUPERSEDED`）
+
+### 2.14 FlightPlan（内部飛行計画）
+- **ID**: `flight_plan_id` (UUID v4)
+- **分類**: **History (Plan)**
+- **主な属性**:
+  - `revision`: リビジョン番号（整数、変更時にインクリメント）
+  - `organization_id`: 運用組織ID
+  - `project_id`: 関連業務案件ID（任意）
   - `primary_aircraft_id`: 主使用機体ID
   - `aircraft_ids`: 対象機体ID配列（複数機体対応）
   - `pilot_id`: 操縦者ID
-  - `flight_area_id`: 飛行範囲ID
-  - `planned_start_time`: 開始予定日時 (ISO8601)
-  - `planned_end_time`: 終了予定日時 (ISO8601)
-  - `flight_purpose`: 飛行目的（空撮、点検、訓練等）
-  - `flight_type`: 飛行形態（昼間/夜間、目視内/目視外、30m以内等）
-  - `permission_id`: 適用する許可承認ID（任意）
-  - `plan_status`: 計画ステータス（`draft`, `locked_for_submission`, `active`, `completed`, `cancelled`）
-- **複数機体対応方針**: 内部データモデルとしては `aircraft_ids[]` で複数機体を許容し、DIPS通報アダプタにおいてDIPS 2.0 APIの単機/複数機仕様に応じて適切にマッピングします。
-- **リビジョン管理**: 計画内容を変更した場合、過去の通報済みスナップショットを直接上書きせず、リビジョンを上げて新しい計画内容として保存します。
+  - `location_id`: 場所マスターID
+  - `planned_start_time` / `planned_end_time`: 飛行予定日時 (ISO8601)
+  - `planned_altitude_agl_meters`: 計画対地高度（m）
+  - `shape_type` / `radius_meters` / `geojson_geometry`: 飛行範囲
+  - `flight_purpose`: 飛行目的
+  - `flight_type`: 飛行形態（昼間/夜間、目視内外等）
+  - `permission_id`: 適用許可承認ID
+  - `safety_measures`: 適用安全措置
+  - `plan_status`: 状態（`draft`, `locked_for_submission`, `active`, `completed`, `cancelled`）
 
-### 2.5 DipsSubmission（DIPS提出試行・不変スナップショット台帳エンティティ - SSoT）
+### 2.15 DipsSubmission（DIPS提出試行・不変スナップショット台帳 - SSoT）
 - **ID**: `submission_id` (UUID v4)
-- **分類**: 独立エンティティ（FlightPlan 1 : N DipsSubmission）。**各提出試行における唯一の正本（Single Source of Truth）**。
-- **役割**: DIPSへの通報直前または手動入力画面確定時点で生成される通報試行レコードであり、Googleスプレッドシート「DIPS飛行計画台帳」の1行と1対1に対応します。
-- **不変境界の定義**:
-  - **不変部（Immutable Snapshot）**: `payload_snapshot` は一度生成されたら絶対に改変されません。計画変更時は新しい `DipsSubmission` を新リビジョンとして起票します。
-  - **可変部（Mutable Lifecycle Metadata）**: ステータスや確認情報等の進行状態は更新可能です。更新履歴は `AuditEvent` に記録されます。
-- **主な属性**:
-  - `flight_plan_id`: 対象飛行計画ID
-  - `revision`: 提出時の計画リビジョン番号
-  - `submission_method`: 通報方式（`'manual'` / `'api'` / `'mock'`）
-  - `status`: DIPS提出ステータス
-    - `snapshot_saved`: 提出スナップショット保存済・通報準備完了
-    - `manual_submit_wait`: 手動通報待ち（手動支援画面表示中）
-    - `manual_submitted`: 操縦者が手動通報実施を記録（※DIPS受理確認ではない）
-    - `dips_confirmed`: 操縦者がDIPS画面での計画登録を確認済み（一覧目視照合または受付番号入力）
-    - `sending`: API送信中
-    - `api_confirmed`: APIによるDIPS受理確認済み（計画ID自動受領）
-    - `submission_uncertain`: API送信中切断・タイムアウト（成否不明・照合待ち）
-    - `reconciliation_required`: 自動照合不能（パイロット手動確認待ち）
-    - `failed`: 通報失敗（エラー）
-    - `retry_wait`: 一時通信エラー再送待ち
-    - `superseded`: 新リビジョンにより更新・差し替え
-    - `cancelled`: 計画取消
-  - `sync_status`: 外部台帳同期ステータス（DIPS通報状態とは直交する別軸として管理）
-    - `local_saved`: 端末ローカルDBにのみ保存（台帳未同期）
-    - `sync_pending`: スプレッドシート同期キュー投入中（送信待ち）
-    - `syncing`: スプレッドシート送信中
-    - `synced`: Googleスプレッドシート「DIPS飛行計画台帳」へ反映完了
-    - `sync_failed`: 同期失敗（オフラインまたはSheets APIエラー）
-  - `payload_snapshot`: **不変JSON**（その時点でDIPSへ渡す予定の全データ: 飛行日時、場所名称、緯度経度、高度、円/ポリゴンGeoJSON、機体登録記号、操縦者氏名/証明書番号、飛行目的、飛行形態、許可承認番号等）
-  - `confirmation_method`: 確認方法（`'flight_plan_list_match'` / `'displayed_id'` / `'api_response'` / `null`）
-  - `dips_plan_id`: DIPS側発行の計画番号/受付番号（**手動一覧照合時は省略可・nullable**。番号が確認できた場合またはAPIレスポンス時のみ保存）
-  - `submitted_at`: 通報日時（手動記録日時またはAPI送信日時、ISO8601）
-  - `confirmed_at`: DIPS登録確認日時（手動確認日時またはAPIレスポンス日時、ISO8601）
-  - `spreadsheet_row_id`: スプレッドシート側の行番号（同期完了時にバインド）
-  - `supersedes_submission_id`: 訂正前の過去提出ID（任意）
-  - `superseded_by_submission_id`: 本提出を上書きした新提出ID（任意）
-  - `cancelled_at`: 取消日時（任意）
-  - `cancellation_reason`: 取消理由（任意）
-  - `notes`: 備考・エラー所感・パイロット手記
+- **分類**: **History (SSoT)**
+- **役割**: DIPSへの通報直前または手動確定時点で生成される提出試行レコード。スプレッドシート「DIPS飛行計画台帳」の1行に対応。
+- **属性**: `flight_plan_id`, `revision`, `submission_method` (`manual`/`api`/`mock`), `status` (`snapshot_saved`, `manual_submitted`, `dips_confirmed`, `api_confirmed` 等), `sync_status`, `payload_snapshot` (**不変JSON**), `dips_plan_id` (nullable), `confirmation_method`, `submitted_at`, `confirmed_at`, `notes`。
 
-### 2.6 DipsNotification（FlightPlanに対する通報状態集約・Projection）
-- **ID**: `flight_plan_id` と1:1
-- **分類**: **集約ビュー / 参照プロジェクション（Projection）**
-- **二重正本の排除**: `DipsNotification` は独立して状態を更新・保持する正本ではありません。`FlightPlan` に紐づく最新の `DipsSubmission`（`current_submission_id`）への参照を持ち、画面表示用に最新状態を射影（Projection）する読み取り集約モデルです。
-- **主なプロパティ（すべて最新の `DipsSubmission` からの参照・導出）**:
-  - `flight_plan_id`: 対象飛行計画ID
-  - `current_submission_id`: 最新の提出スナップショットID（`DipsSubmission` へのポインタ）
-  - `readonly current_status`: 最新提出の `status`
-  - `readonly current_sync_status`: 最新提出の `sync_status`
-  - `readonly dips_plan_id`: 最新提出の `dips_plan_id` (nullable)
-  - `readonly confirmation_method`: 最新提出の `confirmation_method` (nullable)
-  - `readonly last_submitted_at`: 最新提出の `submitted_at`
-  - `readonly last_confirmed_at`: 最新提出の `confirmed_at`
-  - `readonly last_error_message`: エラー内容（存在する場合）
+### 2.16 DipsNotification（通報状態集約プロジェクション）
+- **分類**: **Projection (集約ビュー)**
+- `DipsSubmission` から最新状態を射影してUIへ表示する読み取り専用モデル（二重正本を排除）。
 
-### 2.7 Mission（一連の現場運航セッション）
+### 2.17 Mission（現場運航セッション束）
 - **ID**: `mission_id` (UUID v4)
-- **分類**: 独立エンティティ
+- **分類**: **History (Session)**
+- **役割**: 現場での一連の作業枠（準備開始〜完全撤収）。操縦者の片手操作フローを束ねる。
 - **主な属性**:
-  - `planned_flight_plan_id`: 関連する飛行計画ID（任意・現場で紐付け可能）
-  - `planned_submission_id`: 適用したDIPS提出スナップショットID（任意・予定と実績の結合）
-  - `initial_aircraft_id`: 運航開始時の初期機体ID（主機体）
-  - `pilot_id`: 操縦者ID
-  - `pilot_name`: 操縦者名（表示用キャッシュ）
+  - `planned_flight_plan_id`: 紐付く計画ID（任意）
+  - `location_id`: 現場場所ID
+  - `pilot_id`: 主操縦者ID
   - `assistant_id`: 補助者ID（任意）
-  - `location_name`: 飛行場所名称
-  - `weather`: 天候（晴、曇、雨等）
-  - `wind_speed_ms`: 風速（m/s）
-  - `temperature_c`: 気温（℃）
+  - `weather`: 天候、`wind_speed_ms`: 風速、`temperature_c`: 気温
   - `status`: 運航状態（`preparing`, `in_progress`, `completed`, `aborted`）
-  - `started_at`: 運航開始日時
-  - `ended_at`: 運航終了日時
-  - `sync_status`: 外部同期状態（`draft`, `recorded`, `sync_pending`, `synced`, `sync_failed`）
-  - `spreadsheet_row_id`: 反映されたスプレッドシート行番号
+  - `started_at` / `ended_at`: 運航日時
+  - `sync_status`: 台帳同期状態
 
-### 2.8 Flight（個々の離陸〜着陸セッション）
+### 2.18 Flight（個々の離陸〜着陸セッション）
 - **ID**: `flight_id` (UUID v4)
-- **分類**: 独立エンティティ
+- **分類**: **History (Event)**
+- **役割**: ドローンの1回の離陸から着陸までの実績記録。
 - **主な属性**:
   - `mission_id`: 属するミッションID
-  - `flight_sequence`: 第何飛行か（1, 2, 3... 8回以上無制限）
-  - `aircraft_id`: 実際に飛行した機体ID（途中交代対応）
-  - `battery_id`: 使用したバッテリーID
-  - `takeoff_time`: 離陸打刻日時 (ISO8601、秒/ミリ秒精度)
-  - `landing_time`: 着陸打刻日時 (ISO8601、秒/ミリ秒精度)
-  - `duration_seconds`: 飛行秒数
-  - `start_battery_pct`: 離陸時残量（%）
-  - `end_battery_pct`: 着陸時残量（%）
+  - `flight_sequence`: 運航内通番（1, 2, 3... 制限なし）
+  - `aircraft_id`: **実際に飛行した機体ID**（途中交代対応）
+  - `battery_id`: **使用したバッテリーID**
+  - `takeoff_time` / `landing_time`: 離陸・着陸打刻日時 (ISO8601)
+  - `duration_seconds`: 実飛行秒数（分単位へ換算可能）
+  - `start_battery_pct` / `end_battery_pct`: 離陸時・着陸時残量（%）
   - `flight_nature`: 業務・訓練の別
+  - `pilot_notes`: 飛行所感・特記不具合
+- **二重保存の排除**: 飛行によるバッテリー使用実績（いつ、どの機体で、何分飛び、何%消費したか）は本 `Flight` レコードから完全に集計・導出可能であるため、別テーブルへ重複保存しない。
 
-### 2.9 AircraftSwitch（機体交代イベント記録）
+### 2.19 AircraftSwitch（機体交代イベント記録）
 - **ID**: `switch_id` (UUID v4)
-- **分類**: 独立エンティティ
-- **主な属性**:
-  - `mission_id`: 対象ミッションID
-  - `from_aircraft_id`: 交代前機体ID
-  - `to_aircraft_id`: 交代後機体ID
-  - `switched_at`: 交代日時 (ISO8601)
-  - `reason`: 交代理由（定期機体ローテーション、不調、予備機投入等）
+- **分類**: **History (Event)**
+- **主な属性**: `mission_id`, `from_aircraft_id`, `to_aircraft_id`, `switched_at`, `reason`。
 
-### 2.10 PreflightInspection & PostflightInspection（点検記録）
+### 2.20 PreflightInspection & PostflightInspection（日常点検記録）
 - **ID**: `inspection_id` (UUID v4)
-- **分類**: 独立エンティティ（Missionと1:1または機体交代時1:N）
-- **主な属性**:
-  - `inspection_type`: `preflight`（飛行前日常点検）または `postflight`（飛行後日常点検）
-  - `aircraft_id`: 点検対象機体ID
-  - `inspector_id`: 点検実施者ID
-  - `items`: 点検項目チェック結果配列（正常 / 異常 / 該当なし）
-  - `is_all_normal`: 全項目正常フラグ（1タップ充足用）
-  - `defect_description`: 異常内容・特記事項（異常時のみ展開）
-  - `remedy_action`: 処置内容（異常時のみ）
+- **分類**: **History**
+- **主な属性**: `inspection_type` (`preflight` / `postflight`), `aircraft_id`, `inspector_id` (`Personnel` 参照), `items` (点検項目配列), `is_all_normal`, `defect_description`, `remedy_action`。
 
-### 2.11 Pilot（操縦者情報台帳）
-- **ID**: `pilot_id` (UUID v4)
-- **分類**: 独立エンティティ（複数ミッション・計画から参照されるマスター）
-- **主な属性**:
-  - `name`: 氏名（漢字）
-  - `license_number`: 技能証明書番号 / 技能認証番号
-  - `certificate_type`: 技能証明区分（一等、二等、民間講習修了等）
-  - `certificate_expires_at`: 技能証明有効期限 (ISO8601)
-  - `warning_days`: 期限前警告日数（初期値: 30日）
-  - `contact_phone`: 緊急連絡先電話番号
-  - `is_default`: 既定の主操縦者フラグ
-
-### 2.12 Assistant（立入管理措置補助者台帳）
-- **ID**: `assistant_id` (UUID v4)
-- **分類**: 独立エンティティ（またはMission付属Value Object）
-- **主な属性**:
-  - `name`: 補助者氏名
-  - `role`: 担当役割（立入監視員、安全補助員等）
-  - `contact_phone`: 連絡先電話番号
-
-### 2.13 Permission（飛行許可・承認情報台帳）
-- **ID**: `permission_id` (UUID v4)
-- **分類**: 独立エンティティ（1年間の包括許可等を複数計画・ミッションで共有）
-- **主な属性**:
-  - `permit_number`: 許可承認番号（例: "国空航第XXXXX号"）
-  - `permit_type`: 許可区分（DID、夜間、目視外、30m以内等）
-  - `valid_from`: 有効開始日 (ISO8601)
-  - `valid_to`: 有効終了日 (ISO8601)
-  - `warning_days`: 期限前警告日数（初期値: 30日）
-  - `issuing_authority`: 発行機関（航空局、空港事務所等）
-  - `conditions`: 付加条件メモ / 別添マニュアル参照番号
-
-### 2.14 MaintenanceRecord（点検整備台帳・国交省様式3）
+### 2.21 MaintenanceRecord（点検整備台帳・国交省様式3）
 - **ID**: `maintenance_id` (UUID v4)
-- **分類**: 独立エンティティ（航空法上の機体生涯台帳）
-- **主な属性**:
-  - `aircraft_id`: 対象機体ID
-  - `maintenance_type`: 区分（定期点検20h/100h、部品交換、不具合修理、ファーム更新）
-  - `performed_at`: 実施日時 (ISO8601)
-  - `cumulative_flight_minutes_at_maintenance`: 実施時点の機体累計飛行時間
-  - `description`: 実施内容詳細
-  - `parts_replaced`: 交換部品名・型番
-  - `technician_name`: 点検整備実施者氏名
-  - `next_inspection_due_minutes`: 次回点検目安累計時間
+- **分類**: **History**
+- **役割**: 機体の生涯点検整備記録（定期点検20h/100h、修理、改造、部品交換、ファーム更新）。
+- **主な属性**: `aircraft_id`, `maintenance_type`, `performed_at`, `cumulative_flight_minutes_at_maintenance`, `description`, `parts_replaced`, `technician_name`。
 
-### 2.15 AuditEvent（監査ログ・変更履歴）
+### 2.22 BatteryUsage（バッテリーライフサイクルイベント）
+- **ID**: `usage_id` (UUID v4)
+- **分類**: **History**
+- **役割**: **飛行以外のバッテリーライフサイクルイベント専用エンティティ**（充電完了、深放電、保管管理、定期点検、セル電圧測定、廃棄処理等）。飛行実績と責務を重複させない。
+- **主な属性**: `battery_id`, `event_type` (`CHARGE`, `STORAGE_MAINTENANCE`, `CAPACITY_TEST`, `DEEP_DISCHARGE_WARNING`, `RETIRED_EVENT`), `event_time`, `measured_voltage_v`, `cell_voltages`, `notes`。
+
+### 2.23 ReportSnapshot（帳票発行不変スナップショット）
+- **ID**: `report_snapshot_id` (UUID v4)
+- **分類**: **History (Snapshot)**
+- **役割**: 統合運航帳票または国交省様式PDF/Excel出力時に生成される発行不変スナップショット。提出・監査用に「発行時点でどのような帳票が確定されたか」を恒久保管する。
+- **主な属性**: `report_type` (`INTEGRATED_OPERATION_REPORT`, `FORM_1_FLIGHT_LOG`, `FORM_2_DAILY_INSPECTION`, `FORM_3_MAINTENANCE`), `mission_id`, `aircraft_id`, `location_id`, `generated_at`, `page_count`, `checksum_sha256`, `pdf_blob_key`。
+
+### 2.24 AuditEvent（全般監査ログ・変更履歴）
 - **ID**: `audit_id` (UUID v4)
-- **分類**: 独立エンティティ（不変ログ）
-- **主な属性**:
-  - `timestamp`: 発生日時 (ISO8601)
-  - `entity_type`: 対象種別（`mission`, `flight`, `aircraft`, `battery`, `flight_plan`, `dips_submission`）
-  - `entity_id`: 対象ID
-  - `action`: 操作種別（`create`, `update`, `delete`, `sync`, `conflict_resolved`）
-  - `actor`: 操作主体（`pilot`, `system_sync`, `manual_repair`）
-  - `diff_summary`: 変更差分サマリ
+- **分類**: **History**
+- **役割**: DIPS提出だけでなく、機体・バッテリー・人員・許可・運航記録の作成・更新・同期・論理削除を記録。
+- **属性**: `timestamp`, `entity_type`, `entity_id`, `action` (`CREATE`, `UPDATE`, `LIFECYCLE_CHANGE`, `SYNC`), `actor_personnel_id`, `diff_summary`, `reason`。
 
-### 2.16 AppSetting（アプリ設定・警告閾値マスター）
+### 2.25 AppSetting（アプリ設定・警告閾値マスター）
 - **ID**: `setting_key` (string)
-- **分類**: 独立エンティティ / Key-Value
-- **主な属性**:
-  - `value`: 設定値（JSON形式）
-  - `updated_at`: 更新日時
-  - **保持設定例**:
-    - 各種期限警告閾値（機体登録、許可承認、技能証明）
-    - 既定の主操縦者・主機体ID
-    - 地図タイルキャッシュ上限容量
-    - Googleスプレッドシート連携先ID
-
-### 2.17 DipsFlightPlanLedger（Googleスプレッドシート「DIPS飛行計画台帳」論理スキーマ - B2.2追加）
-Googleスプレッドシート上に保持される「DIPS飛行計画台帳」シートの列定義です。1行が1つの `DipsSubmission` に対応し、過去の提出履歴・改訂履歴を完全に可視化・監査可能とします。
-
-| 列番号 | 列物理名 | 列論理名 | 型・形式 | 説明・必須区分 |
-|:---:|---|---|---|---|
-| A | `submission_id` | 提出ID | UUID v4 | 1つの通報試行・スナップショットの一意識別子（主キー） |
-| B | `flight_plan_id` | 飛行計画ID | UUID v4 | 内部飛行計画の一意識別子 |
-| C | `revision` | 計画リビジョン | 整数 (1, 2, ...) | 計画変更ごとにインクリメントされる版数 |
-| D | `created_at` | 計画作成日時 | ISO8601 | 計画が最初に起票された日時 |
-| E | `snapshot_created_at` | 提出確定日時 | ISO8601 | 提出スナップショットが確定された日時 |
-| F | `planned_start_time` | 飛行予定開始日時 | ISO8601 | 飛行予定開始時刻 |
-| G | `planned_end_time` | 飛行予定終了日時 | ISO8601 | 飛行予定終了時刻 |
-| H | `location_name` | 飛行場所名称 | 文字列 | 現場地点名 |
-| I | `shape_type` | 飛行範囲形状 | `circle` / `polygon` | 円またはポリゴン |
-| J | `center_coordinates` | 計画中心座標 | 緯度,経度 | 例: `33.456789, 129.876543` |
-| K | `radius_meters` | 半径(m) | 数値 | 円形時の半径 |
-| L | `geojson_geometry` | GeoJSON形状 | 文字列(JSON) | 範囲ポリゴンジオメトリ |
-| M | `planned_altitude_agl` | 計画高度(AGL m) | 数値 | 計画対地高度（例: 30, 50） |
-| N | `aircraft_model` | 使用機体型式 | 文字列 | 例: "EVO Lite Series" |
-| O | `registration_mark` | 機体登録記号 | 文字列 | 例: "JU324XXXXXXX" |
-| P | `pilot_name` | 操縦者氏名 | 文字列 | 操縦者名 |
-| Q | `pilot_license_number`| 技能証明番号 | 文字列 | 技能証明等番号 |
-| R | `flight_purpose` | 飛行目的 | 文字列 | 空撮、点検、測量等 |
-| S | `flight_type` | 飛行形態 | 文字列 | 目視内/目視外、30m等 |
-| T | `permission_number` | 許可承認番号 | 文字列 | 包括許可等の番号 |
-| U | `submission_method` | 通報方式 | `manual` / `api` / `mock` | 手動通報かAPI通報かモックか |
-| V | `submission_status` | 通報状態 | 文字列 | `snapshot_saved`, `manual_submitted`, `dips_confirmed`, `api_confirmed`, `superseded`, `cancelled` 等 |
-| W | `confirmation_method` | 確認方法 | 文字列 | `flight_plan_list_match` / `displayed_id` / `api_response` |
-| X | `dips_plan_id` | DIPS計画番号/受付番号 | 文字列(任意) | 番号確認時またはAPI受領時の番号（手動一覧照合時は空欄可） |
-| Y | `submitted_at` | 通報実施日時 | ISO8601 | 手動記録またはAPI送信打刻 |
-| Z | `confirmed_at` | 受理確認日時 | ISO8601 | 確認・追記打刻日時 |
-| AA| `supersedes_id` | 訂正前提出ID | UUID v4 | 本版が差し替えた旧提出ID（訂正履歴） |
-| AB| `superseded_by_id` | 訂正後提出ID | UUID v4 | 本版を差し替えた新提出ID |
-| AC| `cancellation_info` | 取消情報 | 文字列 | 取消日時および理由（取消時） |
-| AD| `linked_mission_id` | 紐付運航実績ID | UUID v4 | 実際に実施されたMission ID（予定と実績の結合） |
-| AE| `notes` | 備考・エラーログ | 文字列 | 通報時メモ、エラー所感、手動追記事項 |
+- **分類**: Key-Value Master
+- 各種期限警告閾値（機体登録、技能証明、許可承認）、地図キャッシュ設定、連携スプレッドシートID等を保持。
 
 ---
 
-## 3. ID戦略と冪等性（Idempotency）設計
+## 3. Master / Preset / History / Projection の4大分類と共通設計規約
 
-現場での通信切断、アプリの不意の強制終了、再送操作に対しても、二重記録や二重通報を防止する冪等性アーキテクチャを確立します。
+| 分類 | 定義と性質 | 該当エンティティ | ライフサイクル・更新規則 |
+|---|---|---|---|
+| **Master** | 実在する管理対象・運用資産。他エンティティから参照される親データ。 | `Organization`, `Client`, `Project`, `AircraftModel`, `Aircraft`, `BatteryModel`, `BatteryCompatibility`, `Battery`, `Personnel`, `Location`, `Permission`, `AppSetting` | **物理削除禁止**。`ACTIVE`, `INACTIVE`, `RETIRED`, `DISPOSED`, `EXPIRED` 等の論理状態で管理。過去履歴の参照を保護。 |
+| **Preset** | 現場入力の手間を省くための再利用可能な条件セット。 | `FlightAreaPreset`, `FlightPurposePreset`, `SafetyMeasurePreset`, `OperationTemplate` | **コピーソース原則**。新規計画へ値をコピー実体化。後日のプリセット変更は過去データへ影響しない。 |
+| **History** | 現場で実際に発生・確定した不可逆の運航・点検・通報・監査実績。 | `FlightPlan`, `DipsSubmission`, `Mission`, `Flight`, `AircraftSwitch`, `PreflightInspection`, `PostflightInspection`, `MaintenanceRecord`, `BatteryUsage`, `ReportSnapshot`, `AuditEvent` | **不変性重視**。生成後の値改変は禁止（ライフサイクルメタデータ更新のみ許容し、変更は `AuditEvent` 追跡）。 |
+| **Projection** | 複数のエンティティから画面表示や帳票レンダリングのために導出される参照ビュー。 | `DipsNotification`, `ReportUnit` / `FlightLogReportViewModel` | **一時的・導出モデル**。正本を持たず、元データから動的に計算・構築。 |
 
-### 3.1 クライアント主導のUUID v4生成
-すべてのエンティティID（`mission_id`, `flight_id`, `job_id`, `switch_id` 等）は、サーバーの発行を待たず、**クライアント側で生成するUUID v4**を使用します。これにより、電波圏外の現場でも重複のない一意識別子を即座に発行できます。
+### 3.1 共通監査メタデータ方針
+すべてのMasterおよびHistoryエンティティは、以下の標準メタデータ属性を保持可能な構造とします：
+- `created_at`: 作成日時 (ISO8601)
+- `created_by`: 作成者Personnel ID（任意）
+- `updated_at`: 更新日時 (ISO8601)
+- `updated_by`: 更新者Personnel ID（任意）
+- `version`: 楽観的ロック・競合検出用リビジョン番号（整数、1から開始）
 
-### 3.2 冪等キー（Idempotency Key）の設計原則
+### 3.2 一括登録（Bulk Import/Export）対応準備
+会社利用における大量機材（機体20機、バッテリー50本、人員30人等）の登録に対応するため、以下の原則を適用します：
+- すべてのMasterは安定したUUID v4を主キーとしつつ、`external_code`（社内管理番号等）による重複判定・UPSERTを許容。
+- 将来のCSV/JSONインポート機能に対応できるよう、各フィールドの必須・任意制約およびバリデーションをドメイン層で明確化。
 
-再送や同期時に使用する冪等キーは、**「更新日時（updated_at）のみに依存させない」**設計とします。ローカルでの編集や再送トリガーのたびにキーが変動して重複防止が破綻することを防ぎます。
+---
 
-1. **不変操作（Immutable Event: Flight打刻、点検記録等）**:
-   - `operation_id`: 操作発生時に発行される不変のUUID v4。
-   - 同一ジョブの再送では常に同一の `operation_id` を送信。
-2. **状態変更エンティティ（Stateful Entity: Mission更新、機体設定等）**:
-   - `idempotency_key = SHA256(entity_type + ":" + entity_id + ":" + sync_revision)`
-   - `sync_revision`: エンティティの内容が実質的に更新された場合のみインクリメントされるリビジョン番号。単なる送信リトライでは変動しない。
+## 4. Googleスプレッドシート論理台帳構成
 
-### 3.3 送信先別の重複防止戦略
-- **Googleスプレッドシート**: 列定義に `operation_id` または `record_id` + `sync_revision` を保持し、GAS側でUPSERT（存在すれば更新、なければ追加）を行う。
-- **国交省DIPS 2.0**: DIPS FPR APIはカスタムIdempotency-Keyヘッダを解釈しないため、結果不明時は自動再POSTを行わず、DIPS計画検索による照合（Reconciliation）によって二重登録を防止する。
+### 4.1 シート増殖禁止の原則
+- **「機体数・バッテリー数・人員数・現場数・飛行回数・運航日数に比例してシートを自動増殖させない」**ことを絶対原則とします。
+- 1機体1シート、1バッテリー1シート、日別原本複製を禁止し、各シートはリレーショナルテーブルに準じた「行追加型」「行更新型」の台帳として運用します。
+
+### 4.2 シート分類と推奨構成
+枚数は固定せず、同期の安全性・運用の見通し・監査性に基づき以下のように分類します。
+
+| No | 論理台帳名（シート名） | 役割・格納データ | 独立Sheet推奨 | 同期・管理方針 |
+|:--:|---|---|:--:|:--:|
+| 1 | **`DIPS飛行計画台帳`** | DIPS提出不変スナップショット・通報履歴（SSoT） | **YES** | **必須同期**（法的監査最重要） |
+| 2 | **`運航実績台帳`** | 全フライトの離着陸実績（時刻、実時間、機体ID、BAT-ID、残量、所感） | **YES** | **必須同期**（全機体共通の行追加型） |
+| 3 | **`日常点検台帳`** | 飛行前・飛行後日常点検記録（日付、機体ID、点検者、合否、処置） | **YES** | **必須同期**（全機体共通の行追加型） |
+| 4 | **`点検整備台帳`** | 国交省様式3（定期点検20h/100h、部品交換、修理）。全機体共通 | **YES** | **必須同期**（機体ID列を持つ行追加型） |
+| 5 | **`機体台帳`** | 機種（Model）情報および機体個別情報（登録記号、製造番号、累計） | **YES** | **同期推奨**（行更新型マスター） |
+| 6 | **`バッテリー台帳`** | バッテリー型式および個体情報（シリアル、互換機種、累計サイクル、時間） | **YES** | **同期推奨**（行更新型マスター） |
+| 7 | **`バッテリー使用履歴`** | バッテリー個体ごとの使用実績（飛行時間、放電、所感） | **NO** (派生View) | **派生View**（`運航実績台帳` から数式・QUERY等で自動参照表示） |
+| 8 | **`人員・場所台帳`** | 人員（Personnel）、場所（Location）、許可承認（Permission） | **YES** | **任意同期**（1シートにまとめるかタブ分け） |
+| 9 | **`案件台帳`** | 顧客（Client）、案件（Project）マスター | **YES** (業務利用時) | **任意同期**（個人利用時は省略可） |
+| 10 | **`プリセット・テンプレート`** | 飛行範囲、目的、安全措置Preset、運航テンプレート | **NO** (ローカル優先) | **ローカル中心**（バックアップ時のみJSON同期等） |
+| 11 | **`帳票発行台帳`** | 発行された統合A4帳票等のメタデータ・履歴（`ReportSnapshot`） | **YES** (監査用) | **任意同期**（監査用メタデータ行追加） |
+
+---
+
+## 5. ID戦略と冪等性（Idempotency）設計
+
+### 5.1 クライアント主導のUUID v4生成
+すべてのエンティティID（`mission_id`, `flight_id`, `personnel_id`, `aircraft_id`, `battery_id`, `submission_id` 等）は、オフライン現場での即時発行を保証するため、**クライアント側で生成するUUID v4**を採用します。
+
+### 5.2 冪等キー（Idempotency Key）の設計原則
+- **不変操作（Flight打刻、点検記録、提出スナップショット等）**: 操作発生時に発行された不変の `operation_id`（UUID v4）を用いて再送時の重複登録を防止。
+- **状態更新エンティティ（Mission、機体設定等）**: `idempotency_key = SHA256(entity_type + ":" + entity_id + ":" + sync_revision)` により、実質的な更新のみを安全に反映。
+- **外部同期**: Googleスプレッドシート側で `operation_id` または `record_id` + `sync_revision` によるUPSERTを実施し、多重送信による二重書き込みを完全に防止。

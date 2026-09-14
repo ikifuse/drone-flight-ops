@@ -43,4 +43,4 @@
 | [22_migration-plan.md](22_migration-plan.md) | 現行GASアプリ非破壊並行運用（Shadow Run）・資産継承・ロールバック |
 | [23_implementation-roadmap.md](23_implementation-roadmap.md) | Phase C実装ロードマップ（C0〜C9マイルストーン・API非依存ルート） |
 | [24_b2.2-dips-manual-fallback-and-ledger.md](24_b2.2-dips-manual-fallback-and-ledger.md) | **Phase B2.2 DIPS API非依存・手動通報フォールバック・飛行計画台帳詳細設計書** |
-| [../decisions/README.md](../decisions/README.md) | アーキテクチャ決定記録（ADR-0001〜ADR-0006） |
+| [../decisions/README.md](../decisions/README.md) | アーキテクチャ決定記録（ADR-0001〜ADR-0007: 正規化マスター・共用機材・業務利用拡張性・統合帳票） |

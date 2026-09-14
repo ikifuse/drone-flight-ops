@@ -18,10 +18,15 @@ src/
 │   └── service-worker-reg.ts   # PWA Service Worker登録・更新検知
 │
 ├── domain/                     # 純粋なビジネスロジック・エンティティ（外部非依存）
-│   ├── aircraft/               # 機体エンティティ・累計計算
-│   ├── battery/                # バッテリー台帳・サイクル計算
-│   ├── flight-log/             # 運航セッション・離着陸・点検
-│   ├── flight-plan/            # 飛行計画・FlightAreaポリゴン
+│   ├── organization/           # 組織・顧客(Client)・案件(Project)マスター
+│   ├── personnel/              # 人員(Personnel)一元化マスター・権限
+│   ├── aircraft/               # 機種型式(AircraftModel)・機体個体(Aircraft)・累計計算
+│   ├── battery/                # バッテリー型式・適合性・個体・ライフサイクル台帳
+│   ├── location/               # 現場場所(Location)・飛行範囲プリセット(FlightAreaPreset)
+│   ├── preset/                 # 飛行目的・安全措置・運航テンプレート(OperationTemplate)
+│   ├── flight-log/             # 運航セッション・離着陸・日常点検・点検整備サマリー
+│   ├── flight-plan/            # 飛行計画・DipsSubmission・許可承認(Permission)
+│   ├── report/                 # 統合運航帳票(IntegratedOperationReport)・ReportUnit・Snapshot
 │   └── dips/                   # DIPS通報ドメインモデル
 │
 ├── usecases/                   # アプリケーション固有の業務ユースケース
