@@ -123,34 +123,39 @@ interface SyncJob {
   - ネットワーク到達不能 / タイムアウト / 5xxエラー: 指数バックオフ（1秒 → 5秒 → 15秒 → 60秒 → 最大300秒）で段階的に再試行。
   - 4xxエラー（バリデーション・認証不備）: 自動再試行を停止し、`failed_manual_action` 状態へ遷移。パイロットへ入力修正または再認証を促す。
 
-### 3.4 DIPS通報前の外部台帳退避順序（Pre-submission Ledger Persisting - B2.2追加）
+### 3.4 DIPS通報前の不変スナップショット保存と外部台帳非同期退避（Pre-submission Snapshot & Non-blocking Ledger Sync）
 
-DIPSへの通報（API通報または手動通報）にあたっては、「DIPSへ提出した後に保存する」のではなく、**「提出予定内容を確定した時点で外部台帳へ先行退避する」**順序を原則とします。
+DIPSへの通報（API通報または手動通報）にあたっては、「DIPSへ提出した後に保存する」のではなく、**「提出予定内容を確定した時点でローカルへ不変payload_snapshotを先行保存する」**順序を必須原則とします。外部台帳（Googleスプレッドシート等）への同期はこれと直交する非同期ジョブとして扱い、**Sheets同期の成否はDIPS通報の前提条件としません**。
 
 ```text
 1. 計画作成・確定
-   ↓ 提出スナップショット (DipsSubmission) 生成
+   ↓ 提出スナップショット (DipsSubmission, status: 'snapshot_saved') 生成
 2. ローカルDB即時永続化 (IndexedDB)
-   ↓ 同期ジョブ登録 (target: 'spreadsheet_dips_ledger')
-3. 外部台帳先行同期 (オンライン時)
-   ├─ オンライン: Googleスプレッドシート「DIPS飛行計画台帳」へ行挿入 (status: 'ledger_saved')
-   └─ オフライン: キュー保持 (status: 'local_saved') のまま手動通報フローを継続
-4. DIPS通報実施
-   ├─ 手動通報: 手動支援画面でコピー → DIPS Web/アプリ入力 → アプリで「手動通報完了」記録
-   └─ API通報 (Optional): バックエンド経由でDIPS FPR APIへ送信
-5. 通報結果・受付番号の追記
-   ↓ ローカルDB更新 (status: 'dips_confirmed' または 'api_confirmed', dips_plan_id)
+   ├─ 不変 payload_snapshot 保存（必須・改変不可）
+   └─ 同期ジョブ登録 (target: 'spreadsheet_dips_ledger', sync_status: 'sync_pending')
+3. 外部台帳への非同期同期（DIPS通報をブロックしない）
+   ├─ オンラインかつSheets疎通可: Googleスプレッドシート「DIPS飛行計画台帳」へ行挿入 (sync_status: 'synced')
+   └─ オフラインまたはSheets障害中: キュー保持 (sync_status: 'sync_pending' / 'sync_failed') のままDIPS通報へ進む
+4. DIPS通報実施（Sheets同期完了を待たずに即時実行可能）
+   ├─ 手動通報: 手動支援画面でコピー → DIPS Web/アプリ入力 → アプリで「手動通報完了」記録 (status: 'manual_submit_wait' → 'dips_confirmed')
+   └─ API通報 (Optional): バックエンド経由でDIPS FPR APIへ送信 (status: 'sending' → 'dips_confirmed' / 'failed')
+5. 通報結果・確認方法の記録
+   ↓ ローカルDB更新 (status: 'dips_confirmed', confirmation_method, dips_plan_id: nullable)
 6. 外部台帳の行更新 (UPSERT)
-   └─ スプレッドシート「DIPS飛行計画台帳」の該当行へ受付番号・確定ステータスを反映
+   └─ スプレッドシート「DIPS飛行計画台帳」の該当行へ確認ステータス・確認方法・受付番号（取得時のみ）を反映
 ```
 
-- **オフライン現場での堅牢性**: 現場が圏外であっても、ステップ1・2・4（手動通報）・5は端末ローカルDB内で完全に完結します。電波復帰時にステップ3および6の台帳同期ジョブが自動実行され、Googleスプレッドシート上の台帳が最新状態へ追いつきます。
+- **オフライン現場・外部サービス障害時の堅牢性**:
+  - DIPS通報前にローカルへ不変 `payload_snapshot` が確実に永続化されます。
+  - Google Sheetsへの同期完了はDIPS通報の必須条件ではありません。Google Sheets障害中やオフラインであっても、DIPSへの手動またはAPI通報は妨げられません。
+  - 端末画面では「ローカル保存済」「外部台帳同期待ち」「外部台帳同期済」を明確に区別して表示します。
+  - 電波復帰時や障害解消時に台帳同期ジョブが自動実行され、スプレッドシート上の台帳が最新状態へ追いつきます。
 
 ---
 
 ## 4. 手動JSONエクスポート／インポート復旧設計
 
-端末水没・故障・機種変更・誤削除に備え、外部ネットワークを介さずにデータを完全に復旧できるオフライン救済機能を設けます。
+端末水没・故障・機種変更・誤削除に備え、外部ネットワークを介さずにデータを安全に復旧できるオフライン救済機能を設けます。
 
 1. **JSONエクスポート**:
    - ワンタップで全テーブル（機体、バッテリー、ミッション、飛行記録、点検記録、設定）を1つの構造化JSONファイル（例: `drone_flight_backup_20260914.json`）として端末の「ファイル」アプリへ保存。

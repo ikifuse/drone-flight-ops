@@ -8,7 +8,7 @@
 
 ## 1. DIPS Adapterの責務と基本設計思想
 
-DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤システム2.0）」との通信仕様を完全にカプセル化し、**外部APIの仕様変更や未確認要件がアプリ本体（UI・運航管理・飛行日誌）へ波及することを遮断する防波堤（Anti-Corruption Layer）**として機能します。
+DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤システム2.0）」との通信仕様を適切にカプセル化し、**外部APIの仕様変更や未確認要件がアプリ本体（UI・運航管理・飛行日誌）へ波及することを遮断する防波堤（Anti-Corruption Layer）**として機能します。
 
 ```text
 ┌────────────────────────────────────────────────────────┐
@@ -120,10 +120,12 @@ export interface ManualAssistanceData {
 export interface DipsSubmissionResult {
   success: boolean;
   method: DipsSubmissionMethod;
-  dipsPlanId?: string;
-  status: 'ledger_saved' | 'manual_submit_wait' | 'manual_submitted' | 'dips_confirmed' | 'api_confirmed' | 'submission_uncertain' | 'failed';
+  dipsPlanId?: string | null;          // nullable / optional (手動確認で番号未取得時はnull)
+  confirmationMethod?: 'flight_plan_list_match' | 'displayed_id' | 'api_response';
+  status: 'snapshot_saved' | 'manual_submit_wait' | 'manual_submitted' | 'dips_confirmed' | 'submission_uncertain' | 'failed';
   errorMessage?: string;
   submittedAt: string;
+  confirmedAt?: string;
 }
 
 // 通報アダプター共通インターフェース
@@ -159,11 +161,11 @@ export interface IDipsApiService extends IDipsSubmissionAdapter {
 ### 5.1 ManualDipsAdapter（手動通報アダプター - 正式・第一級）
 - **役割**: DIPS API未取得時、電波微弱時、または手動運用を選択した場合の基幹アダプター。
 - **挙動**:
-  1. 内部飛行計画から不変の `DipsSubmission` スナップショットを生成。
-  2. Googleスプレッドシート「DIPS飛行計画台帳」へ同期ジョブを登録。
+  1. 内部飛行計画から不変の `payload_snapshot` を生成しローカル保存（status: 'snapshot_saved'）。
+  2. Googleスプレッドシート「DIPS飛行計画台帳」へ非同期同期ジョブ（sync_status: 'sync_pending'）を登録（Sheets同期完了は待たずに通報可能）。
   3. スマホ画面に「手動入力支援画面（コピー用UI）」を表示。
   4. 操縦者が「DIPSへ入力完了」をタップした時点で `manual_submitted` を記録。
-  5. 操縦者がDIPS画面の計画番号/受付番号を入力した時点で `dips_confirmed` を記録。
+  5. 操縦者がDIPS画面で受付番号を入力、またはDIPS飛行計画一覧の一致を目視確認した時点で `dips_confirmed`（`confirmation_method: 'displayed_id'` または `'flight_plan_list_match'`、受付番号は任意）を記録。
 
 ### 5.2 MockDipsAdapter（開発・テスト用モック）
 - **役割**: 外部APIやDIPS本番環境を汚染せずに、通報成功・エラー・照合の全フローをテスト。
@@ -175,7 +177,7 @@ export interface IDipsApiService extends IDipsSubmissionAdapter {
 - **役割**: 国交省審査を通過し、credentialが発行された場合のみ有効化する自動連携プラグイン。
 - **挙動**:
   - Cloudflare Workers中継プロキシを経由してDIPS 2.0 FPRエンドポイントへJSON送信。
-  - レスポンスから受付番号を自動抽出し、`api_confirmed` を記録。
+  - レスポンスから受付番号を自動抽出し、`dips_confirmed`（confirmation_method: 'api_response'）を記録。
 
 ---
 
@@ -199,4 +201,6 @@ DIPS APIがない場合でも、スマートフォン1台でストレスなくDI
   - 許可承認番号
 - **下部アクション**:
   - **「DIPSへ手動通報した」ボタン**: 押下により `MANUAL_SUBMITTED` 状態を打刻。
-  - **「受付番号を入力する」入力欄**: DIPS側で発番された計画番号・受付番号を追記し、`DIPS_CONFIRMED` へ更新。
+  - **「通報結果の確認完了」操作**:
+    - パターンA（番号確認時）: DIPS画面に表示された計画番号/受付番号を入力し、`confirmation_method: 'displayed_id'` で `DIPS_CONFIRMED` へ更新。
+    - パターンB（一覧目視照合時）: DIPS「飛行計画一覧」画面で日時・機体・範囲の一致を目視確認し「一覧で確認済み」をチェックすることで、番号未取得のまま `confirmation_method: 'flight_plan_list_match'` で安全に `DIPS_CONFIRMED` へ更新可能。

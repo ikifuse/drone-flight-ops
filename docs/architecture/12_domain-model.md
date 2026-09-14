@@ -155,53 +155,62 @@
 - **複数機体対応方針**: 内部データモデルとしては `aircraft_ids[]` で複数機体を許容し、DIPS通報アダプタにおいてDIPS 2.0 APIの単機/複数機仕様に応じて適切にマッピングします。
 - **リビジョン管理**: 計画内容を変更した場合、過去の通報済みスナップショットを直接上書きせず、リビジョンを上げて新しい計画内容として保存します。
 
-### 2.5 DipsSubmission（DIPS提出スナップショット・台帳エンティティ - B2.2追加）
+### 2.5 DipsSubmission（DIPS提出試行・不変スナップショット台帳エンティティ - SSoT）
 - **ID**: `submission_id` (UUID v4)
-- **分類**: 独立不変エンティティ（FlightPlan 1 : N DipsSubmission）
-- **役割**: DIPSへの通報直前または手動入力画面確定時点で生成される**「提出予定内容の完全な不変スナップショット」**であり、Googleスプレッドシート「DIPS飛行計画台帳」の1行と1対1に対応します。
+- **分類**: 独立エンティティ（FlightPlan 1 : N DipsSubmission）。**各提出試行における唯一の正本（Single Source of Truth）**。
+- **役割**: DIPSへの通報直前または手動入力画面確定時点で生成される通報試行レコードであり、Googleスプレッドシート「DIPS飛行計画台帳」の1行と1対1に対応します。
+- **不変境界の定義**:
+  - **不変部（Immutable Snapshot）**: `payload_snapshot` は一度生成されたら絶対に改変されません。計画変更時は新しい `DipsSubmission` を新リビジョンとして起票します。
+  - **可変部（Mutable Lifecycle Metadata）**: ステータスや確認情報等の進行状態は更新可能です。更新履歴は `AuditEvent` に記録されます。
 - **主な属性**:
   - `flight_plan_id`: 対象飛行計画ID
   - `revision`: 提出時の計画リビジョン番号
   - `submission_method`: 通報方式（`'manual'` / `'api'` / `'mock'`）
-  - `status`: 提出ステータス（後述のDipsNotification状態マシンと同期）
-  - `payload_snapshot`: 不変JSON（その時点でDIPSへ渡す予定の全データ: 飛行日時、場所名称、緯度経度、高度、円/ポリゴンGeoJSON、機体登録記号、操縦者氏名/証明書番号、飛行目的、飛行形態、許可承認番号等）
-  - `dips_plan_id`: DIPS側発行の計画番号/受付番号（手動入力またはAPIレスポンス）
-  - `submitted_at`: 通報日時（手動記録日時またはAPI送信日時）
-  - `confirmed_at`: DIPS受理確認日時（手動確認入力日時またはAPIレスポンス日時）
-  - `sync_status`: スプレッドシート「DIPS飛行計画台帳」への同期状態（`local_saved`, `sync_pending`, `synced`, `sync_failed`）
-  - `spreadsheet_row_id`: スプレッドシート側の行番号
-  - `supersedes_submission_id`: 訂正前の過去提出ID（任意）
-  - `superseded_by_submission_id`: 本提出を上書きした新提出ID（任意）
-  - `cancelled_at`: 取消日時（任意）
-  - `cancellation_reason`: 取消理由（任意）
-  - `notes`: 備考・エラー所感・パイロット手記
-- **不変性の保証**: 一度生成された `payload_snapshot` は一切更新されません。計画変更時は新しい `DipsSubmission` を追加生成し、`supersedes_submission_id` で過去履歴を追跡します。
-
-### 2.6 DipsNotification（DIPS飛行計画通報ステータス）
-- **ID**: `dips_notification_id` (UUID v4)
-- **分類**: 独立エンティティ（FlightPlan / 最新DipsSubmissionと連動）
-- **主な属性**:
-  - `flight_plan_id`: 対象飛行計画ID
-  - `current_submission_id`: 最新の提出スナップショットID
-  - `status`: 通報状態マシンステータス（13_state-machines.md参照）
-    - `draft`: 計画作成中
-    - `ledger_saved`: 提出スナップショット確定・台帳保存済み（通報待ち）
-    - `manual_submit_wait`: 手動通報待ち（手動支援画面提示中）
+  - `status`: DIPS提出ステータス
+    - `snapshot_saved`: 提出スナップショット保存済・通報準備完了
+    - `manual_submit_wait`: 手動通報待ち（手動支援画面表示中）
     - `manual_submitted`: 操縦者が手動通報実施を記録（※DIPS受理確認ではない）
-    - `dips_confirmed`: 操縦者がDIPS発行の受付番号/計画IDを確認・追記済み
+    - `dips_confirmed`: 操縦者がDIPS画面での計画登録を確認済み（一覧目視照合または受付番号入力）
     - `sending`: API送信中
-    - `api_confirmed`: APIによるDIPS受理確認済み（受付番号自動取得）
+    - `api_confirmed`: APIによるDIPS受理確認済み（計画ID自動受領）
     - `submission_uncertain`: API送信中切断・タイムアウト（成否不明・照合待ち）
     - `reconciliation_required`: 自動照合不能（パイロット手動確認待ち）
     - `failed`: 通報失敗（エラー）
     - `retry_wait`: 一時通信エラー再送待ち
     - `superseded`: 新リビジョンにより更新・差し替え
     - `cancelled`: 計画取消
-  - `dips_plan_id`: DIPS側発行の計画番号
-  - `reconciliation_checked_at`: 照合実行日時
-  - `submitted_at`: 通報日時
-  - `confirmed_at`: 受理確認日時
-  - `last_error_message`: エラー内容
+  - `sync_status`: 外部台帳同期ステータス（DIPS通報状態とは直交する別軸として管理）
+    - `local_saved`: 端末ローカルDBにのみ保存（台帳未同期）
+    - `sync_pending`: スプレッドシート同期キュー投入中（送信待ち）
+    - `syncing`: スプレッドシート送信中
+    - `synced`: Googleスプレッドシート「DIPS飛行計画台帳」へ反映完了
+    - `sync_failed`: 同期失敗（オフラインまたはSheets APIエラー）
+  - `payload_snapshot`: **不変JSON**（その時点でDIPSへ渡す予定の全データ: 飛行日時、場所名称、緯度経度、高度、円/ポリゴンGeoJSON、機体登録記号、操縦者氏名/証明書番号、飛行目的、飛行形態、許可承認番号等）
+  - `confirmation_method`: 確認方法（`'flight_plan_list_match'` / `'displayed_id'` / `'api_response'` / `null`）
+  - `dips_plan_id`: DIPS側発行の計画番号/受付番号（**手動一覧照合時は省略可・nullable**。番号が確認できた場合またはAPIレスポンス時のみ保存）
+  - `submitted_at`: 通報日時（手動記録日時またはAPI送信日時、ISO8601）
+  - `confirmed_at`: DIPS登録確認日時（手動確認日時またはAPIレスポンス日時、ISO8601）
+  - `spreadsheet_row_id`: スプレッドシート側の行番号（同期完了時にバインド）
+  - `supersedes_submission_id`: 訂正前の過去提出ID（任意）
+  - `superseded_by_submission_id`: 本提出を上書きした新提出ID（任意）
+  - `cancelled_at`: 取消日時（任意）
+  - `cancellation_reason`: 取消理由（任意）
+  - `notes`: 備考・エラー所感・パイロット手記
+
+### 2.6 DipsNotification（FlightPlanに対する通報状態集約・Projection）
+- **ID**: `flight_plan_id` と1:1
+- **分類**: **集約ビュー / 参照プロジェクション（Projection）**
+- **二重正本の排除**: `DipsNotification` は独立して状態を更新・保持する正本ではありません。`FlightPlan` に紐づく最新の `DipsSubmission`（`current_submission_id`）への参照を持ち、画面表示用に最新状態を射影（Projection）する読み取り集約モデルです。
+- **主なプロパティ（すべて最新の `DipsSubmission` からの参照・導出）**:
+  - `flight_plan_id`: 対象飛行計画ID
+  - `current_submission_id`: 最新の提出スナップショットID（`DipsSubmission` へのポインタ）
+  - `readonly current_status`: 最新提出の `status`
+  - `readonly current_sync_status`: 最新提出の `sync_status`
+  - `readonly dips_plan_id`: 最新提出の `dips_plan_id` (nullable)
+  - `readonly confirmation_method`: 最新提出の `confirmation_method` (nullable)
+  - `readonly last_submitted_at`: 最新提出の `submitted_at`
+  - `readonly last_confirmed_at`: 最新提出の `confirmed_at`
+  - `readonly last_error_message`: エラー内容（存在する場合）
 
 ### 2.7 Mission（一連の現場運航セッション）
 - **ID**: `mission_id` (UUID v4)
@@ -354,15 +363,16 @@ Googleスプレッドシート上に保持される「DIPS飛行計画台帳」�
 | S | `flight_type` | 飛行形態 | 文字列 | 目視内/目視外、30m等 |
 | T | `permission_number` | 許可承認番号 | 文字列 | 包括許可等の番号 |
 | U | `submission_method` | 通報方式 | `manual` / `api` / `mock` | 手動通報かAPI通報かモックか |
-| V | `submission_status` | 通報状態 | 文字列 | `ledger_saved`, `manual_submitted`, `dips_confirmed`, `api_confirmed`, `superseded`, `cancelled` 等 |
-| W | `dips_plan_id` | DIPS計画番号/受付番号 | 文字列 | 手動入力またはAPIで受領した番号 |
-| X | `submitted_at` | 通報実施日時 | ISO8601 | 手動記録またはAPI送信打刻 |
-| Y | `confirmed_at` | 受理確認日時 | ISO8601 | 受付番号確認・追記打刻 |
-| Z | `supersedes_id` | 訂正前提出ID | UUID v4 | 本版が差し替えた旧提出ID（訂正履歴） |
-| AA| `superseded_by_id` | 訂正後提出ID | UUID v4 | 本版を差し替えた新提出ID |
-| AB| `cancellation_info` | 取消情報 | 文字列 | 取消日時および理由（取消時） |
-| AC| `linked_mission_id` | 紐付運航実績ID | UUID v4 | 実際に実施されたMission ID（予定と実績の結合） |
-| AD| `notes` | 備考・エラーログ | 文字列 | 通報時メモ、エラー所感、手動追記事項 |
+| V | `submission_status` | 通報状態 | 文字列 | `snapshot_saved`, `manual_submitted`, `dips_confirmed`, `api_confirmed`, `superseded`, `cancelled` 等 |
+| W | `confirmation_method` | 確認方法 | 文字列 | `flight_plan_list_match` / `displayed_id` / `api_response` |
+| X | `dips_plan_id` | DIPS計画番号/受付番号 | 文字列(任意) | 番号確認時またはAPI受領時の番号（手動一覧照合時は空欄可） |
+| Y | `submitted_at` | 通報実施日時 | ISO8601 | 手動記録またはAPI送信打刻 |
+| Z | `confirmed_at` | 受理確認日時 | ISO8601 | 確認・追記打刻日時 |
+| AA| `supersedes_id` | 訂正前提出ID | UUID v4 | 本版が差し替えた旧提出ID（訂正履歴） |
+| AB| `superseded_by_id` | 訂正後提出ID | UUID v4 | 本版を差し替えた新提出ID |
+| AC| `cancellation_info` | 取消情報 | 文字列 | 取消日時および理由（取消時） |
+| AD| `linked_mission_id` | 紐付運航実績ID | UUID v4 | 実際に実施されたMission ID（予定と実績の結合） |
+| AE| `notes` | 備考・エラーログ | 文字列 | 通報時メモ、エラー所感、手動追記事項 |
 
 ---
 
