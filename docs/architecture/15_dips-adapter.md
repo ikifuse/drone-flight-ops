@@ -122,7 +122,7 @@ export interface DipsSubmissionResult {
   method: DipsSubmissionMethod;
   dipsPlanId?: string | null;          // nullable / optional (手動確認で番号未取得時はnull)
   confirmationMethod?: 'flight_plan_list_match' | 'displayed_id' | 'api_response';
-  status: 'snapshot_saved' | 'manual_submit_wait' | 'manual_submitted' | 'dips_confirmed' | 'submission_uncertain' | 'failed';
+  status: 'snapshot_saved' | 'manual_submit_wait' | 'manual_submitted' | 'dips_confirmed' | 'api_confirmed' | 'submission_uncertain' | 'failed';
   errorMessage?: string;
   submittedAt: string;
   confirmedAt?: string;
@@ -177,7 +177,7 @@ export interface IDipsApiService extends IDipsSubmissionAdapter {
 - **役割**: 国交省審査を通過し、credentialが発行された場合のみ有効化する自動連携プラグイン。
 - **挙動**:
   - Cloudflare Workers中継プロキシを経由してDIPS 2.0 FPRエンドポイントへJSON送信。
-  - レスポンスから受付番号を自動抽出し、`dips_confirmed`（confirmation_method: 'api_response'）を記録。
+  - DIPS公式API仕様で定義された成功レスポンスを受領・検証後、計画ID等を抽出し、`api_confirmed`（confirmation_method: 'api_response'）を記録。
 
 ---
 

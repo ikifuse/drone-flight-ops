@@ -90,9 +90,7 @@ APIの有無（手動通報 / API自動通報）にかかわらず、提出予�
 
 ```mermaid
 stateDiagram-v2
-    [*] --> DRAFT : 計画作成中
-    
-    DRAFT --> SNAPSHOT_SAVED : 提出スナップショット確定・ローカルDB保存 (台帳同期キュー投入)
+    [*] --> SNAPSHOT_SAVED : 提出内容確定・不変スナップショット生成 (ローカルDB保存・台帳同期キュー投入)
     
     state "手動通報フロー (Manual)" as ManualFlow {
         SNAPSHOT_SAVED --> MANUAL_SUBMIT_WAIT : 手動通報モード選択 (手動支援画面表示)
@@ -102,7 +100,7 @@ stateDiagram-v2
     
     state "API自動通報フロー (Optional API)" as ApiFlow {
         SNAPSHOT_SAVED --> SENDING : API通報開始 (ネットワーク到達確認)
-        SENDING --> API_CONFIRMED : DIPSサーバーより受理レスポンス受領 (計画ID自動取得)
+        SENDING --> API_CONFIRMED : DIPS公式仕様に基づく成功レスポンス受領・検証 (計画ID等取得)
         SENDING --> FAILED : 認証エラー/バリデーションエラー(4xx)
         SENDING --> RETRY_WAIT : 一時通信エラー/サーバー5xxエラー
         SENDING --> SUBMISSION_UNCERTAIN : POST送信中切断/応答タイムアウト (成否不明)
@@ -117,7 +115,7 @@ stateDiagram-v2
         RETRY_WAIT --> SENDING : ネットワーク復帰・再送実行
     }
     
-    FAILED --> DRAFT : 計画パラメータ修正
+    FAILED --> [*] : 不変履歴として保存 (計画修正時はFlightPlan編集・新Submission起票)
     
     DIPS_CONFIRMED --> SUPERSEDED : 計画内容変更による新リビジョン作成
     API_CONFIRMED --> SUPERSEDED : 計画内容変更による新リビジョン作成
@@ -132,18 +130,19 @@ stateDiagram-v2
 
 ### 3.2 各状態の定義と現場UI挙動
 
+※飛行計画の作成・編集中は `FlightPlan.plan_status = 'draft'` で管理され、提出内容を確定して不変スナップショット（`payload_snapshot`）を生成した時点で初めて `DipsSubmission` が起票されます。したがって、Submission状態マシンは初期状態 **`SNAPSHOT_SAVED`** から始まります。
+
 | 状態名 (State) | 説明 | ユーザーへのUI表示 | 次の遷移 |
 |---|---|---|---|
-| **`DRAFT`** | 飛行範囲（円/ポリゴン）・日時・機体・操縦者の作成・編集中。 | 「飛行計画を作成中」 | `SNAPSHOT_SAVED` |
 | **`SNAPSHOT_SAVED`** | 提出不変スナップショット（`payload_snapshot`）が端末ローカルDBへ保存され、通報準備が完了した状態（同時に外部台帳同期キューへ投入）。※Google Sheets同期完了は待たない。 | **「通報準備完了（DIPS未通報）」** | 手動通報またはAPI通報へ |
 | **`MANUAL_SUBMIT_WAIT`** | 手動入力支援画面を表示中。パイロットがDIPS Web/アプリへコピー＆ペースト入力を行っている待機状態。 | 「手動通報待機中（DIPSへ入力してください）」 | `MANUAL_SUBMITTED` |
 | **`MANUAL_SUBMITTED`** | 操縦者がアプリ上で「DIPS手動通報を完了した」と記録打刻した状態。**※DIPS側の登録・受理確認ではない**。 | **「手動通報実施を記録（DIPS登録確認待ち）」** | `DIPS_CONFIRMED` |
 | **`DIPS_CONFIRMED`** | 操縦者がDIPS画面で計画登録を確認した状態（飛行計画一覧との目視照合、または受付番号の確認入力）。 | **「DIPS通報確認完了（手動確認済）」** | 運航完了 / 取消 / 訂正 |
 | **`SENDING`** | バックエンド経由で国交省DIPS APIとHTTP通信中。 | 「DIPS API通報中...（通信中）」 | 成功/失敗/結果不明 |
-| **`API_CONFIRMED`** | DIPS APIから200 OKを受領し、受付番号/計画IDがシステム的に自動確認された状態。 | **「DIPS通報完了（API自動受理・受付番号: XXXXX）」** | 運航完了 / 取消 / 訂正 |
+| **`API_CONFIRMED`** | DIPS公式API仕様で定義された成功レスポンスを受領し、受付番号/計画ID等の必要条件がシステム的に自動確認された状態。 | **「DIPS通報完了（API自動受理・受付番号: XXXXX）」** | 運航完了 / 取消 / 訂正 |
 | **`SUBMISSION_UNCERTAIN`** | API送出後に通信切断・タイムアウトが発生し、登録成否が不明な状態。**自動再POSTは行わない**。 | 「通報結果照合中...（二重登録防止のため照合中）」 | DIPS計画検索照合へ |
 | **`RECONCILIATION_REQUIRED`**| API照合でも成否を判定できず、操縦者によるDIPS Web画面での目視確認を要求する状態。 | 「要確認: DIPS登録状況を照合できません。DIPS画面で確認してください」 | 操縦者の確認入力 |
-| **`FAILED`** | バリデーションエラーや恒久拒否（4xx）。 | 「通報失敗: 内容を修正してください」 | `DRAFT` |
+| **`FAILED`** | バリデーションエラーや恒久拒否（4xx）。不変履歴としてそのまま保存（下書きへの巻き戻しやpayload改変は不可）。 | 「通報失敗: 計画を修正して再作成してください」 | 履歴保存（FlightPlan修正・新Submission起票へ） |
 | **`RETRY_WAIT`** | 通信圏外やDIPSサーバー障害による一時待機。 | 「一時通信エラー: 再送待機中」 | `SENDING` |
 | **`SUPERSEDED`** | 時間変更や機体変更により、新しいリビジョンが起票され、旧提出スナップショットが無効化された状態。 | 「旧版（リビジョン更新により差し替え済み）」 | 履歴保持のみ |
 | **`CANCELLED`** | 当該飛行計画を取り消した状態（DIPS側取消手続きと取消日時・理由記録）。 | 「計画取消済み（取消理由: XXXXX）」 | 履歴保持のみ |
