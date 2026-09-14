@@ -41,12 +41,12 @@
     │        ↓ DIPS_CONFIRMED               PREFLIGHT_INSPECTION (飛行前日常点検)
     └─ API : SENDING                          │
              ↓ API_CONFIRMED / RETRY_WAIT     ▼
-                                            ★【LEGAL & OPERATIONAL TAKEOFF GATE】
+                                            ★【TAKEOFF READINESS ASSESSMENT (離陸前総合評価)】
                                               APPLICATION_FLOW_READY ≠ LEGAL_TAKEOFF_READY
-                                              │ (DIPS通報充足 + 点検合格 + 許可 + 周囲安全)
+                                              │ (DIPS要否/状態 + 点検合格 + 許可 + 周囲安全を独立評価)
                                               ▼
                                             TAKEOFF_READY (離陸待機)
-                                              ↓
+                                              ↓ (実際の離陸打刻はブロックせず必ず記録)
                                             IN_FLIGHT (飛行中)
 ```
 
@@ -64,16 +64,92 @@
    - ただし、**「アプリで次工程へ進める（APPLICATION_FLOW_READY）」ことと「法令上離陸してよい（LEGAL_TAKEOFF_READY）」は全く別概念**である。
    - アプリは「未通報飛行を適法とみなす許可ボタン」を絶対に作成しない。実際の離陸可否は操縦者が法令・許可条件・安全状況を総合確認して判断する。
 
-### 1.2 DIPS未確認時のUI常時表示と監査ログ境界（AuditEvent）
-- **UI常時識別表示**:
-  運航画面（点検画面・フライト画面）に進んだ後も、上部ステータスバー等において DIPS状態（「DIPS未通報」「DIPS手動入力中」「DIPS確認待ち」「DIPS API失敗」「DIPS確認済」等）を色分けバッジ等で常時判別可能とする。
-- **進行監査ログ境界（AuditEvent）**:
-  - `SNAPSHOT_SAVED` から飛行前点検画面へ進む通常の運航準備操作では、過剰な監査ログを大量生成しない。
-  - DIPS未通報・未確認（`MANUAL_SUBMIT_WAIT` や `FAILED` 等）のまま最終離陸（`TAKEOFF_READY` → `IN_FLIGHT` 打刻）を行った場合にのみ、安全監査用として `AuditEvent`（`event_type: 'TAKEOFF_WITH_UNCONFIRMED_DIPS'`, `submission_state`, `pilot_id`, `timestamp`, `acknowledged_notes`）を1回記録する。
+### 1.2 DIPS通報「要否」と「状態」の分離・評価モデル
+「DIPS通報が完了していないこと」を短絡的に「離陸不合格」としてはなりません。航空法上、特定飛行を行う場合は通報が義務（航空法第132条の88）ですが、**非特定飛行の場合は通報義務がなく推奨扱い**です。また、**DIPSシステム障害時（公式通報要領の例外規定）には飛行開始後の事後通報が認められています**。  
+したがって、以下の2軸を明確に分離して評価します。
+
+#### A. DipsReportingRequirement（通報要否・義務度）
+- **`REQUIRED`**: 今回の飛行は特定飛行に該当し、航空法上、事前の飛行計画通報が必須。
+- **`NOT_REQUIRED`**: 非特定飛行（DID外・昼間・目視内・30m以上・催し外・危険物なし・物件投下なし）であり、法令上の通報義務なし（通報は推奨）。
+- **`UNDETERMINED`**: 空域・飛行形態条件が未確定のため、要否判定が保留されている状態。
+
+#### B. DipsReportingStatus（通報手続き状態）
+既存の `DipsSubmission.status` をそのまま活用し、二重状態マシンの新設を避けます：
+- `NOT_APPLICABLE`: 通報不要計画、または通報を行わない運用
+- `NOT_SUBMITTED`: スナップショット未生成 / ドラフト段階
+- `SNAPSHOT_SAVED`: 提出スナップショット保存済（未通報）
+- `MANUAL_SUBMIT_WAIT`: 手動通報入力待機中
+- `MANUAL_SUBMITTED`: 手動通報実施を記録（確認待ち）
+- `SENDING`: API通信中
+- `DIPS_CONFIRMED` / `API_CONFIRMED`: 通報確認完了（手動照合済 または API自動受理）
+- `FAILED`: 通報失敗（恒久エラー）
+- `RETRY_WAIT`: 一時エラー再試行待機
+- `SUBMISSION_UNCERTAIN` / `RECONCILIATION_REQUIRED`: 結果不明・目視照合要
+- `SYSTEM_OUTAGE_EXCEPTION`: **国交省公式通報システム障害例外の記録あり**
+
+#### C. DIPSシステム障害時例外（SYSTEM_OUTAGE_EXCEPTION）の厳格な境界
+- **法令根拠**: 国交省「無人航空機の飛行計画の通報要領」に基づき、通報システム障害等により飛行開始までに通報手段がない場合は、飛行開始後の事後通報が認められています。
+- **自動判定の禁止**: アプリが勝手に「通信ができない＝障害例外成立」と自動判定することは厳禁とします（ユーザーの圏外、API設定ミス、端末オフラインとは厳格に区別）。操縦者が公認障害情報を確認の上で理由・メモを添えて記録した場合にのみ記録されます。
+- **表示表現**: 「DIPS事前通報未確認（システム障害例外記録あり）」等と客観表示するに留め、「合法」「飛行許可」等の法的保証表示は行いません。
+
+### 1.3 TakeoffReadinessAssessment（離陸前総合評価）とBlock/Warning設計
+離陸可否判定を単純なAND条件（DIPS充足＋点検合格＋許可＋周囲安全）とせず、各チェック要素を独立して多軸評価します：
+
+```typescript
+export interface TakeoffReadinessAssessment {
+  overall_status: 'READY' | 'WARNING_PRESENT' | 'BLOCKED';
+  evaluated_at: string;
+  
+  // 各チェック要素の個別評価 (PASS / WARNING / BLOCKING / NOT_APPLICABLE / UNKNOWN)
+  dips_reporting: {
+    requirement: DipsReportingRequirement;
+    status: DipsSubmissionStatus;
+    result: 'PASS' | 'WARNING' | 'BLOCKING' | 'NOT_APPLICABLE';
+    message: string;
+  };
+  permission: {
+    result: 'PASS' | 'WARNING' | 'BLOCKING' | 'NOT_APPLICABLE';
+    message: string;
+  };
+  preflight_inspection: {
+    result: 'PASS' | 'BLOCKING';
+    message: string;
+  };
+  airspace_and_site: {
+    result: 'PASS' | 'WARNING' | 'UNKNOWN';
+    message: string;
+  };
+  weather_condition: {
+    result: 'PASS' | 'WARNING' | 'UNKNOWN';
+    message: string;
+  };
+  operator_acknowledgement: {
+    is_acknowledged: boolean;
+    acknowledged_at?: string;
+  };
+}
+```
+
+- **判定区分とアプリの挙動**:
+  1. **Application Hard Block（アプリ操作の物理阻止）**:
+     - 飛行前日常点検（`PREFLIGHT_INSPECTION`）が未実施・不合格の場合。安全航行の物理的前提であるため、点検合格打刻なしには `TAKEOFF_READY` へ遷移させない。
+  2. **Regulatory / Safety Warning（法令・安全上の警告表示）**:
+     - `DipsReportingRequirement === 'REQUIRED'` かつ DIPS未確認（`SNAPSHOT_SAVED`, `MANUAL_SUBMIT_WAIT`, `FAILED` 等）の場合。画面上に黄色/赤色の警告バナーを表示し、操縦者の確認・了解を促す。
+     - **非特定飛行（`NOT_REQUIRED`）の場合**: DIPS未通報であっても Warning/Blocking とせず、「非特定飛行（通報推奨）」と情報表示する。
+     - **システム障害例外（`SYSTEM_OUTAGE_EXCEPTION`）の場合**: 「事前通報未完了（障害例外記録あり・着陸後速やかに通報してください）」と警告・ガイダンス表示する。
+  3. **Operation FSMの記録保証**:
+     - アプリが Warning を表示していても、**操縦者が物理的に離陸した場合、アプリはその離陸事実（Takeoff打刻）を絶対に拒否せず記録（IN_FLIGHT）する**。記録を停止して無記録飛行を生み出すことは安全・法令管理上最大の過失であるため。
+
+### 1.4 未確認離陸監査ログ（AuditEvent）の境界
+- **記録条件**:
+  - `DipsReportingRequirement === 'REQUIRED'` かつ DIPSが未確認のまま離陸打刻が行われた場合のみ、`AuditEvent`（`event_type: 'TAKEOFF_WITH_UNCONFIRMED_DIPS'`）を記録。
+- **例外除外**:
+  - **非特定飛行（`NOT_REQUIRED`）での離陸時**: 本監査イベントは発生させない（法令義務違反の疑いではないため）。
+  - **システム障害例外（`SYSTEM_OUTAGE_EXCEPTION`）時**: `event_type: 'TAKEOFF_UNDER_SYSTEM_OUTAGE_EXCEPTION'` として区別記録し、通常の未確認離陸と明確に識別可能とする。
 
 > [!IMPORTANT]
 > **「DIPS通報成功確認済み」＝「飛行可能」ではありません。また「アプリで点検へ進める」＝「離陸してよい」でもありません。**
-> DIPS通報の成功は飛行計画通報の法令要件を満たしたことを示すのみであり、実際の離陸には別途「許可承認の有効性」「空域の安全」「土地管理者承諾」「気象条件」「日常点検合格」の総合確認（Legal & Operational Takeoff Gate）が必要です。
+> DIPS通報の成功は飛行計画通報の法令要件を満たしたことを示すのみであり、実際の離陸には別途「許可承認の有効性」「空域の安全」「土地管理者承諾」「気象条件」「日常点検合格」の総合確認（TakeoffReadinessAssessment）が必要です。
 
 ---
 
@@ -198,6 +274,7 @@ stateDiagram-v2
 | **`RETRY_WAIT`** | 通信圏外やDIPSサーバー障害による一時待機。 | 「一時通信エラー: 再送待機中」 | `SENDING` |
 | **`SUPERSEDED`** | 時間変更や機体変更により、新しいリビジョンが起票され、旧提出スナップショットが無効化された状態。 | 「旧版（リビジョン更新により差し替え済み）」 | 履歴保持のみ |
 | **`CANCELLED`** | 当該飛行計画を取り消した状態（DIPS側取消手続きと取消日時・理由記録）。 | 「計画取消済み（取消理由: XXXXX）」 | 履歴保持のみ |
+| **`SYSTEM_OUTAGE_EXCEPTION`** | 国交省公式通報システム障害により、飛行開始前の通報が物理的に不可能な状況において、操縦者が障害例外事由・メモを添えて記録した状態（着陸後速やかに事後通報を行う）。※アプリによる自動判定は禁止。 | **「DIPS事前通報未完了（国交省システム障害例外記録あり・着陸後速やかに通報）」** | 運航完了後の事後通報へ |
 
 > [!IMPORTANT]
 > **状態と法的解釈の混同防止原則（5大ルール）**:

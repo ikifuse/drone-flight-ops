@@ -99,16 +99,18 @@
 ### 3.3 通報ステータス管理と保存・運航Gateの完全分離
 - **計画状態（FlightPlan.plan_status）**:
   - `draft`（入力途中・必須不足でも常時保存可能）→ `submission_ready`（必須・適用条件充足）→ `locked_for_submission`（提出確定・スナップショット生成済）→ `active`（運航中）→ `completed`（運航完了）/ `cancelled`（中止）。
-- **DIPS通報状態（DipsSubmission.status - SUBMISSION_READYからスナップショット生成時に起票）**:
-  - `SNAPSHOT_SAVED`（提出不変スナップショットローカルDB保存済・通報準備完了）→ `MANUAL_SUBMIT_WAIT`（手動通報待機中）→ `MANUAL_SUBMITTED`（手動通報記録済：※DIPS受理確認ではない）→ `DIPS_CONFIRMED`（DIPS計画登録確認済：一覧照合または受付番号確認）/ `API_CONFIRMED`（DIPS公式仕様に基づく受理確認済）。
+- **DIPS通報要否と状態（DipsReportingRequirement & DipsReportingStatus）**:
+  - **通報要否（DipsReportingRequirement）**: `REQUIRED`（特定飛行・通報義務あり）/ `NOT_REQUIRED`（非特定飛行・通報推奨）/ `UNDETERMINED`（未判定）。
+  - **通報状態（DipsSubmission.status - SUBMISSION_READYからスナップショット生成時に起票）**: `SNAPSHOT_SAVED`（スナップショット保存済）→ `MANUAL_SUBMIT_WAIT`（手動待機）→ `MANUAL_SUBMITTED`（手動記録済）→ `DIPS_CONFIRMED` / `API_CONFIRMED`（通報確認完了）。障害例外時は操縦者記録により `SYSTEM_OUTAGE_EXCEPTION`（公式システム障害時事後通報例外）を保持。
   - 送信失敗時は `FAILED`（エラー・不変履歴として保存、再試行時はFlightPlan側を修正して新規Submission起票）。
   - 変更・取消時は `CANCELLED`（取り消し）/ `SUPERSEDED`（改訂により置換）。
 - **外部台帳同期状態（Ledger Sync State - 別軸管理）**:
   - `local_saved`（ローカル保存済）/ `sync_pending`（台帳同期待ち）/ `syncing`（同期中）/ `synced`（台帳同期済）/ `sync_failed`（同期失敗）。
   - **原則**: DIPS通報前にローカルDBへの不変スナップショット保存は必須とするが、Googleスプレッドシートへの同期完了はDIPS通報の必須条件としない。スプレッドシート通信障害時や圏外時でも、DIPSへの通報（手動またはAPI）を妨げない。
-- **運航準備と離陸Gate（Application Flow ≠ Legal Takeoff）**:
+- **運航準備と離陸前総合評価（TakeoffReadinessAssessment - Application Flow ≠ Legal Takeoff）**:
   - `SNAPSHOT_SAVED` 以降、DIPS通報が未確認であっても現場運航準備（`Mission`、日常点検）への移行を妨げない。
-  - ただし実際の離陸には操縦者による法令・許可・安全総合確認（Legal & Operational Takeoff Gate）を要し、アプリが「未通報飛行許可」を自動判定する設計は行わない。
+  - 非特定飛行（`NOT_REQUIRED`）時はDIPS未通報をエラーとせず、システム障害例外（`SYSTEM_OUTAGE_EXCEPTION`）記録時も通常の未通報と区別して案内する。
+  - ただし実際の離陸には操縦者による法令・許可・安全総合確認（TakeoffReadinessAssessment）を要し、アプリが「未通報飛行許可」を自動判定する設計は行わない。また操縦者の実際の離陸打刻記録そのものは絶対に停止しない。
 - 誤操作による多重通報を防ぐ「送信ロック機構」および「計画検索照合機構」。
 
 ### 3.4 DIPS飛行計画台帳（Googleスプレッドシート連携）

@@ -521,13 +521,76 @@ export interface DipsSubmissionReadiness {
    - `blocking_fields.length === 0`
    - すなわち、**`Applicability === 'APPLICABLE'` かつ (`Contract Requirement === 'REQUIRED'` または 条件成立した `CONDITIONAL_REQUIRED`) である全項目について、`effective_value` が存在し、バリデーション（型・形式・値域）を満たしていること**。
 2. **提出を阻害しない項目（Non-blocking）**:
-   - **`OPTIONAL` 項目**: 値が空欄（`OPTIONAL_EMPTY`）であっても `is_ready` を妨げない。
-   - **`NOT_APPLICABLE` 項目**: 今回の飛行条件に該当しない項目（例: 技能証明なし時の証明書番号、特定飛行なし時の許可書番号、「その他」以外選択時のその他理由等）は、空欄であってもエラーとせず、通報ペイロードからも除外される。
+   - **NOT_APPLICABLE 項目**: 今回の飛行条件に該当しない項目（例: 技能証明なし時の証明書番号、特定飛行なし時の許可書番号、「その他」以外選択時のその他理由等）は、空欄であってもエラーとせず、通報ペイロードからも除外される。
    - **マスター自動補完項目**: `MASTER` から有効な値が引き当てられている場合は `AUTO_FILLED` かつ `VALID` となり、ユーザーの追加入力なしで充足とみなす。
 
 ---
 
-## 9. 実画面確認待ち事項（WEB_UI_VERIFICATION_PENDING）
+### 9.6 DIPS通報要否判定サービス（DipsReportingRequirementEvaluator）
+`DipsFieldRequirementEngine` が「No.1〜88の各フィールドの入力必須性・適用性」を評価する責務を持つのに対し、**「今回の飛行計画全体が、航空法上そもそもDIPS通報を義務づけられているか（特定飛行か否か）」**の判定責務は、ドメインサービスとして明確に分離された `DipsReportingRequirementEvaluator` が担います。
+
+```typescript
+// 飛行計画通報の法令上の要否
+export type DipsReportingRequirement =
+  | 'REQUIRED'      // 特定飛行（航空法第132条の88により通報義務あり）
+  | 'NOT_REQUIRED'  // 非特定飛行（法令上の義務なし、通報は推奨扱い）
+  | 'UNDETERMINED'; // 空域・形態未確定のため判定不能
+
+export class DipsReportingRequirementEvaluator {
+  /**
+   * 航空法上の特定飛行該否に基づき、通報義務の有無を決定
+   */
+  public static evaluate(plan: FlightPlan): {
+    requirement: DipsReportingRequirement;
+    is_specific_flight: boolean;
+    reasons: string[];
+  } {
+    const reasons: string[] = [];
+    
+    // 1. 空域チェック (航空法第132条の85: 空港周辺、150m以上、DID人口集中地区)
+    const isAirport = plan.flight_airspace_codes.includes(3); // 空港周辺等
+    const isOver150m = plan.flight_airspace_codes.includes(2) || (plan.planned_altitude_agl_meters ?? 0) > 150;
+    const isDid = plan.flight_airspace_codes.includes(1);     // 人口集中地区
+    
+    if (isAirport) reasons.push('空港等の周辺空域');
+    if (isOver150m) reasons.push('地表・水面から150m以上の空域');
+    if (isDid) reasons.push('人口集中地区（DID）の上空');
+    
+    // 2. 飛行方法チェック (航空法第132条の86: 夜間、目視外、30m未満、催し、危険物、物件投下)
+    const isNight = plan.flight_type_codes.includes(3);       // 夜間飛行
+    const isBvlos = plan.flight_type_codes.includes(4);       // 目視外飛行
+    const isUnder30m = plan.flight_type_codes.includes(1);    // 人・物件30m未満
+    const isEvent = plan.flight_type_codes.includes(2);       // 多数の者が集まる催し上空
+    const isHazardous = plan.flight_type_codes.includes(5);   // 危険物輸送
+    const isDrop = plan.flight_type_codes.includes(6);        // 物件投下
+    
+    if (isNight) reasons.push('夜間飛行');
+    if (isBvlos) reasons.push('目視外飛行');
+    if (isUnder30m) reasons.push('人又は物件から30m未満の飛行');
+    if (isEvent) reasons.push('多数の者の集合する催しの上空');
+    if (isHazardous) reasons.push('危険物の輸送');
+    if (isDrop) reasons.push('物件投下');
+    
+    const is_specific_flight = reasons.length > 0;
+    
+    return {
+      requirement: is_specific_flight ? 'REQUIRED' : 'NOT_REQUIRED',
+      is_specific_flight,
+      reasons: is_specific_flight ? reasons : ['非特定飛行（DID外・昼間・目視内・30m距離確保等）']
+    };
+  }
+}
+```
+
+- **非特定飛行時の取り扱い**:
+  - `requirement === 'NOT_REQUIRED'` の場合、DIPS通報は法令上の義務ではなく**「推奨」**となります。
+  - したがって、DIPS通報が未完了（`NOT_SUBMITTED`, `SNAPSHOT_SAVED` 等）であっても、離陸判定（`TakeoffReadinessAssessment`）において Blocking や エラー扱いとせず、「非特定飛行（通報推奨）」の Informational 表示とします。
+- **システム障害例外の取り扱い**:
+  - 国交省公式通報要領第4条に基づき、通報システム障害により事前通報手段がない場合は飛行開始後の事後通報が可能です。操縦者が公認障害情報に基づき `SYSTEM_OUTAGE_EXCEPTION` を記録している場合、事前通報未完了でも Blocking ではなく「システム障害例外記録あり（着陸後速やかに通報）」として扱います。
+
+---
+
+## 10. 実画面確認待ち事項（WEB_UI_VERIFICATION_PENDING）
 
 国土交通省の公式ドキュメント上では定義されているものの、実運用においてDIPS 2.0 Webポータルの操作性・挙動と突き合わせ確認を要する項目を以下に明記します。推測で仕様を断定せず、オーナーによる実画面確認を経て確定します。
 
