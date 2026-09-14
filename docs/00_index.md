@@ -37,19 +37,32 @@
 | [guidelines/02_legal-and-operations-rules.md](guidelines/02_legal-and-operations-rules.md) | 法令・運用判断規約 | 法令8区分、柔軟運用の尊重、正式記録全体の評価、基準アプリの継承 | 入力欄設計時、帳票設計時、法令変更時 | **確定** | 法令判定、飛行日誌、日常点検、整備記録 |
 | [decisions/README.md](decisions/README.md) | ADR（意思決定記録）目次 | アーキテクチャ決定記録（ADR）の運用ルール、フォーマット、決定履歴 | 技術選定時、過去の決定理由の調査時 | **確定** | アーキテクチャ選定、技術スタック全般 |
 | [decisions/ADR-0001-architecture-selection.md](decisions/ADR-0001-architecture-selection.md) | ADR-0001: アーキテクチャ選定 | PWA ＋ Cloudflare Workers ＋ ローカルDB・スプレッドシートハイブリッド構成の選定理由 | 技術スタック検討時、決定根拠の確認時 | **検討中** | システム全体構成 |
-| [architecture/README.md](architecture/README.md) | アーキテクチャ検討目次 | Phase B1/B1.3（技術構成比較・最終整合性修正）の概要・目的・ドキュメント構成 | B1全体の把握時、B2着手前 | **確定** | アーキテクチャ設計 |
-| [architecture/00_b1-audit-and-corrections.md](architecture/00_b1-audit-and-corrections.md) | B1.3最終整合性修正・監査記録 | 原本性表現の中立化・飛行可能誤認防止・DIPS表示整理（Phase B1.3） | 技術選定の前提確認時、B2設計着手前 | **確定** | アーキテクチャ全体、監査 |
+| [architecture/README.md](architecture/README.md) | アーキテクチャ設計目次 | Phase B1（比較検討）および Phase B2（詳細設計）の概要・構成 | アーキテクチャ全体の把握時 | **確定** | アーキテクチャ設計 |
+| [architecture/00_b1-audit-and-corrections.md](architecture/00_b1-audit-and-corrections.md) | B1.3最終整合性修正・監査記録 | 原本性表現の中立化・飛行可能誤認防止・DIPS表示整理（Phase B1.3） | 技術選定の前提確認時 | **確定** | アーキテクチャ全体、監査 |
 | [architecture/01_frontend-runtime-comparison.md](architecture/01_frontend-runtime-comparison.md) | アプリ実行方式の比較 | PWA、Flutter、React Native/Expo、Capacitor、完全ネイティブ、GASの比較 | クライアント技術選定時 | **確定** | フロントエンド、UI実行環境 |
 | [architecture/02_backend-and-security-comparison.md](architecture/02_backend-and-security-comparison.md) | バックエンド・セキュリティ比較 | Cloudflare Workers、Firebase、Supabase、GAS等の比較、DIPS秘密情報保護 | サーバー選定時、DIPSプロキシ設計時 | **確定** | バックエンド、APIプロキシ、セキュリティ |
 | [architecture/03_data-storage-and-sync-comparison.md](architecture/03_data-storage-and-sync-comparison.md) | データ保存方式・同期比較 | スプレッドシート正本、ローカルDB正本、クラウドDB、ハイブリッド連携の比較 | データモデリング時、同期方式検討時 | **確定** | データ永続化、オフライン、スプレッドシート |
 | [architecture/04_cost-and-operations-analysis.md](architecture/04_cost-and-operations-analysis.md) | 費用・個人運用負荷分析 | 初期・月額・年額費用（0円運用）、Apple Developer費用回避、地図API費用 | コスト見積もり時、運用設計時 | **確定** | 運用コスト、インフラ維持 |
-| [architecture/05_recommended-architecture.md](architecture/05_recommended-architecture.md) | 推奨構成と総合評価 | 最有力推奨構成（PWA+Workers+Hybrid）、第2候補、不採用理由、B2課題 | アーキテクチャ確定時、B2設計着手時 | **確定** | アーキテクチャ全体 |
+| [architecture/05_recommended-architecture.md](architecture/05_recommended-architecture.md) | 推奨構成と総合評価 | 条件付き第一候補（PWA+Workers+Hybrid）、第2候補、不採用理由 | アーキテクチャ確定時 | **確定** | アーキテクチャ全体 |
+| [architecture/10_system-boundaries.md](architecture/10_system-boundaries.md) | システム境界・モジュール責務 | 4大コンポーネントの厳格な責務境界、将来Capacitor拡張ポート設計 | Phase C実装時、境界確認時 | **確定** | システムアーキテクチャ |
+| [architecture/11_data-authority.md](architecture/11_data-authority.md) | データ正本・権威・ライフサイクル | モデルD（ハイブリッド）採用、手修正絶対尊重、競合防止プロトコル | データフロー設計時、同期実装時 | **確定** | データ権威、同期、台帳 |
+| [architecture/12_domain-model.md](architecture/12_domain-model.md) | 概念データモデル・型定義・ID戦略 | 主要エンティティ詳細仕様、UUID v4戦略、二重保存防止の冪等性 | スキーマ実装時、エンティティ設計時 | **確定** | ドメインモデル、DB設計 |
+| [architecture/13_state-machines.md](architecture/13_state-machines.md) | 運航状態・DIPS通報状態マシン | 2つの独立状態マシン設計、8回以上フライト対応、飛行可能誤認防止UI | 状態管理実装時、UIフロー設計時 | **確定** | 運航制御、DIPS連携 |
+| [architecture/14_offline-and-sync.md](architecture/14_offline-and-sync.md) | オフライン・同期・ストレージ保護 | オフライン可否マトリクス、WebKit Persistent多層防御、SyncQueue | オフライン実装時、キュー設計時 | **確定** | オフライン、ストレージ保護 |
+| [architecture/15_dips-adapter.md](architecture/15_dips-adapter.md) | DIPS 2.0 Adapter境界設計 | DRS/FPA/FPR論理分離、未確認事項吸収、MockDipsAdapter | DIPS連携実装時、テスト時 | **確定** | DIPS連携、外部API |
+| [architecture/16_security.md](architecture/16_security.md) | セキュリティ・秘密情報・トークン | client_secretエッジ秘匿、トークンライフサイクル、マスキング | セキュリティレビュー時、認証実装時 | **確定** | セキュリティ、認証 |
+| [architecture/17_map-and-airspace.md](architecture/17_map-and-airspace.md) | 地図・FlightArea・空域データ | 地図5層レイヤー、円・ポリゴンモデル、オープンデータソース選定 | 地図機能実装時、空域判定時 | **確定** | 地図、空域規制 |
+| [architecture/18_reports.md](architecture/18_reports.md) | 帳票生成・法令UI分離 | 国交省様式1・2・3出力、3層生成パイプライン、法令8区分入力極小化 | 帳票実装時、PDF生成時 | **確定** | 帳票出力、法令遵守 |
+| [architecture/19_failure-recovery.md](architecture/19_failure-recovery.md) | エラー分類・フェイルセーフ・復旧 | 10大エラー分類、現場障害耐性、JSONバックアップ復旧 | エラー処理実装時、耐障害設計時 | **確定** | 障害復旧、耐障害性 |
+| [architecture/20_source-structure.md](architecture/20_source-structure.md) | ソースコード構造・依存ルール | モジュールツリー、オニオン単方向依存ルール、禁止依存関係 | Phase C開始時、リファクタリング時 | **確定** | プロジェクト構造、モジュール |
+| [architecture/21_testing-strategy.md](21_testing-strategy.md) | テスト戦略・検証境界 | テストピラミッド、Vitest単体/統合テスト、iPhone/Pixel実機検証 | テストコード作成時、CI構築時 | **確定** | テスト、品質保証 |
+| [architecture/22_migration-plan.md](architecture/22_migration-plan.md) | 現行システム移行・並行運用 | 現行GAS非破壊並行記録（Shadow Run）、データ継承、ロールバック | 移行テスト時、本番切替時 | **確定** | 移行計画、運用切替 |
+| [architecture/23_implementation-roadmap.md](architecture/23_implementation-roadmap.md) | Phase C 実装ロードマップ | C0〜C9インクリメンタル実装手順、各フェーズの完了条件 | Phase C推進時、進捗管理時 | **確定** | 実装計画、マイルストーン |
+| [decisions/README.md](decisions/README.md) | ADR（意思決定記録）目次 | アーキテクチャ決定記録の運用ルールおよび ADR-0000〜0005 一覧 | 技術的意思決定の確認時 | **確定** | アーキテクチャ選定全般 |
 
 ---
 
-## 3. 将来の設計書（Phase B以降）配置計画
-
-Phase B（アーキテクチャ設計）以降で順次作成される設計書群は、1つの巨大ファイルにまとめず、以下の階層構造で独立管理します。各フォルダ内には必ずローカル目次（`README.md` または `00_index.md`）を配置します。
+## 3. 正本ドキュメント・ディレクトリ配置
 
 ```text
 docs/
@@ -64,17 +77,12 @@ docs/
 │   └── 02_legal-and-operations-rules.md
 ├── decisions/                         # ADR（アーキテクチャ決定記録）
 │   ├── README.md
-│   └── ADR-0001-xxx.md
-└── architecture/                      # Phase B以降で作成する詳細設計書群
+│   ├── ADR-0000-xxx.md 〜 ADR-0005-xxx.md
+└── architecture/                      # Phase B 設計書群
     ├── README.md                      # アーキテクチャ全体目次
-    ├── 01_system-overview.md          # システム全体構成（フロント/バックエンド）
-    ├── 02_dips-adapter.md             # DIPS API連携仕様・通信設計
-    ├── 03_map-flight-plan.md          # 地図・空域ポリゴン・計画作成仕様
-    ├── 04_flight-log-state.md         # 現場状態遷移・飛行日誌・点検仕様
-    ├── 05_battery-aircraft-data.md    # バッテリー個体管理・機体台帳データ仕様
-    ├── 06_offline-sync.md             # オフライン永続化・同期キュー設計
-    ├── 07_export-import.md            # 国交省様式PDF/Excel/CSV出力設計
-    └── 08_security-auth.md            # 認証・トークン管理・秘密情報保護設計
+    ├── 00_b1-audit-and-corrections.md # B1再監査・最終事実訂正
+    ├── 01_frontend-runtime-comparison.md 〜 05_recommended-architecture.md
+    └── 10_system-boundaries.md 〜 23_implementation-roadmap.md (Phase B2詳細設計)
 ```
 
 ---
