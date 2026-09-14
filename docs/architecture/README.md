@@ -24,13 +24,14 @@
 | [04_cost-and-operations-analysis.md](04_cost-and-operations-analysis.md) | 個人利用における費用比較（月額/年額、ストア費用、地図費用、運用リスク） |
 | [05_recommended-architecture.md](05_recommended-architecture.md) | 総合評価・推奨アーキテクチャ（条件付き第一候補）、第2候補、不採用理由 |
 
-### Phase B2: 詳細アーキテクチャ・実装前設計書
+### Phase B2 / B2.1: 詳細アーキテクチャ・監査・実装前設計書
 | ドキュメント | 主な内容 |
 |---|---|
+| [09_b2-audit-and-corrections.md](09_b2-audit-and-corrections.md) | **Phase B2.1 実装前アーキテクチャ監査・最終訂正記録**（法令条文・BFF・DIPS照合・モデル改善） |
 | [10_system-boundaries.md](10_system-boundaries.md) | システム境界・4大コンポーネント責務分離・Capacitor拡張ポート |
-| [11_data-authority.md](11_data-authority.md) | 正本・データ権威モデル（モデルD採用）・ライフサイクル・手動修正絶対尊重 |
+| [11_data-authority.md](11_data-authority.md) | 正本・データ権威モデル（モデルD推奨）・ライフサイクル・手動修正尊重 |
 | [12_domain-model.md](12_domain-model.md) | 概念データモデル・主要エンティティ型定義・ID戦略（UUID v4）・冪等性 |
-| [13_state-machines.md](13_state-machines.md) | 運航状態マシン ＆ DIPS通報状態マシンの完全分離と安全確認UI設計 |
+| [13_state-machines.md](13_state-machines.md) | 運航状態マシン ＆ DIPS通報状態マシンの分離と安全確認UI設計 |
 | [14_offline-and-sync.md](14_offline-and-sync.md) | オフラインマトリクス・WebKit Persistent Storage多層防御・同期キュー |
 | [15_dips-adapter.md](15_dips-adapter.md) | DIPS 2.0 Adapter境界（DRS/FPA/FPR分離・未確認事項吸収・Mock設計） |
 | [16_security.md](16_security.md) | セキュリティ・client_secretエッジ秘匿・トークン管理・マスキング |

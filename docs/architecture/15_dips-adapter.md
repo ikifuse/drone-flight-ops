@@ -52,16 +52,17 @@ DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤シス
 - **主要メソッド**: `fetchRegisteredAircraftList()`, `verifyRegistrationMark(mark)`
 
 ### 2.2 FPA Adapter（飛行許可・承認系: `drs-req`）
-- **対象業務**: 航空法第132条の85に基づく包括許可・承認情報、許可番号、期間、付加条件の照合。
+- **対象業務**: 航空法に基づく特定飛行の飛行許可・承認情報（国空航第...）、許可番号、期間、付加条件の照合。
 - **認可エンドポイント**: `/auth/realms/drs-req/protocol/openid-connect/auth`
 - **トークンエンドポイント**: `/auth/realms/drs-req/protocol/openid-connect/token`
 - **主要メソッド**: `fetchApprovedPermissions()`, `verifyPermissionNumber(num)`
 
 ### 2.3 FPR Adapter（飛行計画通報系: `drs-fpl`）
-- **対象業務**: 飛行計画の作成・通報、通報状況照会、通報取消、周辺他機飛行計画の照会。
+- **対象業務**: 飛行計画の作成・通報、通報状況照会、通報取消、周辺他機飛行計画の照会、送信結果不明時の計画照合（Reconciliation）。
 - **認可エンドポイント**: `/auth/realms/drs-fpl/protocol/openid-connect/auth`
 - **トークンエンドポイント**: `/auth/realms/drs-fpl/protocol/openid-connect/token`
-- **主要メソッド**: `submitFlightPlan(planPayload)`, `queryPlanStatus(planId)`, `cancelFlightPlan(planId)`
+- **主要メソッド**: `submitFlightPlan(planPayload)`, `queryPlanStatus(planId)`, `reconcileFlightPlan(criteria)`, `cancelFlightPlan(planId)`
+- **冪等性・二重通報防止**: 国交省FPR APIは利用者独自の `Idempotency-Key` ヘッダを解釈しないため、POST切断時の自動再送は行わず、`reconcileFlightPlan()` による既存計画検索で重複登録を防止します。
 
 ---
 
@@ -72,9 +73,10 @@ DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤シス
 | 項目 | 現状の事実・未確認 | DIPS Adapterでの吸収設計 |
 |---|---|---|
 | **認証プロトコル** | **【確認済】** OIDC / 認可コードフロー | Workers側で標準的なAuthorization Code/Token交換ロジックを実装。 |
-| **`client_secret` 必須性** | **【確認済】** トークン要求に必要 | クライアントへ露出させず、WorkersのSecret Managerで安全に保管。 |
+| **`client_secret` 必須性** | **【確認済】** トークン要求に必要 | クライアントへ露出させず、Cloudflare Workers Secretsで安全に保管。 |
+| **重複防止ヘッダ** | **【確認済】** 独自Idempotency-Keyは未提供 | 結果不明時はPOST再送を行わず、検索APIによる照合（Reconciliation）を必須化。 |
 | **credentialの発行単位** | **【未確認】** 3系統共通か個別か | 設定ファイル（Config）で `shared_credentials: true/false` を切り替え可能な構造とし、個別キーでも共通キーでもコード変更なしで対応。 |
-| **利用申請主体（資格）** | **【確認済】** 現行案内は法人・団体対象<br>**【未確認】** 個人の申請条件 | クライアント側には `MockDipsAdapter` を用意。正式キー取得前でも全UI・計画作成・通報キューの動作検証を完全実施可能にする。 |
+| **利用申請主体（資格）** | **【確認済】** 現行案内は法人・団体対象<br>**【未確認】** 個人の申請条件 | クライアント側には `MockDipsAdapter` を用意。正式キー取得前でも全UI・計画作成・通報キューの動作検証を実施可能にする。 |
 | **複数realmのSSO挙動** | **【未確認】** 1回ログインで全realm有効か | TokenManagerにおいて各realm（`drs-utm`, `drs-req`, `drs-fpl`）ごとに独立したTokenストアを保持し、個別トークンが必要な場合も自動ハンドリング。 |
 
 ---
@@ -94,8 +96,9 @@ export interface IDipsService {
   // FPA: 許可承認
   getApprovedPermissions(): Promise<DipsPermissionDTO[]>;
 
-  // FPR: 飛行計画通報
+  // FPR: 飛行計画通報・照合
   submitFlightPlan(plan: InternalFlightPlan): Promise<DipsSubmissionResult>;
+  reconcileFlightPlan(criteria: DipsPlanSearchCriteria): Promise<DipsReconciliationResult>;
   cancelFlightPlan(dipsPlanId: string): Promise<boolean>;
   getSurroundingPlans(area: FlightAreaDTO, timeRange: TimeRangeDTO): Promise<DipsPlanDTO[]>;
 }

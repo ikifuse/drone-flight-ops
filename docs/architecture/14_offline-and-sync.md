@@ -74,10 +74,12 @@ iOS Safariでは端末のストレージ容量が逼迫した際にIndexedDBがO
 interface SyncJob {
   job_id: string;             // UUID v4
   target: 'spreadsheet' | 'dips_fpr' | 'backup_drive';
-  entity_type: string;        // 'mission' | 'flight_plan'
-  entity_id: string;          // 対象のID
-  idempotency_key: string;    // 二重実行防止ハッシュ
-  status: 'pending' | 'running' | 'retry_wait' | 'succeeded' | 'failed_manual_action';
+  entity_type: string;        // 'mission' | 'flight_plan' | 'flight'
+  entity_id: string;          // 対象のエンティティID
+  operation_id: string;       // 操作ごとに一度だけ発行される不変UUID (再送時も不変)
+  sync_revision: number;      // エンティティの同期間リビジョン番号
+  idempotency_key: string;    // operation_id または SHA256(entity_type + ":" + entity_id + ":" + sync_revision)
+  status: 'pending' | 'running' | 'retry_wait' | 'submission_uncertain' | 'reconciliation_required' | 'succeeded' | 'failed_manual_action';
   payload: Record<string, any>; // 送信データスナップショット
   retry_count: number;
   max_retries: number;
@@ -88,10 +90,35 @@ interface SyncJob {
 }
 ```
 
-### 3.2 リトライ戦略と指数バックオフ
-- **ネットワークエラー / 5xxエラー**: 指数バックオフ（1秒 → 5秒 → 15秒 → 60秒 → 最大300秒）で自動再試行。
-- **4xxエラー（バリデーション・認証不備）**: 自動再試行を停止し、`failed_manual_action` 状態へ遷移。パイロットへ入力修正または再認証を促す。
-- **オンライン復帰トリガー**: `window.addEventListener('online')` を検知した瞬間に、`pending` および `retry_wait` のジョブを即座に再起動。
+### 3.2 送信先別の冪等性・重複防止戦略（Spreadsheet vs DIPS の分離）
+
+外部送信先によって利用可能な重複防止機構が根本的に異なるため、単一の方式で一元化せず、送信先ごとに最適化した戦略を採用します。
+
+1. **Google Spreadsheet 向け（UPSERT Strategy）**:
+   - **前提**: アプリ側でスプレッドシートの列定義を自由に設計可能。
+   - **方式**: 各レコード行に `operation_id` および `mission_id` / `record_id` カラムを書き込む。
+   - **重複防止**: GAS / Sheets API側で `operation_id` の重複を検査し、同一IDが存在する場合は更新（UPDATE）、存在しない場合のみ新規行追記（INSERT）を行うUPSERT方式を適用。
+   - **耐障害性**: ネットワーク切断による同一ジョブの再送が発生しても、同一行が二重挿入される事故を確実に防止。
+
+2. **国交省DIPS 2.0 向け（Reconciliation Strategy）**:
+   - **前提**: 国交省FPR APIは利用者独自の `Idempotency-Key` HTTPヘッダによる重複検知をサポートしていない。
+   - **方式**: 送信中タイムアウトや通信切断で結果が不明となった場合、**安易なPOST再送を固く禁止**し、ジョブを `submission_uncertain` 状態に設定。
+   - **照合（Reconciliation）**:
+     1. DIPS飛行計画検索API（計画名称、日時範囲、機体登録記号、エリア座標）を実行。
+     2. 同一計画が既にDIPS側に登録されているか自動検索。
+     3. 登録確認が取れた場合は、その計画IDおよび受付番号を回収して `succeeded` へ遷移。
+     4. 明確に未登録であることが確認できた場合のみ、安全に再POSTを実行。
+     5. 照合不能または検索APIエラー時は `reconciliation_required` へ移行し、パイロットにDIPS Web画面での目視確認を要請。
+
+### 3.3 リトライ戦略とネットワーク復帰判定
+
+- **`online` イベントの位置づけ**:
+  - `window.addEventListener('online')` はOSの通信アダプタがアクティブになった「再試行のきっかけ（トリガー候補）」に過ぎない。
+  - **「onlineイベント検知 ＝ DIPSまたはGoogleへ到達可能」と誤認してはならない**。
+  - 実際の成否は、対象エンドポイントへのHTTPリクエスト（または軽量ヘルスチェック）の実際のレスポンスをもって初めて判断する。
+- **リトライ制御**:
+  - ネットワーク到達不能 / タイムアウト / 5xxエラー: 指数バックオフ（1秒 → 5秒 → 15秒 → 60秒 → 最大300秒）で段階的に再試行。
+  - 4xxエラー（バリデーション・認証不備）: 自動再試行を停止し、`failed_manual_action` 状態へ遷移。パイロットへ入力修正または再認証を促す。
 
 ---
 
