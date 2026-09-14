@@ -1,7 +1,7 @@
 # ADR-0002: ライフサイクル連動型ハイブリッド正本モデルと手動修正尊重の採用
 
 - **作成日**: 2026-09-14
-- **ステータス**: **提案中（オーナーレビュー待ち）**
+- **ステータス**: **承認済み（Accepted / オーナー承認 2026-09-14・Phase B設計凍結）**
 - **決定者**: オーナー（システム設計者）、AIアシスタント（技術検討パートナー）
 - **関連ドキュメント**: [docs/architecture/11_data-authority.md](../architecture/11_data-authority.md), [docs/architecture/14_offline-and-sync.md](../architecture/14_offline-and-sync.md)
 

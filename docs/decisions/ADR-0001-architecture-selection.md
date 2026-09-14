@@ -1,7 +1,7 @@
 # ADR-0001: 総合運航管理システムのアーキテクチャ選定（PWA + Cloudflare Workers + Hybrid Storage）
 
 - **作成日**: 2026-09-14（B1.1再監査・訂正版）
-- **ステータス**: **提案中（オーナーレビュー待ち）**
+- **ステータス**: **承認済み（Accepted / オーナー承認 2026-09-14・Phase B設計凍結）**
 - **決定者**: オーナー（システム設計者）、AIアシスタント（技術検討パートナー）
 - **関連要件**: [docs/00_goal.md](../00_goal.md), [docs/03_integrated-requirements.md](../03_integrated-requirements.md), [docs/architecture/05_recommended-architecture.md](../architecture/05_recommended-architecture.md), [docs/architecture/00_b1-audit-and-corrections.md](../architecture/00_b1-audit-and-corrections.md)
 

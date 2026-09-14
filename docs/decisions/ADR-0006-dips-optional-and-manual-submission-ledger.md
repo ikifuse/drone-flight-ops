@@ -1,7 +1,7 @@
 # ADR-0006: DIPS API非依存・手動通報フォールバック・飛行計画台帳の独立保持
 
 - **作成日**: 2026-09-14
-- **ステータス**: **提案中（オーナーレビュー待ち）**
+- **ステータス**: **承認済み（Accepted / オーナー承認 2026-09-14・Phase B設計凍結）**
 - **決定者**: オーナー（システム設計者）、AIアシスタント（技術検討パートナー）
 - **関連ドキュメント**: [docs/architecture/24_b2.2-dips-manual-fallback-and-ledger.md](../architecture/24_b2.2-dips-manual-fallback-and-ledger.md), [docs/architecture/11_data-authority.md](../architecture/11_data-authority.md), [docs/architecture/12_domain-model.md](../architecture/12_domain-model.md), [docs/architecture/13_state-machines.md](../architecture/13_state-machines.md), [docs/architecture/15_dips-adapter.md](../architecture/15_dips-adapter.md), [docs/architecture/23_implementation-roadmap.md](../architecture/23_implementation-roadmap.md)
 

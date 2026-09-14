@@ -1,7 +1,7 @@
 # ADR-0004: DIPS 2.0 Adapter分離とバックエンド中継境界の採用
 
 - **作成日**: 2026-09-14
-- **ステータス**: **提案中（オーナーレビュー待ち）**
+- **ステータス**: **承認済み（Accepted / オーナー承認 2026-09-14・Phase B設計凍結）**
 - **決定者**: オーナー（システム設計者）、AIアシスタント（技術検討パートナー）
 - **関連ドキュメント**: [docs/architecture/15_dips-adapter.md](../architecture/15_dips-adapter.md), [docs/architecture/16_security.md](../architecture/16_security.md)
 
