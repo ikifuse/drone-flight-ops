@@ -218,7 +218,7 @@ export interface FlightAreaGeometry {
 `FlightAreaGeometry` を中立モデルとして保持することにより、将来的に以下の形式への変換（Exporter）を既存ドメインを破壊することなく安全に追加可能な構造とします（※現フェーズでは仕様を凍結せず、将来拡張ポートとして確保）：
 - **`DipsApiPayloadAdapter`**: API 1.9仕様に適合する `flyRoute` JSON（Polygon / Circle）への変換。
 - **`GeoJsonExporter`**: GISツールやQGIS、Web地図表示用の標準GeoJSON Feature変換。
-- **`KmlExporter`**: Google Earth等での3D飛行範囲確認用KML変換（将来検討）。
+- **`KmlExporter`**: Google My Maps や Google Earth での視覚的確認・共有用 KML 変換（詳細は [27_output-kml-drive-and-mymaps.md](27_output-kml-drive-and-mymaps.md) にて設計確定）。
 - **`GpxExporter`**: ハンディGPSやフライトコントローラー連携用GPX変換（将来検討）。
 - **`CsvExporter`**: 頂点座標一覧のCSV出力（将来検討）。
 

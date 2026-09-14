@@ -85,14 +85,18 @@ C0: 基盤・PWA Shell 構築
 - **実装範囲**: Workers OIDCトークン交換プロキシ、`ApiDipsAdapter`、FPR飛行計画通報API接続、照合（Reconciliation）自動検索。
 - **完了条件**: DIPSテスト環境または本番環境との間でトークン取得・計画通報・計画ID自動回収が成立すること。
 
-### Phase C8: 統合A4運航帳票 & 国交省様式 PDF/CSV 出力
-- **目的**: 実務用「A4縦 統合運航帳票」（飛行記録＋日常点検＋点検整備サマリー）および法定飛行日誌（様式1・2・3別）、DIPS飛行計画台帳の出力機能確立。
+### Phase C8: 統合A4運航帳票・国交省様式 PDF/CSV 出力 & KML Geo Export
+- **目的**: 実務用「A4縦 統合運航帳票」（飛行記録＋日常点検＋点検整備サマリー）、法定飛行日誌（様式1・2・3別）、DIPS飛行計画台帳の出力、および Google My Maps 連携用 KML エクスポート・Google Drive 自動保存機能の確立。
 - **実装範囲**:
   - `pdf-lib` による「A4縦 統合運航帳票」レンダラー（1機体×1場所×1運航区間単位、BAT交換継続、機体/場所交代での新規帳票分割、自動改ページ続紙対応、5/6フライト固定撤廃）。
   - 国交省標準様式1（飛行記録）、様式2（日常点検記録）、様式3（点検整備記録）の個別PDF/CSV出力。
   - DIPS飛行計画台帳のエクスポート機能。
+  - **KML Geo Export & Google Drive自動保存（詳細は [27_output-kml-drive-and-mymaps.md](27_output-kml-drive-and-mymaps.md) 参照）**:
+    - `KmlExporter`: `FlightAreaGeometry`（Polygon, 近似Circle, Buffered Line）および計画属性・運航実績を「1 FlightPlan = 1 KML」形式で生成。
+    - `GoogleDriveAdapter`: 設定された保存先フォルダへKMLを自動保存（計画確定時・運航完了時更新）。オフライン時は `SyncQueue` 経由で電波復帰時に非同期アップロード。
+    - プライバシー保護プロファイル（`SHARE_SAFE` 既定による個人連絡先除外）。
   - 帳票発行時点の不変スナップショット保存（`ReportSnapshot`）。
-- **完了条件**: オフライン環境でもブラウザ内で必要項目を満たしたPDFが生成・保存できること。DIPS通報履歴が監査用に出力できること。
+- **完了条件**: オフライン環境でもブラウザ内で必要項目を満たしたPDFが生成・保存でき、KMLがGoogle Driveへ自動保存（または圏外時キューイング）されGoogle My Mapsへの手動インポートにより視覚的確認ができること。DIPS通報履歴が監査用に出力できること。
 
 ### Phase C9: オフライン強化 & iPhone/Android実機総合検証・本番切替判定
 - **目的**: 現場本番運用に向けた実機総合検証と多面的信頼性確認、および本番切替判定。

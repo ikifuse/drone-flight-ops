@@ -94,7 +94,12 @@ APIの利用可否に関係なく、新アプリ自身がスタンドアロン�
   - `Load Preset`: 登録済みプリセットを即座に呼び出し。
   - `Copy Preset to FlightPlan`: プリセットを今回の飛行計画へコピーし、必要に応じて微調整（Override）。
 - **将来Exporter/Adapter準備**:
-  - `FlightAreaGeometry` から DIPS API payload（Circle/Polygon）、GeoJSON、KML、GPX、CSV 等へ変換可能な構造を確保。※現時点では出力仕様は確定させず、Domainを中立に保つ。
+  - `FlightAreaGeometry` から DIPS API payload（Circle/Polygon）、GeoJSON、KML、GPX、CSV 等へ変換可能な構造を確保。
+  - **KML変換仕様（詳細は [27_output-kml-drive-and-mymaps.md](27_output-kml-drive-and-mymaps.md) 参照）**:
+    - `POLYGON`: そのままKML Polygonへ変換。
+    - `CIRCLE`: 中心点＋半径から測地線計算により近似Polygon（円周点群）を生成して出力。
+    - `BUFFERED_LINE`: 中心LineStringおよび帯状Polygonとして出力。
+  - ※KML自体は派生Geo Exportであり、Domain幾何データ正本とは分離する。
 
 ---
 

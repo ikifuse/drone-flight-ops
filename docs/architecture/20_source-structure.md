@@ -38,9 +38,9 @@ src/
 ├── infrastructure/             # 外部システム接続・ブラウザAPI実装
 │   ├── storage/                # Dexie.js (IndexedDB) 実装、マイグレーション
 │   ├── dips/                   # DIPS Adapter (DRS, FPA, FPR, Mock)
-│   ├── spreadsheet/            # Google Sheets API / GAS連携アダプター
-│   ├── map/                    # MapLibre GL JS ラッパー・タイルキャッシュ
-│   ├── export/                 # pdf-lib, CSV, Excel 生成エンジン
+│   ├── spreadsheet/            # Google Sheets API / Drive / GAS連携アダプター
+│   ├── map/                    # 地図レンダリングラッパー・タイルキャッシュ
+│   ├── export/                 # pdf-lib, CSV, Excel, KML 生成エンジン
 │   └── device/                 # Geolocation, Storage API (persist)
 │
 ├── presentation/               # UIコンポーネント・画面（React/Vanilla）

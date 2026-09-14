@@ -494,7 +494,7 @@
 | **Master** | 実在する管理対象・運用資産。他エンティティから参照される親データ。 | `Organization`, `Client`, `Project`, `AircraftModel`, `Aircraft`, `BatteryModel`, `BatteryCompatibility`, `Battery`, `Personnel`, `Location`, `Permission`, `InsurancePolicy`, `AppSetting` | **物理削除禁止**。`ACTIVE`, `INACTIVE`, `RETIRED`, `DISPOSED`, `EXPIRED` 等の論理状態で管理。過去履歴の参照を保護。 |
 | **Preset** | 現場入力の手間を省くための再利用可能な条件セット。 | `FlightAreaPreset`, `FlightPurposePreset`, `SafetyMeasurePreset`, `OperationTemplate` | **コピーソース原則**。新規計画へ値をコピー実体化。後日のプリセット変更は過去データへ影響しない。 |
 | **History** | 現場で実際に発生・確定した不可逆の運航・点検・通報・監査実績。 | `FlightPlan`, `DipsSubmission`, `Mission`, `Flight`, `AircraftSwitch`, `PreflightInspection`, `PostflightInspection`, `MaintenanceRecord`, `BatteryUsage`, `ReportSnapshot`, `AuditEvent` | **不変性重視**。生成後の値改変は禁止（ライフサイクルメタデータ更新のみ許容し、変更は `AuditEvent` 追跡）。 |
-| **Projection** | 複数のエンティティから画面表示や帳票レンダリングのために導出される参照ビュー。 | `DipsNotification`, `ReportUnit` / `FlightLogReportViewModel` | **一時的・導出モデル**。正本を持たず、元データから動的に計算・構築。 |
+| **Projection** | 複数のエンティティから画面表示、帳票レンダリング、地図エクスポートのために導出される参照ビュー。 | `DipsNotification`, `ReportUnit` / `FlightLogReportViewModel`, `KmlExportModel` | **一時的・導出モデル**。正本を持たず、元データから動的に計算・構築（KMLやPDF用に専用入力画面を作らず、Domain単一入力から生成）。 |
 
 ### 3.1 共通監査メタデータ方針
 すべてのMasterおよびHistoryエンティティは、以下の標準メタデータ属性を保持可能な構造とします：
