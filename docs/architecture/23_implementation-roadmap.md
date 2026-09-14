@@ -40,7 +40,7 @@ C0: 基盤・PWA Shell 構築
     - **機材系**: `AircraftModel`, `Aircraft`, `BatteryModel`, `BatteryCompatibility`, `Battery`
     - **人員・組織系**: `Organization`, `Personnel`（Role配列管理、UserAccount分離設計準拠）, `Client`, `Project`
     - **現場・プリセット系**: `Location`, `FlightAreaPreset`, `FlightPurposePreset`, `SafetyMeasurePreset`, `OperationTemplate`（Copy Source原則、`default_aircraft_id` nullable）
-    - **法務・計画系**: `Permission`（包括許可）, `FlightPlan`, `DipsSubmission`
+    - **法務・計画・保険系**: `Permission`（包括許可）, `InsurancePolicy`（ドローン賠償責任保険台帳）, `FlightPlan`（複数機体・複数操縦者・総重量・航続時間・GeoJSONスナップショット対応）, `DipsSubmission`（`dips_contract_version`, `payload_snapshot` exact outbound JSON保持）
     - **運航・記録系**: `Mission`, `Flight`, `DailyInspection`, `MaintenanceRecord`, `BatteryUsage`（非飛行イベント専用）
     - **監査・帳票系**: `AuditEvent`, `ReportSnapshot`
   - 共通監査メタデータ（`created_at`, `updated_at`, `created_by`, `updated_by`, `version`）の基盤組み込み

@@ -60,6 +60,7 @@
 | [architecture/22_migration-plan.md](architecture/22_migration-plan.md) | 現行システム移行・並行運用 | 現行GAS非破壊並行記録（Shadow Run）、データ継承、ロールバック | 移行テスト時、本番切替時 | **確定** | 移行計画、運用切替 |
 | [architecture/23_implementation-roadmap.md](architecture/23_implementation-roadmap.md) | Phase C 実装ロードマップ | C0〜C9インクリメンタル実装手順、API非依存ルート、本番切替12大総合判定基準 | Phase C推進時、進捗管理時 | **確定** | 実装計画、マイルストーン |
 | [architecture/24_b2.2-dips-manual-fallback-and-ledger.md](architecture/24_b2.2-dips-manual-fallback-and-ledger.md) | **DIPS API非依存・手動フォールバック・台帳設計** | 手動通報第一級対応、DIPS飛行計画台帳仕様、不変スナップショット、誤認防止5大ルール | DIPS連携設計時、台帳設計時 | **確定** | DIPS連携、外部台帳、手動支援 |
+| [architecture/25_dips-flight-plan-field-mapping.md](architecture/25_dips-flight-plan-field-mapping.md) | **DIPS飛行計画通報フィールドマッピング・入力再利用・Geometry詳細設計** | API 1.9 No.1〜88全件マッピング、新設InsurancePolicy、Geometry Web/API差異、手動入力支援 | 通報機能実装時、スキーマ設計時 | **確定** | dips, flight-plan, schema |
 | [decisions/ADR-0006-dips-optional-and-manual-submission-ledger.md](decisions/ADR-0006-dips-optional-and-manual-submission-ledger.md) | ADR-0006: DIPS API非依存・手動通報・台帳独立保持 | API非依存完結、手動入力支援第一級サポート、提出不変スナップショットと台帳先行保存 | DIPS戦略検討時、意思決定確認時 | **確定** | DIPS連携、データ権威、ロードマップ |
 | [decisions/ADR-0007-normalized-masters-and-business-reporting.md](decisions/ADR-0007-normalized-masters-and-business-reporting.md) | ADR-0007: 正規化マスター体系・共用機材・業務拡張・統合帳票 | 機種/機体分離、バッテリー共用、人員一元化、場所/空域分離、A4統合帳票(3領域) | データ設計時、帳票設計時、業務拡張時 | **確定** | ドメインモデル、帳票、台帳同期 |
 | [decisions/README.md](decisions/README.md) | ADR（意思決定記録）目次 | アーキテクチャ決定記録の運用ルールおよび ADR-0000〜0007 一覧 | 技術的意思決定の確認時 | **確定** | アーキテクチャ選定全般 |
@@ -87,7 +88,7 @@ docs/
     ├── README.md                      # アーキテクチャ全体目次
     ├── 00_b1-audit-and-corrections.md # B1再監査・最終事実訂正
     ├── 01_frontend-runtime-comparison.md 〜 05_recommended-architecture.md
-    └── 10_system-boundaries.md 〜 24_b2.2-dips-manual-fallback-and-ledger.md (Phase B2/B2.1/B2.2詳細設計)
+    └── 10_system-boundaries.md 〜 25_dips-flight-plan-field-mapping.md (Phase B2詳細設計・DIPS詳細マッピング)
 ```
 
 ---
