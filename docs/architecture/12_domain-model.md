@@ -369,7 +369,9 @@
   - `accident_action_confirmed`: 事故対応確認フラグ（true固定）
   - `emergency_contact_target`: 優先緊急連絡先区分（`pilot` / `reporter` / `permit`）
   - `remarks`: 計画書特記事項
-  - `plan_status`: 状態（`draft`, `locked_for_submission`, `active`, `completed`, `cancelled`）
+  - `plan_status`: 計画状態（`draft` [入力途中常時保存可], `submission_ready` [必須・適用条件充足], `locked_for_submission` [提出スナップショット生成済], `active` [運航中], `completed` [運航完了], `cancelled` [中止]）
+  - `readiness_cache`: 直近の `DipsSubmissionReadiness` 評価結果キャッシュ（オプショナル）
+  - **値の上書き追跡（Effective/Override）**: 各項目について `source_master_value`（マスター/プリセット元値）と `override_value`（今回計画の上書き値）を区別し、通報・スナップショットには `effective_value`（上書き優先確定値）を採用する。
 
 ### 2.16 DipsSubmission（DIPS提出試行・不変スナップショット台帳 - SSoT）
 - **ID**: `submission_id` (UUID v4)
@@ -429,36 +431,42 @@
 - **分類**: **History (Event)**
 - **主な属性**: `mission_id`, `from_aircraft_id`, `to_aircraft_id`, `switched_at`, `reason`。
 
-### 2.21 PreflightInspection & PostflightInspection（日常点検記録）
+### 2.21 DipsFieldRequirementEngine（通報必須性・適用性判定ドメインサービス）
+- **分類**: **Domain Service**
+- **役割**: `FlightPlan`, `Aircraft`, `Personnel`, `Permission`, `InsurancePolicy`, プリセットおよび運航条件を入力とし、指定DIPS契約バージョン（例: `"FPR-API-1.9"`）に基づいて、各通報項目の「要求度（Contract Requirement）」「適用性（Applicability）」「入力責任（Input Responsibility）」「有効確定値（Effective Value）」「検証合否（Validation Status）」を評価し、`DipsSubmissionReadiness`（計画全体の提出可否判定結果）を出力する。
+- **4段階状態の遷移判定**:
+  - `DRAFT`（入力途中常時保存可） → [Requirement Engine評価] → `SUBMISSION_READY`（提出可） → [スナップショット生成] → `SNAPSHOT_SAVED`（`DipsSubmission` 起票・ローカルDB保存）。
+
+### 2.22 PreflightInspection & PostflightInspection（日常点検記録）
 - **ID**: `inspection_id` (UUID v4)
 - **分類**: **History**
 - **主な属性**: `inspection_type` (`preflight` / `postflight`), `aircraft_id`, `inspector_id` (`Personnel` 参照), `items` (点検項目配列), `is_all_normal`, `defect_description`, `remedy_action`。
 
-### 2.22 MaintenanceRecord（点検整備台帳・国交省様式3）
+### 2.23 MaintenanceRecord（点検整備台帳・国交省様式3）
 - **ID**: `maintenance_id` (UUID v4)
 - **分類**: **History**
 - **役割**: 機体の生涯点検整備記録（定期点検20h/100h、修理、改造、部品交換、ファーム更新）。
 - **主な属性**: `aircraft_id`, `maintenance_type`, `performed_at`, `cumulative_flight_minutes_at_maintenance`, `description`, `parts_replaced`, `technician_name`。
 
-### 2.23 BatteryUsage（バッテリーライフサイクルイベント）
+### 2.24 BatteryUsage（バッテリーライフサイクルイベント）
 - **ID**: `usage_id` (UUID v4)
 - **分類**: **History**
 - **役割**: **飛行以外のバッテリーライフサイクルイベント専用エンティティ**（充電完了、深放電、保管管理、定期点検、セル電圧測定、廃棄処理等）。飛行実績と責務を重複させない。
 - **主な属性**: `battery_id`, `event_type` (`CHARGE`, `STORAGE_MAINTENANCE`, `CAPACITY_TEST`, `DEEP_DISCHARGE_WARNING`, `RETIRED_EVENT`), `event_time`, `measured_voltage_v`, `cell_voltages`, `notes`。
 
-### 2.24 ReportSnapshot（帳票発行不変スナップショット）
+### 2.25 ReportSnapshot（帳票発行不変スナップショット）
 - **ID**: `report_snapshot_id` (UUID v4)
 - **分類**: **History (Snapshot)**
 - **役割**: 統合運航帳票または国交省様式PDF/Excel出力時に生成される発行不変スナップショット。提出・監査用に「発行時点でどのような帳票が確定されたか」を恒久保管する。
 - **主な属性**: `report_type` (`INTEGRATED_OPERATION_REPORT`, `FORM_1_FLIGHT_LOG`, `FORM_2_DAILY_INSPECTION`, `FORM_3_MAINTENANCE`), `mission_id`, `aircraft_id`, `location_id`, `generated_at`, `page_count`, `checksum_sha256`, `pdf_blob_key`。
 
-### 2.25 AuditEvent（全般監査ログ・変更履歴）
+### 2.26 AuditEvent（全般監査ログ・変更履歴）
 - **ID**: `audit_id` (UUID v4)
 - **分類**: **History**
 - **役割**: DIPS提出だけでなく、機体・バッテリー・人員・許可・運航記録の作成・更新・同期・論理削除を記録。
 - **属性**: `timestamp`, `entity_type`, `entity_id`, `action` (`CREATE`, `UPDATE`, `LIFECYCLE_CHANGE`, `SYNC`), `actor_personnel_id`, `diff_summary`, `reason`。
 
-### 2.26 AppSetting（アプリ設定・警告閾値マスター）
+### 2.27 AppSetting（アプリ設定・警告閾値マスター）
 - **ID**: `setting_key` (string)
 - **分類**: Key-Value Master
 - 各種期限警告閾値（機体登録、技能証明、許可承認）、地図キャッシュ設定、連携スプレッドシートID等を保持。

@@ -78,7 +78,60 @@ DIPS APIでは、飛行目的（1〜16）、飛行空域（1: DID, 2: 150m以上
 
 ## 3. DIPS 2.0 API 1.9版（2.3.8）リクエストボディ No.1〜No.88 全件マッピング
 
-公式仕様書 `2.3.8 飛行計画通報受付 API` の全88項目を漏れなく分析し、新アプリでの取得元、入力分類、および取り扱いを確定しました。
+### 3.0 必須性・適用性・入力責任の「独立3軸評価モデル」
+
+DIPS APIにおける各フィールドの取り扱いを、単一の「必須/任意」という1軸で表現することを厳禁とします。  
+**「DIPS API上で必須」＝「ユーザーが毎回手入力」ではありません**。また、**「API仕様上存在する」＝「今回の飛行で必ず該当する」でもありません**。  
+新アプリでは、すべてのDIPSフィールドを以下の**独立した3軸**によって直交評価します。
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 軸 A: DIPS Contract Requirement（API規約上の要求度）                        │
+│   - REQUIRED              : DIPS仕様上、通報データに常に含まれるべき項目     │
+│   - CONDITIONAL_REQUIRED  : 特定の先行条件（フラグ等）成立時に必須となる項目 │
+│   - OPTIONAL              : 送信しても空欄でも受理される項目                 │
+│   - NOT_SENT              : API送信対象外（アプリ内・照会専用）             │
+│   - RESPONSE_ONLY         : DIPS側からの応答・照会時のみ受信する項目         │
+│   - LEGACY                : 制度移行期互換項目（将来廃止予定）               │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      ▲
+                                      │ 評価
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 軸 B: Applicability（今回の計画への適用性）                                 │
+│   - APPLICABLE        : 今回の飛行計画の条件に該当し、評価・通報対象となる   │
+│   - NOT_APPLICABLE    : 今回の飛行条件に該当せず、入力・提出不要             │
+│   - CONDITION_PENDING : 先行フラグ未決定のため適用可否が保留されている状態   │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      ▲
+                                      │ 解決
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 軸 C: Input Responsibility（値の調達責任・取得元）                          │
+│   - USER_INPUT                : ユーザーが現場・画面で入力・確定             │
+│   - MASTER                    : 機体/人員/許可/保険台帳等から自動引き当て   │
+│   - PRESET                    : 目的・安全措置プリセット等から初期ロード     │
+│   - DERIVED                   : 他フィールドから自動計算（終了時刻、人数等） │
+│   - DIPS_REGISTERED_SELECTION : DIPS Web画面上で登録済台帳から選択           │
+│   - SYSTEM_METADATA           : システムが自動付与（リビジョン、識別名等）   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 3軸評価の具体例
+1. **操縦者氏名 (No.6)**:
+   - Contract Requirement: `REQUIRED`
+   - Applicability: `APPLICABLE`
+   - Input Responsibility: `MASTER`（人員マスターから自動取得。ユーザーの手入力は不要）
+2. **技能証明書番号 (No.9)**:
+   - Contract Requirement: `CONDITIONAL_REQUIRED`
+   - Applicability: 国家資格あり → `APPLICABLE` / なし → `NOT_APPLICABLE`
+   - Input Responsibility: `MASTER`
+3. **許可承認番号 (No.46)**:
+   - Contract Requirement: `CONDITIONAL_REQUIRED`
+   - Applicability: 今回の飛行で許可承認を使用 → `APPLICABLE` / 使用しない（特定飛行なし等） → `NOT_APPLICABLE`
+   - Input Responsibility: `MASTER` または `DIPS_REGISTERED_SELECTION`
+4. **飛行目的その他理由 (No.29)**:
+   - Contract Requirement: `CONDITIONAL_REQUIRED`
+   - Applicability: 目的コードに「その他」を含む → `APPLICABLE` / 含まない → `NOT_APPLICABLE`
+   - Input Responsibility: `USER_INPUT`
 
 ### 3.1 入力分類の定義
 - **`MASTER`**: 登録済みマスター（`Aircraft`, `Personnel`, `Permission`, `InsurancePolicy`, `Location` 等）から自動取得。
@@ -318,7 +371,7 @@ DIPS Web画面のタブ・入力セクション構成に一致させた並び順
 
 ---
 
-## 8. 全88項目の入力元・自動化集計
+## 8. 全88項目の入力元・自動化集計と動的評価
 
 全88項目について、「現場で人間が毎回入力しなければならない項目」と「システムが自動補完・再利用する項目」の件数を集計しました。
 
@@ -331,7 +384,146 @@ DIPS Web画面のタブ・入力セクション構成に一致させた並び順
 | **SUBMISSION_METADATA** | **14** | 計画ID（1）、重複フラグ（3, 85〜86）、システム名（87〜88）、DIPS受付番号（82）、状態コード（79〜81, 83〜84） |
 | **CONDITIONAL（特定条件時）** | **10** | 各種「その他」理由入力（29, 30, 33, 67, 69）、取消理由（84）、許可連絡先（50〜54） |
 
-> **結論**: 全88項目のうち、**現場でパイロットが毎回手入力または確認を要する項目は実質12項目程度（日時、現場調整後の範囲、総重量、安全確認チェック）**であり、残りの76項目はマスター、プリセット、およびシステムによる自動補完・導出で完結します。「88項目あるから手動運用が不可能」ということは全くありません。
+> [!IMPORTANT]
+> **「現場入力約12項目」は固定値ではありません（動的算出値）**:  
+> 上記の「約12項目」は、マスター（機体、操縦者、許可承認、保険）が完全に事前登録されており、かつ「その他」理由や特殊条件が発生しない場合の**典型的なケースにおける参考値**です。  
+> 操縦者の連絡先電話番号がマスター上で未登録の場合や、飛行目的に「その他」を選択した場合、あるいは新機体で包括許可書番号を個別上書きする場合は、現場での手入力・確認項目数は増減します。  
+> アプリは「固定12項目フォーム」として画面をハードコードするのではなく、後述の `DipsFieldRequirementEngine` が文脈に応じて動的に必須性と入力責任を判定します。
+
+---
+
+## 9. DipsFieldRequirementEngine と 判定アーキテクチャ設計
+
+### 9.1 エンジンの責務と設計原則
+`DipsFieldRequirementEngine` は、飛行計画（`FlightPlan`）、選択されたマスター（`Aircraft`, `Personnel`, `Permission`, `InsurancePolicy`）、プリセット、および運航文脈を入力として受け取り、指定された DIPS API 仕様バージョン（例: `"FPR-API-1.9"`）に基づいて、各フィールドの**「Contract Requirement」「Applicability」「Input Responsibility」「Validation Status」**を決定的に算出するドメインサービスです。
+
+```text
+┌────────────────────────────────────────────────────────────┐
+│ [入力コンテキスト Context]                                  │
+│  - FlightPlan (ドラフト値・override値)                     │
+│  - Aircraft, AircraftModel                                 │
+│  - Personnel (主操縦者・操縦者配列・補助者配列)            │
+│  - Permission (包括許可・個別許可)                         │
+│  - InsurancePolicy (保険契約)                              │
+│  - Location, FlightAreaPreset                              │
+│  - Operation Conditions (DID, 夜間, 目視外, 30m未満等)    │
+│  - contract_version: string (例: "FPR-API-1.9")            │
+└─────────────────────────────┬──────────────────────────────┘
+                              │ evaluate(context)
+                              ▼
+┌────────────────────────────────────────────────────────────┐
+│ DipsFieldRequirementEngine                                 │
+│  - 仕様バージョン別ルール適用 (FPR-API-1.9 Rules)          │
+│  - 3軸マッピング解決 (ContractReq x Applicability x Input) │
+│  - 有効値解決 (Effective Value: Master vs Override)        │
+│  - Blocking 条件評価 (REQUIRED + Applicable CONDITIONAL)   │
+└─────────────────────────────┬──────────────────────────────┘
+                              │
+                              ▼
+┌────────────────────────────────────────────────────────────┐
+│ [出力 Output]                                              │
+│  - DipsSubmissionReadiness (計画全体の提出可否・進捗集計)  │
+│  - DipsFieldValidationResult[] (全フィールド個別検証結果)  │
+└────────────────────────────────────────────────────────────┘
+```
+
+### 9.2 機体能力（Aircraft Capabilities）とDIPS空域形状の非混同原則
+- **過剰設計の排除**: 業務用アプリとして機体モデルには将来的に `GNSS`, `waypoint`, `remote_id`, `night_lighting` 等の能力（`AircraftModelCapability`）を保持可能としますが、**DIPS Requirement Engine の必須判定に直結させるのはDIPS側が要求する項目（例: DRS登録有無、型式認証区分等）のみに限定**します。
+- **Geometry 独立原則**: DIPSにおける飛行範囲形状（Polygon, Circle, Buffered Line）は「どの空域・範囲を飛ぶか」を表す運航ジオメトリであり、**「機体に自律Waypoint飛行機能があるか否か」とは全くの別概念**です。機体性能を理由にDIPSのPolygon必須/不要を機械的に直結判定してはなりません。
+
+### 9.3 Effective / Override 値の解決セマンティクス
+マスターやプリセットから初期値を取得する項目であっても、今回の運航計画において現場判断で値を変更（override）できる項目（総重量、航続時間、巡航速度、高度、補助者人数、緊急連絡先等）について、以下の3層で値を追跡します：
+
+1. **`source_master_value`**: マスターまたはプリセットに登録されている元の値。
+2. **`override_value`**: 今回の飛行計画（`FlightPlan`）でユーザーが一時的・意図的に指定した上書き値（未指定時は `null` / `undefined`）。
+3. **`effective_value`**: 最終的に通報ペイロードおよび提出不変スナップショット（`DipsSubmission.payload_snapshot`）へ採用される確定値。
+   - `effective_value = override_value ?? source_master_value`
+- **マスター欠損時の救済**: 例えば操縦者マスターで電話番号が欠落しておりDIPSで必須となる場合、`FlightPlan` 画面で一時入力（override）して提出可能とするとともに、必要に応じて「人員マスター側も更新するか」を操縦者が選択できるようにします。
+
+### 9.4 データ型・モデル定義（Domain Types）
+
+```typescript
+// 軸 A: DIPS Contract Requirement
+export type DipsContractRequirement =
+  | 'REQUIRED'              // 常に必須
+  | 'CONDITIONAL_REQUIRED'  // 先行条件成立時に必須
+  | 'OPTIONAL'              // 任意項目
+  | 'NOT_SENT'              // API送信対象外
+  | 'RESPONSE_ONLY'         // 照会・応答専用
+  | 'LEGACY';               // 移行期互換（将来廃止予定）
+
+// 軸 B: Applicability（今回の計画への適用性）
+export type DipsFieldApplicability =
+  | 'APPLICABLE'            // 今回の飛行に適用
+  | 'NOT_APPLICABLE'        // 今回の飛行に不適用（評価対象外）
+  | 'CONDITION_PENDING';    // 条件確定待ち
+
+// 軸 C: Input Responsibility（値の調達責任）
+export type DipsInputResponsibility =
+  | 'USER_INPUT'                // ユーザー手入力
+  | 'MASTER'                    // マスター台帳参照
+  | 'PRESET'                    // プリセット初期値
+  | 'DERIVED'                   // 自動計算
+  | 'DIPS_REGISTERED_SELECTION' // DIPS側選択
+  | 'SYSTEM_METADATA';          // システム自動付与
+
+// フィールド検証ステータス
+export type DipsFieldStatus =
+  | 'VALID'                 // 充足・形式正常
+  | 'AUTO_FILLED'           // マスター/プリセットから自動補完済
+  | 'MISSING_REQUIRED'      // 必須項目未入力（Blocking）
+  | 'WAITING_CONDITION'     // 先行条件未定のため保留
+  | 'INVALID_FORMAT'        // 書式・型エラー（Blocking）
+  | 'OUT_OF_RANGE'          // 値域エラー（Blocking）
+  | 'NOT_APPLICABLE'        // 不適用（Non-blocking）
+  | 'OPTIONAL_EMPTY';       // 任意項目空欄（Non-blocking）
+
+// 単一フィールドの評価結果
+export interface DipsFieldValidationResult {
+  field_key: string;                       // パラメータ識別子 (例: "pilotInfo[].phone")
+  dips_item_number: number;                // No.1〜No.88
+  contract_requirement: DipsContractRequirement;
+  applicability: DipsFieldApplicability;
+  input_responsibility: DipsInputResponsibility;
+  source_master_value?: unknown;
+  override_value?: unknown;
+  effective_value?: unknown;
+  status: DipsFieldStatus;
+  is_blocking: boolean;                    // SUBMISSION_READY を阻害するか
+  message?: string;                        // 現場向け平易な日本語案内
+}
+
+// 計画全体の提出準備完了度（Readiness Result）
+export interface DipsSubmissionReadiness {
+  is_ready: boolean;                       // SUBMISSION_READY に達しているか
+  contract_version: string;                // 評価基準バージョン ("FPR-API-1.9")
+  evaluated_at: string;                    // 評価日時 (ISO8601)
+  
+  // 集計メトリクス（現場UI表示用）
+  required_total: number;
+  required_satisfied: number;
+  conditional_required_total: number;
+  conditional_required_satisfied: number;
+  optional_total: number;
+  optional_missing: number;
+  
+  // ブロッキング項目および警告
+  blocking_fields: DipsFieldValidationResult[]; // is_blocking = true の一覧
+  warnings: string[];                          // 非ブロッキングの注意事項
+  optional_missing_keys: string[];             // 空欄の任意項目一覧
+}
+```
+
+### 9.5 SUBMISSION_READY を阻害する条件（Blocking Rules）
+計画が `SUBMISSION_READY`（提出準備完了）となるための厳格な論理ルールを以下のように定めます：
+
+1. **`is_ready = true` の成立条件**:
+   - `blocking_fields.length === 0`
+   - すなわち、**`Applicability === 'APPLICABLE'` かつ (`Contract Requirement === 'REQUIRED'` または 条件成立した `CONDITIONAL_REQUIRED`) である全項目について、`effective_value` が存在し、バリデーション（型・形式・値域）を満たしていること**。
+2. **提出を阻害しない項目（Non-blocking）**:
+   - **`OPTIONAL` 項目**: 値が空欄（`OPTIONAL_EMPTY`）であっても `is_ready` を妨げない。
+   - **`NOT_APPLICABLE` 項目**: 今回の飛行条件に該当しない項目（例: 技能証明なし時の証明書番号、特定飛行なし時の許可書番号、「その他」以外選択時のその他理由等）は、空欄であってもエラーとせず、通報ペイロードからも除外される。
+   - **マスター自動補完項目**: `MASTER` から有効な値が引き当てられている場合は `AUTO_FILLED` かつ `VALID` となり、ユーザーの追加入力なしで充足とみなす。
 
 ---
 

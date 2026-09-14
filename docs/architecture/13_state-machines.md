@@ -6,9 +6,9 @@
 
 ---
 
-## 1. 2つの独立した状態マシンの分離原則
+## 1. 2つの独立した状態マシンの分離原則と接続Gate
 
-本システムでは、**「現場の実際の運航・飛行を管理する状態マシン」**と、**「国土交通省DIPS 2.0への手続きを管理する状態マシン」**を完全に分離して設計します。
+本システムでは、**「現場の実際の運航・飛行を管理する状態マシン（Operation FSM）」**と、**「国土交通省DIPS 2.0への手続きを管理する状態マシン（DIPS FSM）」**を完全に分離して設計します。
 
 ```text
 ┌────────────────────────────────────────┐      ┌────────────────────────────────────────┐
@@ -19,9 +19,61 @@
 └────────────────────────────────────────┘      └────────────────────────────────────────┘
 ```
 
+### 1.1 状態概念の4段階と保存・通報・運航Gate
+
+計画作成から現場運航への流れにおいて、以下の4段階の状態概念およびGateを厳密に区別します。
+
+```text
+【計画作成】
+  FlightPlan (plan_status: 'draft')  <-- 入力途中でも常時保存可能 (SAVE_DRAFT = always allowed)
+    │
+    ▼ DipsFieldRequirementEngine による評価
+  SUBMISSION_READY                   <-- REQUIRED + 適用該当時のCONDITIONAL_REQUIRED 充足
+    │
+    ▼ 不変 payload_snapshot 生成 & ローカルDB保存
+  SNAPSHOT_SAVED (DipsSubmission 起票)
+    ├─────────────────────────────────────────┐
+    ▼                                         ▼
+【DIPS手続きライン (DIPS FSM)】         【アプリ現場運航ライン (Operation FSM)】
+  SNAPSHOT_SAVED                            Mission: PREPARING (運航セッション開始)
+    ├─ 手動: MANUAL_SUBMIT_WAIT               │
+    │        ↓ MANUAL_SUBMITTED               ▼
+    │        ↓ DIPS_CONFIRMED               PREFLIGHT_INSPECTION (飛行前日常点検)
+    └─ API : SENDING                          │
+             ↓ API_CONFIRMED / RETRY_WAIT     ▼
+                                            ★【LEGAL & OPERATIONAL TAKEOFF GATE】
+                                              APPLICATION_FLOW_READY ≠ LEGAL_TAKEOFF_READY
+                                              │ (DIPS通報充足 + 点検合格 + 許可 + 周囲安全)
+                                              ▼
+                                            TAKEOFF_READY (離陸待機)
+                                              ↓
+                                            IN_FLIGHT (飛行中)
+```
+
+1. **① DRAFT（下書き）**:
+   - 入力途中。必須項目が不足していても端末ローカルへ保存可能（`SAVE_DRAFT` は常に許可）。
+   - ブラウザや端末を閉じても復元可能。
+2. **② SUBMISSION_READY（通報準備完了）**:
+   - `DipsFieldRequirementEngine` により、今回の飛行に適用される `REQUIRED` および該当する `CONDITIONAL_REQUIRED` がすべて充足された状態。
+   - `OPTIONAL` や `NOT_APPLICABLE` の項目が空であっても提出準備完了を妨げない。
+3. **③ SNAPSHOT_SAVED（提出スナップショット保存済）**:
+   - `SUBMISSION_READY` の内容から、不変の `DipsSubmission.payload_snapshot`（exact outbound JSON）を生成し、端末ローカルDBへ保存完了。
+   - この時点で `DipsSubmission` レコードが起票され、DIPS FSMの初期状態となる。同時に外部台帳同期キューへ投入される（※Googleスプレッドシート同期完了は待たない）。
+4. **④ 運航・離陸Gateの分離（Application Flow ≠ Legal Takeoff）**:
+   - **`SNAPSHOT_SAVED` 以降、DIPS通報が未完了（`MANUAL_SUBMIT_WAIT`, `SENDING`, `FAILED`, `RETRY_WAIT`, `SUBMISSION_UNCERTAIN` 等）であっても、アプリの現場運航準備（`Mission` 作成、飛行前点検、現場記録画面）への遷移そのものをHard Blockしない**。
+   - ただし、**「アプリで次工程へ進める（APPLICATION_FLOW_READY）」ことと「法令上離陸してよい（LEGAL_TAKEOFF_READY）」は全く別概念**である。
+   - アプリは「未通報飛行を適法とみなす許可ボタン」を絶対に作成しない。実際の離陸可否は操縦者が法令・許可条件・安全状況を総合確認して判断する。
+
+### 1.2 DIPS未確認時のUI常時表示と監査ログ境界（AuditEvent）
+- **UI常時識別表示**:
+  運航画面（点検画面・フライト画面）に進んだ後も、上部ステータスバー等において DIPS状態（「DIPS未通報」「DIPS手動入力中」「DIPS確認待ち」「DIPS API失敗」「DIPS確認済」等）を色分けバッジ等で常時判別可能とする。
+- **進行監査ログ境界（AuditEvent）**:
+  - `SNAPSHOT_SAVED` から飛行前点検画面へ進む通常の運航準備操作では、過剰な監査ログを大量生成しない。
+  - DIPS未通報・未確認（`MANUAL_SUBMIT_WAIT` や `FAILED` 等）のまま最終離陸（`TAKEOFF_READY` → `IN_FLIGHT` 打刻）を行った場合にのみ、安全監査用として `AuditEvent`（`event_type: 'TAKEOFF_WITH_UNCONFIRMED_DIPS'`, `submission_state`, `pilot_id`, `timestamp`, `acknowledged_notes`）を1回記録する。
+
 > [!IMPORTANT]
-> **「DIPS通報成功確認済み」＝「飛行可能」ではありません。**
-> DIPS通報の成功は飛行計画通報の法令要件を満たしたことを示すのみであり、実際の離陸には別途「許可承認の有効性」「空域の安全」「土地管理者承諾」「気象条件」「日常点検合格」の総合確認が必要です。
+> **「DIPS通報成功確認済み」＝「飛行可能」ではありません。また「アプリで点検へ進める」＝「離陸してよい」でもありません。**
+> DIPS通報の成功は飛行計画通報の法令要件を満たしたことを示すのみであり、実際の離陸には別途「許可承認の有効性」「空域の安全」「土地管理者承諾」「気象条件」「日常点検合格」の総合確認（Legal & Operational Takeoff Gate）が必要です。
 
 ---
 

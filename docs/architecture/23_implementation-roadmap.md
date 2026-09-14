@@ -40,12 +40,13 @@ C0: 基盤・PWA Shell 構築
     - **機材系**: `AircraftModel`, `Aircraft`, `BatteryModel`, `BatteryCompatibility`, `Battery`
     - **人員・組織系**: `Organization`, `Personnel`（Role配列管理、UserAccount分離設計準拠）, `Client`, `Project`
     - **現場・プリセット系**: `Location`, `FlightAreaPreset`, `FlightPurposePreset`, `SafetyMeasurePreset`, `OperationTemplate`（Copy Source原則、`default_aircraft_id` nullable）
-    - **法務・計画・保険系**: `Permission`（包括許可）, `InsurancePolicy`（ドローン賠償責任保険台帳）, `FlightPlan`（複数機体・複数操縦者・総重量・航続時間・GeoJSONスナップショット対応）, `DipsSubmission`（`dips_contract_version`, `payload_snapshot` exact outbound JSON保持）
+    - **法務・計画・保険系**: `Permission`（包括許可）, `InsurancePolicy`（ドローン賠償責任保険台帳）, `FlightPlan`（複数機体・複数操縦者・総重量・航続時間・GeoJSONスナップショット対応、`draft`/`submission_ready`状態、`effective_value`/`override_value`セマンティクス）, `DipsSubmission`（`dips_contract_version`, `payload_snapshot` exact outbound JSON保持）
+    - **通報要件判定エンジン型**: `DipsFieldRequirementEngine` インターフェース、`DipsContractRequirement`, `DipsFieldApplicability`, `DipsInputResponsibility`, `DipsFieldValidationResult`, `DipsSubmissionReadiness` 型定義
     - **運航・記録系**: `Mission`, `Flight`, `DailyInspection`, `MaintenanceRecord`, `BatteryUsage`（非飛行イベント専用）
-    - **監査・帳票系**: `AuditEvent`, `ReportSnapshot`
+    - **監査・帳票系**: `AuditEvent`（DIPS未確認離陸等の安全監査イベント境界定義）, `ReportSnapshot`
   - 共通監査メタデータ（`created_at`, `updated_at`, `created_by`, `updated_by`, `version`）の基盤組み込み
   - Storage API（`persist()`）要求、手動JSONエクスポート/インポート（バルク移行準備）。
-  - ※Phase C1ではデータベーススキーマとエンティティ層の確立を主目的とし、全マスターの高度な管理UI（CRUD・検索Picker等）は後続PhaseおよびUI構築ステップで段階的に肉付けする。
+  - ※Phase C1ではデータベーススキーマ、エンティティ層、および通報判定エンジン型の確立を主目的とし、全マスターの高度な管理UI（CRUD・検索Picker等）は後続PhaseおよびUI構築ステップで段階的に肉付けする。
 - **完了条件**: ブラウザリロード後も作成したデータが確実に維持・復元されること。設計された全自動テストが合格すること。
 
 ### Phase C2: 現行運航フローの再現
