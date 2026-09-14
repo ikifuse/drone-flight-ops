@@ -120,8 +120,8 @@
 - 計画確定時に提出予定スナップショットを作成し、端末ローカルDBへ保存した上で台帳同期キューへ投入する。
 
 ### 3.5 提出内容の不変スナップショットとリビジョン管理
-- 飛行計画（FlightPlan）が後から日時変更や機体変更された場合でも、過去にDIPSへ提出した内容が上書き消去されないよう、提出確定時点のデータスナップショット（`DipsSubmission.payload_snapshot`）を不変記録として保持する。
-- **不変境界の明確化**: 不変なのは `payload_snapshot`（通報ペイロード）であり、通報ステータスや確認日時等のライフサイクルメタデータは更新可能とし、更新履歴は `AuditEvent` で管理する。
+- 飛行計画（FlightPlan）が後から日時変更や機体変更された場合でも、過去にDIPSへ提出した内容が上書き消去されないよう、提出確定時点の意味論的データスナップショット（`DipsSubmission.submission_snapshot`）を不変記録として保持する。
+- **不変境界の明確化**: 不変なのは意味論的通報スナップショット（`submission_snapshot`）であり、通報ステータスや確認日時等のライフサイクルメタデータは更新可能とし、更新履歴は `AuditEvent` で管理する。API通報時（Phase C7 Optional）に実際に国交省へ送信した電文 exact JSON が存在する場合は `api_payload_snapshot`（nullable）として記録するが、手動通報経路においてAPI JSONは生成されず、ユーザー向けJSONファイル出力も行わない。
 - 計画変更・再通報時は `revision` をインクリメントし、旧提出レコードとの前後関係（`supersedes_id` 等）を追跡可能とする。
 
 ---
@@ -263,11 +263,15 @@
 - バリデーション機能（必須項目チェック、日付形式チェック、重複判定）。
 
 ### 8.4 KML Geo Export ＆ Google My Maps 連携（Google Drive自動保存）
-- **3大出力系統の分離**: Google Sheets（台帳権威・原本）、PDF（法的提出・印刷用派生帳票）、KML（地図可視化・共有用派生Geo Export）の3系統を厳格に分離し、KMLをPDFやSheetsの代替としない。
+- **4大出力・連携境界の確立**: 
+  1. **Google Sheets**: 確定台帳（Ledger Authority、原本・長期保存・検索・修正・集計・PDF生成元）。
+  2. **PDF**: 人間向け帳票（Human-readable Report、印刷・提出・保管・現場携行原本）。
+  3. **KML**: ユーザー向け地図出力（User-facing Geo Export、Google Drive保存、Google My Maps / Google Earthインポート、1計画1KML）。
+  4. **JSON**: DIPS API内部通信限定（Internal DIPS API Transport、Phase C7 Optional、ユーザー向けファイル出力・要求は一切行わない）。
 - **1計画1KML原則**: 1 FlightPlan = 1 KML ファイルを生成し、計画空域（Polygon、近似Circle、Buffered Line）、計画属性、および運航完了後の点検・飛行実績を集約。
 - **Google Drive自動保存**: 設定された保存先フォルダへKMLを自動保存（計画確定時および運航完了時更新）。オフライン時は電波復帰時に非同期同期。
 - **Google My Maps手動連携**: 利用者がGoogle My Mapsへ手動インポートして視覚的に確認・共有（1 FlightPlan = 1 My Map推奨）。
-- **機体実飛行GPSログ重畳（将来拡張）**: 機体から取得したGPSログ（CSV/GPX）を同一My Map上へ重ね合わせて計画と実績を視覚対比できる拡張境界を確保。
+- **機体実飛行GPSログ重畳（将来拡張）**: 機体から取得したGPSログ（CSV/GPX）を同一My Map上へ重ね合わせて計画と実績を視覚対比できる拡張境界を確保（GPX等は入力側の候補であり、アプリの必須出力ではない）。
 - **プライバシー保護**: 個人連絡先（電話・メール・住所）を除外した共有用プロファイル（`SHARE_SAFE`）による安全なエクスポート。
 
 ---

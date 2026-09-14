@@ -30,7 +30,7 @@
     ▼ DipsFieldRequirementEngine による評価
   SUBMISSION_READY                   <-- REQUIRED + 適用該当時のCONDITIONAL_REQUIRED 充足
     │
-    ▼ 不変 payload_snapshot 生成 & ローカルDB保存
+    ▼ 不変 submission_snapshot 生成 & ローカルDB保存
   SNAPSHOT_SAVED (DipsSubmission 起票)
     ├─────────────────────────────────────────┐
     ▼                                         ▼
@@ -57,7 +57,7 @@
    - `DipsFieldRequirementEngine` により、今回の飛行に適用される `REQUIRED` および該当する `CONDITIONAL_REQUIRED` がすべて充足された状態。
    - `OPTIONAL` や `NOT_APPLICABLE` の項目が空であっても提出準備完了を妨げない。
 3. **③ SNAPSHOT_SAVED（提出スナップショット保存済）**:
-   - `SUBMISSION_READY` の内容から、不変の `DipsSubmission.payload_snapshot`（exact outbound JSON）を生成し、端末ローカルDBへ保存完了。
+   - `SUBMISSION_READY` の内容から、不変の `DipsSubmission.submission_snapshot`（意味論的通報スナップショット）を生成し、端末ローカルDBへ保存完了（API通報時は送信時に exact JSON を `api_payload_snapshot` へ記録）。
    - この時点で `DipsSubmission` レコードが起票され、DIPS FSMの初期状態となる。同時に外部台帳同期キューへ投入される（※Googleスプレッドシート同期完了は待たない）。
 4. **④ 運航・離陸Gateの分離（Application Flow ≠ Legal Takeoff）**:
    - **`SNAPSHOT_SAVED` 以降、DIPS通報が未完了（`MANUAL_SUBMIT_WAIT`, `SENDING`, `FAILED`, `RETRY_WAIT`, `SUBMISSION_UNCERTAIN` 等）であっても、アプリの現場運航準備（`Mission` 作成、飛行前点検、現場記録画面）への遷移そのものをHard Blockしない**。
@@ -258,11 +258,11 @@ stateDiagram-v2
 
 ### 3.2 各状態の定義と現場UI挙動
 
-※飛行計画の作成・編集中は `FlightPlan.plan_status = 'draft'` で管理され、提出内容を確定して不変スナップショット（`payload_snapshot`）を生成した時点で初めて `DipsSubmission` が起票されます。したがって、Submission状態マシンは初期状態 **`SNAPSHOT_SAVED`** から始まります。
+※飛行計画の作成・編集中は `FlightPlan.plan_status = 'draft'` で管理され、提出内容を確定して不変スナップショット（`submission_snapshot`）を生成した時点で初めて `DipsSubmission` が起票されます。したがって、Submission状態マシンは初期状態 **`SNAPSHOT_SAVED`** から始まります。
 
 | 状態名 (State) | 説明 | ユーザーへのUI表示 | 次の遷移 |
 |---|---|---|---|
-| **`SNAPSHOT_SAVED`** | 提出不変スナップショット（`payload_snapshot`）が端末ローカルDBへ保存され、通報準備が完了した状態（同時に外部台帳同期キューへ投入）。※Google Sheets同期完了は待たない。 | **「通報準備完了（DIPS未通報）」** | 手動通報またはAPI通報へ |
+| **`SNAPSHOT_SAVED`** | 提出不変スナップショット（`submission_snapshot`）が端末ローカルDBへ保存され、通報準備が完了した状態（同時に外部台帳同期キューへ投入）。※Google Sheets同期完了は待たない。 | **「通報準備完了（DIPS未通報）」** | 手動通報またはAPI通報へ |
 | **`MANUAL_SUBMIT_WAIT`** | 手動入力支援画面を表示中。パイロットがDIPS Web/アプリへコピー＆ペースト入力を行っている待機状態。 | 「手動通報待機中（DIPSへ入力してください）」 | `MANUAL_SUBMITTED` |
 | **`MANUAL_SUBMITTED`** | 操縦者がアプリ上で「DIPS手動通報を完了した」と記録打刻した状態。**※DIPS側の登録・受理確認ではない**。 | **「手動通報実施を記録（DIPS登録確認待ち）」** | `DIPS_CONFIRMED` |
 | **`DIPS_CONFIRMED`** | 操縦者がDIPS画面で計画登録を確認した状態（飛行計画一覧との目視照合、または受付番号の確認入力）。 | **「DIPS通報確認完了（手動確認済）」** | 運航完了 / 取消 / 訂正 |

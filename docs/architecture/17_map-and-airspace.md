@@ -36,7 +36,7 @@
 
 ## 2. 飛行範囲（FlightAreaGeometry）の中立Domainモデル
 
-2026-09-14のDIPS Web実画面検証（`OBSERVED`）に基づき、新アプリはDIPS API専用形式ではなく、将来的な各種出力（DIPS API payload, GeoJSON, KML, GPX, CSV等）へ可逆・中立に変換可能なDomainモデル `FlightAreaGeometry` を採用します。
+2026-09-14のDIPS Web実画面検証（`OBSERVED`）に基づき、新アプリはDIPS API専用形式ではなく、ユーザー向けGeo Export（KML）、地図描画内部変換（GeoJSON）、将来のAPI連携（Phase C7 Optional）等へ可逆・中立に変換可能なDomainモデル `FlightAreaGeometry` を採用します。
 
 ### 2.1 データ定義（Domain Model）
 ```typescript
@@ -93,13 +93,14 @@ APIの利用可否に関係なく、新アプリ自身がスタンドアロン�
   - `Save as Preset`: 作成したエリアを定常プリセットとしてローカル保存。
   - `Load Preset`: 登録済みプリセットを即座に呼び出し。
   - `Copy Preset to FlightPlan`: プリセットを今回の飛行計画へコピーし、必要に応じて微調整（Override）。
-- **将来Exporter/Adapter準備**:
-  - `FlightAreaGeometry` から DIPS API payload（Circle/Polygon）、GeoJSON、KML、GPX、CSV 等へ変換可能な構造を確保。
-  - **KML変換仕様（詳細は [27_output-kml-drive-and-mymaps.md](27_output-kml-drive-and-mymaps.md) 参照）**:
+- **描画Adapterとユーザー向けGeo Exportの責務分離**:
+  - **幾何データ正本**: アプリ内部の中立Domainモデル `FlightAreaGeometry` を唯一の正本とします。GeoJSONをDomain正本や必須ユーザーExportフォーマットに固定しません。
+  - **地図描画用内部Adapter（GeoJSON）**: 採用する地図レンダリングライブラリがGeoJSONを要求する場合のみ、`FlightAreaGeometry -> MapRenderingAdapter -> GeoJSON` として内部的に一時変換して描画します。
+  - **ユーザー向けGeo Export（KML）**: ユーザー向けファイル出力は **KML** を第一形式とし、Google Driveへの自動保存およびGoogle My Mapsへの手動インポートを標準とします（`FlightAreaGeometry -> KmlExporter -> .kml`、詳細は [27_output-kml-drive-and-mymaps.md](27_output-kml-drive-and-mymaps.md) 参照）。
     - `POLYGON`: そのままKML Polygonへ変換。
     - `CIRCLE`: 中心点＋半径から測地線計算により近似Polygon（円周点群）を生成して出力。
     - `BUFFERED_LINE`: 中心LineStringおよび帯状Polygonとして出力。
-  - ※KML自体は派生Geo Exportであり、Domain幾何データ正本とは分離する。
+  - ※GeoJSON, GPX, CSV はKMLと同格のユーザー向けGeo Export完成要件としません（GPXは機体ログ取込側、CSVは台帳側の用途として扱う）。
 
 ---
 

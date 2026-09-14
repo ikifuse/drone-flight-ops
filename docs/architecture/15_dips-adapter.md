@@ -10,10 +10,16 @@
 
 DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤システム2.0）」との通信仕様を適切にカプセル化し、**外部APIの仕様変更や未確認要件がアプリ本体（UI・運航管理・飛行日誌）へ波及することを遮断する防波堤（Anti-Corruption Layer）**として機能します。
 
+> [!IMPORTANT]
+> **API JSON 生成の内部局所性と手動アダプターの完全分離**:
+> - **API JSON 生成は `ApiDipsAdapter` の内部責務**です。これは国交省APIとの通信電文（Wire Format）に過ぎず、**ユーザー向けにJSONファイルとして出力・エクスポートするものではありません**。
+> - **`ManualDipsAdapter` は API JSON payload の生成を前提としません**。手動通報支援は意味論的Snapshot（`submission_snapshot`）から直接、人間の視認・1タップコピーに適した ViewModel（`ManualAssistanceData`）を生成します。
+> - 本書に記載された OIDC フロー、認証レルム（`drs-utm`, `drs-req`, `drs-fpl`）、エンドポイント候補、および Cloudflare Workers Proxy 構成は、公式仕様書に基づく調査結果・設計候補資産であり、**正式なAPI利用承認・credential取得前の実装確定事項ではありません**。正式資格が取得された場合のみ Phase C7（Optional Integration）開始時に最新公式仕様と突き合わせて再確認・実装します。
+
 ```text
 ┌────────────────────────────────────────────────────────┐
 │ クライアント Core / UI / 運航管理                     │
-│  - 内部FlightPlan / 不変DipsSubmission スナップショット │
+│  - 内部FlightPlan / 不変 submission_snapshot           │
 │  - IDipsSubmissionAdapter (共通通報インターフェース)   │
 └───────────────────────────┬────────────────────────────┘
                             │ (共通インターフェース呼出)
@@ -24,12 +30,15 @@ DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤シス
 │  │  ManualDipsAdapter   │      MockDipsAdapter       │ │
 │  │ 【正式・第一級対応】 │ 【開発・テスト・検証用】   │ │
 │  │ - 手動入力支援画面DTO│ - 擬似受付番号発行         │ │
-│  │ - クリップボード抽出 │ - 擬似エラーシミュレート   │ │
-│  │ - 操縦者手動打刻記録 │ - オフライン開発完結       │ │
+│  │ - 1タップコピー展開  │ - 擬似エラーシミュレート   │ │
+│  │ - 操縦者手動確認記録 │ - オフライン開発完結       │ │
+│  │ ※JSON生成は行わない │ ※JSON生成は行わない       │ │
 │  └──────────────────────┴────────────────────────────┘ │
 │  ┌───────────────────────────────────────────────────┐ │
-│  │  ApiDipsAdapter 【将来・利用承認時 Optional】      │ │
+│  │  ApiDipsAdapter 【将来・利用承認時 Optional (C7)】 │ │
 │  │  - DRS / FPA / FPR レルム別 OIDC / REST 通信      │ │
+│  │  - DIPS API exact outbound JSON の内部生成        │ │
+│  │  - api_payload_snapshot (nullable) の記録         │ │
 │  └──────────────────────┬────────────────────────────┘ │
 └─────────────────────────┼──────────────────────────────┘
                           │ (API利用可能時のみ中継)
@@ -161,7 +170,7 @@ export interface IDipsApiService extends IDipsSubmissionAdapter {
 ### 5.1 ManualDipsAdapter（手動通報アダプター - 正式・第一級）
 - **役割**: DIPS API未取得時、電波微弱時、または手動運用を選択した場合の基幹アダプター。
 - **挙動**:
-  1. 内部飛行計画から不変の `payload_snapshot` を生成しローカル保存（status: 'snapshot_saved'）。
+  1. 内部飛行計画から不変の `submission_snapshot` を生成しローカル保存（status: 'snapshot_saved'）。API JSON payloadの生成は行わない。
   2. Googleスプレッドシート「DIPS飛行計画台帳」へ非同期同期ジョブ（sync_status: 'sync_pending'）を登録（Sheets同期完了は待たずに通報可能）。
   3. スマホ画面に「手動入力支援画面（コピー用UI）」を表示。
   4. 操縦者が「DIPSへ入力完了」をタップした時点で `manual_submitted` を記録。

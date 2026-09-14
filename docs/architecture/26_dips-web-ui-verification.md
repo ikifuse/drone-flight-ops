@@ -162,7 +162,7 @@
 │  - 飛行範囲作図 (Flight Area Editor: Polygon / Circle / Buffered Line)  │
 │  - 安全確保措置・スケジュール・連絡先設定                              │
 │  - 3軸要件判定 & Readiness 集計 (DipsFieldRequirementEngine)          │
-│  - 提出不変スナップショット生成 (DipsSubmission / payload_snapshot)   │
+│  - 提出不変スナップショット生成 (DipsSubmission / submission_snapshot)   │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
          ┌──────────────────────────┴──────────────────────────┐
@@ -215,12 +215,11 @@ export interface FlightAreaGeometry {
 ```
 
 ### 4.2 将来Exporter / Adapter の拡張ポート
-`FlightAreaGeometry` を中立モデルとして保持することにより、将来的に以下の形式への変換（Exporter）を既存ドメインを破壊することなく安全に追加可能な構造とします（※現フェーズでは仕様を凍結せず、将来拡張ポートとして確保）：
-- **`DipsApiPayloadAdapter`**: API 1.9仕様に適合する `flyRoute` JSON（Polygon / Circle）への変換。
-- **`GeoJsonExporter`**: GISツールやQGIS、Web地図表示用の標準GeoJSON Feature変換。
-- **`KmlExporter`**: Google My Maps や Google Earth での視覚的確認・共有用 KML 変換（詳細は [27_output-kml-drive-and-mymaps.md](27_output-kml-drive-and-mymaps.md) にて設計確定）。
-- **`GpxExporter`**: ハンディGPSやフライトコントローラー連携用GPX変換（将来検討）。
-- **`CsvExporter`**: 頂点座標一覧のCSV出力（将来検討）。
+`FlightAreaGeometry` を中立モデルとして保持することにより、将来的に以下の形式への変換（Exporter / Adapter）を既存ドメインを破壊することなく安全に追加可能な構造とします（詳細は [27_output-kml-drive-and-mymaps.md](27_output-kml-drive-and-mymaps.md) 参照）：
+- **`KmlExporter`**: ユーザー向けGeo Exportの第一形式。Google My Maps や Google Earth での視覚的確認・共有用 KML 変換、Google Drive自動保存（詳細は27番にて確定）。
+- **`MapRenderingAdapter (GeoJSON)`**: 地図描画ライブラリ（MapLibre GL JS等）が要求する場合のみ内部利用するアダプター。ユーザー向け標準エクスポート形式とは扱わない。
+- **`DipsApiPayloadAdapter`**: Phase C7 Optional において、API 1.9仕様に適合する内部通信用JSON（Polygon / Circle）への変換。ユーザー非公開。
+- **※GPX / CSV**: GPX等は機体実飛行ログ（AircraftFlightLog）取込側の入力候補であり、CSVは台帳側の用途として扱う。これらはKMLと同格のユーザー向けGeo Export完成要件としない。
 
 ---
 

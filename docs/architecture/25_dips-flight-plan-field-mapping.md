@@ -3,7 +3,7 @@
 最終更新: 2026-09-14  
 プロジェクト: `drone-flight-ops`  
 フェーズ: Phase B設計反映 / DIPS 2.0 API 1.9版・操作マニュアル詳細設計  
-ステータス: **確定設計（C1実装前凍結）**
+ステータス: **フィールド対応確定（手動通報支援C6 / API JSON生成はC7 Optional）**
 
 ---
 
@@ -14,6 +14,7 @@
 
 - 既存の `24_b2.2-dips-manual-fallback-and-ledger.md` は、手動/APIフォールバック、提出状態マシン、`DipsSubmission` ライフサイクル、Googleスプレッドシート台帳連携を主責務とします。
 - 本文書 `25_dips-flight-plan-field-mapping.md` は、**「何をDIPSへ通報するか」「各項目をアプリのどこから取得・導出するか」「Web手動入力支援とAPI自動送信の等価性」「88項目の全件定義」**を主責務とします。
+- **実装フェーズの分離**: 本書のフィールド定義は手動通報支援（Phase C6）およびAPI自動送信（Phase C7 Optional）の共通基礎ですが、**DIPS API用のJSONシリアライズ実装自体は Phase C7（正式credential取得時）の責務**であり、Phase C1〜C6のブロッカーとしません。
 
 ### 1.2 正本とする公式一次資料
 本設計は、以下の国土交通省およびDIPS公式一次資料のみを仕様根拠として策定しています。非公式ブログ、二次解説サイト、個人の推測は一切根拠としていません。
@@ -34,30 +35,50 @@
 
 DIPS APIのリクエストパラメータ名（例: `flightPurpose`, `flightAirspace`, `assistantsNumber`, `flyRoute` 等）や数値コード体系を、そのままCore Domainのエンティティ属性として直接混入させることを厳禁とします。
 
+また、**手動通報支援経路**と**将来のAPI送信経路**を明確に分離します。
+
 ```text
 ┌────────────────────────────────────────────────────────┐
 │ [Core Domain]                                          │
 │  - FlightPlan (計画日時、意味論ベースの目的・空域・形態) │
 │  - Aircraft, Personnel, Permission, Location, Preset   │
-│  - InsurancePolicy (新設マスター)                      │
+│  - InsurancePolicy (保険台帳)                          │
 └───────────────────────────┬────────────────────────────┘
-                            │
+                            │ lockForSubmission()
                             ▼
 ┌────────────────────────────────────────────────────────┐
-│ [Mapper 層] DipsFlightPlanMapper                       │
-│  - バージョン別コード値変換 (DipsCodeMapper(version)) │
-│  - 補助者人数の導出 (Personnel配列 → カウント数)       │
-│  - 無制限値のAdapterマッピング (true → -1)            │
-│  - 時刻文字列フォーマット (ISO8601 → DIPS指定書式)     │
+│ [不変提出Snapshot] submission_snapshot                 │
+│  - 提出確定時点の意味論的通報データ (不変保持)         │
 └─────────────┬────────────────────────────┬─────────────┘
               │                            │
-              ▼ (API 通報用)               ▼ (手動 Web 支援用)
-┌───────────────────────────┐┌───────────────────────────┐
-│ DipsFlightPlanPayloadDTO  ││ DipsManualEntryViewModel  │
-│  - API 1.9 No.1〜88 準拠  ││  - DIPS Web画面順レイアウト │
-│  - JSON シリアライズ       ││  - 1タップコピー用テキスト │
-│  - DipsSubmission へ保存  ││  - 登録済選択 vs 手入力整理│
-└─────────────┬─────────────┘└───────────────────────────┘
+              ▼ (手動 Web 通報支援経路: C6) │
+┌───────────────────────────┐              │
+│ DipsManualEntryViewModel  │              │
+│  - DIPS Web実画面順配置   │              │
+│  - 1タップコピー用テキスト│              │
+│  - 登録済選択 vs 手入力   │              │
+│  ※JSONシリアライズは不要 │              │
+└───────────────────────────┘              │
+                                           ▼ (API 自動通報経路: C7 Optional)
+                              ┌───────────────────────────┐
+                              │ DipsFlightPlanMapper      │
+                              │  - FPR-API-1.9 コード変換 │
+                              └─────────────┬─────────────┘
+                                            │
+                                            ▼
+                              ┌───────────────────────────┐
+                              │ DipsFlightPlanPayloadDTO  │
+                              │  - No.1〜88 準拠 DTO      │
+                              │  - 内部JSONシリアライズ   │
+                              │  - api_payload_snapshot   │
+                              │    (POST送信時のみ記録)   │
+                              └─────────────┬─────────────┘
+                                            │ (HTTPS POST)
+                                            ▼
+                              ┌───────────────────────────┐
+                              │ DIPS 2.0 FPR-API (外部)   │
+                              └───────────────────────────┘
+```
               ▼
 ┌───────────────────────────┐
 │ IDipsSubmissionAdapter    │
@@ -68,11 +89,12 @@ DIPS APIのリクエストパラメータ名（例: `flightPurpose`, `flightAirs
 ### 2.1 バージョン管理されたコード値変換（Versioned Code Mapping）
 DIPS APIでは、飛行目的（1〜16）、飛行空域（1: DID, 2: 150m以上, 3: 空港周辺等）、飛行方法（1: 30m未満, 2: イベント, 3: 夜間, 4: 目視外等）のように数値コードが多用されます。これらをUIやDomainにハードコードせず、`DipsCodeMapper(contract_version)` を介して変換します。
 
-### 2.2 exact outbound payload と仕様バージョンメタデータの保持
-`DipsSubmission` には以下の属性を必須化します：
+### 2.2 意味論的スナップショット、exact outbound payload、および仕様バージョンメタデータの保持
+`DipsSubmission` には以下の属性を規定します：
 - `dips_contract_version`: 生成基準となったAPI仕様バージョン（例: `"FPR-API-1.9"`）。
-- `payload_snapshot`: 送信（または手動提示）された**完全なexact outbound payload（JSON文字列）**。
-後日マスター（機体、人員、保険、場所）が改定されたり、DIPS APIが2.0へ改版された場合でも、「提出当時に何を通報したか」を法的に完全再現・立証可能とします。
+- `submission_snapshot`: 提出確定時点の**完全な意味論的通報スナップショット**。手動通報およびAPI通報の双方で必ず保持。
+- `api_payload_snapshot`: 実際にDIPS APIへ送信した**完全な exact outbound payload（JSON文字列、Phase C7 Optional、nullable）**。手動通報時はnull。
+後日マスター（機体、人員、保険、場所）が改定されたり、DIPS APIが2.0へ改版された場合でも、「提出当時に何を通報しようとし／通報したか」を法的に完全再現・立証可能とします。手動通報経路においてユーザーへJSONファイルを出力・要求することはありません。
 
 ---
 
@@ -436,7 +458,7 @@ DIPS Web画面のタブ・入力セクション構成に一致させた並び順
 
 1. **`source_master_value`**: マスターまたはプリセットに登録されている元の値。
 2. **`override_value`**: 今回の飛行計画（`FlightPlan`）でユーザーが一時的・意図的に指定した上書き値（未指定時は `null` / `undefined`）。
-3. **`effective_value`**: 最終的に通報ペイロードおよび提出不変スナップショット（`DipsSubmission.payload_snapshot`）へ採用される確定値。
+3. **`effective_value`**: 最終的に通報ペイロードおよび提出不変スナップショット（`DipsSubmission.submission_snapshot`）へ採用される確定値。
    - `effective_value = override_value ?? source_master_value`
 - **マスター欠損時の救済**: 例えば操縦者マスターで電話番号が欠落しておりDIPSで必須となる場合、`FlightPlan` 画面で一時入力（override）して提出可能とするとともに、必要に応じて「人員マスター側も更新するか」を操縦者が選択できるようにします。
 

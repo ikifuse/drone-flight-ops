@@ -16,11 +16,11 @@ C0: 基盤・PWA Shell 構築
       └─► C2: 現行運航フロー再現 (点検〜離着陸〜BAT交換)
            ├─► C3: バッテリー台帳 & 機体累計管理
            ├─► C4: スプレッドシート外部台帳同期 & DIPS飛行計画台帳新設
-           └─► C5: 地図・FlightArea (MapLibre & GeoJSON)
+           └─► C5: 地図・FlightArea (MapLibre & FlightAreaGeometry, ユーザーKML出力)
                 └─► C6: DIPS手動入力支援・Manual/Mock Adapter & 通報状態管理
                      │   ★【DIPS API非依存の主要機能実装完了】
-                     ├─► C7: 【Optional】DIPS実API接続中継 (Workers Proxy / 審査承認時)
-                     ├─► C8: 国交省様式 PDF/CSV 帳票出力 & DIPS計画台帳出力
+                     ├─► C7: 【Optional】DIPS実API接続中継 (Workers Proxy / API JSON / 審査承認時)
+                     ├─► C8: 国交省様式 PDF/CSV 帳票出力 & KML/Google Drive自動保存
                      └─► C9: オフライン強化 & 実機総合検証 (本番運用可能判定)
 ```
 
@@ -40,12 +40,12 @@ C0: 基盤・PWA Shell 構築
     - **機材系**: `AircraftModel`, `Aircraft`, `BatteryModel`, `BatteryCompatibility`, `Battery`
     - **人員・組織系**: `Organization`, `Personnel`（Role配列管理、UserAccount分離設計準拠）, `Client`, `Project`, 役割分離（`SubmissionActor` 通報操作者, `Pilot` 現場操縦者, `ContactPerson` 緊急連絡先の独立保持設計）
     - **現場・プリセット系**: `Location`, `FlightAreaGeometry`（`polygon` / `circle` / `buffered_line` の中立Domainモデル型）, `FlightAreaPreset`, `InternalFlightPurpose`（内部目的定義）, `FlightPurposePreset`, `SafetyMeasurePreset`, `OperationTemplate`（Copy Source原則、`default_aircraft_id` nullable）
-    - **法務・計画・保険系**: `Permission`（包括許可）, `InsurancePolicy`（ドローン賠償責任保険台帳）, `FlightPlan`（複数機体・複数操縦者・総重量・航続時間・FlightAreaGeometryスナップショット対応、複数日指定拡張 `planned_occurrences` 互換フィールド、`draft`/`submission_ready`状態、`effective_value`/`override_value`セマンティクス）, `DipsSubmission`（`dips_contract_version`, `payload_snapshot` exact outbound JSON保持）
+    - **法務・計画・保険系**: `Permission`（包括許可）, `InsurancePolicy`（ドローン賠償責任保険台帳）, `FlightPlan`（複数機体・複数操縦者・総重量・航続時間・FlightAreaGeometryスナップショット対応、複数日指定拡張 `planned_occurrences` 互換フィールド、`draft`/`submission_ready`状態、`effective_value`/`override_value`セマンティクス）, `DipsSubmission`（`dips_contract_version`, 不変の意味論的 `submission_snapshot` 保持, `api_payload_snapshot` [nullable]）
     - **通報要件・離陸評価型**: `DipsFieldRequirementEngine` インターフェース、`DipsReportingRequirementEvaluator`（特定飛行/非特定飛行要否判定）、`DipsContractRequirement`, `DipsFieldApplicability`, `DipsInputResponsibility`, `DipsFieldValidationResult`, `DipsSubmissionReadiness`, `TakeoffReadinessAssessment`（離陸前多軸評価）型定義
     - **運航・記録系**: `Mission`, `Flight`, `DailyInspection`, `MaintenanceRecord`, `BatteryUsage`（非飛行イベント専用）
     - **監査・帳票系**: `AuditEvent`（`TAKEOFF_WITH_UNCONFIRMED_DIPS`, `TAKEOFF_UNDER_SYSTEM_OUTAGE_EXCEPTION` 等の安全監査イベント境界定義）, `ReportSnapshot`
   - 共通監査メタデータ（`created_at`, `updated_at`, `created_by`, `updated_by`, `version`）の基盤組み込み
-  - Storage API（`persist()`）要求、手動JSONエクスポート/インポート（バルク移行準備）。
+  - Storage API（`persist()`）要求。※会社利用等のバルク移行が必要な場合はCSV/Sheets連携を第一候補とし、ユーザー向けJSONファイルのエクスポート/インポートは要求しない。
   - ※Phase C1ではデータベーススキーマ、エンティティ層、および通報判定エンジン型の確立を主目的とし、全マスターの高度な管理UI（CRUD・検索Picker等）、地図エディタUI、外部Exporter、DIPS通信、およびユーザー認証は後続Phaseで実装する。
 - **完了条件**: ブラウザリロード後も作成したデータが確実に維持・復元されること。設計された全自動テストが合格すること。
 
@@ -70,20 +70,20 @@ C0: 基盤・PWA Shell 構築
   - レイヤー構造: 国土地理院BaseLayer（© 国土地理院）、規制空域レイヤー（DID、空港等周辺、緊急用務空域）、作図レイヤーの分離。
   - 図形作成・編集機能: `POLYGON`（多角形）、`CIRCLE`（中心＋半径）、`BUFFERED_LINE`（中心線＋幅/半径）の作成・頂点編集・削除。
   - プリセット管理: `FlightAreaPreset` 保存・読込、飛行計画への適用（Override対応）。
-  - 将来Exporterポート: `FlightAreaGeometry` から DIPS API payload、GeoJSON、KML、GPX、CSV 等への変換ポート準備（※出力仕様確定は後続）。
+  - 中立Domainの維持: `FlightAreaGeometry` を正本とし、Map描画ライブラリが要求する場合のみ内部AdapterでGeoJSONへ変換。ユーザー向けGeo Exportの第一形式はKML（詳細は27番参照）。
   - キャッシュ機構: オフライン時の事前キャッシュ地図表示。
   - ※レンダリングライブラリ（Leaflet / MapLibre GL JS等）はC5開始時に実機検証してADR決定。
 - **完了条件**: 現場予定エリアを画面上に描画（円・ポリゴン・線形バッファ）・保存・プリセット再利用でき、オフライン時でも事前キャッシュ地図が表示されること。
 
 ### Phase C6: DIPS手動入力支援・Manual/Mock Adapter & 通報状態管理
 - **目的**: DIPS API未取得・審査中でも現場で実運用可能な「手動通報フロー」と「通報状態管理」の実装。**【本フェーズ完了の定義: DIPS API非依存の主要機能実装完了】**（※本番運用可能判定は、C8の帳票機能およびC9の実機・オフライン・Shadow Run等の総合検証を完了した後に行う）。
-- **実装範囲**: `ManualDipsAdapter`、手動入力支援画面（1タップコピーUI、DIPS Webリンク）、`MockDipsAdapter`、DIPS通報状態マシン（`SNAPSHOT_SAVED`, `MANUAL_SUBMIT_WAIT`, `MANUAL_SUBMITTED`, `DIPS_CONFIRMED` 等と、直交する台帳同期状態 `sync_status` の分離）、確認方法（`flight_plan_list_match` / `displayed_id`）対応、誤認防止安全UI。
+- **実装範囲**: `ManualDipsAdapter`、手動入力支援画面（1タップコピーUI、DIPS Webリンク）、`MockDipsAdapter`、DIPS通報状態マシン（`SNAPSHOT_SAVED`, `MANUAL_SUBMIT_WAIT`, `MANUAL_SUBMITTED`, `DIPS_CONFIRMED` 等と、直交する台帳同期状態 `sync_status` の分離）、確認方法（`flight_plan_list_match` / `displayed_id`）対応、誤認防止安全UI。※手動通報支援ではAPI用JSONシリアライズは行わない。
 - **完了条件**: DIPS APIキーが一切存在しなくても、計画作成→ローカル不変スナップショット保存→手動コピー画面→手動通報打刻→通報確認記録（受付番号入力または一覧目視照合）までが正常に動作し、「手動通報記録」と「DIPS確認済み」、および「台帳同期状態」が明確に区別されること。
 
-### Phase C7: 【Optional Integration】DIPS 2.0 実API中継（Cloudflare Workers Proxy）
+### Phase C7: 【Optional Integration】DIPS 2.0 実API中継（Cloudflare Workers Proxy & JSON Payload）
 - **目的**: 国交省審査を通過し、正式なcredential（client_id, client_secret）が発行された場合のみ追加する拡張統合機能。**（※審査未完了・API拒否時でも本フェーズをスキップしてC8・C9へ進むことができ、アプリ完成のブロッカーとならない）**
-- **実装範囲**: Workers OIDCトークン交換プロキシ、`ApiDipsAdapter`、FPR飛行計画通報API接続、照合（Reconciliation）自動検索。
-- **完了条件**: DIPSテスト環境または本番環境との間でトークン取得・計画通報・計画ID自動回収が成立すること。
+- **実装範囲**: Workers OIDCトークン交換プロキシ、`ApiDipsAdapter`、FPR飛行計画通報API（No.1〜88準拠 DipsFlightPlanPayloadDTO および内部JSONシリアライズ）、`api_payload_snapshot` 記録、照合（Reconciliation）自動検索。
+- **完了条件**: DIPSテスト環境または本番環境との間でトークン取得・JSON計画通報・計画ID自動回収が成立すること。
 
 ### Phase C8: 統合A4運航帳票・国交省様式 PDF/CSV 出力 & KML Geo Export
 - **目的**: 実務用「A4縦 統合運航帳票」（飛行記録＋日常点検＋点検整備サマリー）、法定飛行日誌（様式1・2・3別）、DIPS飛行計画台帳の出力、および Google My Maps 連携用 KML エクスポート・Google Drive 自動保存機能の確立。
@@ -111,7 +111,7 @@ C0: 基盤・PWA Shell 構築
   6. **日跨ぎ飛行**: 日付変更線を跨ぐ夜間・未明フライトで時間計算・日付記録が正確であること。
   7. **特殊運航シナリオ**: 飛行0回での現場中止（`ABORTED`）および8回以上の連続飛行が制限なく正常記録できること。
   8. **スプレッドシート競合保護**: スプレッドシート側のセル直接編集が、アプリからの後続同期で上書き破壊されないこと。
-  9. **ストレージEviction想定復旧**: IndexedDBクリア時でも、外部スプレッドシートおよびJSONバックアップからのデータ復旧（リストア）が成立すること。
+  9. **ストレージEviction想定復旧**: IndexedDBクリア時でも、確定台帳である外部スプレッドシート（およびCSV）からのデータ復旧（リストア）が成立すること。
   10. **DIPS Mockエラー・照合処理**: 4xxエラー時の入力修正誘導、およびPOST切断時の照合（Reconciliation）フローが意図通り動作すること。
   11. **DIPS手動通報・飛行計画台帳の自律検証**: DIPS API接続が一切ない環境でも、計画作成・不変スナップショット保存・手動支援コピー・手動通報打刻・確認記録（受付番号または一覧目視照合）・スプレッドシート台帳同期の全プロセスが正常完了すること。
   12. **実現場並行運用（Shadow Run）**: 現行GASアプリと並行運用し、3回以上の実際の飛行セッションで記録内容の整合性を確認すること。

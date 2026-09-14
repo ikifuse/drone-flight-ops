@@ -389,8 +389,8 @@
   - `dips_contract_version`: 基準API仕様バージョン（例: `"FPR-API-1.9"`）
   - `submission_method`: 通報方式 (`manual` / `api` / `mock`)
   - `status`: 通報状態 (`snapshot_saved`, `manual_submit_wait`, `manual_submitted`, `dips_confirmed`, `api_confirmed`, `failed`, `cancelled`, `superseded`, `system_outage_exception`)
-  - `sync_status`: スプレッドシート台帳同期状態 (`local_saved`, `sync_pending`, `syncing`, `synced`, `sync_failed`)
-  - `payload_snapshot`: **提出時点のexact outbound payload（不変JSON文字列）**
+  - `submission_snapshot`: **提出確定時点の意味論的不変通報スナップショット（必須・通報方式問わず保持）**。手動入力支援（`ManualDipsAdapter`）の1タップコピー展開、およびGoogle Sheets飛行計画台帳同期の元データ。
+  - `api_payload_snapshot`: **DIPS API送信時のexact outbound JSON文字列（任意・nullable、Phase C7 Optional）**。`ApiDipsAdapter` 経由で国交省へ実際にPOSTした電文の監査記録。手動通報時やAPI未利用時はnull。
   - `dips_plan_id`: DIPS飛行計画番号（受付番号、nullable）
   - `confirmation_method`: 確認方式 (`flight_plan_list_match` / `displayed_id` / `api_response`)
   - `submitted_at`: 通報日時

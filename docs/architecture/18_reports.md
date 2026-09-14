@@ -33,10 +33,13 @@
 └─────────────────┘ └────────────────┘ └────────────────┘
 ```
 
-### 1.1 帳票（PDF/印刷）と Geo Export（KML）の役割分担
-- **PDF / 印刷帳票**: 航空法に基づく公的提出、現場での紙面提示、コンビニ印刷、紙面保管、および社内監査閲覧のためのフォーマットです。
-- **KML (Geo Export)**: 計画空域や運航実績を Google My Maps や Google Earth 上で視覚的に重ね合わせて確認・共有するための地理情報交換フォーマットです（詳細は [27_output-kml-drive-and-mymaps.md](27_output-kml-drive-and-mymaps.md) 参照）。
-- **原則**: **KMLをPDF帳票の代替とすることはできません**。また、KML導入によってPDF生成要件が縮小されることもありません。双方は同一のDomain正本データから、それぞれ `ReportModelBuilder -> PdfGenerator` および `KmlExportModelBuilder -> KmlExporter` により独立して生成されます。
+### 1.1 帳票（PDF/印刷）、確定台帳（Sheets）、Geo Export（KML）、および内部通信（JSON）の境界
+- **4大出力・連携境界の原則**:
+  1. **Google Sheets**: 確定台帳（原本・長期保存・手動修正・集計・PDF生成元・Ledger Authority）。
+  2. **PDF**: 人間向け帳票（航空法に基づく公的提出、現場での紙面提示、コンビニ印刷、紙面保管、社内監査閲覧のためのHuman-readable Report）。
+  3. **KML (Geo Export)**: 計画空域や運航実績を Google My Maps や Google Earth 上で視覚的に重ね合わせて確認・共有するためのユーザー向け地図出力（詳細は [27_output-kml-drive-and-mymaps.md](27_output-kml-drive-and-mymaps.md) 参照）。
+  4. **JSON**: DIPS API（Phase C7 Optional）内部電文通信専用。ユーザー向けエクスポートファイルとしては提供せず、ユーザーにJSONの作成・編集・保存を要求しません。
+- **原則**: **KMLをPDF帳票やSheets台帳の代替とすることはできません**。また、KML導入によってPDF生成要件やSheets台帳保存が縮小されることもありません。双方は同一のDomain正本データから、それぞれ `ReportModelBuilder -> PdfGenerator` および `KmlExportModelBuilder -> KmlExporter` により独立して生成されます。
 
 ---
 

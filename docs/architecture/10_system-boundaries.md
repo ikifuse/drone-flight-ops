@@ -43,7 +43,7 @@
   1. **現場操作UIの提供**: 強い日差しの屋外でも視認性の高い、片手タップ・手袋タップ可能な高コントラストUI。
   2. **運航状態マシン（Operation State Machine）の実行**: 準備〜日常点検〜離陸〜着陸〜BAT交換〜機体交代〜飛行後点検〜運航確定の進行。
   3. **ローカルファースト永続化**: 通信状態に関わらず、全ての入力・打刻イベントをローカルDB（IndexedDB）へ即時保存。
-  4. **地図・飛行範囲（FlightArea）管理**: MapLibre GL JSによる地理院地図タイルのオフライン描画、円および多角形ポリゴンの作成・編集・GeoJSON保持。
+  4. **地図・飛行範囲（FlightArea）管理**: MapLibre GL JSによる地理院地図タイルのオフライン描画、円・多角形ポリゴン・線形バッファの作成・編集、中立な `FlightAreaGeometry` のドメイン保持（地図描画ライブラリ向けには内部アダプターでGeoJSON変換、ユーザー向け地図出力としてはKMLを生成）。
   5. **同期キュー（SyncQueue）の管理**: DIPS通報やスプレッドシート送信ジョブ（運航日誌・DIPS飛行計画台帳）の生成、状態追跡、オフライン時の待機、再試行。
   6. **帳票およびGeoエクスポート**: 国交省取扱要領に基づく飛行日誌PDF/CSVのブラウザ内生成、および Google My Maps 連携用 KML エクスポート・Google Drive への自動保存（詳細は 27番参照）。
   7. **DIPS手動入力支援機能**: API未利用時でもDIPS Web/Appへ素早く正確に転記できるよう、提出項目の一覧表示・ワンタップクリップボードコピー・DIPS Web起動導線を提供。
@@ -94,7 +94,7 @@
 
 | 境界間 | プロトコル | 主なデータ形式 | 障害時のフォールバック |
 |---|---|---|---|
-| **Client ⇔ LocalDB** | IndexedDB API / Dexie.js | 内部TypeScriptオブジェクト | メモリ内保持 ＋ JSON手動退避 |
+| **Client ⇔ LocalDB** | IndexedDB API / Dexie.js | 内部TypeScriptオブジェクト | メモリ内保持（バルク移行時はSheets/CSVを第一候補とする） |
 | **Client ⇔ Backend** | HTTPS (Fetch / REST) | JSON (CSRFトークン/セッション保護) | 同期キューへ退避しオフライン継続 |
 | **Backend ⇔ DIPS 2.0** | HTTPS (OIDC / REST) | JSON (`application/json`) | `送信待ち` / `通報失敗` へ遷移し再送待機 |
 | **Client ⇔ Spreadsheet** | HTTPS (Google Sheets API v4 / GAS WebAPI) | JSON (行配列・レコード) | 同期キューへ保持し、手動同期再試行可能 |

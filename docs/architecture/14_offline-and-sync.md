@@ -127,20 +127,20 @@ interface SyncJob {
 
 ### 3.4 DIPS通報前の不変スナップショット保存と外部台帳非同期退避（Pre-submission Snapshot & Non-blocking Ledger Sync）
 
-DIPSへの通報（API通報または手動通報）にあたっては、「DIPSへ提出した後に保存する」のではなく、**「提出予定内容を確定した時点でローカルへ不変payload_snapshotを先行保存する」**順序を必須原則とします。外部台帳（Googleスプレッドシート等）への同期はこれと直交する非同期ジョブとして扱い、**Sheets同期の成否はDIPS通報の前提条件としません**。
+DIPSへの通報（API通報または手動通報）にあたっては、「DIPSへ提出した後に保存する」のではなく、**「提出予定内容を確定した時点でローカルへ不変submission_snapshotを先行保存する」**順序を必須原則とします。外部台帳（Googleスプレッドシート等）への同期はこれと直交する非同期ジョブとして扱い、**Sheets同期の成否はDIPS通報の前提条件としません**。
 
 ```text
 1. 計画作成・確定
    ↓ 提出スナップショット (DipsSubmission, status: 'snapshot_saved') 生成
 2. ローカルDB即時永続化 (IndexedDB)
-   ├─ 不変 payload_snapshot 保存（必須・改変不可）
+   ├─ 不変 submission_snapshot 保存（必須・改変不可）
    └─ 同期ジョブ登録 (target: 'spreadsheet_dips_ledger', sync_status: 'sync_pending')
 3. 外部台帳への非同期同期（DIPS通報をブロックしない）
    ├─ オンラインかつSheets疎通可: Googleスプレッドシート「DIPS飛行計画台帳」へ行挿入 (sync_status: 'synced')
    └─ オフラインまたはSheets障害中: キュー保持 (sync_status: 'sync_pending' / 'sync_failed') のままDIPS通報へ進む
 4. DIPS通報実施（Sheets同期完了を待たずに即時実行可能）
    ├─ 手動通報: 手動支援画面でコピー → DIPS Web/アプリ入力 → アプリで「手動通報完了」記録 (status: 'manual_submit_wait' → 'dips_confirmed')
-   └─ API通報 (Optional): バックエンド経由でDIPS FPR APIへ送信 (status: 'sending' → 'dips_confirmed' / 'failed')
+   └─ API通報 (Optional): バックエンド経由でDIPS FPR APIへ送信 (status: 'sending' → 'dips_confirmed' / 'failed', exact JSON を api_payload_snapshot へ記録)
 5. 通報結果・確認方法の記録
    ↓ ローカルDB更新 (status: 'dips_confirmed', confirmation_method, dips_plan_id: nullable)
 6. 外部台帳の行更新 (UPSERT)
@@ -148,7 +148,7 @@ DIPSへの通報（API通報または手動通報）にあたっては、「DIPS
 ```
 
 - **オフライン現場・外部サービス障害時の堅牢性**:
-  - DIPS通報前にローカルへ不変 `payload_snapshot` が確実に永続化されます。
+  - DIPS通報前にローカルへ不変 `submission_snapshot` が確実に永続化されます。
   - Google Sheetsへの同期完了はDIPS通報の必須条件ではありません。Google Sheets障害中やオフラインであっても、DIPSへの手動またはAPI通報は妨げられません。
   - 端末画面では「ローカル保存済」「外部台帳同期待ち」「外部台帳同期済」を明確に区別して表示します。
   - 電波復帰時や障害解消時に台帳同期ジョブが自動実行され、スプレッドシート上の台帳が最新状態へ追いつきます。
