@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Production build output
+dist/
+
+# Local environment and OS files
+.DS_Store
+Thumbs.db
+*.local
+.cache/
+
+# PWA / Vite temp files
+dev-dist/

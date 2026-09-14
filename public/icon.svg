@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="96" fill="#0a0f1d"/>
+  <circle cx="256" cy="256" r="180" fill="#131c31" stroke="#1e2942" stroke-width="8"/>
+  
+  <!-- Rotors -->
+  <circle cx="160" cy="160" r="44" fill="none" stroke="#38bdf8" stroke-width="8" stroke-dasharray="12 6"/>
+  <circle cx="352" cy="160" r="44" fill="none" stroke="#38bdf8" stroke-width="8" stroke-dasharray="12 6"/>
+  <circle cx="160" cy="352" r="44" fill="none" stroke="#38bdf8" stroke-width="8" stroke-dasharray="12 6"/>
+  <circle cx="352" cy="352" r="44" fill="none" stroke="#38bdf8" stroke-width="8" stroke-dasharray="12 6"/>
+
+  <!-- Arms -->
+  <line x1="200" y1="200" x2="160" y2="160" stroke="#64748b" stroke-width="14" stroke-linecap="round"/>
+  <line x1="312" y1="200" x2="352" y2="160" stroke="#64748b" stroke-width="14" stroke-linecap="round"/>
+  <line x1="200" y1="312" x2="160" y2="352" stroke="#64748b" stroke-width="14" stroke-linecap="round"/>
+  <line x1="312" y1="312" x2="352" y2="352" stroke="#64748b" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- Center Hub Body -->
+  <polygon points="256,180 320,230 295,330 217,330 192,230" fill="#0284c7" stroke="#38bdf8" stroke-width="6"/>
+  <circle cx="256" cy="256" r="28" fill="#0a0f1d" stroke="#67e8f9" stroke-width="5"/>
+  <circle cx="256" cy="256" r="12" fill="#38bdf8"/>
+
+  <!-- Camera/Sensor Indicator -->
+  <path d="M236 324 L276 324 L266 348 L246 348 Z" fill="#38bdf8"/>
+</svg>
