@@ -20,21 +20,22 @@
 
 - **選択肢A: クライアント直接通信**: バックエンドを置かず、ブラウザからDIPSへ直接アクセスを試みる。
 - **選択肢B: アプリ全体をDIPS仕様に密結合**: DIPSのデータ形式をそのままアプリの内部データモデルとする。
-- **選択肢C: DIPS Adapter論理分離 ＋ バックエンド中継境界・BFF構成（推奨案）**:
-  - クライアント内部に3系統独立アダプター（DRS, FPA, FPR）を設置。
-  - BFF（Backend for Frontend）パターンを採用し、`client_secret` 保持およびAccess/Refresh TokenはCloudflare Workers等のバックエンド境界で安全に保持。
+- **選択肢C: DIPS Multi-Adapter論理分離 ＋ バックエンド中継境界構成（推奨案）**:
+  - クライアント内部に共通通報インターフェース `IDipsSubmissionAdapter` を定義。
+  - **`ManualDipsAdapter`（第一級対応）**: DIPS API未取得時でも現場スマホ1台で手動通報（手動支援・コピー・通報記録・受付番号追記）を完全完結。
+  - **`MockDipsAdapter`（検証用）**: 外部通信なしで擬似通報・エラー・照合の全フローを検証。
+  - **`ApiDipsAdapter`（Optional）**: 利用申請承認・credential発行時のみCloudflare Workers中継プロキシを経由してDIPS 2.0 APIと通信。
   - DIPS二重通報防止のため、POST切断時の自動再送を禁止し、検索APIによる照合（Reconciliation）を必須化。
-  - テスト用モック（`MockDipsAdapter`）を備え、API利用申請の審査中や障害時でもアプリ本体の機能の開発・動作検証を可能とする。
 
 ---
 
 ## 3. 提案内容（Proposed Decision）
 
-**選択肢C（DIPS Adapter論理分離 ＋ バックエンド中継境界・BFF構成）** を推奨候補として提案する（オーナーレビュー承認待ち）。
+**選択肢C（DIPS Multi-Adapter論理分離 ＋ バックエンド中継境界構成）** を推奨候補として提案する（オーナーレビュー承認待ち）。
 
-1. クライアント側には `IDipsService` 抽象インターフェースを定義し、UIや運航管理ロジックがDIPSの生API仕様に直接依存しない構造とする。
-2. DRS (`drs-utm`), FPA (`drs-req`), FPR (`drs-fpl`) を論理モジュールとして分離し、credentialが共通か個別かといった未確認仕様の判明時にもアダプター内部の変更のみで対応可能とする。
-3. `client_secret` および動的OAuthトークンはバックエンド境界（Cloudflare Workers）で安全に隔離し、ブラウザへは直接露出させずセキュアCookieセッションで管理する。
+1. クライアント側には `IDipsSubmissionAdapter` 共通インターフェースを定義し、UIや運航管理ロジックがDIPS APIの有無や生API仕様に直接依存しない構造とする。
+2. 手動通報アダプターを正式サポートし、APIが取得できない場合でもアプリ本体を100%完成・運用可能とする。
+3. API利用時は DRS (`drs-utm`), FPA (`drs-req`), FPR (`drs-fpl`) を論理モジュールとして分離し、`client_secret` および動的OAuthトークンはバックエンド境界（Cloudflare Workers）で安全に隔離する。
 4. 国交省APIが独自Idempotency-Keyヘッダをサポートしない前提に立ち、送信結果不明時は計画照合（Reconciliation）によって二重通報を防止する。
 
 ---

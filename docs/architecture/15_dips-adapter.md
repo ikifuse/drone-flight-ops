@@ -13,27 +13,34 @@ DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤シス
 ```text
 ┌────────────────────────────────────────────────────────┐
 │ クライアント Core / UI / 運航管理                     │
-│  - IDipsService (共通インターフェース)                │
+│  - 内部FlightPlan / 不変DipsSubmission スナップショット │
+│  - IDipsSubmissionAdapter (共通通報インターフェース)   │
 └───────────────────────────┬────────────────────────────┘
-                            │ (抽象化メソッド呼出)
+                            │ (共通インターフェース呼出)
                             ▼
 ┌────────────────────────────────────────────────────────┐
-│ DIPS Adapter レイヤー                                  │
-│  ┌─────────────────┬─────────────────┬────────────────┐│
-│  │   DRS Adapter   │   FPA Adapter   │  FPR Adapter   ││
-│  │ (機体登録系)    │ (飛行許可承認系)│ (飛行計画通報) ││
-│  │ realm: drs-utm  │ realm: drs-req  │ realm: drs-fpl ││
-│  └────────┬────────┴────────┬────────┴────────┬───────┘│
-└───────────┼─────────────────┼─────────────────┼────────┘
-            │                 │                 │
-            ▼                 ▼                 ▼
+│ 通報アダプター群（Multi-Adapter Strategy）            │
+│  ┌──────────────────────┬────────────────────────────┐ │
+│  │  ManualDipsAdapter   │      MockDipsAdapter       │ │
+│  │ 【正式・第一級対応】 │ 【開発・テスト・検証用】   │ │
+│  │ - 手動入力支援画面DTO│ - 擬似受付番号発行         │ │
+│  │ - クリップボード抽出 │ - 擬似エラーシミュレート   │ │
+│  │ - 操縦者手動打刻記録 │ - オフライン開発完結       │ │
+│  └──────────────────────┴────────────────────────────┘ │
+│  ┌───────────────────────────────────────────────────┐ │
+│  │  ApiDipsAdapter 【将来・利用承認時 Optional】      │ │
+│  │  - DRS / FPA / FPR レルム別 OIDC / REST 通信      │ │
+│  └──────────────────────┬────────────────────────────┘ │
+└─────────────────────────┼──────────────────────────────┘
+                          │ (API利用可能時のみ中継)
+                          ▼
 ┌────────────────────────────────────────────────────────┐
 │ バックエンド中継境界 (Cloudflare Workers Proxy)        │
 │  - client_secretの安全な秘匿保管                       │
 │  - 各realmのToken Endpoint / API EndpointへのHTTPS中継 │
-└───────────────────────────┬────────────────────────────┘
-                            │
-                            ▼
+└─────────────────────────┬──────────────────────────────┘
+                          │
+                          ▼
 ┌────────────────────────────────────────────────────────┐
 │ 国土交通省 DIPS 2.0 (外部API)                          │
 └────────────────────────────────────────────────────────┘
@@ -83,32 +90,113 @@ DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤シス
 
 ## 4. 共通インターフェース定義（TypeScript）
 
+APIの有無によってアプリ本体のデータ構造や呼び出し元コードを変更させないため、共通の通報アダプターインターフェース `IDipsSubmissionAdapter` を定義します。
+
 ```typescript
-export interface IDipsService {
-  // 接続確認・認証状態
+// 提出方式
+export type DipsSubmissionMethod = 'manual' | 'api' | 'mock';
+
+// 手動入力支援用DTO
+export interface ManualAssistanceData {
+  flightPlanId: string;
+  revision: number;
+  plannedStartTimeFormatted: string;   // 例: "2026/10/20 10:00"
+  plannedEndTimeFormatted: string;     // 例: "2026/10/20 12:00"
+  locationName: string;                // 例: "〇〇町飛行場"
+  coordinatesText: string;             // 例: "33.456789, 129.876543"
+  radiusMetersText: string;            // 例: "150m"
+  altitudeAglText: string;             // 例: "30m (AGL)"
+  aircraftRegistrationMark: string;    // 例: "JU324XXXXXXX"
+  aircraftModel: string;               // 例: "EVO Lite Series"
+  pilotName: string;                   // 例: "山田 太郎"
+  pilotLicenseNumber: string;          // 例: "第XXXXX号"
+  flightPurpose: string;               // 例: "空撮"
+  flightType: string;                  // 例: "目視内飛行・昼間飛行"
+  permissionNumber: string;            // 例: "国空航第XXXXX号"
+  dipsWebUrl: string;                  // DIPS 2.0 ログイン/飛行計画通報画面URL
+}
+
+// 通報結果
+export interface DipsSubmissionResult {
+  success: boolean;
+  method: DipsSubmissionMethod;
+  dipsPlanId?: string;
+  status: 'ledger_saved' | 'manual_submit_wait' | 'manual_submitted' | 'dips_confirmed' | 'api_confirmed' | 'submission_uncertain' | 'failed';
+  errorMessage?: string;
+  submittedAt: string;
+}
+
+// 通報アダプター共通インターフェース
+export interface IDipsSubmissionAdapter {
+  readonly method: DipsSubmissionMethod;
+  
+  // 提出準備（スナップショット検証・外部台帳退避用データ生成）
+  prepareSubmission(plan: InternalFlightPlan): Promise<DipsSubmissionPayload>;
+  
+  // 通報実行（手動支援表示、またはAPI送信、またはモック実行）
+  executeSubmission(payload: DipsSubmissionPayload): Promise<DipsSubmissionResult>;
+  
+  // 手動入力支援データの取得（手動アダプター時）
+  getManualAssistanceData(payload: DipsSubmissionPayload): ManualAssistanceData;
+  
+  // 計画取消
+  cancelPlan(dipsPlanId: string, reason: string): Promise<boolean>;
+}
+
+// API接続用サービス（承認時 Optional）
+export interface IDipsApiService extends IDipsSubmissionAdapter {
   getAuthStatus(realm: 'drs-utm' | 'drs-req' | 'drs-fpl'): Promise<DipsAuthStatus>;
   login(realm: 'drs-utm' | 'drs-req' | 'drs-fpl'): Promise<void>;
   logout(realm: 'drs-utm' | 'drs-req' | 'drs-fpl'): Promise<void>;
-
-  // DRS: 機体登録
-  getRegisteredAircraft(): Promise<DipsAircraftDTO[]>;
-
-  // FPA: 許可承認
-  getApprovedPermissions(): Promise<DipsPermissionDTO[]>;
-
-  // FPR: 飛行計画通報・照合
-  submitFlightPlan(plan: InternalFlightPlan): Promise<DipsSubmissionResult>;
   reconcileFlightPlan(criteria: DipsPlanSearchCriteria): Promise<DipsReconciliationResult>;
-  cancelFlightPlan(dipsPlanId: string): Promise<boolean>;
-  getSurroundingPlans(area: FlightAreaDTO, timeRange: TimeRangeDTO): Promise<DipsPlanDTO[]>;
 }
 ```
 
 ---
 
-## 5. テスト用モック（`MockDipsAdapter`）の設計
+## 5. アダプター実装区分（Manual / Mock / API）
 
-開発中およびAPI利用申請の審査中においても、Phase Cの実装・単体テスト・E2Eテストが完全に進められるよう、`MockDipsAdapter` を用意します。
+### 5.1 ManualDipsAdapter（手動通報アダプター - 正式・第一級）
+- **役割**: DIPS API未取得時、電波微弱時、または手動運用を選択した場合の基幹アダプター。
+- **挙動**:
+  1. 内部飛行計画から不変の `DipsSubmission` スナップショットを生成。
+  2. Googleスプレッドシート「DIPS飛行計画台帳」へ同期ジョブを登録。
+  3. スマホ画面に「手動入力支援画面（コピー用UI）」を表示。
+  4. 操縦者が「DIPSへ入力完了」をタップした時点で `manual_submitted` を記録。
+  5. 操縦者がDIPS画面の計画番号/受付番号を入力した時点で `dips_confirmed` を記録。
 
-- ネットワーク通信を行わず、ローカルでリアルなDIPS受付番号（例: `DIPS-202609-MOCK-XXXX`）を生成。
-- 意図的なバリデーションエラー、503一時通信エラー、トークン期限切れなどのシミュレーション機能を備え、エラーハンドリングUIの堅牢性を事前検証。
+### 5.2 MockDipsAdapter（開発・テスト用モック）
+- **役割**: 外部APIやDIPS本番環境を汚染せずに、通報成功・エラー・照合の全フローをテスト。
+- **挙動**:
+  - 擬似受付番号（例: `MOCK-DIPS-2026-XXXX`）を発行。
+  - 画面上に **`[MOCK] 疑似通報`** と明確に表示し、本物の通報と混同させない。
+
+### 5.3 ApiDipsAdapter（DIPS 2.0 APIアダプター - 利用承認時 Optional）
+- **役割**: 国交省審査を通過し、credentialが発行された場合のみ有効化する自動連携プラグイン。
+- **挙動**:
+  - Cloudflare Workers中継プロキシを経由してDIPS 2.0 FPRエンドポイントへJSON送信。
+  - レスポンスから受付番号を自動抽出し、`api_confirmed` を記録。
+
+---
+
+## 6. 手動入力支援画面（Manual Assistance Screen）設計
+
+DIPS APIがない場合でも、スマートフォン1台でストレスなくDIPS Web画面へ必要事項を転記できるよう、専用の「手動入力支援画面」を提供します。
+
+### 6.1 画面構成と1タップコピーUI
+- **上部**: 「DIPS Webを開く」外部リンクボタン（ブラウザの別タブで開く）。
+- **注意文**: 「※DIPS側へ自動入力はされません。各項目の『コピー』を押し、DIPS画面へ貼り付けてください」。
+- **項目リスト（各項目にワンタップ「コピー」ボタン付き）**:
+  - 飛行予定日時（開始・終了）
+  - 飛行場所・名称
+  - 緯度経度（10進数）
+  - 飛行高度（AGL対地高度）
+  - 飛行範囲半径（m）
+  - 機体登録記号（JU324...）
+  - 操縦者氏名・技能証明番号
+  - 飛行目的（空撮・点検等）
+  - 飛行形態（昼間・目視内等）
+  - 許可承認番号
+- **下部アクション**:
+  - **「DIPSへ手動通報した」ボタン**: 押下により `MANUAL_SUBMITTED` 状態を打刻。
+  - **「受付番号を入力する」入力欄**: DIPS側で発番された計画番号・受付番号を追記し、`DIPS_CONFIRMED` へ更新。

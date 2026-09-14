@@ -81,55 +81,76 @@ stateDiagram-v2
 
 ---
 
-## 3. DIPS通報状態マシン（DIPS Notification State Machine）
+## 3. DIPS通報状態マシン（DIPS Notification State Machine - B2.2改訂）
 
-国土交通省DIPS 2.0への飛行計画通報プロトコルを反映し、通信切断やレスポンス未達による二重通報事故を防止する「結果不明・照合（Reconciliation）」状態を含む状態追跡を行います。
+APIの有無（手動通報 / API自動通報）にかかわらず、提出予定スナップショットの台帳退避、手動入力支援、送信成否、そして「操縦者による手動通報操作」と「DIPS側の受理確認」を明確に分離した状態追跡を行います。
 
 ### 3.1 状態遷移図（Mermaid）
 
 ```mermaid
 stateDiagram-v2
-    [*] --> UNCREATED : 計画作成前
+    [*] --> DRAFT : 計画作成中
     
-    UNCREATED --> CREATED : 飛行範囲・計画保存
+    DRAFT --> LEDGER_SAVED : 提出スナップショット確定・外部台帳保存/キュー投入
     
-    CREATED --> PENDING : 通報ボタン押下(キュー登録)
+    state "手動通報フロー (Manual)" as ManualFlow {
+        LEDGER_SAVED --> MANUAL_SUBMIT_WAIT : 手動通報モード選択 (手動支援画面表示)
+        MANUAL_SUBMIT_WAIT --> MANUAL_SUBMITTED : 操縦者が「DIPSへ手動通報した」と記録
+        MANUAL_SUBMITTED --> DIPS_CONFIRMED : 操縦者がDIPS発行の受付番号/計画IDを入力確認
+    }
     
-    PENDING --> SENDING : ネットワーク疎通確認・送信開始
+    state "API自動通報フロー (Optional API)" as ApiFlow {
+        LEDGER_SAVED --> SENDING : API通報開始 (ネットワーク到達確認)
+        SENDING --> API_CONFIRMED : DIPSサーバーより受理レスポンス受領(計画ID自動取得)
+        SENDING --> FAILED : 認証エラー/バリデーションエラー(4xx)
+        SENDING --> RETRY_WAIT : 一時通信エラー/サーバー5xxエラー
+        SENDING --> SUBMISSION_UNCERTAIN : POST送信中切断/応答タイムアウト(成否不明)
+        
+        SUBMISSION_UNCERTAIN --> API_CONFIRMED : DIPS計画照合で登録確認
+        SUBMISSION_UNCERTAIN --> RETRY_WAIT : DIPS計画照合で未登録確認済み
+        SUBMISSION_UNCERTAIN --> RECONCILIATION_REQUIRED : 照合不能/要手動確認
+        
+        RECONCILIATION_REQUIRED --> DIPS_CONFIRMED : 操縦者がDIPS画面確認の上「受付番号」入力
+        RECONCILIATION_REQUIRED --> RETRY_WAIT : 操縦者が「未登録」確認の上再送指定
+        
+        RETRY_WAIT --> SENDING : ネットワーク復帰・再送実行
+    }
     
-    SENDING --> SUCCESS_CONFIRMED : 国交省サーバーより受理レスポンス受領
-    SENDING --> FAILED : 認証エラー/バリデーションエラー(4xx)
-    SENDING --> RETRY_WAIT : 送信前切断/サーバー5xxエラー
-    SENDING --> SUBMISSION_UNCERTAIN : POST送信中切断/応答タイムアウト(成否不明)
+    FAILED --> DRAFT : 計画パラメータ修正
     
-    SUBMISSION_UNCERTAIN --> SUCCESS_CONFIRMED : DIPS計画照合で登録確認(ID回収)
-    SUBMISSION_UNCERTAIN --> RETRY_WAIT : DIPS計画照合で未登録確認済み
-    SUBMISSION_UNCERTAIN --> RECONCILIATION_REQUIRED : 照合不能/要ユーザー手動確認
+    DIPS_CONFIRMED --> SUPERSEDED : 計画内容変更による新リビジョン作成
+    API_CONFIRMED --> SUPERSEDED : 計画内容変更による新リビジョン作成
+    DIPS_CONFIRMED --> CANCELLED : 計画取消 (DIPS側取消処理＋台帳理由記録)
+    API_CONFIRMED --> CANCELLED : 計画取消 (DIPS API取消または手動取消)
     
-    RECONCILIATION_REQUIRED --> SUCCESS_CONFIRMED : ユーザーがWeb確認の上「登録済み」承認
-    RECONCILIATION_REQUIRED --> RETRY_WAIT : ユーザーが「未登録」確認の上再送指定
-    
-    RETRY_WAIT --> SENDING : ネットワーク復帰・到達確認/リトライタイマー
-    FAILED --> CREATED : パラメータ修正後再送
-    
-    SUCCESS_CONFIRMED --> [*]
+    DIPS_CONFIRMED --> [*]
+    API_CONFIRMED --> [*]
+    CANCELLED --> [*]
+    SUPERSEDED --> [*]
 ```
 
-### 3.2 各状態の定義と挙動
+### 3.2 各状態の定義と現場UI挙動
 
 | 状態名 (State) | 説明 | ユーザーへのUI表示 | 次の遷移 |
 |---|---|---|---|
-| **`UNCREATED`** | 飛行計画データが未作成。 | 「飛行計画を作成してください」 | `CREATED` |
-| **`CREATED`** | 端末内に飛行範囲（円/ポリゴン）・日時が保存された状態。 | 「DIPS通報待ち（ローカル保存済）」 | `PENDING` |
-| **`PENDING`** | パイロットが通報を要求し、同期キューに入った状態（オフライン含む）。 | 「通報待機中（通信可能時に送信）」 | `SENDING` |
-| **`SENDING`** | バックエンド（Workers）経由でDIPS Token/FPRエンドポイントと通信中。 | 「DIPS通報中...（通信中）」 | 成功時/失敗時/結果不明時 |
-| **`SUBMISSION_UNCERTAIN`** | POSTリクエスト送出後に切断・タイムアウトが発生し、DIPS側での登録成否が不明な状態。**自動再POSTは絶対に行わない**。 | 「通報結果確認中...（二重登録防止のため照合中）」 | DIPS計画検索による照合結果へ |
-| **`RECONCILIATION_REQUIRED`** | DIPS計画検索でも登録成否を自動判別できず、手動確認が必要な状態。 | 「要確認: DIPS登録状況を照合できません。DIPS Web画面等で確認してください」 | ユーザー確認アクション |
-| **`SUCCESS_CONFIRMED`** | DIPSサーバーから計画ID・受付番号が正常に返却された状態（または照合により確認）。 | **「DIPS通報成功確認済み（受付番号: XXXXX）」** | 完了 |
-| **`FAILED`** | 登録記号不一致や日付矛盾など、恒久的な拒否レスポンス（4xx）。 | 「通報失敗: エラー内容を表示（修正が必要）」 | `CREATED` |
-| **`RETRY_WAIT`** | 圏外やDIPSサーバー一時障害による未送信状態。 | 「一時通信エラー: 再送待機中」 | `SENDING` |
+| **`DRAFT`** | 飛行範囲（円/ポリゴン）・日時・機体・操縦者の作成・編集中。 | 「飛行計画を作成中」 | `LEDGER_SAVED` |
+| **`LEDGER_SAVED`** | 提出スナップショットが確定し、ローカルDB保存およびスプレッドシート「DIPS飛行計画台帳」へ保存（オフライン時は同期キュー投入）された状態。 | **「台帳保存済み（DIPS未通報）」** | 手動通報またはAPI通報へ |
+| **`MANUAL_SUBMIT_WAIT`** | 手動入力支援画面を表示中。パイロットがDIPS Web/アプリへコピー＆ペースト入力を行っている待機状態。 | 「手動通報待機中（DIPSへ入力してください）」 | `MANUAL_SUBMITTED` |
+| **`MANUAL_SUBMITTED`** | 操縦者がアプリ上で「DIPS手動通報を完了した」と記録打刻した状態。**※DIPS側の受理確認ではない**。 | **「手動通報実施を記録（DIPS受付番号の確認待ち）」** | `DIPS_CONFIRMED` |
+| **`DIPS_CONFIRMED`** | 操縦者がDIPS画面で発行された計画番号・受付番号を目視確認し、アプリへ追記登録した状態。 | **「DIPS通報確認完了（手動入力・受付番号: XXXXX）」** | 運航完了 / 取消 / 訂正 |
+| **`SENDING`** | バックエンド経由で国交省DIPS APIとHTTP通信中。 | 「DIPS API通報中...（通信中）」 | 成功/失敗/結果不明 |
+| **`API_CONFIRMED`** | DIPS APIから200 OKを受領し、受付番号/計画IDがシステム的に自動確認された状態。 | **「DIPS通報完了（API自動受理・受付番号: XXXXX）」** | 運航完了 / 取消 / 訂正 |
+| **`SUBMISSION_UNCERTAIN`** | API送出後に通信切断・タイムアウトが発生し、登録成否が不明な状態。**自動再POSTは絶対に行わない**。 | 「通報結果照合中...（二重登録防止のため照合中）」 | DIPS計画検索照合へ |
+| **`RECONCILIATION_REQUIRED`**| API照合でも成否を判定できず、操縦者によるDIPS Web画面での目視確認を要求する状態。 | 「要確認: DIPS登録状況を照合できません。DIPS画面で確認してください」 | 操縦者の確認入力 |
+| **`FAILED`** | バリデーションエラーや恒久拒否（4xx）。 | 「通報失敗: 内容を修正してください」 | `DRAFT` |
+| **`RETRY_WAIT`** | 通信圏外やDIPSサーバー障害による一時待機。 | 「一時通信エラー: 再送待機中」 | `SENDING` |
+| **`SUPERSEDED`** | 時間変更や機体変更により、新しいリビジョンが起票され、旧提出スナップショットが無効化された状態。 | 「旧版（リビジョン更新により差し替え済み）」 | 履歴保持のみ |
+| **`CANCELLED`** | 当該飛行計画を取り消した状態（DIPS側取消手続きと自社台帳への取消日時・理由記録）。 | 「計画取消済み（取消理由: XXXXX）」 | 履歴保持のみ |
 
-> [!CAUTION]
-> **UI表示における厳守事項**:
-> `SUCCESS_CONFIRMED` となった場合でも、画面に「飛行可能！」のような過剰な表示は行わず、「DIPS飛行計画通報が完了しました（受付番号: XXXXX）。周囲の安全・許可条件を確認してください」という注意喚起UIを徹底します。
-> また、`SUBMISSION_UNCERTAIN` 状態では、DIPS APIが利用側独自の `Idempotency-Key` ヘッダによる重複防止を保証していないため、**安易なPOST再送を行わず、必ずDIPS計画検索APIによる照合、またはパイロット自身による目視確認を介在させます**。
+> [!IMPORTANT]
+> **状態と法的解釈の混同防止原則（5大ルール）**:
+> 1. **「LEDGER_SAVED（台帳保存済み）」≠「DIPS通報済み」**: 自社のスプレッドシート台帳に保存されても、DIPSへは未提出です。
+> 2. **「MANUAL_SUBMITTED（手動通報記録）」≠「DIPS確認済み」**: パイロットがボタンを押しただけではDIPS側の受理証明にはならず、受付番号・計画IDの確認（`DIPS_CONFIRMED`）を別ステップとして要求します。
+> 3. **「API_CONFIRMED」と「DIPS_CONFIRMED」の区別**: システム自動検証（API）か人間による目視確認（手動）かを監査ログ上で識別可能とします。
+> 4. **「MOCK成功」≠「実通報成功」**: 開発・テスト用のMock DIPS Adapterで成功しても、本番通報済みとは絶対に表示せず、「[MOCK] 疑似通報完了」と画面上明記します。
+> 5. **「通報完了」≠「飛行可能」**: DIPS通報はいかなる状態であっても飛行許可そのものではありません。「飛行計画通報完了。飛行前に周囲の安全・気象・許可条件を必ず確認してください」と表示します。

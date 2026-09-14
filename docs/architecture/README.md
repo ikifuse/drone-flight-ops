@@ -41,5 +41,6 @@
 | [20_source-structure.md](20_source-structure.md) | ソースコードディレクトリ構造・オニオン依存方向ルール・禁止依存 |
 | [21_testing-strategy.md](21_testing-strategy.md) | テスト戦略・Vitest単体/統合テスト・iPhone 13 / Pixel 6a実機検証 |
 | [22_migration-plan.md](22_migration-plan.md) | 現行GASアプリ非破壊並行運用（Shadow Run）・資産継承・ロールバック |
-| [23_implementation-roadmap.md](23_implementation-roadmap.md) | Phase C実装ロードマップ（C0〜C9マイルストーン・完了条件） |
-| [../decisions/README.md](../decisions/README.md) | アーキテクチャ決定記録（ADR-0001〜ADR-0005） |
+| [23_implementation-roadmap.md](23_implementation-roadmap.md) | Phase C実装ロードマップ（C0〜C9マイルストーン・API非依存ルート） |
+| [24_b2.2-dips-manual-fallback-and-ledger.md](24_b2.2-dips-manual-fallback-and-ledger.md) | **Phase B2.2 DIPS API非依存・手動通報フォールバック・飛行計画台帳詳細設計書** |
+| [../decisions/README.md](../decisions/README.md) | アーキテクチャ決定記録（ADR-0001〜ADR-0006） |

@@ -75,3 +75,4 @@
 | [ADR-0003](ADR-0003-offline-storage-and-eviction-defense.md) | ローカル永続化方式とWebKitストレージ自動削除への多層防御 | **提案中** | 2026-09-14 | IndexedDB ＋ Storage API (persist) ＋ クラウド/JSON二重化の採用 |
 | [ADR-0004](ADR-0004-dips-adapter-architecture.md) | DIPS 2.0 Adapter分離とバックエンド中継境界の採用 | **提案中** | 2026-09-14 | DRS/FPA/FPR論理分離とclient_secretエッジ秘匿中継の採用 |
 | [ADR-0005](ADR-0005-state-machine-separation.md) | 運航状態マシンとDIPS通報状態マシンの厳格分離および飛行可能誤認防止 | **提案中** | 2026-09-14 | 現場物理運航と電子手続き通報の完全分離、安全確認UIの徹底 |
+| [ADR-0006](ADR-0006-dips-optional-and-manual-submission-ledger.md) | DIPS API非依存・手動通報フォールバック・飛行計画台帳の独立保持 | **提案中** | 2026-09-14 | API非依存完結、手動入力支援第一級サポート、提出不変スナップショットと台帳先行保存 |
