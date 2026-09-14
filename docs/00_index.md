@@ -36,6 +36,13 @@
 | [guidelines/01_structure-and-maintenance-rules.md](guidelines/01_structure-and-maintenance-rules.md) | 構造・分割・保守規約 | 9大分割原則、「大きくなってから分割」の禁止、定期構造レビュー手順 | モジュール分割時、リファクタリング検討時、Phase境界 | **確定** | ディレクトリ構造、モジュール設計、CI/CD |
 | [guidelines/02_legal-and-operations-rules.md](guidelines/02_legal-and-operations-rules.md) | 法令・運用判断規約 | 法令8区分、柔軟運用の尊重、正式記録全体の評価、基準アプリの継承 | 入力欄設計時、帳票設計時、法令変更時 | **確定** | 法令判定、飛行日誌、日常点検、整備記録 |
 | [decisions/README.md](decisions/README.md) | ADR（意思決定記録）目次 | アーキテクチャ決定記録（ADR）の運用ルール、フォーマット、決定履歴 | 技術選定時、過去の決定理由の調査時 | **確定** | アーキテクチャ選定、技術スタック全般 |
+| [decisions/ADR-0001-architecture-selection.md](decisions/ADR-0001-architecture-selection.md) | ADR-0001: アーキテクチャ選定 | PWA ＋ Cloudflare Workers ＋ ローカルDB・スプレッドシートハイブリッド構成の選定理由 | 技術スタック検討時、決定根拠の確認時 | **検討中** | システム全体構成 |
+| [architecture/README.md](architecture/README.md) | アーキテクチャ検討目次 | Phase B1（技術構成の比較・検討）の概要・目的・ドキュメント構成 | B1全体の把握時、B2着手前 | **確定** | アーキテクチャ設計 |
+| [architecture/01_frontend-runtime-comparison.md](architecture/01_frontend-runtime-comparison.md) | アプリ実行方式の比較 | PWA、Flutter、React Native/Expo、Capacitor、完全ネイティブ、GASの比較 | クライアント技術選定時 | **確定** | フロントエンド、UI実行環境 |
+| [architecture/02_backend-and-security-comparison.md](architecture/02_backend-and-security-comparison.md) | バックエンド・セキュリティ比較 | Cloudflare Workers、Firebase、Supabase、GAS等の比較、DIPS秘密情報保護 | サーバー選定時、DIPSプロキシ設計時 | **確定** | バックエンド、APIプロキシ、セキュリティ |
+| [architecture/03_data-storage-and-sync-comparison.md](architecture/03_data-storage-and-sync-comparison.md) | データ保存方式・同期比較 | スプレッドシート正本、ローカルDB正本、クラウドDB、ハイブリッド連携の比較 | データモデリング時、同期方式検討時 | **確定** | データ永続化、オフライン、スプレッドシート |
+| [architecture/04_cost-and-operations-analysis.md](architecture/04_cost-and-operations-analysis.md) | 費用・個人運用負荷分析 | 初期・月額・年額費用（0円運用）、Apple Developer費用回避、地図API費用 | コスト見積もり時、運用設計時 | **確定** | 運用コスト、インフラ維持 |
+| [architecture/05_recommended-architecture.md](architecture/05_recommended-architecture.md) | 推奨構成と総合評価 | 最有力推奨構成（PWA+Workers+Hybrid）、第2候補、不採用理由、B2課題 | アーキテクチャ確定時、B2設計着手時 | **確定** | アーキテクチャ全体 |
 
 ---
 
