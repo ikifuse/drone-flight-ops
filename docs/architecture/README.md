@@ -30,7 +30,7 @@
 
 | ドキュメント | 主な内容 |
 |---|---|
-| [00_b1-audit-and-corrections.md](00_b1-audit-and-corrections.md) | **Phase B1.1 再監査・訂正記録**（断定過剰・未確認事項・正本矛盾の再検証と根拠整理） |
+| [00_b1-audit-and-corrections.md](00_b1-audit-and-corrections.md) | **Phase B1.2 最終事実訂正・監査記録**（DIPS公式仕様・申請主体・Workers制限・オフライン通報・正本モデル等の整理） |
 | [01_frontend-runtime-comparison.md](01_frontend-runtime-comparison.md) | アプリ実行方式の比較（PWA、Flutter、React Native/Expo、Capacitor、完全ネイティブ、GAS延長） |
 | [02_backend-and-security-comparison.md](02_backend-and-security-comparison.md) | バックエンド候補とセキュリティ比較（Cloudflare Workers、Firebase、Supabase、GAS backend、自前サーバー） |
 | [03_data-storage-and-sync-comparison.md](03_data-storage-and-sync-comparison.md) | データ保存方式・原本性比較（ローカルDB正本、スプレッドシート正本、クラウドDB、ハイブリッド） |
