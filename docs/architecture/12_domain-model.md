@@ -334,7 +334,8 @@
   - `revision`: リビジョン番号（整数、変更時にインクリメント）
   - `organization_id`: 運用組織ID
   - `project_id`: 関連業務案件ID（任意）
-  - `name`: 飛行計画名称（例: "金岡公園_定期空撮_20261020"）
+  - `name`: 飛行計画名称（例: "金岡公園_定期空撮_20261020"。DIPS Web自動生成名称は表示用参考とし、UUIDを内部正本IDとする）
+  - `submitted_by_user_id`: 通報・入力操作者（SubmissionActor。現場パイロットや連絡先と同一である必要はない）
   - `primary_aircraft_id`: 主使用機体ID
   - `aircraft_ids`: 対象機体ID配列（**複数機体対応**）
   - `planned_total_weight_kg`: 当該運航での最大離陸総重量（自重＋装備品、kg）
@@ -344,20 +345,23 @@
   - `selected_assistant_person_ids`: 登録Personnelから選択した補助者ID配列
   - `planned_assistants_count`: DIPS申告用補助者人数（人数override対応）
   - `location_id`: 場所マスターID
-  - `planned_start_time` / `planned_end_time`: 飛行予定日時 (ISO8601)
+  - `planned_start_time` / `planned_end_time`: 飛行予定日時 (ISO8601、主日程)
+  - `planned_occurrences`: **複数日・定期指定拡張用配列**（オプショナル: `Array<{ start_time: string; end_time: string }>`。C1で単一日時スキーマを破壊せず、将来拡張を許容）
   - `planned_duration_minutes`: 飛行予定時間（分）
   - `planned_speed_kmh`: 巡航対地速度（km/h）
   - `altitude_type`: 高度種別（`AGL`対地 / `MSL`海抜）
   - `planned_altitude_agl_meters`: 計画対地高度（m）
   - `planned_altitude_msl_meters`: 計画海抜高度（m、任意）
   - `geometry_kind`: 形状種別（`circle` / `polygon` / `buffered_line`）
-  - `geometry_snapshot`: 提出時飛行範囲ディープコピー（GeoJSON）
-  - `flight_purpose_codes`: 飛行目的数値コード配列（**複数選択対応**、1〜16）
-  - `flight_purpose_other_text`: 目的「その他」選択時の詳細理由
-  - `flight_airspace_codes`: 飛行空域数値コード配列（**複数選択対応**）
-  - `flight_type_codes`: 飛行形態数値コード配列（**複数選択対応**）
-  - `permission_id`: 適用許可承認ID (nullable)
-  - `insurance_policy_id`: 適用保険マスターID (nullable)
+  - `geometry`: 中立幾何モデル（`FlightAreaGeometry`: center/radius、polygon_points、または path_points/buffer_radius）
+  - `geometry_snapshot`: 提出時飛行範囲ディープコピー（不変スナップショット）
+  - `internal_purpose_id`: アプリ内部目的ID（`InternalFlightPurpose`。操縦練習、観光PR撮影、屋根外壁点検等）
+  - `flight_purpose_codes`: DIPS公式飛行目的数値コード配列（**複数選択対応**、1〜16。`DipsPurposeMapper` により内部目的から自動推奨または手動選択）
+  - `flight_purpose_other_text`: 目的「その他」選択時の詳細理由（テキスト）
+  - `flight_airspace_codes`: 飛行空域数値コード配列（**複数選択対応**、空港等周辺・150m以上・DID・該当なし。緊急用務空域は飛行前現場確認として分離）
+  - `flight_type_codes`: 飛行形態数値コード配列（**複数選択対応**、夜間・目視外・30m未満・催し場所・危険物・物件投下・該当なし）
+  - `permission_id`: 適用許可承認ID (nullable、選択時に許可番号・期間・カテゴリーを参照)
+  - `insurance_policy_id`: 適用保険マスターID (nullable、選択時に保険会社・商品名・対人対物補償等を自動補完し今回Override可能)
   - `onsite_control_code`: 立入管理等の安全確保措置コード
   - `safety_measures`: 適用安全措置テキスト配列
   - `flight_manual_type`: 飛行マニュアル区分（標準 / 独自）
@@ -367,6 +371,8 @@
   - `communication_check_confirmed`: 連絡体制確認フラグ（true固定）
   - `radio_check_confirmed`: 無線機器確認フラグ（true固定）
   - `accident_action_confirmed`: 事故対応確認フラグ（true固定）
+  - `contact_source`: 緊急連絡先選択区分（`user_account` 自アカウント / `application` 申請書情報 / `pilot` 操縦者）
+  - `contact_person_id`: 連絡先対象人物ID（操縦者選択時の参照）
   - `emergency_contact_target`: 優先緊急連絡先区分（`pilot` / `reporter` / `permit`）
   - `remarks`: 計画書特記事項
   - `plan_status`: 計画状態（`draft` [入力途中常時保存可], `submission_ready` [必須・適用条件充足], `locked_for_submission` [提出スナップショット生成済], `active` [運航中], `completed` [運航完了], `cancelled` [中止]）

@@ -8,67 +8,93 @@
 
 ## 1. 地図・空域データのレイヤー構造
 
-本システムでは、描画・計算・判定の独立性を担保するため、地図および空域規制データを以下の5つの独立レイヤーとして階層管理します。
+本システムでは、描画・計算・判定の独立性を担保するため、地図および空域規制データを以下の階層構造として明確に分離管理します。2026-09-14のDIPS Web実画面検証（詳細は [26_dips-web-ui-verification.md](26_dips-web-ui-verification.md) 参照）にて、背景地図には「© 国土地理院」表記が確認されていますが、規制空域レイヤーは別系統データとして管理します。
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│ [レイヤー5: 飛行範囲レイヤー (FlightArea)]                  │
-│  - パイロットが描画した円（中心＋半径）または多角形ポリゴン│
+│ [レイヤー5: 飛行計画・作図レイヤー (FlightPlanningLayer)]    │
+│  - ユーザーが作成した FlightAreaGeometry                    │
+│    (POLYGON / CIRCLE / BUFFERED_LINE)                       │
 ├─────────────────────────────────────────────────────────────┤
 │ [レイヤー4: 周辺飛行計画レイヤー (Surrounding Plans)]       │
 │  - DIPSから取得した他機の飛行計画表示                       │
 ├─────────────────────────────────────────────────────────────┤
-│ [レイヤー3: 航空法規制空域レイヤー (Regulated Airspace)]    │
-│  - 空港等周辺空域、進入表面、緊急用務空域                   │
+│ [レイヤー3: 航空法規制空域レイヤー (Regulatory Airspace)]    │
+│  - 空港等周辺空域、進入表面、緊急用務空域（出典・更新日保持）│
 ├─────────────────────────────────────────────────────────────┤
-│ [レイヤー2: 人口集中地区レイヤー (DID)]                     │
-│  - 国勢調査DID境界ポリゴン                                  │
+│ [レイヤー2: 人口集中地区レイヤー (DID Layer)]               │
+│  - 国勢調査DID境界ポリゴン（出典・更新日保持）              │
 ├─────────────────────────────────────────────────────────────┤
-│ [レイヤー1: 地図背景タイル (Base Map Tiles)]                │
-│  - 国土地理院タイル（標準地図 / 淡色地図 / 航空写真）      │
+│ [レイヤー1: 地図背景タイル (BaseLayer)]                     │
+│  - 国土地理院タイル（標準 / 淡色 / 航空写真、© 国土地理院） │
 └─────────────────────────────────────────────────────────────┘
 ```
 
+※DIPS背景地図が国土地理院であっても、DIDや空港周辺等の規制レイヤーがすべて国土地理院提供とは断定しません。新アプリでは各規制レイヤーに出典（`source`）および更新日（`updated_at`）を保持できる構造とします。
+
 ---
 
-## 2. 飛行範囲（FlightArea）の内部標準データモデル
+## 2. 飛行範囲（FlightAreaGeometry）の中立Domainモデル
 
-パイロットが現場で直感的に操作でき、かつDIPS通報仕様にも適合するハイブリッド表現を採用します。
+2026-09-14のDIPS Web実画面検証（`OBSERVED`）に基づき、新アプリはDIPS API専用形式ではなく、将来的な各種出力（DIPS API payload, GeoJSON, KML, GPX, CSV等）へ可逆・中立に変換可能なDomainモデル `FlightAreaGeometry` を採用します。
 
-### 2.1 データ定義
+### 2.1 データ定義（Domain Model）
 ```typescript
-export interface FlightArea {
-  flight_area_id: string;      // UUID v4
-  name: string;                // 現場名（例: "〇〇海岸フライト"）
-  shape_type: 'circle' | 'polygon';
+export type FlightGeometryType = 'polygon' | 'circle' | 'buffered_line';
+
+export interface LatLngPoint {
+  latitude: number;   // 10進（WGS84）
+  longitude: number;  // 10進（WGS84）
+}
+
+export interface FlightAreaGeometry {
+  geometry_id: string;              // UUID v4
+  type: FlightGeometryType;
   
-  // 円形指定時
-  center?: {
-    latitude: number;          // 10進（例: 35.6895）
-    longitude: number;         // 10進（例: 139.6917）
-    radius_meters: number;     // 半径（m）
-  };
+  // CIRCLE 指定時
+  center?: LatLngPoint;
+  radius_meters?: number;
+  
+  // POLYGON 指定時
+  polygon_points?: LatLngPoint[];   // 3点以上
+  
+  // BUFFERED_LINE 指定時（DIPS Web実画面で確認された線＋幅指定）
+  path_points?: LatLngPoint[];      // 2点以上の中心線
+  buffer_radius_meters?: number;    // 線周りの幅・半径（m）
+}
 
-  // 多角形ポリゴン指定時
-  polygon_coordinates?: [number, number][]; // [ [lng, lat], [lng, lat], ... ]
-
+export interface FlightArea {
+  flight_area_id: string;           // UUID v4
+  name: string;                     // 現場名・エリア名（例: "〇〇海岸フライト"）
+  geometry: FlightAreaGeometry;     // 中立幾何データ
+  
   // 高度属性（150mは航空法規制閾値であり、既定計画高度ではない）
   planned_altitude_agl_meters: number; // 計画対地高度（m、実飛行計画値）
   max_altitude_agl_meters: number;     // 運用上限対地高度（m、安全マージン含む）
   planned_altitude_msl_meters?: number; // 計画海抜高度（m、任意）
   altitude_source: 'manual_input' | 'dem_elevation' | 'dips_imported';
 
-  geojson: GeoJSON.Feature;        // 標準GeoJSON表現（自動生成保持）
+  // プリセット・スナップショット属性
+  is_preset?: boolean;              // 定常飛行エリアプリセットフラグ
+  preset_name?: string;
   
   created_at: string;
   updated_at: string;
 }
 ```
 
-### 2.2 操作機能
-- **円描画モード**: 地図上をタップして中心点を決め、半径（m）を直感指定。
-- **ポリゴン描画モード**: 頂点をタップして順次追加。
-- **過去範囲の再利用・複製**: 過去の飛行実績からワンタップで同一エリアを呼び出し、再計画へ適用。
+### 2.2 地図エディタ機能（Flight Area Editor）
+APIの利用可否に関係なく、新アプリ自身がスタンドアロンで飛行計画を作成・再利用できるよう、以下の編集機能を提供します（Phase C5にて実装）：
+
+- **POLYGON作成・編集**: 地図上タップによる頂点追加、ドラッグ移動、削除。
+- **CIRCLE作成・編集**: 中心点タップ＋半径スライダーまたは数値入力（m）。
+- **BUFFERED_LINE作成・編集**: 飛行経路（中心線）のタップ追加＋幅/バッファ半径（m）の指定。
+- **プリセット管理**:
+  - `Save as Preset`: 作成したエリアを定常プリセットとしてローカル保存。
+  - `Load Preset`: 登録済みプリセットを即座に呼び出し。
+  - `Copy Preset to FlightPlan`: プリセットを今回の飛行計画へコピーし、必要に応じて微調整（Override）。
+- **将来Exporter/Adapter準備**:
+  - `FlightAreaGeometry` から DIPS API payload（Circle/Polygon）、GeoJSON、KML、GPX、CSV 等へ変換可能な構造を確保。※現時点では出力仕様は確定させず、Domainを中立に保つ。
 
 ---
 
@@ -110,3 +136,24 @@ export interface FlightArea {
    - データ最終更新日時、情報源、現在オフラインか否か、未取得レイヤーの有無を画面上に明記。
 3. **境界マージンと注意喚起**:
    - 空港周辺やDIDの境界線から一定距離（例: 1km以内）にある場合は、「境界接近中: 管理機関への確認を推奨」と注意喚起。
+
+---
+
+## 5. 緊急用務空域の責務分離（FlightPlan通報 vs 飛行前現場確認）
+
+2026-09-14のDIPS Web実画面検証（`OBSERVED`）において、飛行計画作成画面の「飛行空域」選択肢（空港周辺・150m以上・DID・該当なし）には「緊急用務空域」が含まれていませんでした。
+
+特定飛行10類型において緊急用務空域は原則飛行禁止空域であり、事前の通報対象というよりは「飛行直前に告示状況を確認し、該当する場合は飛行を中止する」性格のものです。
+
+そのため新アプリでは：
+- **FlightPlan 通報項目**: DIPS仕様に準じた空域選択（空港等周辺、150m以上、DID）
+- **飛行前確認項目 (Pre-flight Checklist)**: 直前の告示有無の確認（航空局告示・DIPS Web確認ステータス）
+
+を同一入力・同一責務に混同せず、明確に分離して扱います。
+
+---
+
+## 6. 地図レンダリングライブラリの選定方針
+
+地図描画ライブラリ（Leaflet、MapLibre GL JS、OpenLayers等）の選定については、Phase B設計書およびADRで特定ライブラリに凍結・確定させません。
+Phase C5（地図・飛行範囲編集）開始時に、モバイル実機（iPhone 13 / Pixel 6a）での描画性能、国土地理院タイルの親和性、オフラインキャッシュ容易性、図形編集UIライブラリの成熟度を検証した上でADR決定を行います。

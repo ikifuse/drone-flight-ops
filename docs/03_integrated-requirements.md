@@ -81,14 +81,15 @@
 現場でのDIPS 2.0通報および社内・自治体・土地所有者への提出用計画書を作成するための要件です。
 
 ### 3.1 計画属性
-- **運航識別**: 計画を一意に識別する計画UUID、計画名称（`name`）、DIPS通報ID（通報完了後に付与）。
+- **運航識別**: 計画を一意に識別する計画UUID、計画名称（`name`。DIPS Webの自動生成形式は表示用参考としUUIDを正本とする）、DIPS通報ID（通報完了後に付与）。
 - **所属・案件（任意）**: `organization_id`（運用主体）、`client_id`（顧客）、`project_id`（案件/現場名）。個人利用時は未指定可。
-- **運航日時**: 飛行予定開始日時、終了日時（日跨ぎ許容）、飛行予定時間（分）。
-- **飛行場所・空域**: 現場マスター参照（`location_id`）、空域プリセット参照（`flight_area_preset_id`）、場所名称、住所/地名、中心緯度経度、飛行範囲（円の半径m、またはポリゴン座標列）、最大飛行高度（地表高 AGL / 海抜高 MSL）、巡航対地速度（km/h）。
-- **機体・人員**: 使用予定機体配列（`aircraft_ids`、複数機体対応、`primary_aircraft_id`）、最大離陸総重量（当該運航での実計画総重量kg）、航続可能時間（分）、主操縦者（`primary_pilot_id`）、操縦者配列（`pilot_ids`、複数操縦者対応）、技能証明番号、緊急連絡先電話番号、補助者配列（`selected_assistant_person_ids`）およびDIPS申告補助者人数（`planned_assistants_count`、人数override対応）。
-- **飛行目的・方法**: 飛行目的マスター参照（`flight_purpose_codes`、複数選択対応、1〜16）、特定飛行空域（`flight_airspace_codes`、複数選択対応）、飛行形態区分（`flight_type_codes`、複数選択対応: 30m未満、夜間、目視外等）、許可承認書番号（`permission_id`）。
-- **保険情報**: 賠償責任保険台帳参照（`insurance_policy_id`、会社名、商品名、対人/対物賠償限度額、無制限フラグ）。
-- **安全確保措置**: 安全措置マスター参照（`safety_measure_preset_id`、立入管理等の区画設定、安全確認チェック項目）。
+- **運航日時**: 飛行予定開始日時、終了日時（日跨ぎ許容）、飛行予定時間（分）、定期・複数日指定拡張対応（`planned_occurrences`）。
+- **飛行場所・空域**: 現場マスター参照（`location_id`）、空域プリセット参照（`flight_area_preset_id`）、場所名称、住所/地名、中心緯度経度、中立幾何モデル（`FlightAreaGeometry`: 円の半径m、多角形ポリゴン座標列、または線分中心線＋幅/半径m）、最大飛行高度（地表高 AGL / 海抜高 MSL）、巡航対地速度（km/h）。
+- **機体・人員**: 使用予定機体配列（`aircraft_ids`、複数機体対応、`primary_aircraft_id`）、最大離陸総重量（当該運航での実計画総重量kg）、航続可能時間（分）、主操縦者（`primary_pilot_id`）、操縦者配列（`pilot_ids`、複数操縦者対応）、技能証明情報、補助者配列（`selected_assistant_person_ids`）およびDIPS申告補助者人数（`planned_assistants_count`、人数override対応）。
+- **業務利用での役割分離**: 通報操作者（`submitted_by_user_id` / `SubmissionActor`）、現場操縦者（`Pilot`）、緊急連絡先（`ContactPerson`）を概念上分離し、緊急連絡先の選択元（自アカウント / 申請書 / 操縦者）を保持可能とする。
+- **飛行目的・方法**: 内部飛行目的（`InternalFlightPurpose`: 操縦練習、観光PR撮影、屋根外壁点検等）とDIPS公式目的（`flight_purpose_codes`、複数選択対応、1〜16、業務/業務以外）の分離、特定飛行空域（`flight_airspace_codes`、複数選択対応: 空港周辺・150m以上・DID・該当なし）、飛行形態区分（`flight_type_codes`、複数選択対応: 30m未満、夜間、目視外等）、許可承認書参照（`permission_id`、許可番号・期間・カテゴリー）。
+- **保険情報**: 賠償責任保険台帳参照（`insurance_policy_id`、会社名、商品名、対人/対物賠償限度額、無制限フラグ。選択時に自動補完し今回Override可能）。
+- **安全確保措置**: 安全措置マスター参照（`safety_measure_preset_id`、立入管理等の区画設定、安全確認チェック項目）。緊急用務空域はDIPS通報項目ではなく飛行前現場確認として分離。
 
 ### 3.2 テンプレート・過去計画の複製（Copy Source原則）
 - 運航テンプレート（`OperationTemplate`）または過去に通報・実施した計画から新規計画を作成する際は、**値を新規ドラフトへ値コピー（ディープコピー）**する。

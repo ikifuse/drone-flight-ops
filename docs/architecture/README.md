@@ -44,4 +44,5 @@
 | [23_implementation-roadmap.md](23_implementation-roadmap.md) | Phase C実装ロードマップ（C0〜C9マイルストーン・API非依存ルート） |
 | [24_b2.2-dips-manual-fallback-and-ledger.md](24_b2.2-dips-manual-fallback-and-ledger.md) | **Phase B2.2 DIPS API非依存・手動通報フォールバック・飛行計画台帳詳細設計書** |
 | [25_dips-flight-plan-field-mapping.md](25_dips-flight-plan-field-mapping.md) | **DIPS飛行計画通報フィールドマッピング・入力再利用・Geometry詳細設計書**（API 1.9 No.1〜88全件対応） |
+| [26_dips-web-ui-verification.md](26_dips-web-ui-verification.md) | **DIPS Web飛行計画通報・実画面検証記録・API非依存計画作成**（OBSERVED/PENDING・FlightAreaGeometry・役割分離） |
 | [../decisions/README.md](../decisions/README.md) | アーキテクチャ決定記録（ADR-0001〜ADR-0007: 正規化マスター・共用機材・業務利用拡張性・統合帳票） |
