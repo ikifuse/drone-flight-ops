@@ -56,4 +56,4 @@
 
 ## 6. 操作アカウントと人員の監査接続（PENDING-C1-SCHEMA）
 
-本書の既存 `actor_personnel_id` / `created_by` / `updated_by` はPersonnel参照を示すが、[12a](12a_organization-and-personnel.md) のSubmissionActorはUserAccountであり同一人物・同一IDとは限らない。通報・編集した操作主体と、操縦・点検等を行った記録対象人員の両方を識別可能にする証跡要件を保持する。操作アカウントの監査参照、Personnelとの任意関連、未ログイン運用時の識別方法はC1 schema確定前に整理するPENDINGであり、UserAccount IDをPersonnel ID欄へ無条件に代入しない。これはC1で認証機能を追加する指示ではない。
+本書の既存 `actor_personnel_id` / `created_by` / `updated_by` はPersonnel参照を示すが、[12a](12a_organization-and-personnel.md) および [identity-and-access/02](../identity-and-access/02_environment-and-personnel-lifecycle.md) のとおり操作主体（UserAccount）と記録対象人員（Personnel）は同一人物・同一IDとは限りません。通報・編集した操作主体と、操縦・点検等を行った記録対象人員の両方を識別可能にする証跡要件を保持します。操作アカウントの監査参照、Personnelとの任意関連、未ログイン運用時の識別方法はC1 schema確定前に整理するPENDINGであり、UserAccount IDをPersonnel ID欄へ無条件に代入しません。これはC1で認証機能を追加する指示ではありません。

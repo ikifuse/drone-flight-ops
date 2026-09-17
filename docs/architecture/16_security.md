@@ -112,17 +112,13 @@ BFF方式におけるユーザーAccess Token / Refresh Tokenの保持先候補�
 
 ## 8. 三層権限（レイヤー分離）のセキュリティ境界
 
-99.2 §2に基づき、本システムのアクセス制御は以下の**3つの独立したレイヤー**として分離し、相互に混同・自動昇格させない設計を徹底します。
+99.2 §2および[ADR-0010](../decisions/ADR-0010-three-tier-permissions-and-environment-boundary.md)に基づき、本システムのアクセス制御は以下の**3つの独立したレイヤー**として分離し、相互に混同・自動昇格させない設計を徹底します。
 
-1. **第1層：業務上の役割（Operational Roles）**
-   - 現場での操縦者、DIPS飛行計画の通報者、実飛行時の記録者、補助者等の実務・法令上の役割。
-   - 操縦者だからといって、自動的にアプリ管理者やDrive Editorの権限を持つわけではない。
-2. **第2層：アプリ機能上の権限（App Functional Permissions）**
-   - 画面表示、計画作成、通常運航入力、設定変更（機体・BAT・人員マスター管理）等のアプリ機能に対するアクセス制御。
-   - ※具体的な機能ごとの権限マトリクス（設定変更可能な役割の組み合わせ等）は、Step 2において人員マスターおよび運用環境との整合性を検証して確定するものとし、現段階では新しいアクセスルールを独自に確定せず保留（PENDING）とする。
-3. **第3層：Google Drive上の実アクセス権（Physical Drive Permissions）**
-   - Google Workspace / 個人Googleアカウント標準共有に基づく Viewer / Editor / Owner 等の実ファイルアクセス権。
-   - Driveの権限管理はGoogle側を正本とし、アプリ内でDrive権限の自動付与・自動剥奪を行わない。また、Drive Viewer/Editorであること自体がアプリ管理者を意味するものではない。
+1. **第1層：業務上の役割（Operational Roles）**: 現場での操縦者、DIPS飛行計画の通報者、実飛行時の記録者、補助者等の実務・法令上の役割。
+2. **第2層：アプリ機能上の権限（App Functional Permissions）**: 設定変更、運航入力、管理者管理等のアプリケーション内部の操作認可。
+3. **第3層：外部ストレージ実アクセス権（Physical Drive Permissions）**: Google Drive上の Viewer / Editor / Owner 等の実ファイルアクセス権。Google側が唯一の正本。
+
+三層権限の詳細仕様、業務役割の定義、層間制約ルール、および運用環境・所属ライフサイクルについては、専門の正本文書である [01. 三層権限モデル・業務役割・機能権限設計](identity-and-access/01_three-tier-permissions-and-roles.md) および [02. 運用環境・アカウント・所属ライフサイクル設計](identity-and-access/02_environment-and-personnel-lifecycle.md) を参照してください。本ファイルはインフラ・通信セキュリティの境界のみを規定します。
 
 ---
 
