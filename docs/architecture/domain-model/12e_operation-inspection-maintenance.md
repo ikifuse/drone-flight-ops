@@ -50,8 +50,23 @@
 ## 5. MaintenanceRecord（点検整備台帳・国交省様式3）
 - **ID**: `maintenance_id` (UUID v4)
 - **分類**: **History**
-- **役割**: 機体の生涯点検整備記録（定期点検20h/100h、修理、改造、部品交換、ファーム更新）。
-- **主な属性**: `aircraft_id`, `maintenance_type`, `performed_at`, `cumulative_flight_minutes_at_maintenance`, `description`, `parts_replaced`, `technician_name`。
+- **役割**: 当方管理下における機体別点検整備履歴（定期点検20h/100h、修理、改造、部品交換、点検整備、中古機等取得時の状態確認）。
+- **主な属性**:
+  - `aircraft_id`: 対象機体ID
+  - `maintenance_type`: 点検・整備区分（定期点検、修理、改造、部品確認、取得時状態確認等）
+  - `performed_at`: 実施日時 (ISO8601)
+  - `cumulative_flight_minutes_at_maintenance`: 点検整備時の当方管理累計飛行時間（分）
+  - `description`: 点検整備内容・確認事項詳細
+  - `parts_replaced`: 交換部品情報
+  - `technician_actor`: 実施者Actor（社内技術者、外部整備業者等の実施担当情報）
+  - `recorded_by_actor`: 記録作成者／転記者Actor（報告書等に基づきアプリへ記録・転記した人物）
+- **中古機等取得時の状態確認の扱い**:
+  - 中古機体（EVO Lite+等）の取得時に実施した短時間の動作確認（例: 2026-09-01 自宅屋内での短時間離着陸・ホバリング・前後左右確認）は、本アプリ上の通常運航実績（`Flight` / `Mission`）には算入せず、本点検整備履歴における「取得時状態確認」として保持する。
+  - 過去の飛行を推測して架空の `Flight` や `Mission` を補完・作成してはならない。
+- **実施者Actorと記録作成者／転記者Actorの分離**:
+  - 点検・整備を実際に実施した人物（「実施者Actor」）と、整備報告書等に基づいてアプリへ記録を作成・転記した人物（「記録作成者／転記者Actor」）の責任を分離する。
+  - 外部修理業者等へ本アプリやGoogle Driveへの直接入力を強制せず、編集権限を持つ利用者が業者報告書等を根拠に転記できる構造とする。
+  - 本「記録作成者／転記者Actor」は、通常運航業務における「Recorder Role（運航記録係）」へ自動統合・混同してはならない。
 
 ## 6. ReportSnapshot（帳票発行不変スナップショット）
 - **ID**: `report_snapshot_id` (UUID v4)
@@ -65,6 +80,9 @@
 
 ## 8. 実績と点検の未定義参照（PENDING-C1-SCHEMA）
 
-各Flightの実際の操縦者は、計画の `pilot_ids` やMissionの主操縦者と区別して追跡し、[帳票](../18_reports.md)・[KMLの実績表示](../output/27a_kml-export.md) が正しい人員を参照できなければならない。現属性一覧にはFlight単位の実操縦者参照が未定義であり、Mission.pilot_idを全飛行の実操縦者と無条件に代用しない。単独/複数交代を含む具体的FK・保持形式はC1 schema確定前のPENDINGとする。
-
-飛行前/飛行後点検は、その点検が属するMissionと実施日時を保持し、日常点検帳票や機体交代後の点検を実績へ結び付ける必要がある。現属性一覧に不足するMission参照・実施日時の具体的フィールド名と型・関連基数はC1 schema確定前に決定し、作成日時から実施日時を推測しない。
+1. **実操縦者参照**:
+   - 各Flightの実際の操縦者は、計画の `pilot_ids` やMissionの主操縦者と区別して追跡し、[帳票](../18_reports.md)・[KMLの実績表示](../output/27a_kml-export.md) が正しい人員を参照できなければならない。現属性一覧にはFlight単位の実操縦者参照が未定義であり、Mission.pilot_idを全飛行の実操縦者と無条件に代用しない。単独/複数交代を含む具体的FK・保持形式はC1 schema確定前のPENDINGとする。
+2. **日常点検のMission参照と実施日時**:
+   - 飛行前/飛行後点検は、その点検が属するMissionと実施日時を保持し、日常点検帳票や機体交代後の点検を実績へ結び付ける必要がある。現属性一覧に不足するMission参照・実施日時の具体的フィールド名と型・関連基数はC1 schema確定前に決定し、作成日時から実施日時を推測しない。
+3. **点検整備Actorの具体的フィールド構造**:
+   - `MaintenanceRecord` における「実施者Actor」および「記録作成者／転記者Actor」の具体的フィールド名、型定義、外部業者情報の格納形式は、C1 schema確定前に決定する。
