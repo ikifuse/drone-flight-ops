@@ -89,6 +89,11 @@
 | [ADR-0007](ADR-0007-normalized-masters-and-business-reporting.md) | 正規化マスター体系・共有機材モデル・業務利用拡張性・再利用プリセットおよび統合帳票境界の策定 | **承認済み** | 2026-09-14 | 機種/機体分離、バッテリー型式/個体分離・共有(N:M)、人員/場所マスター、プリセット・運航テンプレート、組織/案件拡張性、シート増殖禁止、統合A4縦帳票・続紙設計 |
 | [ADR-0008](ADR-0008-user-facing-export-and-recovery-boundaries.md) | ユーザー向けJSON出力廃止と出力・復旧境界の再定義 | **承認済み** | 2026-09-15 | 0003のuser-facing JSON部分と0001の同一JSON退避条項を部分置換。全量DB復旧形式はPENDING、KML代替禁止 |
 | [ADR-0009](ADR-0009-map-renderer-selection-deferred-to-c5.md) | 地図描画ライブラリの選定をPhase C5実機評価へ留保 | **承認済み** | 2026-09-15 | 0001のMapLibre固定のみ部分置換。今回はライブラリ未選定 |
+| [ADR-0010](ADR-0010-three-tier-permissions-and-environment-boundary.md) | 三層権限レイヤーの分離と運用環境所属境界の採用 | **提案中（Proposed）** | 2026-09-18 | 業務役割・機能権限・Drive実アクセス権の3層分離、人物所属ライフサイクル、具体的DBフィールド固定回避 |
+| [ADR-0011](ADR-0011-shared-flight-list-asynchronous-handoff.md) | 共有飛行リストを用いた非同期運航引継ぎ方式の採用 | **提案中（Proposed）** | 2026-09-18 | 通報者と操縦者の分離、通報受領済み計画の共有作業キュー発行による現場時間差・分業引継ぎ |
+| [ADR-0012](ADR-0012-fixed-template-date-sheet-replication.md) | 統合帳票における固定1枚テンプレート日付複製方式の採用 | **提案中（Proposed）** | 2026-09-18 | A4縦1枚レイアウト保証、動的改ページ/フォント縮小の排除、明細上限(7行)/機体・場所交代時の日付複製シート |
+| [ADR-0013](ADR-0013-kml-generation-at-flight-plan-submission.md) | 飛行計画通報時におけるKML確定生成および未同期再送方式の採用 | **提案中（Proposed）** | 2026-09-18 | 通報時KML確定生成、事後実績・行政証跡の排除、端末内未同期保持と飛行後点検後のピギーバック再送 |
+| [ADR-0014](ADR-0014-dedicated-egress-ip-gateway.md) | DIPS外部通信における専用固定送信元IPゲートウェイ方式の採用 | **提案中（Proposed）** | 2026-09-18 | 国交省API申請要件(固定IP)充足、Google Cloud NAT経由BFFプロキシ構成、機微情報非公開 |
 
 ## 4. 承認時点・履歴と現行仕様の読み方
 
@@ -102,5 +107,8 @@ ADR-0001〜0006は承認コミット `00bd729`（2026-09-14）でAcceptedにな�
 | 0005の初期DIPS状態名 | 0006でManual第一級・確認方法・3保存軸を拡張。現行状態は [13 状態管理設計](../architecture/state-machines/README.md) |
 | 0006の `payload_snapshot` | 意味論的提出記録の設計意図を維持し、現行型は `submission_snapshot`、API exact payloadは任意の `api_payload_snapshot` に分離。[12d](../architecture/domain-model/12d_flight-plan-and-dips.md) / [25c](../architecture/dips-flight-plan/25c_api-payload-mapping.md) |
 | 0007の円/ポリゴン例示 | Geometryの全形状定義ではない。正本 [17](../architecture/17_map-and-airspace.md) はPOLYGON / CIRCLE / BUFFERED_LINE |
+| 0007の続紙・動的改ページ | 0012（Proposed）により固定A4縦1枚テンプレート日付複製シート方式への変更を提案中 |
+| 0001/0004のWorkers直接送信 | 0014（Proposed）により国交省固定送信元IP要件を満たすGoogle Cloud NATゲートウェイ方式を提案中 |
 
-0008/0009は2026-09-15のオーナー依頼で明示された方針を記録したAccepted ADRです。どちらもPhase C1の開始を許可せず、既存実装の変更を含みません。旧ADRから現行詳細へ辿る際は、この表と後続ADRの限定範囲を先に確認してください。
+0008/0009は2026-09-15のオーナー依頼で明示された方針を記録したAccepted ADRです。
+0010〜0014は2026-09-18に設計検討正本（99.2）に基づき起票されたProposed ADRです。段階的マイグレーションの各Stepにおける整合性検証を経て、Step 8の監査完了時に「Accepted候補」としてオーナーへ提示し、オーナーの明示承認を受けて初めてAcceptedへ変更します（自動昇格は行いません）。いずれもPhase C1コード実装の開始を許可しません。
