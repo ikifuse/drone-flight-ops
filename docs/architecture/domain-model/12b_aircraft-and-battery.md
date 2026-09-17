@@ -27,15 +27,20 @@
   - `nickname`: 機体呼称・愛称（例: "EVO Lite+ A号機"）
   - `registration_mark`: DIPS登録記号（例: "JU324XXXXXXX"）
   - `serial_number`: 機体固有製造番号
-  - `cumulative_flight_minutes`: 累計飛行時間（分）
-  - `cumulative_flight_count`: 累計飛行回数
-  - `management_start_date`: 管理開始日
+  - `cumulative_flight_minutes`: 当方管理開始後の累計飛行時間（分）
+  - `cumulative_flight_count`: 当方管理開始後の累計飛行回数
+  - `management_start_date`: 当方管理開始日 (ISO8601)
   - `status`: 状態（`ACTIVE`, `MAINTENANCE`, `RETIRED`, `LOST`）
   - **期限管理属性**:
     - `registration_expires_at`: 機体登録有効期限日時 (ISO8601)
     - `registration_warning_days`: 期限前警告日数（初期値: 30日）
     - `maintenance_due_date`: 次回点検予定日
     - `maintenance_due_flight_minutes`: 次回点検飛行時間閾値（例: 20時間/100時間）
+- **中古機材の取得前履歴と当方管理開始後累計の恒久的分離**:
+  - 中古機体（EVO Lite+等）を取得した場合、「当方管理開始累計 = 00:00」として管理を開始する。これは製造後一度も飛行していないことを意味するのではなく、根拠のない推測過去時間を作らず、当方で責任をもって管理・追跡できる時点からの確定累計として扱う設計である。
+  - 過去の飛行を推測して架空の `Flight` や `Mission` を補完・作成してはならない。
+  - 将来、前所有者の信頼できる公的・整備記録が入手できた場合も、当方管理開始累計そのものへ過去時間を加算・上書きせず、「取得前履歴」と「当方管理開始後累計」を別の意味論として独立保持する。
+  - 取得前履歴（前所有者記録、推計値等）の具体的物理保持構造は **PENDING-C1-SCHEMA** とする。
 - **リレーション**: `AircraftModel` (N:1), `Flight` (1:N), `MaintenanceRecord` (1:N)
 
 ## 3. BatteryModel（バッテリー型式マスター）
@@ -56,7 +61,11 @@
 - **例**:
   - `(EVO Lite Series, AUTEL-LITE-BAT)`
   - `(EVO Lite+ Series, AUTEL-LITE-BAT)`
-  - これにより、同一モデルの複数機体間だけでなく、互換性のある異機種間でも同一バッテリー個体を安全・適正に共有可能。
+  - これにより、同一モデルの複数機体間だけでなく、互換性のある異機種間でも同一バッテリー個体を安全・適正に共有可能とする。
+- **N:M共用管理とフリート拡張性**:
+  - バッテリー個体を特定機体の固定所属（1:N関係）とせず、型式互換に基づく共用プールとして管理する。
+  - 個人運用の「機体2機・BAT7本」の実例から、将来会社・スクール等で機体数やBAT本数が増加した場合（例: 3機・20本）でも、マスターの変更で拡張しやすくし、データ構造の破壊的変更リスクを低減する。
+  - スプレッドシートや画面表示で見られる「機体セット別BAT配置」は、現場利用者の見やすさを目的とした表示上の配慮（Projection / Presentation）にすぎず、データ構造上の物理的所有関係を表すものではない。
 
 ## 5. Battery（実物バッテリー個体台帳）
 - **ID**: `battery_id` (UUID v4)
@@ -64,14 +73,18 @@
 - **役割**: 実在するバッテリー1本。**特定機体の所有物としない**。
 - **主な属性**:
   - `battery_model_id`: バッテリー型式ID（`BatteryModel` 参照）
-  - `display_name`: 現場管理用表示名（例: "BAT-01", "BAT-02"）
+  - `display_name`: 現場管理用表示名（例: "BAT-01", "BAT-02", "BAT-⑤"）
   - `serial_number`: バッテリー個体シリアル番号
-  - `purchase_date`: 購入日
+  - `purchase_date`: 購入日または取得日 (ISO8601)
   - `condition_at_start`: 管理開始時状態（`NEW`, `USED`）
   - `cumulative_cycle_count`: 累計充電サイクル数
-  - `cumulative_flight_minutes`: 累計飛行時間（分、全機体での飛行合算）
+  - `cumulative_flight_minutes`: 当方管理開始後の累計飛行時間（分、全機体での飛行合算）
   - `status`: 状態（`ACTIVE`, `IN_USE`, `DISCHARGED`, `MAINTENANCE`, `RETIRED`, `DISPOSED`）
   - `last_health_note`: 直近の異常・所感・セル電圧バランスメモ
+- **取得時確認サイクル数と管理開始後使用履歴の分離**:
+  - 中古BAT（実例: ⑤=5回、⑥=7回、⑦=6回）を取得した場合、取得時に実確認したサイクル数を「取得時確認サイクル数」として台帳に保持し、当方管理開始後の使用回数・飛行時間と意味論を分離する。
+  - 取得時サイクル数から機体の総飛行時間を推測・逆算してはならない。
+  - 取得時確認サイクル数を保持する具体的物理カラム名・定義は **PENDING-C1-SCHEMA** とする。
 
 ## 6. BatteryUsage（バッテリーライフサイクルイベント）
 - **ID**: `usage_id` (UUID v4)
@@ -83,6 +96,11 @@
 
 バッテリー交換は次のFlightの `battery_id` 選択であり、交換だけで `BatteryUsage` に飛行使用記録を重複生成しない。実使用の機体・バッテリー・時間の正本は [Flight](12e_operation-inspection-maintenance.md)、非飛行の充放電・保管等は本書 `BatteryUsage`。累計値の手動修正と同期優先順位は [Data Authority](../11_data-authority.md)。
 
-## 8. 業務上の状態と保存enumの対応（PENDING-C1-SCHEMA）
+## 8. 業務上の状態と物理保存構造の保留（PENDING-C1-SCHEMA）
 
-統合要件が求める保管・点検・劣化・紛失の管理と、本書の既存 `Battery.status` / 非飛行イベントの対応は未確定である。これらの業務状態を省略せず、ライフサイクル、使用中/放電等の運用状態、健全性を1つのenumに統合すべきか別軸にすべきかをC1 schema確定前に整理する。既存enumを完成済みと扱わず、推測で新しい保存値を追加しない。
+1. **業務状態とenumの対応**:
+   - 統合要件が求める保管・点検・劣化・紛失の管理と、本書の既存 `Battery.status` / 非飛行イベントの対応は未確定である。これらの業務状態を省略せず、ライフサイクル、使用中/放電等の運用状態、健全性を1つのenumに統合すべきか別軸にすべきかをC1 schema確定前に整理する。既存enumを完成済みと扱わず、推測で新しい保存値を追加しない。
+2. **飛行外BATイベントの物理配置**:
+   - 飛行実績（Flight）と飛行外イベント（BatteryUsage）の責務分離は確定とするが、飛行外イベントをスプレッドシートやIndexedDBのどの表/タブ/行へ物理配置するかは未固定とする（99.2 §4準拠）。
+3. **取得前履歴属性の物理配置**:
+   - 機体の取得前履歴およびバッテリーの取得時確認サイクル数の具体的フィールド定義は、C1 schema確定前に決定する。
