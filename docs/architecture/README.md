@@ -15,6 +15,7 @@
 | [state-machines README](state-machines/README.md) | Operation FSM / DIPS FSM / 法令・安全総合評価。C2/C6/C7の独立状態管理 |
 | [dips-submission README](dips-submission/README.md) | Manual通報業務と独立Sheets台帳。C4/C6の境界 |
 | [dips-flight-plan README](dips-flight-plan/README.md) | 公式88項目、Manual Web UI、C7 payload、要件エンジンの責務分離 |
+| [dips-infrastructure README](dips-infrastructure/README.md) | DIPS API接続インフラ・固定送信元IPゲートウェイ・秘密情報保護。C7インフラ境界 |
 | [output README](output/README.md) | JSON/KML/Sheets/PDF境界、KML生成、Drive保存、My Maps操作、将来機体ログ |
 | [identity-and-access README](identity-and-access/README.md) | 三層権限・業務役割・アプリ機能権限・運用環境・所属ライフサイクル |
 | [10_system-boundaries](10_system-boundaries.md) | システム間責務・障害境界・将来ネイティブ拡張ポート |
@@ -31,6 +32,7 @@
 | [23_implementation-roadmap](23_implementation-roadmap.md) | C0〜C9の範囲・受入基準・C7スキップ経路・現在の停止位置 |
 | [26_dips-web-ui-verification](26_dips-web-ui-verification.md) | OBSERVED / OFFICIAL_SPEC / INFERRED / PENDINGを保つ実画面の証拠資料 |
 | [28_c1-docs-restructure-audit](28_c1-docs-restructure-audit.md) | 今回の全docs責務監査・移行対照・整合修正・最終検査記録 |
+| [31_dedicated-egress-ip-gateway](dips-infrastructure/31_dedicated-egress-ip-gateway.md) | Google Cloud NAT・VPC Egress・固定IP・認証トークン隔離詳細 |
 
 設計の基準は確定でも、PENDINGは未解決です。26番は証拠資料であり、現行型・UI契約は上表の対応する設計正本に置きます。
 
@@ -58,6 +60,7 @@
 | SyncQueue | [14](14_offline-and-sync.md) | 各Adapterは対象ジョブ・失敗処理を参照 |
 | Sheets Ledger | [24a](dips-submission/24a_submission-and-sheets-ledger.md) | 12にSheets列を重複定義しない |
 | DIPS API JSON | [25c](dips-flight-plan/25c_api-payload-mapping.md) | 通信Adapterは15、27は内部transportという境界のみ |
+| DIPS API接続インフラ / 固定送信元IP | [dips-infrastructure](dips-infrastructure/README.md) | 10は全体境界、16はセキュリティ境界、31は詳細設計、25cはAPI payload |
 | 出力・復旧の形式境界 | [27](output/27_output-boundaries.md) | ADR-0008は決定理由、全量restoreはPENDING |
 | KML | [27a](output/27a_kml-export.md) | Drive/My Mapsは保存・利用のみ |
 | Drive Storage | [27b](output/27b_google-drive-storage.md) | 14はキュー共通契約、KML生成とは別 |

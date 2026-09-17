@@ -39,7 +39,7 @@ docs/
 ├── guidelines/                 # 構造・保守、法令・運用の規約
 ├── decisions/
 │   ├── README.md               # ADR-0000はこの中の運用決定（独立ファイルなし）
-│   └── ADR-0001〜0009           # 決定履歴と限定置換
+│   └── ADR-0001〜0014           # 決定履歴と限定置換・Proposed決定
 └── architecture/
     ├── README.md               # 設計領域と概念の正本表
     ├── domain-model/           # C1のEntity / schema参照
@@ -47,6 +47,7 @@ docs/
     ├── state-machines/         # 運航・通報・離陸評価
     ├── dips-submission/        # Manual業務 / Sheets Ledger
     ├── dips-flight-plan/       # カタログ / Manual UI / API / 入力評価
+    ├── dips-infrastructure/    # DIPS API接続インフラ / 固定送信元IP / ゲートウェイ
     ├── output/                 # 出力境界 / KML / Drive / My Maps / 機体ログ
     └── 単一責務設計・比較履歴・監査記録（architecture READMEから参照）
 ```
