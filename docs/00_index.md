@@ -43,6 +43,7 @@ docs/
 └── architecture/
     ├── README.md               # 設計領域と概念の正本表
     ├── domain-model/           # C1のEntity / schema参照
+    ├── identity-and-access/    # 三層権限・業務役割・運用環境・所属ライフサイクル
     ├── state-machines/         # 運航・通報・離陸評価
     ├── dips-submission/        # Manual業務 / Sheets Ledger
     ├── dips-flight-plan/       # カタログ / Manual UI / API / 入力評価

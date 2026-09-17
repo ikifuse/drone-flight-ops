@@ -16,11 +16,12 @@
 | [dips-submission README](dips-submission/README.md) | Manual通報業務と独立Sheets台帳。C4/C6の境界 |
 | [dips-flight-plan README](dips-flight-plan/README.md) | 公式88項目、Manual Web UI、C7 payload、要件エンジンの責務分離 |
 | [output README](output/README.md) | JSON/KML/Sheets/PDF境界、KML生成、Drive保存、My Maps操作、将来機体ログ |
+| [identity-and-access README](identity-and-access/README.md) | 三層権限・業務役割・アプリ機能権限・運用環境・所属ライフサイクル |
 | [10_system-boundaries](10_system-boundaries.md) | システム間責務・障害境界・将来ネイティブ拡張ポート |
 | [11_data-authority](11_data-authority.md) | Model Dのライフサイクル別権威・確定台帳・手修正保護 |
 | [14_offline-and-sync](14_offline-and-sync.md) | オフライン成立条件・Storage保護・SyncQueue・再試行 |
 | [15_dips-adapter](15_dips-adapter.md) | Manual / Mock / Optional APIの共通Adapter・DRS/FPA/FPR・結果不明照合 |
-| [16_security](16_security.md) | BFF・秘密情報・セッション・マスキング・開示境界 |
+| [16_security](16_security.md) | BFF・秘密情報・セッション・マスキング・開示境界（三層権限概要） |
 | [17_map-and-airspace](17_map-and-airspace.md) | 中立Geometry・地図層・編集・空域情報・データ鮮度・ライブラリ留保 |
 | [18_reports](18_reports.md) | 帳票パイプライン・ReportUnit・スナップショット・区切り・続紙・法令UI分離 |
 | [19_failure-recovery](19_failure-recovery.md) | 障害分類・業務継続・復旧できる範囲・未決の全DB復旧 |
@@ -38,7 +39,8 @@
 | 概念 | 唯一の詳細正本 | 他文書で扱う範囲 |
 |---|---|---|
 | FlightAreaGeometry | [17](17_map-and-airspace.md) | 12は型参照、25cはDIPS変換、27aはKML変換 |
-| Personnel / Actor / Pilot / Contact | [12a](domain-model/12a_organization-and-personnel.md) | 26は観測/未確認、25bは選択UI |
+| Personnel / Actor / Pilot / Contact | [12a](domain-model/12a_organization-and-personnel.md) | 26は観測/未確認、25bは選択UI、権限・所属はidentity-and-access |
+| 三層権限 / 業務役割 / 運用環境・所属 | [identity-and-access](identity-and-access/README.md) | 16は境界原則のみ、12aは業務役割参照 |
 | Aircraft / Battery / Compatibility | [12b](domain-model/12b_aircraft-and-battery.md) | 18/24aは射影・外部保存 |
 | Location / Preset / Template | [12c](domain-model/12c_location-and-presets.md) | 17はGeometry参照、25は再利用方法 |
 | FlightPlan / DipsSubmission / semantic snapshot | [12d](domain-model/12d_flight-plan-and-dips.md) | 状態全値は13b、API電文は25c、24aは台帳への保存 |

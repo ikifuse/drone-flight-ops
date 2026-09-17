@@ -51,7 +51,7 @@ erDiagram
 - [12e](12e_operation-inspection-maintenance.md): Mission / Flight / AircraftSwitch / PreflightInspection / PostflightInspection / MaintenanceRecord / ReportSnapshot。
 - [12f](12f_common-lifecycle-id-and-audit.md): AuditEvent / AppSetting / 分類・更新・ID・冪等性・一括登録準備。
 - [17](../17_map-and-airspace.md): FlightAreaGeometry、[13](../state-machines/README.md): 状態・離陸評価、[25d](../dips-flight-plan/25d_requirement-validation.md): DipsFieldRequirement。
-- [11](../11_data-authority.md): Data Authority、[14](../14_offline-and-sync.md): SyncQueue、[24a](../dips-submission/24a_submission-and-sheets-ledger.md): Sheets Ledger、[18](../18_reports.md): Reports。
+- [11](../11_data-authority.md): Data Authority、[14](../14_offline-and-sync.md): SyncQueue、[24a](../dips-submission/24a_submission-and-sheets-ledger.md): Sheets Ledger、[18](../18_reports.md): Reports、[identity-and-access](../identity-and-access/README.md): 三層権限・運用環境・所属ライフサイクル。
 
 ## 3. C1で読む範囲
 

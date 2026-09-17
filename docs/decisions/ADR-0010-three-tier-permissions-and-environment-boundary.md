@@ -3,7 +3,7 @@
 - **作成日**: 2026-09-18
 - **ステータス**: **提案中（Proposed）**
 - **決定者**: 検討中（99.2設計検討正本反映 / オーナー最終監査待ち）
-- **関連設計**: [16 セキュリティ・秘密情報](../architecture/16_security.md)、[12a 人員・組織](../architecture/domain-model/12a_organization-and-personnel.md)、[新設予定: identity-and-access](../architecture/identity-and-access/README.md)
+- **関連設計**: [16 セキュリティ・秘密情報](../architecture/16_security.md)、[12a 人員・組織](../architecture/domain-model/12a_organization-and-personnel.md)、[identity-and-access](../architecture/identity-and-access/README.md)（[01 三層権限](../architecture/identity-and-access/01_three-tier-permissions-and-roles.md)、[02 運用環境・所属](../architecture/identity-and-access/02_environment-and-personnel-lifecycle.md)）
 - **関連ADR**: [ADR-0007](ADR-0007-normalized-masters-and-business-reporting.md)
 
 ## 1. 背景と課題（Context）

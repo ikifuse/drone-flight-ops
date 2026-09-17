@@ -10,7 +10,7 @@
 | 文書 | 主要責務 |
 |---|---|
 | [12_overview.md](12_overview.md) | 関連図・責務と外部正本 |
-| [12a_organization-and-personnel.md](12a_organization-and-personnel.md) | 組織・顧客・案件・人員・Actor/Pilot/Contact |
+| [12a_organization-and-personnel.md](12a_organization-and-personnel.md) | 組織・顧客・案件・人員マスター、Role/Actor境界（権限・所属・環境は [identity-and-access](../identity-and-access/README.md)） |
 | [12b_aircraft-and-battery.md](12b_aircraft-and-battery.md) | 機種/機体・バッテリー型式/個体・互換・非飛行イベント |
 | [12c_location-and-presets.md](12c_location-and-presets.md) | 場所・範囲/目的/安全Preset・運航Template |
 | [12d_flight-plan-and-dips.md](12d_flight-plan-and-dips.md) | 許可・保険・計画・不変DipsSubmission |
