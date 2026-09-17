@@ -1,0 +1,58 @@
+# 12. Domain Modelの全体構造と正本
+
+最終更新: 2026-09-15\
+状態: Phase C0完了・Phase C1未着手（docs再編）
+
+主要責務: Entity間の関連と正本の所在。詳細型・外部仕様をここへ再集約しない。
+
+## 1. 全体関連図（ER概要）
+
+個人運用から法人フリートまで、Master / Preset / History / Projectionを分離する。共通分類と更新規則は [12f](12f_common-lifecycle-id-and-audit.md)、個別属性は領域文書を正本とする。
+
+```mermaid
+erDiagram
+    Organization ||--o{ Client : scopes
+    Organization ||--o{ Personnel : scopes
+    Client ||--o{ Project : owns
+    Project o|--o{ FlightPlan : optional
+    AircraftModel ||--o{ Aircraft : models
+    AircraftModel ||--o{ BatteryCompatibility : permits
+    BatteryModel ||--o{ BatteryCompatibility : supports
+    BatteryModel ||--o{ Battery : models
+    Aircraft }o--o{ FlightPlan : planned_aircraft
+    Personnel }o--o{ FlightPlan : planned_pilots
+    Location ||--o{ FlightAreaPreset : offers
+    Location ||--o{ FlightPlan : locates
+    FlightAreaPreset o|--o{ OperationTemplate : reused_by
+    Location ||--o{ OperationTemplate : locates
+    OperationTemplate o|--o{ FlightPlan : copies_values
+    FlightPlan ||--o{ DipsSubmission : revisions
+    FlightPlan ||--o| DipsNotification : projects_latest
+    FlightPlan o|--o{ Mission : planned_for
+    DipsSubmission o|--o{ Mission : applied_submission
+    Mission ||--o{ Flight : records
+    Mission ||--o{ PreflightInspection : records
+    Mission ||--o{ PostflightInspection : records
+    Mission ||--o{ AircraftSwitch : records
+    Aircraft ||--o{ Flight : flown_by
+    Battery ||--o{ Flight : powered_by
+    Aircraft ||--o{ MaintenanceRecord : maintained
+    Battery ||--o{ BatteryUsage : nonflight_events
+```
+
+機体とバッテリーを所有関係で結ばない。実際に使用した組合せはFlightで保持し、型式互換をBatteryCompatibilityで表す。ERは全属性を複製する図ではない。独立管理するPermission / InsurancePolicy、発行履歴ReportSnapshot、変更履歴AuditEvent、設定AppSettingの属性は領域文書を参照する。SyncQueueは同期インフラ制御、DIPS Sheets台帳は提出記録の外部保持先であり、Domain Entityとの混在を避ける。
+
+## 2. 正本と境界
+
+- [12a](12a_organization-and-personnel.md): Organization / Client / Project / Personnel / Actor・Pilot・Contact。
+- [12b](12b_aircraft-and-battery.md): AircraftModel / Aircraft / BatteryModel / BatteryCompatibility / Battery / BatteryUsage。
+- [12c](12c_location-and-presets.md): Location / FlightAreaPreset / FlightPurposePreset / SafetyMeasurePreset / OperationTemplate。
+- [12d](12d_flight-plan-and-dips.md): Permission / InsurancePolicy / FlightPlan / DipsSubmission / DipsNotification。
+- [12e](12e_operation-inspection-maintenance.md): Mission / Flight / AircraftSwitch / PreflightInspection / PostflightInspection / MaintenanceRecord / ReportSnapshot。
+- [12f](12f_common-lifecycle-id-and-audit.md): AuditEvent / AppSetting / 分類・更新・ID・冪等性・一括登録準備。
+- [17](../17_map-and-airspace.md): FlightAreaGeometry、[13](../state-machines/README.md): 状態・離陸評価、[25d](../dips-flight-plan/25d_requirement-validation.md): DipsFieldRequirement。
+- [11](../11_data-authority.md): Data Authority、[14](../14_offline-and-sync.md): SyncQueue、[24a](../dips-submission/24a_submission-and-sheets-ledger.md): Sheets Ledger、[18](../18_reports.md): Reports。
+
+## 3. C1で読む範囲
+
+C1のDomain schema / type・基本Repository設計は、本領域の該当Entityと12fを起点とし、関連する外部正本だけを読む。C1で複数組織UI、Bulk Import UI、API通信、Map editor、KML生成、Drive保存を追加実装しない。現フェーズの機能範囲は [23](../23_implementation-roadmap.md) が正本。

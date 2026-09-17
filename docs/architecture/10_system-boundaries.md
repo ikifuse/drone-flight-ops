@@ -1,6 +1,6 @@
 # 10. システム境界と責務分離設計（10_system-boundaries.md）
 
-最終更新: 2026-09-14
+最終更新: 2026-09-15
 プロジェクト: `drone-flight-ops`
 フェーズ: Phase B2（詳細アーキテクチャ・実装前設計）
 
@@ -43,11 +43,11 @@
   1. **現場操作UIの提供**: 強い日差しの屋外でも視認性の高い、片手タップ・手袋タップ可能な高コントラストUI。
   2. **運航状態マシン（Operation State Machine）の実行**: 準備〜日常点検〜離陸〜着陸〜BAT交換〜機体交代〜飛行後点検〜運航確定の進行。
   3. **ローカルファースト永続化**: 通信状態に関わらず、全ての入力・打刻イベントをローカルDB（IndexedDB）へ即時保存。
-  4. **地図・飛行範囲（FlightArea）管理**: MapLibre GL JSによる地理院地図タイルのオフライン描画、円・多角形ポリゴン・線形バッファの作成・編集、中立な `FlightAreaGeometry` のドメイン保持（地図描画ライブラリ向けには内部アダプターでGeoJSON変換、ユーザー向け地図出力としてはKMLを生成）。
+  4. **地図・飛行範囲（FlightArea）管理**: Phase C5開始時に実機比較して選ぶ描画ライブラリ（Leaflet / MapLibre GL JS等、[17](17_map-and-airspace.md)）による、利用条件に沿った地理院地図タイルの描画、円・多角形ポリゴン・線形バッファの作成・編集、中立な `FlightAreaGeometry` のドメイン保持（地図描画ライブラリ向けには内部アダプターでGeoJSON変換、ユーザー向け地図出力としてはKMLを生成）。
   5. **同期キュー（SyncQueue）の管理**: DIPS通報やスプレッドシート送信ジョブ（運航日誌・DIPS飛行計画台帳）の生成、状態追跡、オフライン時の待機、再試行。
-  6. **帳票およびGeoエクスポート**: 国交省取扱要領に基づく飛行日誌PDF/CSVのブラウザ内生成、および Google My Maps 連携用 KML エクスポート・Google Drive への自動保存（詳細は 27番参照）。
+  6. **帳票およびGeoエクスポート**: 国交省取扱要領に基づく飛行日誌PDF/CSVのブラウザ内生成、および Google My Maps 連携用 KML エクスポート・Google Drive への自動保存（[出力境界](output/27_output-boundaries.md)、[KML](output/27a_kml-export.md)、[Drive](output/27b_google-drive-storage.md) 参照）。
   7. **DIPS手動入力支援機能**: API未利用時でもDIPS Web/Appへ素早く正確に転記できるよう、提出項目の一覧表示・ワンタップクリップボードコピー・DIPS Web起動導線を提供。
-  8. **提出前台帳保存**: DIPSへ実際に通報（または手動入力）する前に、提出予定内容の不変スナップショットをローカルおよび外部台帳へ先行保存。
+  8. **提出前台帳保存**: DIPSへ実際に通報（または手動入力）する前に、提出予定内容の不変スナップショットをローカルへ先行保存し、外部台帳への非同期同期ジョブを登録する。Sheets同期完了はDIPS通報の前提にしない（[24a](dips-submission/24a_submission-and-sheets-ledger.md)）。
 - **クライアント層が「やってはならないこと」**:
   - DIPS APIの `client_secret` やマスター認証資格情報の直接保持。
   - DIPSサーバーへの直接的なCORS通信（将来の公式仕様でPKCE直接通信が認可・開放されない限り行わない）。
@@ -80,7 +80,7 @@
 - **主要責務**:
   1. **人間の確認・手修正の受容**: パイロットがPCやスマホから直接スプレッドシートを開き、記録の目視点検や手動補記（気象所感、備考、バッテリーコンディション追記）を行える透明性の提供。
   2. **累積計算の継続**: 機体累計飛行時間、バッテリー個体別生涯サイクル数等の数式計算の維持。
-  3. **長期保管・原本性担保**: 端末紛失・破損・ストレージ自動削除から隔離されたクラウド上の不変バックアップ。
+  3. **長期保管・原本性担保**: 端末紛失・破損・ストレージ自動削除から隔離した外部確定台帳。不変提出Snapshotと手動補記できる台帳メタデータを区別し、全量DBバックアップと同一視しない（[11](11_data-authority.md)、[24a](dips-submission/24a_submission-and-sheets-ledger.md)）。
   4. **DIPS飛行計画台帳の恒久保管**: DIPS側のデータ保存期間や参照制限に依存せず、「いつ、誰が、どの機体で、どのような範囲をDIPSへ通報しようとしたか／通報したか」を独立した台帳シートに履歴保存。
   5. **印刷・提示**: 国交省立入検査時や事業者監査時に即座に提出できる正式帳票フォーマットの提供。
 - **スプレッドシート層が「やってはならないこと」**:
@@ -96,7 +96,7 @@
 |---|---|---|---|
 | **Client ⇔ LocalDB** | IndexedDB API / Dexie.js | 内部TypeScriptオブジェクト | メモリ内保持（バルク移行時はSheets/CSVを第一候補とする） |
 | **Client ⇔ Backend** | HTTPS (Fetch / REST) | JSON (CSRFトークン/セッション保護) | 同期キューへ退避しオフライン継続 |
-| **Backend ⇔ DIPS 2.0** | HTTPS (OIDC / REST) | JSON (`application/json`) | `送信待ち` / `通報失敗` へ遷移し再送待機 |
+| **Backend ⇔ DIPS 2.0** | HTTPS (OIDC / REST) | JSON (`application/json`) | 送出前失敗は待機。送出後の処理有無が不明なら [13b](state-machines/13b_dips-submission.md) の照合へ進み、自動再POSTしない |
 | **Client ⇔ Spreadsheet** | HTTPS (Google Sheets API v4 / GAS WebAPI) | JSON (行配列・レコード) | 同期キューへ保持し、手動同期再試行可能 |
 
 ---
@@ -108,3 +108,7 @@
 1. **Geolocation Port**: `navigator.geolocation` を直接叩かず、`ILocationService` を経由（Capacitor移行時は `@capacitor/geolocation` に差し替え可能）。
 2. **Storage Port**: IndexedDB操作を `IStorageService` に集約（将来ネイティブSQLiteやファイルシステムへの退避が可能）。
 3. **File Export Port**: `Blob` ダウンロード処理を `IFileExportService` に集約（将来ネイティブ共有ダイアログ `@capacitor/share` 等に差し替え可能）。
+
+## 5. 詳細正本への接続
+
+DIPS Adapter境界は [15](15_dips-adapter.md)、秘密・トークン・Sessionの全規則は [16](16_security.md)、Manual支援原則は [24](dips-submission/24_manual-submission.md)、画面VMは [25b](dips-flight-plan/25b_manual-web-mapping.md)、API電文は [25c](dips-flight-plan/25c_api-payload-mapping.md) が正本。Sheetsは確定台帳、Driveは生成ファイル保存という独立した外部責務であり、片方の障害で現場記録や他方を停止させない。

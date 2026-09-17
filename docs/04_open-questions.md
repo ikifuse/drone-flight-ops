@@ -1,7 +1,21 @@
 # 未確認事項と将来の設計判断論点
 
-最終更新: 2026-09-14
+最終更新: 2026-09-18
 プロジェクト: `drone-flight-ops`
+
+
+**現在の区分**: 以下は未確認事項と当初の選択肢の記録です。Phase Bで既に決定した事項は再び承認待ちに戻しません。
+
+| 当初の論点 | 現在の扱い / 正本 |
+|---|---|
+| クライアント・バックエンド選定 | ADR-0001によりPWA / Workers採用済み。地図ライブラリはADR-0009によりC5評価へ留保 |
+| データ権威・同期 | ADR-0002 Model D採用済み。詳細は[11](architecture/11_data-authority.md)/[14](architecture/14_offline-and-sync.md) |
+| 秘密情報保護 | ADR-0004のBFF境界採用済み。具体的なC7認証検証・credentialはPENDING、[16](architecture/16_security.md) |
+| API非依存・手動通報 | ADR-0006採用済み。C6 Manual第一級 / C7 Optional |
+| 機材・人員・帳票 | ADR-0007正規化採用済み。詳細は[Domain](architecture/domain-model/README.md)/[Reports](architecture/18_reports.md) |
+| JSON退避 | ADR-0008で利用者向けJSON廃止、全DB復旧形式はPENDING |
+
+採用決定と限定置換の正確な範囲は [ADR一覧](decisions/README.md) を参照してください。以下§2の候補比較は当初の検討履歴であり、上表の決定と競合する現行案ではありません。
 
 ---
 
@@ -88,3 +102,19 @@
   - 機体メーカーのログ（Autel Skyの飛行ログ・バッテリー情報）から、サイクル数やセル電圧の生データをインポート・連携できるか。
 - **寿命予測と交換アラート**:
   - 蓄積された飛行時間・内部抵抗・所感データから、「そろそろ廃棄・セル点検が必要」と操縦者に推奨するスマート保全機能の要否。
+
+
+## 3. C1前docs再編で追跡するPENDING
+
+| ID / 項目 | 未決内容 | 対応時点・正本 |
+|---|---|---|
+| PENDING-C0-ACCEPTANCE | iPhone/AndroidのC0受入確認とC1開始のオーナーGO | C1開始前。[23](architecture/23_implementation-roadmap.md) |
+| PENDING-DOMAIN-SEMANTIC-KEYS | API数値に依存しない意味キー辞書の全定義、既存意味との対応確認。推測enumを実装しない | 該当C1型を固定する前。[12d](architecture/domain-model/12d_flight-plan-and-dips.md)/[25c](architecture/dips-flight-plan/25c_api-payload-mapping.md) |
+| PENDING-C1-SCHEMA | `geometry` / 旧 `geometry_snapshot` の統合、状態の永続化表記、旧catalog取得元名とEntityの対応。Batteryの保管/点検/劣化/紛失の業務状態との対応、Flightごとの実操縦者、点検のMission参照/実施日時、UserAccount操作主体とPersonnel記録対象の監査接続。別正本・推測属性を増やさない | 該当型・schema固定前。[12b](architecture/domain-model/12b_aircraft-and-battery.md)/[12d](architecture/domain-model/12d_flight-plan-and-dips.md)/[12e](architecture/domain-model/12e_operation-inspection-maintenance.md)/[12f](architecture/domain-model/12f_common-lifecycle-id-and-audit.md)/[25a](architecture/dips-flight-plan/25a_field-catalog.md) |
+| PENDING-LEDGER-SNAPSHOT | セル容量を超える全snapshotの格納・再構成・完全性確認、およびSubmissionに関連する複数Missionの物理表現。切捨て不可 | C4開始前。[24a](architecture/dips-submission/24a_submission-and-sheets-ledger.md) |
+| PENDING-LOCAL-RESTORE | ローカルDB全量backup/restoreのユーザー向け形式、対象範囲、暗号化・競合・復旧検証 | C1のJSON実装には進まない。C9本番判定前に整理。[ADR-0008](decisions/ADR-0008-user-facing-export-and-recovery-boundaries.md) |
+| PENDING-MAP-RENDERER | Leaflet / MapLibre GL JS等のiPhone/Android実機比較・決定 | C5開始時。[ADR-0009](decisions/ADR-0009-map-renderer-selection-deferred-to-c5.md) |
+| DIPS Web / API | 既存のPENDING-WEB各項目、API申請主体・credential・contractの操作別適用。Web観測をAPI事実に変換しない | [26証拠記録](architecture/26_dips-web-ui-verification.md)、[25a](architecture/dips-flight-plan/25a_field-catalog.md)、C6/C7の該当実装前 |
+| My Maps / Drive / 機体ログ | 既存PENDING-MYMAPS各項目、実KML表示・Drive更新方針・機体ログ取得形式 | [Output README](architecture/output/README.md)。C8および将来拡張 |
+
+既知の未決事項を明示することと、今回の文書構造の不整合を放置することは区別します。後続Phaseの未検証事項を解決済みとは報告しません。

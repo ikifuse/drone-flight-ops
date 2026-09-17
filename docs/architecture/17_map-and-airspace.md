@@ -1,6 +1,6 @@
 # 17. 地図・飛行範囲（FlightArea）・空域データソース設計（17_map-and-airspace.md）
 
-最終更新: 2026-09-14
+最終更新: 2026-09-15
 プロジェクト: `drone-flight-ops`
 フェーズ: Phase B2（詳細アーキテクチャ・実装前設計）
 
@@ -8,7 +8,7 @@
 
 ## 1. 地図・空域データのレイヤー構造
 
-本システムでは、描画・計算・判定の独立性を担保するため、地図および空域規制データを以下の階層構造として明確に分離管理します。2026-09-14のDIPS Web実画面検証（詳細は [26_dips-web-ui-verification.md](26_dips-web-ui-verification.md) 参照）にて、背景地図には「© 国土地理院」表記が確認されていますが、規制空域レイヤーは別系統データとして管理します。
+本システムでは、描画・計算・判定の独立性を担保するため、地図および空域規制データを以下の階層構造として明確に分離管理します。2026-09-14のDIPS Web実画面検証（`OBSERVED`、詳細は [26_dips-web-ui-verification.md](26_dips-web-ui-verification.md) 参照）にて、背景地図には「© 国土地理院」表記が確認されていますが、規制空域レイヤーは別系統データとして管理します。
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
@@ -36,52 +36,46 @@
 
 ## 2. 飛行範囲（FlightAreaGeometry）の中立Domainモデル
 
-2026-09-14のDIPS Web実画面検証（`OBSERVED`）に基づき、新アプリはDIPS API専用形式ではなく、ユーザー向けGeo Export（KML）、地図描画内部変換（GeoJSON）、将来のAPI連携（Phase C7 Optional）等へ可逆・中立に変換可能なDomainモデル `FlightAreaGeometry` を採用します。
+2026-09-14のDIPS Web実画面検証（`OBSERVED`）に基づき、新アプリはDIPS API専用形式ではなく、ユーザー向けGeo Export（KML）、地図描画内部変換（GeoJSON）、将来のAPI連携（Phase C7 Optional）等へ元形状を保ち、各境界で変換する中立Domainモデル `FlightAreaGeometry` を採用します。
 
 ### 2.1 データ定義（Domain Model）
+本節を `FlightAreaGeometry` の唯一の型正本とする。旧26の重複型は移管済み。アプリの形状識別子は大文字 `kind` に統一し、外部API/GeoJSONの座標配列はAdapterだけで生成する。
+
 ```typescript
-export type FlightGeometryType = 'polygon' | 'circle' | 'buffered_line';
+export type GeometryKind = 'POLYGON' | 'CIRCLE' | 'BUFFERED_LINE';
 
 export interface LatLngPoint {
-  latitude: number;   // 10進（WGS84）
-  longitude: number;  // 10進（WGS84）
+  latitude: number;   // WGS84、10進緯度
+  longitude: number;  // WGS84、10進経度
 }
 
-export interface FlightAreaGeometry {
-  geometry_id: string;              // UUID v4
-  type: FlightGeometryType;
-  
-  // CIRCLE 指定時
-  center?: LatLngPoint;
-  radius_meters?: number;
-  
-  // POLYGON 指定時
-  polygon_points?: LatLngPoint[];   // 3点以上
-  
-  // BUFFERED_LINE 指定時（DIPS Web実画面で確認された線＋幅指定）
-  path_points?: LatLngPoint[];      // 2点以上の中心線
-  buffer_radius_meters?: number;    // 線周りの幅・半径（m）
-}
+export type FlightAreaGeometry = { geometry_id: string } & (
+  | { kind: 'POLYGON'; polygon_points: LatLngPoint[] } // 3点以上
+  | { kind: 'CIRCLE'; center: LatLngPoint; radius_meters: number }
+  | { kind: 'BUFFERED_LINE'; path_points: LatLngPoint[]; buffer_radius_meters: number } // 2点以上
+);
 
 export interface FlightArea {
   flight_area_id: string;           // UUID v4
-  name: string;                     // 現場名・エリア名（例: "〇〇海岸フライト"）
-  geometry: FlightAreaGeometry;     // 中立幾何データ
-  
-  // 高度属性（150mは航空法規制閾値であり、既定計画高度ではない）
-  planned_altitude_agl_meters: number; // 計画対地高度（m、実飛行計画値）
-  max_altitude_agl_meters: number;     // 運用上限対地高度（m、安全マージン含む）
-  planned_altitude_msl_meters?: number; // 計画海抜高度（m、任意）
+  name: string;                     // 現場名・エリア名（例: 架空現場A）
+  geometry: FlightAreaGeometry;     // 元の中心・頂点・半径を保持
+  planned_altitude_agl_meters: number; // 計画対地高度
+  max_altitude_agl_meters: number;     // 運用上限対地高度
+  planned_altitude_msl_meters?: number; // 任意の計画海抜高度
   altitude_source: 'manual_input' | 'dem_elevation' | 'dips_imported';
-
-  // プリセット・スナップショット属性
-  is_preset?: boolean;              // 定常飛行エリアプリセットフラグ
+  calculated_area_sqm?: number;     // 幾何データから導出する面積（元形状の代替にしない）
+  is_preset?: boolean;              // プリセット表示属性
   preset_name?: string;
-  
   created_at: string;
   updated_at: string;
 }
 ```
+
+- `geometry_id` はUUID v4。各図形は自形状のパラメータだけを持つ。高度は形状の座標列へ混入させず `FlightArea` / 計画属性として保持する（150mを既定計画高度にしない）。
+- `buffer_radius_meters` はアプリDomainにおける中心線から片側境界までの距離。アプリで全幅を表示する場合は半径の2倍とする。旧26の `buffer_width_meters` は全幅表現の意図を持つ旧案として扱い、同じ数値を半径へ読み替えない。**DIPS実画面の「幅/半径」ラベルがどちらを意味するかは未確認**であり、入力支援前に照合する（26のBUFFERED_LINE保留事項）。
+- 旧 `FlightGeometryType`（小文字type）、`center_point`、座標tuple、Geometry内高度は本型への統合前の表記。旧型を並行した正本として実装しない。現在C1未着手のため保存済みアプリデータを変換したという意味ではない。
+- `FlightAreaPreset` のEntity定義・プリセットへの帰属は[12c](domain-model/12c_location-and-presets.md)が正本。`is_preset` / `preset_name` は旧FlightArea表現の互換意図を示す表示属性であり、別マスターを増設するものではない。
+
 
 ### 2.2 地図エディタ機能（Flight Area Editor）
 APIの利用可否に関係なく、新アプリ自身がスタンドアロンで飛行計画を作成・再利用できるよう、以下の編集機能を提供します（Phase C5にて実装）：
@@ -96,17 +90,25 @@ APIの利用可否に関係なく、新アプリ自身がスタンドアロン�
 - **描画Adapterとユーザー向けGeo Exportの責務分離**:
   - **幾何データ正本**: アプリ内部の中立Domainモデル `FlightAreaGeometry` を唯一の正本とします。GeoJSONをDomain正本や必須ユーザーExportフォーマットに固定しません。
   - **地図描画用内部Adapter（GeoJSON）**: 採用する地図レンダリングライブラリがGeoJSONを要求する場合のみ、`FlightAreaGeometry -> MapRenderingAdapter -> GeoJSON` として内部的に一時変換して描画します。
-  - **ユーザー向けGeo Export（KML）**: ユーザー向けファイル出力は **KML** を第一形式とし、Google Driveへの自動保存およびGoogle My Mapsへの手動インポートを標準とします（`FlightAreaGeometry -> KmlExporter -> .kml`、詳細は [27_output-kml-drive-and-mymaps.md](27_output-kml-drive-and-mymaps.md) 参照）。
-    - `POLYGON`: そのままKML Polygonへ変換。
-    - `CIRCLE`: 中心点＋半径から測地線計算により近似Polygon（円周点群）を生成して出力。
-    - `BUFFERED_LINE`: 中心LineStringおよび帯状Polygonとして出力。
+  - **ユーザー向けGeo Export（KML）**: ユーザー向けファイル出力は **KML** を第一形式とし、Google Driveへの自動保存およびGoogle My Mapsへの手動インポートを標準とします（`FlightAreaGeometry -> KmlExporter -> .kml`、詳細は [出力設計群](output/README.md) 参照）。
+    - 3形状の具体的KML変換（Polygon、円の近似Polygon、中心LineStringと帯状Polygon）は[KML exporter](output/27a_kml-export.md)へ委譲する。近似出力から元形状を完全復元できるとは限らないため、元GeometryはDomainに保持する。
+    - `DipsApiPayloadAdapter` は[25c](dips-flight-plan/25c_api-payload-mapping.md)のC7内部通信ポートであり、ユーザー向け出力とは分離する。
   - ※GeoJSON, GPX, CSV はKMLと同格のユーザー向けGeo Export完成要件としません（GPXは機体ログ取込側、CSVは台帳側の用途として扱う）。
 
 ---
 
+### 2.3 FlightAreaPreset から FlightPlan へのコピー原則
+1. `FlightAreaPreset` は現場の計画範囲候補（マスター/プリセット）として保存されます。
+2. 計画作成時、`FlightAreaPreset` から `FlightPlan.geometry` へ**ディープコピー**されます。
+3. コピー後、パイロットは今回の運航に合わせて頂点を微調整したり半径を絞り込むことができます。
+4. **過大経路設定の防止**: DIPS公式注意喚起（2026-07-17付）に準拠し、現場枠全体を無思慮に通報するのではなく、「今回の実際の飛行経路」に即した形状へ調整することを推奨するUX設計とします。
+
+---
+
+
 ## 3. 空域データソースの確認状況とライセンス・キャッシュ条件
 
-データソースの法的位置づけ、利用規約、オフライン再配布条件を以下の3区分で厳格に整理します。
+データソースの法的位置づけ、利用規約、オフライン再配布条件に関する従来の調査分類を保持します。下表の「確認済み」は当時の記録区分であり、本再編で現在の規約を再認定した意味ではありません。C5着手時に原文・更新日・キャッシュ条件を再確認します。
 
 | レイヤー | データ提供元 | 確認区分 | 利用規約・キャッシュ条件 | 更新頻度 |
 |---|---|:---:|---|---|
@@ -161,5 +163,5 @@ APIの利用可否に関係なく、新アプリ自身がスタンドアロン�
 
 ## 6. 地図レンダリングライブラリの選定方針
 
-地図描画ライブラリ（Leaflet、MapLibre GL JS、OpenLayers等）の選定については、Phase B設計書およびADRで特定ライブラリに凍結・確定させません。
+地図描画ライブラリ（Leaflet、MapLibre GL JS、OpenLayers等）は[ADR-0009](../decisions/ADR-0009-map-renderer-selection-deferred-to-c5.md)によりPhase C5の実機検証で決定します。旧ADR-0001のMapLibre記述だけを根拠に固定実装しません。
 Phase C5（地図・飛行範囲編集）開始時に、モバイル実機（iPhone 13 / Pixel 6a）での描画性能、国土地理院タイルの親和性、オフラインキャッシュ容易性、図形編集UIライブラリの成熟度を検証した上でADR決定を行います。

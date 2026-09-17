@@ -1,10 +1,12 @@
 # 23. Phase C 実装ロードマップとマイルストーン（23_implementation-roadmap.md）
 
-最終更新: 2026-09-14
+最終更新: 2026-09-15
 プロジェクト: `drone-flight-ops`
-フェーズ: Phase B設計凍結（ADR-0001〜0006 承認済）/ Phase C0 開始
+フェーズ: Phase B設計凍結（ADR-0001〜0007承認済、追加部分置換ADR-0008/0009）/ C0構築完了・C1設計準備完了・C1未着手
 
 ---
+
+**現在の停止位置**: C0受入確認・オーナーGO待ち。C1前docs再編は後続コードの着手承認ではありません。
 
 ## 1. 実装の基本方針（安全な段階的積み上げ）
 
@@ -16,7 +18,7 @@ C0: 基盤・PWA Shell 構築
       └─► C2: 現行運航フロー再現 (点検〜離着陸〜BAT交換)
            ├─► C3: バッテリー台帳 & 機体累計管理
            ├─► C4: スプレッドシート外部台帳同期 & DIPS飛行計画台帳新設
-           └─► C5: 地図・FlightArea (MapLibre & FlightAreaGeometry, ユーザーKML出力)
+           └─► C5: 地図・FlightArea (描画ライブラリ未選定 / FlightAreaGeometry)
                 └─► C6: DIPS手動入力支援・Manual/Mock Adapter & 通報状態管理
                      │   ★【DIPS API非依存の主要機能実装完了】
                      ├─► C7: 【Optional】DIPS実API接続中継 (Workers Proxy / API JSON / 審査承認時)
@@ -29,17 +31,19 @@ C0: 基盤・PWA Shell 構築
 ## 2. 実装フェーズ詳細仕様
 
 ### Phase C0: 基盤・PWA Shell 構築
+- **状態**: Vanilla TypeScriptによる構築完了。受入確認・C1開始GO待ち。以下の完了条件は実機受入の基準であり、今回のdocs監査で実機検証したという意味ではない。
 - **目的**: Vite + TypeScript + PWA の最小実行可能スケルトンを構築。
 - **実装範囲**: プロジェクト初期化、PWA Service Worker登録、基本レイアウト、高コントラストCSSトークン。
 - **完了条件**: iPhone SafariおよびPixel Chromeでホーム画面追加ができ、フルスクリーンオフライン起動すること。
 
 ### Phase C1: ローカルDB & ドメインモデル実装（正規化マスター基礎確立）
+- **状態**: 未着手。schema/typeの入口は [domain-model README](domain-model/README.md)。Geometryは[17](17_map-and-airspace.md)、要件エンジン型は[25d](dips-flight-plan/25d_requirement-validation.md)、状態/離陸評価は[state-machines README](state-machines/README.md)が正本。
 - **目的**: 現場自律稼働と将来の業務利用・複数機材共用に耐えるデータ永続化基盤を確立。
 - **実装範囲**:
   - `src/domain/` の型定義およびDexie.js（IndexedDB）スキーマ定義:
     - **機材系**: `AircraftModel`, `Aircraft`, `BatteryModel`, `BatteryCompatibility`, `Battery`
     - **人員・組織系**: `Organization`, `Personnel`（Role配列管理、UserAccount分離設計準拠）, `Client`, `Project`, 役割分離（`SubmissionActor` 通報操作者, `Pilot` 現場操縦者, `ContactPerson` 緊急連絡先の独立保持設計）
-    - **現場・プリセット系**: `Location`, `FlightAreaGeometry`（`polygon` / `circle` / `buffered_line` の中立Domainモデル型）, `FlightAreaPreset`, `InternalFlightPurpose`（内部目的定義）, `FlightPurposePreset`, `SafetyMeasurePreset`, `OperationTemplate`（Copy Source原則、`default_aircraft_id` nullable）
+    - **現場・プリセット系**: `Location`, `FlightAreaGeometry`（`POLYGON` / `CIRCLE` / `BUFFERED_LINE` の中立Domainモデル型）, `FlightAreaPreset`, `InternalFlightPurpose`（内部目的定義）, `FlightPurposePreset`, `SafetyMeasurePreset`, `OperationTemplate`（Copy Source原則、`default_aircraft_id` nullable）
     - **法務・計画・保険系**: `Permission`（包括許可）, `InsurancePolicy`（ドローン賠償責任保険台帳）, `FlightPlan`（複数機体・複数操縦者・総重量・航続時間・FlightAreaGeometryスナップショット対応、複数日指定拡張 `planned_occurrences` 互換フィールド、`draft`/`submission_ready`状態、`effective_value`/`override_value`セマンティクス）, `DipsSubmission`（`dips_contract_version`, 不変の意味論的 `submission_snapshot` 保持, `api_payload_snapshot` [nullable]）
     - **通報要件・離陸評価型**: `DipsFieldRequirementEngine` インターフェース、`DipsReportingRequirementEvaluator`（特定飛行/非特定飛行要否判定）、`DipsContractRequirement`, `DipsFieldApplicability`, `DipsInputResponsibility`, `DipsFieldValidationResult`, `DipsSubmissionReadiness`, `TakeoffReadinessAssessment`（離陸前多軸評価）型定義
     - **運航・記録系**: `Mission`, `Flight`, `DailyInspection`, `MaintenanceRecord`, `BatteryUsage`（非飛行イベント専用）
@@ -70,9 +74,9 @@ C0: 基盤・PWA Shell 構築
   - レイヤー構造: 国土地理院BaseLayer（© 国土地理院）、規制空域レイヤー（DID、空港等周辺、緊急用務空域）、作図レイヤーの分離。
   - 図形作成・編集機能: `POLYGON`（多角形）、`CIRCLE`（中心＋半径）、`BUFFERED_LINE`（中心線＋幅/半径）の作成・頂点編集・削除。
   - プリセット管理: `FlightAreaPreset` 保存・読込、飛行計画への適用（Override対応）。
-  - 中立Domainの維持: `FlightAreaGeometry` を正本とし、Map描画ライブラリが要求する場合のみ内部AdapterでGeoJSONへ変換。ユーザー向けGeo Exportの第一形式はKML（詳細は27番参照）。
+  - 中立Domainの維持: `FlightAreaGeometry` を正本とし、Map描画ライブラリが要求する場合のみ内部AdapterでGeoJSONへ変換。ユーザー向けGeo Exportの第一形式はKML（生成・Drive保存の実装はC8。[出力境界](output/27_output-boundaries.md)参照）。
   - キャッシュ機構: オフライン時の事前キャッシュ地図表示。
-  - ※レンダリングライブラリ（Leaflet / MapLibre GL JS等）はC5開始時に実機検証してADR決定。
+  - ※レンダリングライブラリ（Leaflet / MapLibre GL JS等）はC5開始時に実機検証し、採用決定をADRで記録する（[ADR-0009](../decisions/ADR-0009-map-renderer-selection-deferred-to-c5.md)）。現時点では固定しない。
 - **完了条件**: 現場予定エリアを画面上に描画（円・ポリゴン・線形バッファ）・保存・プリセット再利用でき、オフライン時でも事前キャッシュ地図が表示されること。
 
 ### Phase C6: DIPS手動入力支援・Manual/Mock Adapter & 通報状態管理
@@ -91,7 +95,7 @@ C0: 基盤・PWA Shell 構築
   - `pdf-lib` による「A4縦 統合運航帳票」レンダラー（1機体×1場所×1運航区間単位、BAT交換継続、機体/場所交代での新規帳票分割、自動改ページ続紙対応、5/6フライト固定撤廃）。
   - 国交省標準様式1（飛行記録）、様式2（日常点検記録）、様式3（点検整備記録）の個別PDF/CSV出力。
   - DIPS飛行計画台帳のエクスポート機能。
-  - **KML Geo Export & Google Drive自動保存（詳細は [27_output-kml-drive-and-mymaps.md](27_output-kml-drive-and-mymaps.md) 参照）**:
+  - **KML Geo Export & Google Drive自動保存（詳細は [output README](output/README.md) 参照）**:
     - `KmlExporter`: `FlightAreaGeometry`（Polygon, 近似Circle, Buffered Line）および計画属性・運航実績を「1 FlightPlan = 1 KML」形式で生成。
     - `GoogleDriveAdapter`: 設定された保存先フォルダへKMLを自動保存（計画確定時・運航完了時更新）。オフライン時は `SyncQueue` 経由で電波復帰時に非同期アップロード。
     - プライバシー保護プロファイル（`SHARE_SAFE` 既定による個人連絡先除外）。
@@ -111,7 +115,7 @@ C0: 基盤・PWA Shell 構築
   6. **日跨ぎ飛行**: 日付変更線を跨ぐ夜間・未明フライトで時間計算・日付記録が正確であること。
   7. **特殊運航シナリオ**: 飛行0回での現場中止（`ABORTED`）および8回以上の連続飛行が制限なく正常記録できること。
   8. **スプレッドシート競合保護**: スプレッドシート側のセル直接編集が、アプリからの後続同期で上書き破壊されないこと。
-  9. **ストレージEviction想定復旧**: IndexedDBクリア時でも、確定台帳である外部スプレッドシート（およびCSV）からのデータ復旧（リストア）が成立すること。
+  9. **ストレージEviction想定復旧**: 同期済み確定台帳の再取得・競合検証が成立すること。未同期データ・設定・全ローカルDBの復旧まで保証しない。全量backup/restore形式・範囲・検証はPENDING（[ADR-0008](../decisions/ADR-0008-user-facing-export-and-recovery-boundaries.md)）としてC9の本番判定前に解決または残存リスクの明示的判断を要する。KMLでDB復旧しない。
   10. **DIPS Mockエラー・照合処理**: 4xxエラー時の入力修正誘導、およびPOST切断時の照合（Reconciliation）フローが意図通り動作すること。
   11. **DIPS手動通報・飛行計画台帳の自律検証**: DIPS API接続が一切ない環境でも、計画作成・不変スナップショット保存・手動支援コピー・手動通報打刻・確認記録（受付番号または一覧目視照合）・スプレッドシート台帳同期の全プロセスが正常完了すること。
   12. **実現場並行運用（Shadow Run）**: 現行GASアプリと並行運用し、3回以上の実際の飛行セッションで記録内容の整合性を確認すること。

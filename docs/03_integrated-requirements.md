@@ -1,6 +1,6 @@
 # 新アプリ（drone-flight-ops）統合要件定義書
 
-最終更新: 2026-09-14
+最終更新: 2026-09-15
 プロジェクト: `drone-flight-ops`
 目的: 現行自作アプリの強み（バッテリー個体管理・現場フロー）とワンエビneoの利便性（DIPS連携・地図機能）を統合した次世代システムの要件整理
 
@@ -8,9 +8,11 @@
 
 ## 1. 新アプリで追加が必要な機能一覧
 
-現行アプリを基準とし、将来の「現場スマホ1台による一気通貫運用」を実現するために追加すべき機能一覧です。
+現行アプリを基準とし、将来の「現場スマホ1台による一気通貫運用」を実現するための機能一覧です。C6 Manualを第一級の完成経路とし、C7 APIは承認・credential取得時のみのOptional拡張です。以下の一覧はC1に全機能を実装する指示ではありません。Phase配分は [ロードマップ](architecture/23_implementation-roadmap.md) を正本とします。
 
-1. **DIPS 2.0 API連携モジュール**
+1. **DIPS手動通報支援およびOptional API連携**
+   - 登録済マスター・プリセット・FlightPlanから作る手動入力支援、Webへの導線、通報記録と確認記録（C6）
+   - 以下の自動取得・送信はC7 Optionalに限定
    - 機体一覧の自動取得（DRS API）
    - 飛行許可・承認情報の自動取得（FPA API）
    - 飛行計画の照会・検索（FPR API）
@@ -20,10 +22,11 @@
    - GPS現在地表示および飛行予定地点の地図ナビゲーション
    - 円形範囲作成（中心点指定＋半径m入力）
    - 多角形（ポリゴン）範囲作成（画面タップによる頂点追加・移動）
+   - 線形バッファ（BUFFERED_LINE）範囲作成（中心線＋片側距離。中立定義は17番）
    - 航空法規制空域（空港周辺、DID人口集中地区、緊急用務空域等）の重ね合わせ表示
    - 過去に通報・飛行した範囲のプリセット保存とワンタップ呼出
 3. **計画から日誌へのデータ自動引き継ぎ**
-   - DIPS通報完了時の通報ID、機体、日時、場所、範囲、目的、許可番号を、現場飛行セッションへそのままバインド（二重入力の完全排除）
+   - 計画・提出snapshotの機体、日時、場所、範囲、目的、許可情報を現場飛行セッションへ引き継ぎ、二重入力を抑える。通報IDは得られた場合に参照する。DIPS未確認でも運航準備・実際の打刻記録を妨げず、予定と実績を混同しない。
 4. **汎用機体・機材マスター体系（業務利用・共有機材対応）**
    - 機種型式（AircraftModel）と機体個体（Aircraft）の分離管理
    - バッテリー型式（BatteryModel）、機体適合性（BatteryCompatibility）、バッテリー個体（Battery）の分離管理による共用・複数台運用
@@ -33,7 +36,7 @@
    - 機体登録有効期限（3年）、包括許可承認期限（1年）、操縦者技能証明、機体定期点検期限（例: 20時間/100時間）の自動カウントダウンと事前警告
 6. **オフラインファースト・ローカルキューイング機能**
    - 電波圏外でのドラフト計画作成、飛行前点検、離着陸記録、飛行後点検の完全スタンドアロン実行
-   - 通信復帰後のワンタップ一括同期・DIPS通報
+   - 通信復帰後の外部台帳同期と、別経路のDIPS通報支援。API送信結果不明時は自動再POSTせず照合する。
 7. **標準帳票および統合A4帳票マルチエクスポート機能**
    - 現場実務用の「A4縦 統合運航帳票（飛行記録＋日常点検＋点検整備サマリー）」出力（1機体×1場所×1運航区間単位、自動改ページ続紙対応）
    - 国土交通省標準様式1（飛行記録）、様式2（日常点検記録）、様式3（点検整備記録）の個別PDF/Excel直接出力
@@ -56,7 +59,7 @@
 - **型式情報 (BatteryModel)**: メーカー、型式名、型式コード、公称電圧、公称容量(mAh)、適合機種(BatteryCompatibility)。
 - **個体識別情報 (Battery)**: バッテリー個体ID（例: `BAT_1`〜`BAT_7` は初期データ例であり任意文字列・QRコード/バーコード等に対応可能な柔軟性）、シリアル番号、製造年月、運用開始日。
 - **所有・共用管理**: バッテリーは特定機体に従属させず、適合する複数機体間で共用可能とする。
-- **状態管理 (Lifecycle Status)**: `ACTIVE`（現役）, `STORAGE`（保管中）, `INSPECTION`（点検中）, `DEGRADED`（性能低下・予備）, `DISPOSED`（廃棄）, `LOST`（紛失）。物理削除せず過去運航履歴の参照を維持。
+- **状態管理 (Lifecycle Status)**: 現役・保管中・点検中・性能低下/予備・廃棄・紛失を把握できること。物理削除せず過去運航履歴の参照を維持する。enumの正本は [12b Battery](architecture/domain-model/12b_aircraft-and-battery.md)。既存enumとの未定義の対応はPENDINGとしてC1のschema固定前に確認し、本書で別enumを定義しない。
 - **生涯統計**: 累計充電サイクル数、累計総飛行時間、累計使用回数。
 
 ### 2.2 飛行ごとのバッテリー紐付け記録
@@ -81,13 +84,14 @@
 現場でのDIPS 2.0通報および社内・自治体・土地所有者への提出用計画書を作成するための要件です。
 
 ### 3.1 計画属性
-- **運航識別**: 計画を一意に識別する計画UUID、計画名称（`name`。DIPS Webの自動生成形式は表示用参考としUUIDを正本とする）、DIPS通報ID（通報完了後に付与）。
+- **運航識別**: 計画を一意に識別する計画UUID、計画名称（`name`。DIPS Webの自動生成形式は表示用参考としUUIDを正本とする）、DIPS通報ID（取得できた場合に保持。手動の一覧目視照合ではnull可）。
 - **所属・案件（任意）**: `organization_id`（運用主体）、`client_id`（顧客）、`project_id`（案件/現場名）。個人利用時は未指定可。
 - **運航日時**: 飛行予定開始日時、終了日時（日跨ぎ許容）、飛行予定時間（分）、定期・複数日指定拡張対応（`planned_occurrences`）。
 - **飛行場所・空域**: 現場マスター参照（`location_id`）、空域プリセット参照（`flight_area_preset_id`）、場所名称、住所/地名、中心緯度経度、中立幾何モデル（`FlightAreaGeometry`: 円の半径m、多角形ポリゴン座標列、または線分中心線＋幅/半径m）、最大飛行高度（地表高 AGL / 海抜高 MSL）、巡航対地速度（km/h）。
 - **機体・人員**: 使用予定機体配列（`aircraft_ids`、複数機体対応、`primary_aircraft_id`）、最大離陸総重量（当該運航での実計画総重量kg）、航続可能時間（分）、主操縦者（`primary_pilot_id`）、操縦者配列（`pilot_ids`、複数操縦者対応）、技能証明情報、補助者配列（`selected_assistant_person_ids`）およびDIPS申告補助者人数（`planned_assistants_count`、人数override対応）。
 - **業務利用での役割分離**: 通報操作者（`submitted_by_user_id` / `SubmissionActor`）、現場操縦者（`Pilot`）、緊急連絡先（`ContactPerson`）を概念上分離し、緊急連絡先の選択元（自アカウント / 申請書 / 操縦者）を保持可能とする。
-- **飛行目的・方法**: 内部飛行目的（`InternalFlightPurpose`: 操縦練習、観光PR撮影、屋根外壁点検等）とDIPS公式目的（`flight_purpose_codes`、複数選択対応、1〜16、業務/業務以外）の分離、特定飛行空域（`flight_airspace_codes`、複数選択対応: 空港周辺・150m以上・DID・該当なし）、飛行形態区分（`flight_type_codes`、複数選択対応: 30m未満、夜間、目視外等）、許可承認書参照（`permission_id`、許可番号・期間・カテゴリー）。
+- **飛行目的・方法**: 内部飛行目的（`InternalFlightPurpose`: 操縦練習、観光PR撮影、屋根外壁点検等）と通報に対応する目的（`flight_purposes`、複数選択対応、業務/業務以外）の分離、特定飛行空域（`flight_airspaces`、複数選択対応: 空港周辺・150m以上・DID・該当なし）、飛行方法（`flight_methods`、複数選択対応: 30m未満、夜間、目視外等）、許可承認書参照（`permission_id`、許可番号・期間・カテゴリー）。
+- API数値コード（目的1〜16等）は [公式フィールドカタログ](architecture/dips-flight-plan/25a_field-catalog.md) に保持し、[API Mapper](architecture/dips-flight-plan/25c_api-payload-mapping.md) が中立意味値から変換する。CoreへAPIコードを固定せず、完全な意味キー辞書の未確定部分はPENDINGとする。
 - **保険情報**: 賠償責任保険台帳参照（`insurance_policy_id`、会社名、商品名、対人/対物賠償限度額、無制限フラグ。選択時に自動補完し今回Override可能）。
 - **安全確保措置**: 安全措置マスター参照（`safety_measure_preset_id`、立入管理等の区画設定、安全確認チェック項目）。緊急用務空域はDIPS通報項目ではなく飛行前現場確認として分離。
 
@@ -97,22 +101,13 @@
 - 将来テンプレートの内容が改定されても、過去に作成・通報済みの飛行計画や日誌データには影響を与えない。
 - よく使用する飛行場所・範囲・連絡先を「現場プリセット」として登録可能。
 
-### 3.3 通報ステータス管理と保存・運航Gateの完全分離
-- **計画状態（FlightPlan.plan_status）**:
-  - `draft`（入力途中・必須不足でも常時保存可能）→ `submission_ready`（必須・適用条件充足）→ `locked_for_submission`（提出確定・スナップショット生成済）→ `active`（運航中）→ `completed`（運航完了）/ `cancelled`（中止）。
-- **DIPS通報要否と状態（DipsReportingRequirement & DipsReportingStatus）**:
-  - **通報要否（DipsReportingRequirement）**: `REQUIRED`（特定飛行・通報義務あり）/ `NOT_REQUIRED`（非特定飛行・通報推奨）/ `UNDETERMINED`（未判定）。
-  - **通報状態（DipsSubmission.status - SUBMISSION_READYからスナップショット生成時に起票）**: `SNAPSHOT_SAVED`（スナップショット保存済）→ `MANUAL_SUBMIT_WAIT`（手動待機）→ `MANUAL_SUBMITTED`（手動記録済）→ `DIPS_CONFIRMED` / `API_CONFIRMED`（通報確認完了）。障害例外時は操縦者記録により `SYSTEM_OUTAGE_EXCEPTION`（公式システム障害時事後通報例外）を保持。
-  - 送信失敗時は `FAILED`（エラー・不変履歴として保存、再試行時はFlightPlan側を修正して新規Submission起票）。
-  - 変更・取消時は `CANCELLED`（取り消し）/ `SUPERSEDED`（改訂により置換）。
-- **外部台帳同期状態（Ledger Sync State - 別軸管理）**:
-  - `local_saved`（ローカル保存済）/ `sync_pending`（台帳同期待ち）/ `syncing`（同期中）/ `synced`（台帳同期済）/ `sync_failed`（同期失敗）。
-  - **原則**: DIPS通報前にローカルDBへの不変スナップショット保存は必須とするが、Googleスプレッドシートへの同期完了はDIPS通報の必須条件としない。スプレッドシート通信障害時や圏外時でも、DIPSへの通報（手動またはAPI）を妨げない。
-- **運航準備と離陸前総合評価（TakeoffReadinessAssessment - Application Flow ≠ Legal Takeoff）**:
-  - `SNAPSHOT_SAVED` 以降、DIPS通報が未確認であっても現場運航準備（`Mission`、日常点検）への移行を妨げない。
-  - 非特定飛行（`NOT_REQUIRED`）時はDIPS未通報をエラーとせず、システム障害例外（`SYSTEM_OUTAGE_EXCEPTION`）記録時も通常の未通報と区別して案内する。
-  - ただし実際の離陸には操縦者による法令・許可・安全総合確認（TakeoffReadinessAssessment）を要し、アプリが「未通報飛行許可」を自動判定する設計は行わない。また操縦者の実際の離陸打刻記録そのものは絶対に停止しない。
-- 誤操作による多重通報を防ぐ「送信ロック機構」および「計画検索照合機構」。
+### 3.3 通報ステータス管理と保存・運航Gateの分離
+
+- 入力途中のFlightPlanは常にdraft保存可能とする。必須性・適用性・入力責任の評価を満たした `SUBMISSION_READY` から、不変snapshotを生成する。型と計画状態は [FlightPlan / DipsSubmission](architecture/domain-model/12d_flight-plan-and-dips.md)、要件エンジンは [25d](architecture/dips-flight-plan/25d_requirement-validation.md) を正本とする。
+- 通報要否（特定飛行・非特定飛行・未判定）、提出の履歴状態、台帳同期状態、離陸前総合評価を独立に扱う。状態の全値・遷移・失敗/取消/改訂・確認方法は [状態設計README](architecture/state-machines/README.md)、同期は [14](architecture/14_offline-and-sync.md) に一元化する。
+- DIPS通報前のローカル不変snapshot保存は必須だが、Sheets同期完了は通報の必須条件にしない。手動通報の記録とDIPS確認済みを区別し、番号が表示されない場合は一覧目視照合で確認できる。
+- snapshot保存後の運航準備・点検はDIPS未確認でも進められる。非特定飛行の通報推奨、公式システム障害時の例外記録、通常の未通報を区別する。総合法令・許可・安全確認は [TakeoffReadinessAssessment](architecture/state-machines/13c_takeoff-readiness.md) による操縦者確認とし、アプリによる自動飛行許可としない。実際に発生した離着陸の記録は止めない。
+- 多重通報を防ぐ送信ロックと結果不明時の計画照合を行う。詳細は [DIPS FSM](architecture/state-machines/13b_dips-submission.md)。
 
 ### 3.4 DIPS飛行計画台帳（Googleスプレッドシート連携）
 - DIPSへ通報する予定内容、および通報した内容を、DIPS側の保存期間や将来の参照制限に依存せず、利用者側の独立台帳として長期保管するための台帳。
@@ -135,7 +130,8 @@
 - **手動通報方式（Manual Submission - 第一級サポート）**:
   - DIPS API未承認時、個人利用不可時、またはAPI障害時でも利用可能な正式機能。
   - アプリ内で飛行計画を作成・スナップショット保存後、**「手動入力支援画面」** を表示。
-  - 飛行日時、場所、登録記号、操縦者、高度、飛行範囲（中心座標・半径、ポリゴン頂点列）等を1画面に整理し、各項目をワンタップでクリップボードへコピー可能とする。
+  - Web実画面順に、登録済機体・操縦者Picker、目的・空域・飛行方法の複数checkbox、数値・日時、保険の構造化入力、許可情報選択、地図Geometryを支援する。登録済み選択を優先し、テキスト等のコピーが有効な項目は1タップコピー可能とする。手動利用者にAPI JSONの表示・作成・保存・コピーを要求しない。
+  - 操縦者と緊急連絡先の選択元、通報操作者と実際の操縦者を分離し、複数日への拡張を阻害しない。設計正本は [Manual Web mapping](architecture/dips-flight-plan/25b_manual-web-mapping.md)、証拠は [実画面調査](architecture/26_dips-web-ui-verification.md) のOBSERVED / OFFICIAL_SPEC / INFERRED / PENDINGを維持する。
   - DIPS 2.0 Webポータル（またはDIPS App）の起動導線を備え、人間がDIPS側で通報を完了後、アプリ側で「手動通報完了」を記録できること。
   - **手動確認の柔軟性**: DIPS側で受付番号/計画番号が表示された場合はそれを入力可能とするが、番号が明示されない場合でも、DIPSの飛行計画一覧画面で登録された計画を目視照合できた場合は `confirmation_method: 'flight_plan_list_match'` として通報確認完了（`DIPS_CONFIRMED`）を記録可能とする（受付番号はnullable/任意）。
 - **API自動通報方式（API Submission - 将来追加可能なOptional結合）**:
@@ -143,6 +139,8 @@
   - バックエンド（Cloudflare Workers）経由でFPR APIへ直接JSONペイロードを送出。
 - **Mock方式（Mock Submission - 開発・テスト用）**:
   - 開発中およびテスト用の疑似受付番号生成機能。
+
+**DIPS Submission Assistance Principle**: 利用者が既に入力・選択したFlightPlan、Master、Preset、Permission、InsurancePolicy、Personnel、Aircraftを再利用し、DIPS通報時の再入力・判断・画面往復を最小化する。標準経路は `Master / Preset / FlightPlan → submission_snapshot → Manual Assistance ViewModel → DIPS Webで必要最小限の選択・入力・確認 → 通報確認記録`。API正式利用時だけ同じsnapshotから `API Mapper → API内部JSON → DIPS API` を追加し、APIの有無でFlightPlanや現場運航を作り直さない。原則の正本は [DIPS設計概要](architecture/dips-flight-plan/25_overview.md)。
 
 ### 4.2 認証基盤（OpenID Connect - API方式時のみ）
 - DIPS 2.0の分離された認証realmに対応可能であること:
@@ -152,6 +150,7 @@
 - BFF（Backend for Frontend）パターンにより、`client_secret` やトークンをクライアントに露出させずWorkersバックエンドで安全に中継。
 
 ### 4.3 APIクライアント機能（API方式時のみ）
+以下のendpoint表記は旧調査での例を保持したものです。C7で最新の公式契約・資格ごとの利用範囲へ再照合するまで、実装URLとして固定しません。[Adapter境界](architecture/15_dips-adapter.md)と[API mapping](architecture/dips-flight-plan/25c_api-payload-mapping.md)に従います。
 - **機体情報取得**: `GET /utm/v1/aircrafts` を呼び出し、所有機体一覧（登録記号、機体ID等）を自動同期。
 - **許可承認情報取得**: `GET /permissions` を呼び出し、有効な許可証情報を自動同期。
 - **飛行計画検索**: 緯度経度・日時・半径を指定して周辺の他機飛行計画を取得・表示。
@@ -199,7 +198,7 @@
 
 ---
 
-## 6. 地図・ポリゴン要件
+## 6. 地図・飛行範囲要件
 
 現場での直感的な空間把握と正確な通報を実現するための要件です。
 
@@ -220,8 +219,10 @@
   - 地図上を順次タップして頂点を追加。
   - 頂点のドラッグ移動、削除、頂点間の自動線引き。
   - 描画中のポリゴン面積（㎡ / ㎢）および外周長をリアルタイム表示。
-- **座標出力**:
-  - DIPS通報仕様で求められる世界測地系（WGS84）の緯度・経度配列（GeoJSON準拠）を正確に生成。
+- **線形バッファ指定モード**:
+  - 中心線と片側距離を保持し、作成・頂点編集・削除・再利用に対応する。DIPS Webの幅表記の意味は観測上未確定ならPENDINGのまま扱う。
+- **中立Geometryと変換**:
+  - `FlightAreaGeometry` の `POLYGON` / `CIRCLE` / `BUFFERED_LINE` を正本とする。型・単位・座標順・高度との関係は [17_map-and-airspace](architecture/17_map-and-airspace.md) に一元化する。GeoJSONは描画Adapter等の内部変換、KMLは利用者の地図出力、DIPS APIの要求形式はC7 Mapperで個別に変換する。API座標形式をGeoJSONと同一視しない。
 
 ---
 
@@ -233,15 +234,15 @@
 - アプリの起動、過去データの閲覧、新規運航の開始、飛行前点検、離着陸記録、バッテリー交換、飛行後点検、日誌の一時確定までを、**通信が一切発生しない状態でも実行可能**とすること。
 
 ### 7.2 ローカルファーストストレージ
-- すべての入力・打刻・状態変更は、端末内のローカル永続領域（LocalStorage / IndexedDB / SQLite等）へミリ秒単位で即時永続化。
+- すべての入力・打刻・状態変更は、採用済みのIndexedDBへ通信待ちなしで速やかに永続化する設計目標とする。固定ミリ秒値の保証はせず、永続化失敗時を明示する。
 - ブラウザのリロード、端末のバッテリー切れ、誤ってアプリを閉じた場合でも、直前の画面・状態を確実に復元。
 
 ### 7.3 オフライン地図キャッシュ
 - 事前に現場の地図タイル（地理院地図・航空写真）を端末内へキャッシュし、電波圏外でも飛行予定エリアの背景地図を表示可能とすること。
 
 ### 7.4 同期キュー（キューイング機構）
-- オフライン時に作成したDIPS通報計画や飛行日誌は「未送信キュー」としてプール。
-- 電波が回復した段階で、操縦者のワンタップ操作により、安全に外部システム（DIPS 2.0、クラウド保存先等）へ一括同期。
+- オフライン時も計画・日誌をローカル保存し、外部台帳の同期ジョブをキューへ積む。手動支援画面もローカルで参照できるが、DIPS Webへの実通報は通信を要する。
+- 外部到達性を確認して台帳同期を再試行する。DIPS API送信は別経路（C7 Optional）とし、POST結果不明なら自動再送せず照合する。SyncQueueの型・再試行の正本は [14_offline-and-sync](architecture/14_offline-and-sync.md)。
 
 ---
 
@@ -255,7 +256,7 @@
 
 ### 8.2 データエクスポート（CSV / Excel）
 - 日常点検シートおよび飛行明細の一括CSV/Excel出力。
-- バッテリー個別履歴（`BAT_1`〜`BAT_n`）のCSV出力。
+- 正規化台帳から個体IDで抽出したバッテリー履歴のCSV出力（個体ごとの物理シートは作らない）。
 - 機体累計台帳のCSV出力。
 
 ### 8.3 データインポート（CSV）
@@ -289,5 +290,5 @@
 - ネットワーク瞬断時の再試行によって同一フライトが二重登録される事故を構造的に防ぐ。
 
 ### 9.3 データの透明性とベンダーロックイン排除
-- 特定の独自データベースにデータを囲い込まず、ユーザー自身がいつでも全データをエクスポート・バックアップ可能とすること。
+- 特定の独自データベースにデータを囲い込まないという要件を維持する。同期済み確定台帳の長期保管はGoogle Sheets、用途別出力はPDF/CSV/Excel/KMLで扱う。ローカルDB全量backup/restoreのユーザー向け形式・対象・検証はPENDING（[ADR-0008](decisions/ADR-0008-user-facing-export-and-recovery-boundaries.md)）。KMLをDB復旧の代替にせず、C1でユーザー向けJSON import/exportを実装しない。
 - Googleスプレッドシート等との連携も含め、日常的な閲覧・共有が平易であること。

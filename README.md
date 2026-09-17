@@ -1,6 +1,6 @@
 # drone-flight-ops
 
-次世代 総合ドローン運航管理システム 要件定義・設計準備プロジェクト
+iPhone / Android向け 総合ドローン運航管理アプリ（C0 Shell構築済み・C1未着手）
 
 ---
 
@@ -13,7 +13,7 @@
 ## ドキュメント一覧
 
 - [AGENTS.md](AGENTS.md) - **AI向け開発憲法・案内（AIは最初にここを読む）**
-- [docs/00_index.md](docs/00_index.md) - **ドキュメント総合目次（全資料のマトリクス）**
+- [docs/00_index.md](docs/00_index.md) - **ドキュメント総合目次（領域別の入口）**
 - [01_アプリ概要.md](01_アプリ概要.md) - プロジェクト全体概要・申し送り
 - [docs/00_goal.md](docs/00_goal.md) - 最終ゴール、iPhone/Android現場一気通貫フロー、設計原則
 - [docs/01_current-system-analysis.md](docs/01_current-system-analysis.md) - 現行自作アプリの機能・強み・弱み分析
@@ -24,9 +24,13 @@
 - [docs/guidelines/02_legal-and-operations-rules.md](docs/guidelines/02_legal-and-operations-rules.md) - 法令・実運用判断規約（法令8区分・柔軟運用）
 - [docs/decisions/README.md](docs/decisions/README.md) - アーキテクチャ決定記録（ADR）
 
+- [docs/architecture/README.md](docs/architecture/README.md) - 領域別設計書と主要概念の正本
+- [docs/architecture/28_c1-docs-restructure-audit.md](docs/architecture/28_c1-docs-restructure-audit.md) - C1前docs再編・移行対照・最終監査
+
 ## 運用ルール
 
 - **完成形は大前提として「iPhone / Android 両対応の現場用アプリ」です（単なるPC向けWebではありません）。**
-- **条件付き第一候補として「PWA ＋ Cloudflare Workers ＋ ローカルDB・スプレッドシート連携（モデルDハイブリッド）」を選定（詳細は docs/architecture/ 参照）。**
-- **Phase B2（詳細アーキテクチャ・実装前設計）完了時点。実装作業はPhase Cにて進めます。**
+- **PWA ＋ Cloudflare Workers ＋ IndexedDB・Google Sheets（Model D）はADR-0001〜0007に基づく採用済み設計です。出力・復旧と地図ライブラリの部分置換はADR-0008/0009を参照してください。**
+- **Phase B設計凍結、Phase C0基盤・PWA Shell構築完了、C1設計準備完了。C1以降は未着手で、C0受入確認・オーナーGO待ちです。**
+- C6 Manual DIPSを第一級機能とし、C7 API接続はOptional。C1前のdocs再編は実装開始を意味しません。
 - ルールや規約の詳細は [AGENTS.md](AGENTS.md) を参照してください。

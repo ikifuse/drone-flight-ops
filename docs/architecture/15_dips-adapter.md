@@ -1,6 +1,6 @@
 # 15. DIPS 2.0 Adapter境界設計（15_dips-adapter.md）
 
-最終更新: 2026-09-14
+最終更新: 2026-09-15
 プロジェクト: `drone-flight-ops`
 フェーズ: Phase B2（詳細アーキテクチャ・実装前設計）
 
@@ -13,7 +13,7 @@ DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤シス
 > [!IMPORTANT]
 > **API JSON 生成の内部局所性と手動アダプターの完全分離**:
 > - **API JSON 生成は `ApiDipsAdapter` の内部責務**です。これは国交省APIとの通信電文（Wire Format）に過ぎず、**ユーザー向けにJSONファイルとして出力・エクスポートするものではありません**。
-> - **`ManualDipsAdapter` は API JSON payload の生成を前提としません**。手動通報支援は意味論的Snapshot（`submission_snapshot`）から直接、人間の視認・1タップコピーに適した ViewModel（`ManualAssistanceData`）を生成します。
+> - **`ManualDipsAdapter` は API JSON payload の生成を前提としません**。手動通報支援は意味論的Snapshot（`submission_snapshot`）から直接、人間の視認・1タップコピーに適した ViewModel（`DipsManualEntryViewModel`）を生成します。
 > - 本書に記載された OIDC フロー、認証レルム（`drs-utm`, `drs-req`, `drs-fpl`）、エンドポイント候補、および Cloudflare Workers Proxy 構成は、公式仕様書に基づく調査結果・設計候補資産であり、**正式なAPI利用承認・credential取得前の実装確定事項ではありません**。正式資格が取得された場合のみ Phase C7（Optional Integration）開始時に最新公式仕様と突き合わせて再確認・実装します。
 
 ```text
@@ -59,7 +59,7 @@ DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤シス
 
 ## 2. 3系統の認証レルム（Realm）と論理分離
 
-国交省公式仕様書（2026年9月確認）に基づき、3系統の独立したアダプターを設けます。
+旧設計で記録された国交省公式仕様書（2026年9月確認）の `OFFICIAL_SPEC` に基づき、3系統の独立したアダプターを設けます。
 
 ### 2.1 DRS Adapter（機体登録系: `drs-utm`）
 - **対象業務**: DIPS登録記号（JU324...）、有効期限、機体スペック情報の自動取得・照合。
@@ -84,7 +84,7 @@ DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤シス
 
 ## 3. 未確認事項の吸収アーキテクチャ
 
-国交省公式ガイドラインで確認済みの事項と、未確認の事項をAdapter内部で以下のように吸収します。
+旧設計が国交省公式ガイドラインで確認した事項と未確認事項の分類を保持します。表の確認済は当時の証拠分類であり、C7開始時に最新原文と資格条件へ再照合します。
 
 | 項目 | 現状の事実・未確認 | DIPS Adapterでの吸収設計 |
 |---|---|---|
@@ -103,27 +103,12 @@ APIの有無によってアプリ本体のデータ構造や呼び出し元コ�
 
 ```typescript
 // 提出方式
+// 型定義の正本は12d。以下はAdapterが利用する型の参照例。
 export type DipsSubmissionMethod = 'manual' | 'api' | 'mock';
 
-// 手動入力支援用DTO
-export interface ManualAssistanceData {
-  flightPlanId: string;
-  revision: number;
-  plannedStartTimeFormatted: string;   // 例: "2026/10/20 10:00"
-  plannedEndTimeFormatted: string;     // 例: "2026/10/20 12:00"
-  locationName: string;                // 例: "〇〇町飛行場"
-  coordinatesText: string;             // 例: "33.456789, 129.876543"
-  radiusMetersText: string;            // 例: "150m"
-  altitudeAglText: string;             // 例: "30m (AGL)"
-  aircraftRegistrationMark: string;    // 例: "JU324XXXXXXX"
-  aircraftModel: string;               // 例: "EVO Lite Series"
-  pilotName: string;                   // 例: "山田 太郎"
-  pilotLicenseNumber: string;          // 例: "第XXXXX号"
-  flightPurpose: string;               // 例: "空撮"
-  flightType: string;                  // 例: "目視内飛行・昼間飛行"
-  permissionNumber: string;            // 例: "国空航第XXXXX号"
-  dipsWebUrl: string;                  // DIPS 2.0 ログイン/飛行計画通報画面URL
-}
+// 手動支援ViewModelは25bが正本。旧ManualAssistanceDataはこの型へ名称統一。
+// 具体型はC6で25bの表示契約に沿って実装する。
+// import type { DipsManualEntryViewModel } from application boundary;
 
 // 通報結果
 export interface DipsSubmissionResult {
@@ -131,9 +116,9 @@ export interface DipsSubmissionResult {
   method: DipsSubmissionMethod;
   dipsPlanId?: string | null;          // nullable / optional (手動確認で番号未取得時はnull)
   confirmationMethod?: 'flight_plan_list_match' | 'displayed_id' | 'api_response';
-  status: 'snapshot_saved' | 'manual_submit_wait' | 'manual_submitted' | 'dips_confirmed' | 'api_confirmed' | 'submission_uncertain' | 'failed';
+  status: DipsSubmissionStatus;         // 正本: 13b DIPS状態、12dから参照
   errorMessage?: string;
-  submittedAt: string;
+  submittedAt?: string;               // 実通報の打刻またはAPI送出時のみ。支援表示中は未設定。
   confirmedAt?: string;
 }
 
@@ -142,16 +127,16 @@ export interface IDipsSubmissionAdapter {
   readonly method: DipsSubmissionMethod;
   
   // 提出準備（スナップショット検証・外部台帳退避用データ生成）
-  prepareSubmission(plan: InternalFlightPlan): Promise<DipsSubmissionPayload>;
+  prepareSubmission(plan: InternalFlightPlan): Promise<DipsSubmissionSnapshot>;
   
   // 通報実行（手動支援表示、またはAPI送信、またはモック実行）
-  executeSubmission(payload: DipsSubmissionPayload): Promise<DipsSubmissionResult>;
+  executeSubmission(snapshot: DipsSubmissionSnapshot): Promise<DipsSubmissionResult>;
   
   // 手動入力支援データの取得（手動アダプター時）
-  getManualAssistanceData(payload: DipsSubmissionPayload): ManualAssistanceData;
+  getManualAssistanceData(snapshot: DipsSubmissionSnapshot): DipsManualEntryViewModel;
   
-  // 計画取消
-  cancelPlan(dipsPlanId: string, reason: string): Promise<boolean>;
+  // 内部提出記録を起点に取消。手動通報ではdips_plan_idがnullでも利用可能。
+  cancelPlan(submissionId: string, reason: string): Promise<boolean>;
 }
 
 // API接続用サービス（承認時 Optional）
@@ -163,6 +148,8 @@ export interface IDipsApiService extends IDipsSubmissionAdapter {
 }
 ```
 
+取消は内部 `submission_id` から提出記録・Snapshot・確認方法を解決する。ManualではDIPS Web側で該当計画を確認して取消操作を行った後、外部番号がnullでも内部記録へ取消を打刻できる。API経路だけは公式取消契約が要求する外部計画ID等を取得・照合し、不足時は推測したIDで送信せず手動確認へ案内する。取消履歴・改訂の正本は[12d](domain-model/12d_flight-plan-and-dips.md)と[13b](state-machines/13b_dips-submission.md)。
+
 ---
 
 ## 5. アダプター実装区分（Manual / Mock / API）
@@ -170,11 +157,11 @@ export interface IDipsApiService extends IDipsSubmissionAdapter {
 ### 5.1 ManualDipsAdapter（手動通報アダプター - 正式・第一級）
 - **役割**: DIPS API未取得時、電波微弱時、または手動運用を選択した場合の基幹アダプター。
 - **挙動**:
-  1. 内部飛行計画から不変の `submission_snapshot` を生成しローカル保存（status: 'snapshot_saved'）。API JSON payloadの生成は行わない。
-  2. Googleスプレッドシート「DIPS飛行計画台帳」へ非同期同期ジョブ（sync_status: 'sync_pending'）を登録（Sheets同期完了は待たずに通報可能）。
+  1. 内部飛行計画から不変の `submission_snapshot` を生成しローカル保存（status: 'SNAPSHOT_SAVED'）。API JSON payloadの生成は行わない。
+  2. Googleスプレッドシート「DIPS飛行計画台帳」へ非同期同期ジョブ（`SyncJob.status: 'pending'`）を登録。Entity側の `DipsSubmission.sync_status: 'sync_pending'` とは別軸で管理（Sheets同期完了は待たずに通報可能）。
   3. スマホ画面に「手動入力支援画面（コピー用UI）」を表示。
-  4. 操縦者が「DIPSへ入力完了」をタップした時点で `manual_submitted` を記録。
-  5. 操縦者がDIPS画面で受付番号を入力、またはDIPS飛行計画一覧の一致を目視確認した時点で `dips_confirmed`（`confirmation_method: 'displayed_id'` または `'flight_plan_list_match'`、受付番号は任意）を記録。
+  4. 通報操作者がDIPS Webで実際の通報操作を行い、「DIPSへ手動通報した」をタップした時点で `MANUAL_SUBMITTED` を記録。入力やコピーの完了だけではこの状態にしない。
+  5. 通報操作者がDIPS画面で受付番号を入力、またはDIPS飛行計画一覧の一致を目視確認した時点で `DIPS_CONFIRMED`（`confirmation_method: 'displayed_id'` または `'flight_plan_list_match'`、受付番号は任意）を記録。
 
 ### 5.2 MockDipsAdapter（開発・テスト用モック）
 - **役割**: 外部APIやDIPS本番環境を汚染せずに、通報成功・エラー・照合の全フローをテスト。
@@ -186,30 +173,14 @@ export interface IDipsApiService extends IDipsSubmissionAdapter {
 - **役割**: 国交省審査を通過し、credentialが発行された場合のみ有効化する自動連携プラグイン。
 - **挙動**:
   - Cloudflare Workers中継プロキシを経由してDIPS 2.0 FPRエンドポイントへJSON送信。
-  - DIPS公式API仕様で定義された成功レスポンスを受領・検証後、計画ID等を抽出し、`api_confirmed`（confirmation_method: 'api_response'）を記録。
+  - DIPS公式API仕様で定義された成功レスポンスを受領・検証後、計画ID等を抽出し、`API_CONFIRMED`（confirmation_method: 'api_response'）を記録。
 
 ---
 
-## 6. 手動入力支援画面（Manual Assistance Screen）設計
+## 6. Manual入力支援の正本とAdapterの責務
 
-DIPS APIがない場合でも、スマートフォン1台でストレスなくDIPS Web画面へ必要事項を転記できるよう、専用の「手動入力支援画面」を提供します。
+登録済Picker、checkbox、構造化数値/日時、1タップコピー、受付番号または一覧照合による確認操作は[25b Manual Web mapping](dips-flight-plan/25b_manual-web-mapping.md)を正本とする。旧15の全表示項目と下部操作、旧24の確認パターンを同書へ統合した。Adapterは意味論的SnapshotをViewModelへ渡し、ユーザーの手動通報打刻と確認操作を状態管理へ通知する。
 
-### 6.1 画面構成と1タップコピーUI
-- **上部**: 「DIPS Webを開く」外部リンクボタン（ブラウザの別タブで開く）。
-- **注意文**: 「※DIPS側へ自動入力はされません。各項目の『コピー』を押し、DIPS画面へ貼り付けてください」。
-- **項目リスト（各項目にワンタップ「コピー」ボタン付き）**:
-  - 飛行予定日時（開始・終了）
-  - 飛行場所・名称
-  - 緯度経度（10進数）
-  - 飛行高度（AGL対地高度）
-  - 飛行範囲半径（m）
-  - 機体登録記号（JU324...）
-  - 操縦者氏名・技能証明番号
-  - 飛行目的（空撮・点検等）
-  - 飛行形態（昼間・目視内等）
-  - 許可承認番号
-- **下部アクション**:
-  - **「DIPSへ手動通報した」ボタン**: 押下により `MANUAL_SUBMITTED` 状態を打刻。
-  - **「通報結果の確認完了」操作**:
-    - パターンA（番号確認時）: DIPS画面に表示された計画番号/受付番号を入力し、`confirmation_method: 'displayed_id'` で `DIPS_CONFIRMED` へ更新。
-    - パターンB（一覧目視照合時）: DIPS「飛行計画一覧」画面で日時・機体・範囲の一致を目視確認し「一覧で確認済み」をチェックすることで、番号未取得のまま `confirmation_method: 'flight_plan_list_match'` で安全に `DIPS_CONFIRMED` へ更新可能。
+状態名・遷移の正本は[状態設計群](state-machines/README.md)、DipsSubmission / Snapshot型は[12d](domain-model/12d_flight-plan-and-dips.md)。共通インターフェースの `DipsSubmissionSnapshot` は12dの `submission_snapshot` 型を指し、API wire DTOではない。`DipsSubmissionResult.success` は操作結果であり、手動通報時にDIPS受理を独立に保証するboolではない。
+
+C7送信DTO・コード変換・API契約版・exact outbound JSONの正本は[25c](dips-flight-plan/25c_api-payload-mapping.md)。認証および機密管理は[16](16_security.md)に従う。API未承認時はこれらの実装を要求しない。
