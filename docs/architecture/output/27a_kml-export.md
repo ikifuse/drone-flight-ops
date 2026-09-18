@@ -1,6 +1,6 @@
 # 27a. KML生成・変換・出力プロファイル
 
-最終更新: 2026-09-15\
+最終更新: 2026-09-18\
 状態: 設計確定（Phase C1 未着手。個別 `PENDING` は未決）\
 主要責務: DomainからのKML射影、ファイル単位・命名・プライバシー\
 入口: [出力設計目次](README.md)
@@ -11,19 +11,21 @@
 
 ### 1.1 単位原則
 
-- **基本単位**: **1 FlightPlan = 1 KML ファイル**
+- **基本単位**: **1 DIPS FlightPlan（または確定 `submission_snapshot`） = 1 KML ファイル**
 - KMLのIdentityはFlightPlan単位です。1計画に複数の通報リビジョンが存在し得るため、「1通報リビジョン＝1計画」とは扱いません。過去の通報証跡はDipsSubmissionで保持します。
+- **運航記録上の「柔軟な1飛行」との区別**:
+  - Step 6で策定した現場運航日誌における「柔軟な1飛行（Flight）」と「DIPS FlightPlan」は別概念です。同義化したり混同してはなりません。
 - DIPS通報が不要な非特定飛行でも、アプリ内で `FlightPlan` を作成した場合は、通報有無に関わらず「1 FlightPlan」をKML生成の基本単位とします。[計画なしのMission](../domain-model/12e_operation-inspection-maintenance.md)も引き続き許容し、KMLのために計画作成を強制しません。
 
 ### 1.2 1ファイルへの統合構造
 
-1つのKMLファイル内部に、計画情報・飛行範囲・現場点検・フライト実績を複数の `Folder`, `Placemark`, `ExtendedData` として階層的に構造化します。
+1つのKMLファイル内部に、計画情報・飛行範囲を複数の `Folder`, `Placemark`, `ExtendedData` として階層的に構造化します（事後の運航実績や点検記録は含めません）。
 
 ```text
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <name>2026-10-20_サンプル公園_FP-a1b2c3</name>
-    <description>drone-flight-ops Flight Record</description>
+    <description>drone-flight-ops Flight Plan</description>
 
     <!-- 1. 飛行範囲フォルダ -->
     <Folder>
@@ -52,28 +54,7 @@
           <Data name="Methods"><value>...</value></Data>
           <Data name="Altitude"><value>100m AGL</value></Data>
           <Data name="DipsStatus"><value>DIPS_CONFIRMED</value></Data>
-          <Data name="DipsPlanID"><value>...</value></Data>
         </ExtendedData>
-      </Placemark>
-    </Folder>
-
-    <!-- 3. 現場運航実績フォルダ (Mission完了時追加) -->
-    <Folder>
-      <name>Operational Execution</name>
-      <Placemark>
-        <name>飛行前点検: 合格 (2026-10-20 09:15)</name>
-      </Placemark>
-      <Folder>
-        <name>Flights</name>
-        <Placemark>
-          <name>Flight 1 (09:30 - 09:45, 15min, BAT-A01)</name>
-        </Placemark>
-        <Placemark>
-          <name>Flight 2 (09:55 - 10:12, 17min, BAT-A02)</name>
-        </Placemark>
-      </Folder>
-      <Placemark>
-        <name>飛行後点検: 合格 (2026-10-20 10:20)</name>
       </Placemark>
     </Folder>
   </Document>
@@ -105,75 +86,54 @@
 
 ---
 
-## 3. KML射影の入力候補となる計画情報と運航実績
+## 3. KML射影の入力データ（DIPS通報内容基準・CURRENT-ACCEPTED）
 
-以下はDomainから参照できる属性カタログです。全項目を無条件出力する指示ではありません。実際のXML・name・description・ExtendedData・ファイル名は第6節のプロファイルにより選別し、既定の `SHARE_SAFE` を適用します。
+KMLへ運航全データを詰めません。入力内容は「その飛行計画についてDIPSへ通報した確定内容（`submission_snapshot`）＋ その通報対象の共通Geometry（`FlightAreaGeometry`）」とし、KML独自の属性を再選定する設計を排除します。
 
-### 3.1 計画確定時（Plan Snapshot）
-
-- `FlightPlan ID`（UUID）および表示短縮ID
-- 計画名称（`name`）
-- 飛行予定日時（開始日時・終了日時）
-- 飛行場所情報（場所名、住所/地名、中心緯度経度）
-- 飛行目的（内部目的およびDIPS公式目的）
-- 飛行空域（DID、空港周辺、150m以上、該当なし）
-- 飛行方法（夜間、目視外、30m未満等）
-- 予定機体（メーカー、型式、登録記号）
-- 予定操縦者（氏名、技能証明区分）
-- 計画高度（AGL / MSL）、巡航速度、予定航続時間
-- 補助者人数（申告人数）
-- 適用許可承認情報（許可番号、有効期間）
-- 適用保険情報（保険会社名、商品名、対人対物補償限度）
-- DIPS通報ステータス（`DIPS_CONFIRMED`, `MANUAL_SUBMITTED`, `NOT_REQUIRED` 等）およびDIPS計画番号
-- 特記事項・備考
+### 3.1 含まれる計画属性（Plan Snapshot）
+- 計画名称、飛行予定日時、飛行場所情報
+- 飛行目的（DIPS公式目的）、飛行空域、飛行方法
+- 予定機体、予定操縦者、計画高度、巡航速度、予定航続時間
+- 補助者人数、適用許可承認情報、適用保険情報
 - 飛行範囲幾何データ（`FlightAreaGeometry`）
 
-### 3.2 運航完了時（Operational Execution Snapshot）
-
-運航完了時には、上記計画情報に加えて以下の実績情報が同一KMLへ追記されます：
-- **飛行前点検（Preflight Inspection）**: 実施日時、点検実施者、判定結果（合格/不合格）、特記不具合
-- **個別フライト実績（Flights）**: 各フライトの離陸日時、着陸日時、実飛行時間（分）、使用機体（機体交代対応）、使用バッテリー個体、操縦者、飛行所感・不具合記録
-- **飛行後点検（Postflight Inspection）**: 実施日時、点検実施者、判定結果（合格/不合格）、特記不具合、処置内容
-
-> [!IMPORTANT]
-> **原本性・台帳権威の分離**:\
-> KMLに運航実績や点検結果が含まれていても、KMLはこれらの法的原本・マスター台帳ではありません。正本はローカルDB（IndexedDB）および外部確定台帳（Google Sheets）です。KMLはその時点の可視化用スナップショットに過ぎません。
+### 3.2 含まれない事後データ（排除境界）
+- **日常点検結果**: 飛行前点検・飛行後点検の結果や不具合処置はKMLへ入れない。
+- **実飛行・バッテリー実績**: 各離着陸時刻、実飛行時間、バッテリー個体使用履歴はKMLへ入れない。
+- **点検整備記録**: 機体の生涯点検整備台帳はKMLへ入れない。
+- **行政側受付証跡**: DIPS送信後に得る受付結果・受付番号等は「通報した内容」ではないためKMLには含めず、`06_DIPS関連` へ別保持する。
+- ※運航完了時に事後実績をKMLへ追記する旧案（旧3.2節）は、ADR-0013により正式に却下・除外（`HISTORICAL`）。
 
 ---
 
-## 4. KMLライフサイクル（1計画1ファイルの更新モデル）
+## 4. KMLライフサイクル（通報時確定生成モデル・ADR-0013準拠）
 
-運航の進行に伴い、1つのFlightPlanに対応するKMLは以下のライフサイクルを辿ります。
+KMLは運航終了時ではなく、飛行計画を確定してDIPSへ通報する段階で確定生成します。
 
 ```text
-[FlightPlan 確定 (SUBMISSION_READY / SNAPSHOT_SAVED)]
+[FlightPlan 確定・DIPS通報実施 (SUBMISSION_CONFIRMED / API_CONFIRMED)]
   │
   ▼
-【初回 KML 生成】
+【KML 確定生成】
   ├─ 計画Geometry (Polygon / Approximated Circle / Buffered Line)
-  ├─ 計画属性 (機体・操縦者・目的・空域・高度・許可・保険)
-  └─ DIPS通報ステータス
+  └─ 計画属性 (機体・操縦者・目的・空域・高度・安全措置・許可・保険)
   │
-  ▼ (Google Drive の指定フォルダへ保存)
-  │
-[現場運航セッション (Mission 開始 〜 離着陸 〜 点検 〜 完了)]
-  │ (ローカルDBおよびSheets台帳へ運航実績を逐次記録)
-  │
-[Mission 完了打刻]
-  │
-  ▼
-【最終 KML 再生成（更新）】
-  ├─ 計画情報（初回内容を維持）
-  ├─ 飛行前点検結果
-  ├─ 各フライト実績（離着陸時刻・飛行時間・使用機体・使用BAT）
-  └─ 飛行後点検結果
-  │
-  ▼ (Google Drive 上の同一ファイルを更新 / またはRevision保存)
+  ▼ (Google Drive 07_出力_PDF・KML/KML/ [※サブ階層はCURRENT-PROPOSAL] へ保存試行)
+  ├─ [成功]: 保存完了（同一計画の再生成・重複保存は行わない）
+  └─ [失敗]: 未同期KMLとして端末保持（CURRENT-PROPOSAL / PENDING）
 ```
 
-- **原則**: 「1 FlightPlan ＝ 1 KML」のIdentityを維持。
-- **履歴管理方針**: KMLの過去版を法定監査原本として多重保持する要件は設けません（監査原本・履歴はDomain / Google Sheets / DipsSubmission Snapshot / ReportSnapshot で厳格に保持されるため）。
-- Drive上の更新・Revision方針は [27b Drive Storage](27b_google-drive-storage.md) を参照します。My Mapsへの再インポート挙動は [PENDING-MYMAPS-04](27c_google-mymaps-workflow.md#3-my-maps-実機検証待ち事項pending-mymaps) です。
+- **原則**: 「1 DIPS FlightPlan（または確定 `submission_snapshot`） ＝ 1 KML」のIdentityを維持。
+- **保存先フォルダー階層**:
+  - `07_出力_PDF・KML/KML/` の出力領域配置は確定（`CURRENT-ACCEPTED`）。
+  - その配下の詳細サブフォルダー階層（例: `操縦者/年度/` 等）は構成確認用の例示（`CURRENT-PROPOSAL`）であり、最終的な詳細階層やファイル命名規則は実装Phaseの検討課題（`PENDING`）とします。
+- **KML障害時のDIPS再通報・飛行リスト阻害の禁止**:
+  - KMLの生成・Drive保存が失敗しても、DIPS通報状態をアプリ上で巻き戻さず、KML生成・保存失敗だけを理由にDIPSを再通報しません。
+  - KML生成・保存失敗だけを理由に共有飛行リストへの登録を阻害しません。
+- **未同期KMLの再送ライフサイクル（CURRENT-PROPOSAL / PENDING）**:
+  - 通報時に保存失敗したKMLは端末側に未同期として保持され、通信復帰時の自動再送、または飛行後点検完了後の「操縦者の最後の確定送信」において、A4運航記録やBAT履歴等と同時にDrive保存を再試行する経路を検討候補（`CURRENT-PROPOSAL`）とします。
+  - ※物理的なSyncQueue構造、端末内キャッシュ方式、および厳密な再送トリガーは、Step 8 / Phase C1の設計課題（`PENDING`）として留保します。
+- Drive上の更新・Revision方針は [27b Drive Storage](27b_google-drive-storage.md) を参照します。My Mapsへのインポート挙動は [PENDING-MYMAPS-04](27c_google-mymaps-workflow.md#3-my-maps-実機検証待ち事項pending-mymaps) です。
 
 ---
 

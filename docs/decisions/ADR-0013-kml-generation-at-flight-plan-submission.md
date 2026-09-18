@@ -3,7 +3,7 @@
 - **作成日**: 2026-09-18
 - **ステータス**: **提案中（Proposed）**
 - **決定者**: 検討中（99.2設計検討正本反映 / オーナー最終監査待ち）
-- **関連設計**: [27a KML出力](../architecture/output/27a_kml-export.md)、[27 出力境界](../architecture/output/27_output-boundaries.md)、[14 オフライン・同期](../architecture/14_offline-and-sync.md)
+- **関連設計**: [27 出力境界](../architecture/output/27_output-boundaries.md)、[27a KML出力](../architecture/output/27a_kml-export.md)、[27b Drive保存](../architecture/output/27b_google-drive-storage.md)、[14 オフライン・同期](../architecture/14_offline-and-sync.md)
 - **関連ADR**: [ADR-0008](ADR-0008-user-facing-export-and-recovery-boundaries.md)
 
 ## 1. 背景と課題（Context）
