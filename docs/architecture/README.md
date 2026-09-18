@@ -5,14 +5,33 @@
 
 ## 1. 本目次の役割と読み順
 
-[総合目次](../00_index.md)から本書へ進み、対象領域のREADMEと正本詳細文書を読みます。ここには仕様本文を複製せず、責務・正本・状態・履歴を案内します。C1ではまずDomain READMEから必要なschema/typeへ進みます。採用根拠と部分置換は [ADR一覧](../decisions/README.md)（ADR-0001〜0007、追加ADR-0008/0009）を参照してください。
+[総合目次](../00_index.md)から本書へ進み、対象領域のREADMEと正本詳細文書を読みます。ここには仕様本文を複製せず、責務・正本・状態・履歴を案内します。C1ではまずDomain READMEから必要なschema/typeへ進みます。採用根拠と部分置換は [ADR一覧](../decisions/README.md)（ADR-0001〜0007、追加ADR-0008/0009、および提案中ADR-0010〜0014）を参照してください。
 
-## 2. 現行設計の入口
+## 2. 設計文書における状態分類タグ体系と99.2検討正本からの移植原則
+
+本リポジトリでは、非公開の検討正本（`99.2_設計検討メモ_全論点・根拠・因果統合正本`）から各専門領域への段階的な設計移植を進めています。その際、以下の**全Step共通ルール**を適用します。
+
+1. **検討正本と確定仕様の区別**:
+   - 99.2は完成仕様書ではなく、「設計を詰めている途中に、何を問題として考え、どの案を検討し、なぜ現在案になっているか、何が未確定かを保持する検討正本」です。
+   - したがって、「99.2に書かれていること」のみを理由に確定仕様やADR Acceptedへ自動昇格させることはせず、各論点の現在状態を確認・検証して正式docsへ反映します。
+2. **設計状態分類タグ**:
+   - **`CURRENT-ACCEPTED`**: 現時点採用済み。これまでの検討・合意に基づき現行の設計ベースラインとして採用された設計。※将来変更禁止を意味せず、合理的な理由と因果を記録して更新可能。また、ADRの正式ステータスである `Accepted`（オーナー承認済みの重要決定）を意味しません。
+   - **`CURRENT-PROPOSAL`**: 現在案。現時点で最も有力な検討候補案。
+   - **`PENDING`**: 未確定・要検討。詳細設計や検証課題として留保されている事項。
+   - **`VERIFY`**: 外部確認待ち。外部API仕様、国交省正式通知、実機挙動等の確認待ち事項。
+   - **`HISTORICAL`**: 過去案・変更前案。変更経緯を保持し、誤認復活を防ぐための記録。
+   - **`EVIDENCE/EXAMPLE`**: 観察事実・実例・設計根拠。実測値や特定環境の例示（一般規範と区別）。
+   - **`NEW-PROPOSAL`**: 新規提案。整合や標準化のために新たに起票された提案。
+3. **最終監査**:
+   - Step 8において、`32_99-2-migration-and-audit.md` で全状態と監査証跡を網羅的に整理します。
+
+## 3. 現行設計の入口
 
 | 入口 / 文書 | 主責務・読む場面 |
 |---|---|
 | [domain-model README](domain-model/README.md) | ER・領域別Entity・共通ライフサイクル/ID/監査。C1型・schema実装の入口 |
 | [state-machines README](state-machines/README.md) | Operation FSM / DIPS FSM / 法令・安全総合評価。C2/C6/C7の独立状態管理 |
+| [presentation README](presentation/README.md) | ホーム4大入口、全体ナビゲーション、画面仕様記述規約、共有飛行リストUI |
 | [dips-submission README](dips-submission/README.md) | Manual通報業務と独立Sheets台帳。C4/C6の境界 |
 | [dips-flight-plan README](dips-flight-plan/README.md) | 公式88項目、Manual Web UI、C7 payload、要件エンジンの責務分離 |
 | [dips-infrastructure README](dips-infrastructure/README.md) | DIPS API接続インフラ・固定送信元IPゲートウェイ・秘密情報保護。C7インフラ境界 |
@@ -32,11 +51,14 @@
 | [23_implementation-roadmap](23_implementation-roadmap.md) | C0〜C9の範囲・受入基準・C7スキップ経路・現在の停止位置 |
 | [26_dips-web-ui-verification](26_dips-web-ui-verification.md) | OBSERVED / OFFICIAL_SPEC / INFERRED / PENDINGを保つ実画面の証拠資料 |
 | [28_c1-docs-restructure-audit](28_c1-docs-restructure-audit.md) | 今回の全docs責務監査・移行対照・整合修正・最終検査記録 |
+| [30a_home-and-navigation](presentation/30a_home-and-navigation.md) | ホーム4大入口、ナビゲーション原則、マスターその場登録UX、環境切替UI |
+| [30b_screen-specification-standard](presentation/30b_screen-specification-standard.md) | 画面仕様共通記述規約（11標準項目テンプレート） |
+| [30c_shared-flight-list-ui](presentation/30c_shared-flight-list-ui.md) | 共有飛行リスト画面仕様（カード5項目、操作導線、非同期引継ぎ、Online/Offline） |
 | [31_dedicated-egress-ip-gateway](dips-infrastructure/31_dedicated-egress-ip-gateway.md) | Google Cloud NAT・VPC Egress・固定IP・認証トークン隔離詳細 |
 
 設計の基準は確定でも、PENDINGは未解決です。26番は証拠資料であり、現行型・UI契約は上表の対応する設計正本に置きます。
 
-## 3. 主要概念の正本
+## 4. 主要概念の正本
 
 | 概念 | 唯一の詳細正本 | 他文書で扱う範囲 |
 |---|---|---|
@@ -61,6 +83,8 @@
 | Sheets Ledger | [24a](dips-submission/24a_submission-and-sheets-ledger.md) | 12にSheets列を重複定義しない |
 | DIPS API JSON | [25c](dips-flight-plan/25c_api-payload-mapping.md) | 通信Adapterは15、27は内部transportという境界のみ |
 | DIPS API接続インフラ / 固定送信元IP | [dips-infrastructure](dips-infrastructure/README.md) | 10は全体境界、16はセキュリティ境界、31は詳細設計、25cはAPI payload |
+| ホーム4大入口 / 画面ナビゲーション / 画面仕様記述規約 | [presentation](presentation/README.md) | 13a/13bはFSMトリガー、01は権限表示制御の参照 |
+| 共有飛行リストUI / 非同期引継ぎ | [30c](presentation/30c_shared-flight-list-ui.md) | ADR-0011は決定背景、24aは共有台帳正本、12dは計画Entity |
 | 出力・復旧の形式境界 | [27](output/27_output-boundaries.md) | ADR-0008は決定理由、全量restoreはPENDING |
 | KML | [27a](output/27a_kml-export.md) | Drive/My Mapsは保存・利用のみ |
 | Drive Storage | [27b](output/27b_google-drive-storage.md) | 14はキュー共通契約、KML生成とは別 |
@@ -69,7 +93,7 @@
 | Reports / ReportUnit / ReportSnapshot | [18](18_reports.md) | 12はEntity参照・FK、27は形式境界 |
 | Security | [16](16_security.md) | KMLの具体的な開示プロファイルは27a |
 
-## 4. 比較・監査の履歴
+## 5. 比較・監査の履歴
 
 以下は当時の比較・監査記録です。本文の旧提案を現行契約として再採用しません。最新の採用範囲はADRと§2/§3の設計を読みます。
 
@@ -83,7 +107,7 @@
 | [05_recommended-architecture](05_recommended-architecture.md) | B1の第一候補・代替案・却下理由・見直し条件 |
 | [09_b2-audit-and-corrections](09_b2-audit-and-corrections.md) | B2.1の状態・法令・認証・データモデル訂正履歴 |
 
-## 5. 旧番号からの移行案内
+## 6. 旧番号からの移行案内
 
 旧文書はリンク履歴を保つための案内だけを残します。詳細仕様の追記先にせず、§2の領域READMEから正本へ進んでください。
 
