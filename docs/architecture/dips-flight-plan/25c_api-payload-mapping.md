@@ -62,7 +62,7 @@ DIPS APIでは、飛行目的（1〜16）、飛行空域（1: DID, 2: 150m以上
 ## 5. JSONのライフサイクルとexact outbound payload
 
 1. `lockForSubmission()` によって保持する意味論的Snapshotは、manual / api / mock全方式の提出確定時点の機体・操縦者・目的・空域・方法・高度・Geometry・保険・許可等を保存する。[12d](../domain-model/12d_flight-plan-and-dips.md)がその型と不変性の正本であり、Manual ViewModelとSheets台帳も同じSnapshotを使用する。
-2. `ApiDipsAdapter` は送信操作と契約バージョンを選び、`DipsFlightPlanMapper → DipsCodeMapper → DipsFlightPlanPayloadDTO → JSON serializer` の順で国交省FPR API（Workers Proxy中継）へPOSTする直前の電文を生成する。具体エンドポイントは資格取得後の公式契約で確定し、旧27の `/api/v1/flight-plans` 例を確定endpointとして扱わない。
+2. `ApiDipsAdapter` は送信操作と契約バージョンを選び、`DipsFlightPlanMapper → DipsCodeMapper → DipsFlightPlanPayloadDTO → JSON serializer` の順で国交省FPR API（[33aの現在接続経路](../dips-infrastructure/33a_fixed-egress-and-api-connection.md)で中継）へPOSTする直前の電文を生成する。具体エンドポイントは資格取得後の公式契約で確定し、旧27の `/api/v1/flight-plans` 例を確定endpointとして扱わない。
 3. `api_payload_snapshot` は実際のoutbound JSON文字列を内部監査・照合用に記録する。API未利用時・手動時はnull。通信結果が不明でも送出した内容と試行を失わず、[状態設計](../state-machines/README.md)の照合へ進む。成功後にだけ履歴を作る設計にはしない。
 4. 機密・認証トークンは[16](../16_security.md)の除外対象とする。Domainを内部でJSON型やシリアライズ形式に保存することと、ユーザー向けJSON exportは異なる。本電文はユーザーへ表示・作成・保存・コピー・アップロードを要求せず、端末ファイルやDriveへのエクスポート対象にしない。
 

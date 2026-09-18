@@ -8,9 +8,9 @@
 
 | 当初の論点 | 現在の扱い / 正本 |
 |---|---|
-| クライアント・バックエンド選定 | ADR-0001によりPWA / Workers採用済み。地図ライブラリはADR-0009によりC5評価へ留保 |
+| クライアント・バックエンド選定 | ADR-0001のPWAを維持。DIPS用Workers経路からの変更は[33a](architecture/dips-infrastructure/33a_fixed-egress-and-api-connection.md)／ADR-0018 Proposed。地図はADR-0009のC5留保を維持 |
 | データ権威・同期 | ADR-0002 Model D採用済み。詳細は[11](architecture/11_data-authority.md)/[14](architecture/14_offline-and-sync.md) |
-| 秘密情報保護 | ADR-0004のBFF境界採用済み。具体的なC7認証検証・credentialはPENDING、[16](architecture/16_security.md) |
+| 秘密情報保護 | ADR-0004の秘密隔離を維持。正式認証・credentialはVERIFY、保持方式はPENDING。[16](architecture/16_security.md) |
 | API非依存・手動通報 | ADR-0006採用済み。C6 Manual第一級 / C7 Optional |
 | 機材・人員・帳票 | ADR-0007正規化採用済み。詳細は[Domain](architecture/domain-model/README.md)/[Reports](architecture/18_reports.md) |
 | JSON退避 | ADR-0008で利用者向けJSON廃止、全DB復旧形式はPENDING |
@@ -25,18 +25,12 @@
 これらは推測で進めず、将来の実装検討時に国土交通省や公式ガイドラインで直接確認する必要があります。
 
 ### 1.1 DIPS 2.0 APIの利用申請主体と資格要件
-- **個人・個人事業主での申請可否**:
-  - 国交省の案内資料では「運航管理システム等を整備する法人・団体」向けとして案内されている箇所がある。
-  - 個人、個人事業主、あるいは趣味・個人業務での利用目的で `client_id` および `client_secret` が正式に発行されるか未確認。
-- **申請時に求められる審査基準**:
-  - システム構成図、セキュリティ対策基準、データ保管体制、事故時の連絡体制など、どのような運用体制の審査があるのか。
-  - 公開Webアプリではなく、個人運航用のスタンドアロンツールでも認可対象になるのか。
+
+**HISTORICAL**: 旧案内の法人・団体向け表記から、個人申請可能か、個人のシステムが対象となるかを未確認としていた。**99.2の確認記録**: 航空局照会で個人申請可能・専有固定IP条件を確認し、最終訂正版を送付済み。詳細因果は[33a](architecture/dips-infrastructure/33a_fixed-egress-and-api-connection.md)。申請可能と承認済みを同一視せず、審査結果・設定通知・正式接続仕様はVERIFYとして残す。システム構成図、セキュリティ対策、データ保管体制、事故時の連絡体制等の個別審査要件や、個人用スタンドアロン構成の認可を推測で充足扱いにしない。
 
 ### 1.2 クライアントID・認証realmの具体的発行単位
-- **3系統の認証realmとcredentialの対応関係**:
-  - DIPS 2.0には、機体登録（`drs-utm`）、飛行許可承認（`drs-req`）、飛行計画通報（`drs-fpl`）の3つの異なるrealmが存在する。
-  - 申請書（`DIPS2.0_API_Application_Forms.xlsx`）提出後、1つの `client_id` / `client_secret` で3系統すべてにアクセスできるのか、realmごとに個別のcredentialが発行されるのか未確認。
-  - 実際の「DIPS 2.0 API設定通知書」を受領・確認するまで断定しない。
+
+旧DRS／FPA／FPRのrealm例は[15](architecture/15_dips-adapter.md)のHISTORICAL / EVIDENCE/EXAMPLE。credential共通／個別、SSO、endpoint、認証フローを現在契約として確定しない。接続システムURL／OIDCリダイレクトURLは原本時点で未確定、Client ID／Secret通知は未受領。確認と保持方式の詳細正本は[16 §9](architecture/16_security.md#9-step-4の認証確認と保持方式の未確定)。
 
 ### 1.3 通報API（FPR）の詳細制約とエラー仕様
 - **リクエストレート制限（Rate Limit）**:
@@ -152,3 +146,13 @@
 | PENDING-S3-BATTERY-HISTORY / VERIFY-S3-BATTERY-EVIDENCE | [32b](architecture/asset-management/32b_battery-sharing-and-acquisition-history.md)：取得時観測・個体履歴の表／行、共用表示と実物対応 |
 | PENDING-S3-MAINTENANCE-ACTOR / PENDING-S3-ACQUISITION-RECORD / VERIFY-S3-MAINTENANCE-EVIDENCE | [32c](architecture/asset-management/32c_acquisition-check-and-maintenance-actors.md)：実施者／転記者・取得確認の具体FK／保存／UIと原本照合 |
 | 後続の移植範囲（設計状態を降格しない） | [移植記録](migration/README.md)：§3・§5・§6の残り・§7以降。整備全体・保存構造の既存Docsとの相違を本Stepで解消していない |
+
+## 7. 99.2再移植Step 4の未確定と確認境界
+
+| 対象 | 詳細正本 |
+|---|---|
+| PENDING-C7-INFRA / VERIFY-S4-APPLICATION-EVIDENCE | [33a](architecture/dips-infrastructure/33a_fixed-egress-and-api-connection.md)：実行基盤・VPC／NAT経路・IP維持／復旧・費用／監視、原回答／申請・実環境照合 |
+| VERIFY-S4-API-CONTRACT / PENDING-S4-SESSION | [16 §9](architecture/16_security.md#9-step-4の認証確認と保持方式の未確定)：正式認証・通知・URL、最小一時状態とToken／Session保持 |
+| API非依存と結果不明時の安全境界 | [33b](architecture/dips-infrastructure/33b_api-availability-and-retry-boundaries.md)：到達済み境界を維持し、具体照合契約・UIを先取りしない |
+
+§7の固定IP／API基盤／通信境界のみ移管した。既存WARNや他領域のPENDINGは解消していない。対象外の移植待ちと、設計自体の未確定を区別する。

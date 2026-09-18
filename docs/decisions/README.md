@@ -80,10 +80,10 @@
 | 番号 | タイトル | ステータス | 決定日 | 概要 |
 |---|---|---|---|---|
 | ADR-0000（本README内の運用決定。独立ファイルなし） | ADRの導入と運用ルールの策定 | **承認済み** | 2026-09-14 | 技術的意思決定の透明性と追跡性を確保するためADRを導入 |
-| [ADR-0001](ADR-0001-architecture-selection.md) | 総合運航管理システムのアーキテクチャ選定 | **承認済み・一部置換** | 2026-09-14 | PWA/Workers/Hybridは維持。JSON退避条項は0008、MapLibre固定は0009で部分置換 |
+| [ADR-0001](ADR-0001-architecture-selection.md) | 総合運航管理システムのアーキテクチャ選定 | **承認済み・一部置換** | 2026-09-14 | PWA/Hybridは維持。DIPS用Workers変更は0018 Proposed、JSONは0008、地図は0009を参照 |
 | [ADR-0002](ADR-0002-data-authority-and-sync.md) | ライフサイクル連動型ハイブリッド正本モデルと手動修正尊重の採用 | **承認済み** | 2026-09-14 | 現場端末一次権威と外部台帳確定、手修正上書き防止の採用 |
 | [ADR-0003](ADR-0003-offline-storage-and-eviction-defense.md) | ローカル永続化方式とWebKitストレージ自動削除への多層防御 | **承認済み・一部置換** | 2026-09-14 | IndexedDB/persist/Sheetsは維持。ユーザーJSON backup/export/import部分のみ0008で置換 |
-| [ADR-0004](ADR-0004-dips-adapter-architecture.md) | DIPS 2.0 Adapter分離とバックエンド中継境界の採用 | **承認済み** | 2026-09-14 | DRS/FPA/FPR論理分離とclient_secretエッジ秘匿中継の採用 |
+| [ADR-0004](ADR-0004-dips-adapter-architecture.md) | DIPS 2.0 Adapter分離とバックエンド中継境界の採用 | **承認済み** | 2026-09-14 | Adapter・秘密隔離を維持。Workers指定の変更記録は0018 Proposed、正式認証は16のVERIFY |
 | [ADR-0005](ADR-0005-state-machine-separation.md) | 運航状態マシンとDIPS通報状態マシンの厳格分離および飛行可能誤認防止 | **承認済み** | 2026-09-14 | 現場物理運航と電子手続き通報の完全分離、安全確認UIの徹底 |
 | [ADR-0006](ADR-0006-dips-optional-and-manual-submission-ledger.md) | DIPS API非依存・手動通報フォールバック・飛行計画台帳の独立保持 | **承認済み** | 2026-09-14 | API非依存完結、手動入力支援第一級サポート、提出不変スナップショットと台帳先行保存 |
 | [ADR-0007](ADR-0007-normalized-masters-and-business-reporting.md) | 正規化マスター体系・共有機材モデル・業務利用拡張性・再利用プリセットおよび統合帳票境界の策定 | **承認済み** | 2026-09-14 | 機種/機体分離、バッテリー型式/個体分離・共有(N:M)、人員/場所マスター、プリセット・運航テンプレート、組織/案件拡張性、シート増殖禁止、統合A4縦帳票・続紙設計 |
@@ -92,8 +92,9 @@
 | [ADR-0015](ADR-0015-record-first-design-and-implementation-gate.md) | 記録・保存先から設計し、差分監査後に依存実装へ進む | **提案中（Proposed）** | 未承認（記録2026-09-18） | 99.2 §0・§1の設計順序と理由を記録。詳細ゲートは23 |
 | [ADR-0016](ADR-0016-environment-membership-and-access-separation.md) | 人物・環境所属と三層権限の分離、離任の所属終了化 | **提案中（Proposed）** | 未承認（記録2026-09-18） | 0007 §2.3の役割・資格の部分置換を記録。詳細は31a〜31d |
 | [ADR-0017](ADR-0017-asset-acquisition-history-and-cumulative-scope.md) | 機材取得履歴・管理累計の意味と点検整備Actorを分ける | **提案中（Proposed）** | 未承認（記録2026-09-18） | 0007の型式／個体・互換と0002の累計基点を具体化。詳細は32a〜32c |
+| [ADR-0018](ADR-0018-dips-fixed-egress-and-limited-backend.md) | DIPS APIの専有固定IP経路・限定バックエンド | **提案中（Proposed）** | 未承認（記録2026-09-18） | 0001／0004のDIPS用Workers指定の限定置換を記録。詳細は33a／33b／16 |
 
-ADR-0010〜0014は比較用main `6344d7a`にProposedとして存在する。本ブランチはその作成前の`ea73d08`から再移植しており、旧Step成果をコピーしないため収録しない。番号を再利用せずStep 1で0015、Step 2で0016、Step 3で0017を新設した。mainの0010〜0014をAcceptedへ変更していない。
+ADR-0010〜0014は比較用main `6344d7a`にProposedとして存在する。本ブランチはその作成前の`ea73d08`から再移植しており、旧Step成果をコピーしないため収録しない。番号を再利用せずStep 1で0015、Step 2で0016、Step 3で0017、Step 4で0018を新設した。mainの0010〜0014をAcceptedへ変更していない。
 
 CURRENT-ACCEPTEDは現在の設計ベースラインを表し、ADRの承認ではない。[7状態の正本](../guidelines/03_design-evidence-and-causality.md#3-状態ラベルと由来)に従う。0015がProposedであることを理由に、99.2 §0・§1で到達した設計方法を未決へ戻さない。
 
@@ -116,3 +117,5 @@ ADR-0001〜0006は承認コミット `00bd729`（2026-09-14）でAcceptedにな�
 0016がProposedであることを理由に、§2の到達済み設計をPENDINGへ戻さない。反対に離任UI・処理権限・offline・物理所有等の未確定をADR追加によって採用済みにしない。
 
 0017は0007の機材正規化と0002の累計基点の意味をClarifiesとして記録する。32a〜32cの現在設計ベースラインとADR Proposedを区別し、承認済みADRの正式な上書きや、§6全体・保存構造の移植完了とは扱わない。
+
+0018は0001 §3のDIPS用Workers境界、0004 §2・§3項3のWorkers指定について、現在ベースライン上の限定置換をPartially Supersedesとして記録する。0018はProposedであり、0001／0004の承認履歴を正式承認済みの新決定で上書きしたとは扱わない。現在経路の詳細は[33a](../architecture/dips-infrastructure/33a_fixed-egress-and-api-connection.md)、旧認証候補とVERIFYは[16](../architecture/16_security.md)。

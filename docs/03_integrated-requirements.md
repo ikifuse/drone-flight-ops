@@ -138,21 +138,24 @@
   - **手動確認の柔軟性**: DIPS側で受付番号/計画番号が表示された場合はそれを入力可能とするが、番号が明示されない場合でも、DIPSの飛行計画一覧画面で登録された計画を目視照合できた場合は `confirmation_method: 'flight_plan_list_match'` として通報確認完了（`DIPS_CONFIRMED`）を記録可能とする（受付番号はnullable/任意）。
 - **API自動通報方式（API Submission - 将来追加可能なOptional結合）**:
   - 国交省からAPI利用が正式認可された場合にのみ有効化される拡張機能。
-  - バックエンド（Cloudflare Workers）経由でFPR APIへ直接JSONペイロードを送出。
+  - [33a](architecture/dips-infrastructure/33a_fixed-egress-and-api-connection.md)のDIPS連携バックエンド・固定出口経路でFPR APIへJSONを送出。旧Workers選定から変更した理由は同書を正本とする。
 - **Mock方式（Mock Submission - 開発・テスト用）**:
   - 開発中およびテスト用の疑似受付番号生成機能。
 
 **DIPS Submission Assistance Principle**: 利用者が既に入力・選択したFlightPlan、Master、Preset、Permission、InsurancePolicy、Personnel、Aircraftを再利用し、DIPS通報時の再入力・判断・画面往復を最小化する。標準経路は `Master / Preset / FlightPlan → submission_snapshot → Manual Assistance ViewModel → DIPS Webで必要最小限の選択・入力・確認 → 通報確認記録`。API正式利用時だけ同じsnapshotから `API Mapper → API内部JSON → DIPS API` を追加し、APIの有無でFlightPlanや現場運航を作り直さない。原則の正本は [DIPS設計概要](architecture/dips-flight-plan/25_overview.md)。
 
-### 4.2 認証基盤（OpenID Connect - API方式時のみ）
+### 4.2 認証基盤（旧OIDC候補と正式契約の確認待ち）
+
+以下のrealmは旧公式調査に由来するEVIDENCE/EXAMPLEで、現在の正式接続仕様として再認定しない。通知・契約は[16 §9](architecture/16_security.md#9-step-4の認証確認と保持方式の未確定)のVERIFY。
 - DIPS 2.0の分離された認証realmに対応可能であること:
   - 機体登録系: `drs-utm`
   - 飛行許可承認系: `drs-req`
   - 飛行計画通報系: `drs-fpl`
-- BFF（Backend for Frontend）パターンにより、`client_secret` やトークンをクライアントに露出させずWorkersバックエンドで安全に中継。
+- 秘密情報をクライアントへ置かない境界を維持する。旧BFFの具体候補とGoogle Cloud側のToken／Session保持未決は16を参照し、Workers指定やCookie方式を現行確定事項としない。
 
 ### 4.3 APIクライアント機能（API方式時のみ）
-以下のendpoint表記は旧調査での例を保持したものです。C7で最新の公式契約・資格ごとの利用範囲へ再照合するまで、実装URLとして固定しません。[Adapter境界](architecture/15_dips-adapter.md)と[API mapping](architecture/dips-flight-plan/25c_api-payload-mapping.md)に従います。
+
+以下のendpoint表記は旧調査の参照例（EVIDENCE/EXAMPLE / VERIFY）です。C7で最新の公式契約・資格ごとの利用範囲へ再照合するまで、実装URLとして固定しません。[Adapter境界](architecture/15_dips-adapter.md)と[API mapping](architecture/dips-flight-plan/25c_api-payload-mapping.md)に従います。API業務機能・payload詳細の再移植は本Stepの対象外です。
 - **機体情報取得**: `GET /utm/v1/aircrafts` を呼び出し、所有機体一覧（登録記号、機体ID等）を自動同期。
 - **許可承認情報取得**: `GET /permissions` を呼び出し、有効な許可証情報を自動同期。
 - **飛行計画検索**: 緯度経度・日時・半径を指定して周辺の他機飛行計画を取得・表示。

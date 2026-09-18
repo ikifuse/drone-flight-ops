@@ -15,3 +15,5 @@
 Geometry一般仕様は[17](../17_map-and-airspace.md)、Entity schemaは[Domain設計群](../domain-model/README.md)、Web観測・PENDINGは[26](../26_dips-web-ui-verification.md)。本READMEに詳細定義を追加しない。
 
 上位入口: [architecture README](../README.md) → [docs index](../../00_index.md)。
+
+API電文をどの経路から送るかは[dips-infrastructure](../dips-infrastructure/README.md)、正式認証の確認待ちは[16](../16_security.md)。本領域のMapper／DTO／Snapshot詳細をインフラ正本へ移さない。

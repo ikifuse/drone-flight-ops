@@ -1,6 +1,6 @@
 # 10. システム境界と責務分離設計（10_system-boundaries.md）
 
-最終更新: 2026-09-15
+最終更新: 2026-09-18
 プロジェクト: `drone-flight-ops`
 フェーズ: Phase B2（詳細アーキテクチャ・実装前設計）
 
@@ -10,29 +10,18 @@
 
 本システムは、現場スマートフォン（iPhone / Android）単体での自律運航記録を最優先としつつ、将来の国交省DIPS 2.0連携およびGoogleスプレッドシートへの外部台帳同期を安全に行うため、明確な4つの責務境界を設定します。
 
-```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│ [境界1] クライアント層 (PWA / TypeScript SPA)                            │
-│  - UI / 現場状態管理 / 地図描画 / オフライン永続化 / 同期キュー管理      │
-└───────────────────┬─────────────────────────────────┬───────────────────┘
-                    │ (セキュア中継・Fetch)            │ (認証済み外部同期)
-                    ▼                                 ▼
-┌──────────────────────────────────────┐  ┌───────────────────────────────┐
-│ [境界2] バックエンド境界             │  │ [境界4] 外部台帳・確認境界    │
-│  (Cloudflare Workers / エッジAPI)    │  │  (Google Spreadsheet / Drive) │
-│  - DIPS API client_secret秘匿保管    │  │  - 人間による確認・手動補記   │
-│  - OIDC認可コード/トークン交換・中継 │  │  - 機体台帳累計の計算継続     │
-│  - CORS制約回避 / レスポンス正規化   │  │  - 国交省監査用帳票の印刷・提示│
-└───────────────────┬──────────────────┘  └───────────────────────────────┘
-                    │ (国交省OIDC / REST)
-                    ▼
-┌──────────────────────────────────────┐
-│ [境界3] 国交省DIPS 2.0 境界          │
-│  - 機体登録 (DRS: drs-utm)           │
-│  - 飛行許可承認 (FPA: drs-req)       │
-│  - 飛行計画通報 (FPR: drs-fpl)       │
-└──────────────────────────────────────┘
+```mermaid
+flowchart TB
+    PWA["境界1 PWA：現場UI・状態・ローカル保存・同期"]
+    Backend["境界2 DIPS連携バックエンド：秘密隔離・API通信（経路正本33a）"]
+    DIPS["境界3 DIPS 2.0：外部API（正式契約VERIFY）"]
+    Ledger["境界4 Sheets / Drive：外部台帳・確認・保存"]
+    PWA -->|API利用可能時のみ| Backend
+    Backend -->|33aの固定出口経路| DIPS
+    PWA -->|独立した外部同期| Ledger
 ```
+
+旧Workers経路の採用理由と固定IP要件による変更は[33a](dips-infrastructure/33a_fixed-egress-and-api-connection.md)を詳細正本とする。この図はシステム間責務だけを示し、ネットワーク構成を重複定義しない。
 
 ---
 
@@ -50,28 +39,23 @@
   8. **提出前台帳保存**: DIPSへ実際に通報（または手動入力）する前に、提出予定内容の不変スナップショットをローカルへ先行保存し、外部台帳への非同期同期ジョブを登録する。Sheets同期完了はDIPS通報の前提にしない（[24a](dips-submission/24a_submission-and-sheets-ledger.md)）。
 - **クライアント層が「やってはならないこと」**:
   - DIPS APIの `client_secret` やマスター認証資格情報の直接保持。
-  - DIPSサーバーへの直接的なCORS通信（将来の公式仕様でPKCE直接通信が認可・開放されない限り行わない）。
+  - 固定送信元IP・秘密情報の境界を迂回するDIPS API直接通信。根拠は33aと[16](16_security.md)であり、未確認のCORS／PKCEを許可条件・禁止理由として確定しない。
   - 通信待ちによるUI操作のブロッキング（オフラインファースト原則）。
 
-### 2.2 バックエンド境界（Backend / Cloudflare Workers）の責務
-- **主要責務**:
-  1. **機密情報の安全な隔離（Secrets Isolation）**: 暗号化された環境変数（Cloudflare Workers Secrets）により、DIPS接続に必要な `client_secret` をクライアントから安全に隠蔽。
-  2. **認証トークン交換・中継（BFF）**: DIPS認可コードフローにおけるToken Endpointとの通信（認可コードとアクセストークン・リフレッシュトークンの交換）およびセキュアCookieセッションの管理（※API利用可能時のみ動作）。
-  3. **CORS制約の解消**: ブラウザからの同一オリジンまたは許可オリジンリクエストを受け、DIPS各エンドポイントへ安全にプロキシ通信。
-  4. **データ変換・サニタイズ**: DIPSの送受信JSONとクライアント内部データ構造の相互変換、機密情報がクライアント側へ過剰返却されないためのフィルタリング。
-- **バックエンド層が「やってはならないこと」**:
-  - 現場飛行運航の直接的な状態制御（現場記録はクライアント単独で完結しなければならない）。
-  - オフライン不可欠機能への依存強制（Workersがダウンしていても、飛行日誌の記録・保存・閲覧・PDF出力、および手動DIPS入力支援は支障なく動作すること）。
-  - 恒常的なユーザー飛行実績データの永続保持（プライバシー保護および0円運用の観点から、エッジステートレスを原則とし、データはクライアントローカルDBおよびオーナー指定の外部台帳のみに蓄積する）。
+### 2.2 DIPS連携バックエンド境界の責務
+
+- **主要責務**: DIPS API秘密情報の隔離と、登録する固定送信元IP経路によるDIPS通信。Google Cloud上の限定バックエンドとCloud NATの役割・旧方式からの因果は[33a](dips-infrastructure/33a_fixed-egress-and-api-connection.md)。認証フロー・Token Endpoint・Cookie・実行コンピュートをこの責務要約から確定しない。
+- **担当しない責任**: 現場の直接状態制御、全利用者の運航データの中央DB化、API障害時のアプリ起動停止。必要最小限の一時状態まで禁止する意味ではなく、保持方式は[16](16_security.md)のPENDING。
+- **送受信境界**: 秘密の過剰返却を防ぐ規則は16。API電文の意味変換・Mapper・DTOは[25c](dips-flight-plan/25c_api-payload-mapping.md)であり、バックエンド／ネットワーク文書に別のpayload正本を置かない。Manual独立と結果不明時の安全境界は[33b](dips-infrastructure/33b_api-availability-and-retry-boundaries.md)。
 
 ### 2.3 DIPS Adapter境界の責務
 - **主要責務**:
   - **通報方式の論理抽象化（Pluggable Adapter）**:
     - `ManualDipsAdapter`: DIPS API不要の完全自律手動通報アダプター（手動入力支援画面表示・パイロットの通報完了記録受付・DIPS計画番号手動入力）。
     - `MockDipsAdapter`: オフライン開発・シミュレーション用モックアダプター（擬似受付番号発行）。
-    - `ApiDipsAdapter`: 将来API認可時にのみ有効化されるWorkers中継型REST/OIDCアダプター。
+    - `ApiDipsAdapter`: 将来API利用承認・credential取得時にのみ有効化されるAPIアダプター。中継経路は33a、正式認証契約はVERIFY。
   - 3つのアダプターを同一の `IDipsSubmissionAdapter` インターフェースで統一し、アプリ本体のデータモデルやUIが特定の提出経路に依存しない防波堤（Anti-Corruption Layer）を確立。
-  - 国交省DIPS 2.0の3つの異なる認証レルム（DRS: `drs-utm`, FPA: `drs-req`, FPR: `drs-fpl`）の通信仕様差分を吸収。
+  - DRS／FPA／FPRの業務・外部契約差分を吸収。旧調査の具体realmは15のHISTORICAL / EVIDENCE/EXAMPLEであり、正式契約への再照合はVERIFY。
 - **DIPS Adapterが「やってはならないこと」**:
   - DIPS通報結果をもって、アプリ全体として「飛行可能」と断定すること。
   - API非承認時にアプリの機能全体を停止させること（必ずManualDipsAdapterへフォールバックすること）。
@@ -95,8 +79,8 @@
 | 境界間 | プロトコル | 主なデータ形式 | 障害時のフォールバック |
 |---|---|---|---|
 | **Client ⇔ LocalDB** | IndexedDB API / Dexie.js | 内部TypeScriptオブジェクト | メモリ内保持（バルク移行時はSheets/CSVを第一候補とする） |
-| **Client ⇔ Backend** | HTTPS (Fetch / REST) | JSON (CSRFトークン/セッション保護) | 同期キューへ退避しオフライン継続 |
-| **Backend ⇔ DIPS 2.0** | HTTPS (OIDC / REST) | JSON (`application/json`) | 送出前失敗は待機。送出後の処理有無が不明なら [13b](state-machines/13b_dips-submission.md) の照合へ進み、自動再POSTしない |
+| **Client ⇔ Backend** | HTTPS (Fetch / REST) | JSON（認証・セッション詳細は16のVERIFY／PENDING） | 現場記録を継続。DIPS登録成否不明なら33bに従い自動再POSTしない |
+| **Backend ⇔ DIPS 2.0** | HTTPS（正式認証契約VERIFY） | API JSON（25c正本） | 送出前失敗は待機。送出後の処理有無が不明なら [13b](state-machines/13b_dips-submission.md) の照合へ進み、自動再POSTしない |
 | **Client ⇔ Spreadsheet** | HTTPS (Google Sheets API v4 / GAS WebAPI) | JSON (行配列・レコード) | 同期キューへ保持し、手動同期再試行可能 |
 
 ---
@@ -111,4 +95,4 @@
 
 ## 5. 詳細正本への接続
 
-DIPS Adapter境界は [15](15_dips-adapter.md)、秘密・トークン・Sessionの全規則は [16](16_security.md)、Manual支援原則は [24](dips-submission/24_manual-submission.md)、画面VMは [25b](dips-flight-plan/25b_manual-web-mapping.md)、API電文は [25c](dips-flight-plan/25c_api-payload-mapping.md) が正本。Sheetsは確定台帳、Driveは生成ファイル保存という独立した外部責務であり、片方の障害で現場記録や他方を停止させない。
+固定IP経路・限定責務は[33a](dips-infrastructure/33a_fixed-egress-and-api-connection.md)、API可用性と通信安全の因果は[33b](dips-infrastructure/33b_api-availability-and-retry-boundaries.md)。DIPS Adapter境界は [15](15_dips-adapter.md)、秘密・トークン・Sessionの全規則は [16](16_security.md)、Manual支援原則は [24](dips-submission/24_manual-submission.md)、画面VMは [25b](dips-flight-plan/25b_manual-web-mapping.md)、API電文は [25c](dips-flight-plan/25c_api-payload-mapping.md) が正本。Sheetsは確定台帳、Driveは生成ファイル保存という独立した外部責務であり、片方の障害で現場記録や他方を停止させない。

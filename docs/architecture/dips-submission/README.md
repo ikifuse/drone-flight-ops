@@ -15,3 +15,5 @@ C6の通報支援とC4の外部台帳を分離する。画面入力の詳細は2
 ## 2. 読み順と変更境界
 
 [architecture README](../README.md) → 本README → 対象文書。新しい詳細仕様をREADMEへ追記しない。Phase C0完了・C1未着手。各Phaseの範囲は [23](../23_implementation-roadmap.md)。
+
+API未承認・接続基盤障害時もManualが独立する因果は[dips-infrastructure](../dips-infrastructure/README.md)。固定IP経路を本領域へ複製せず、手動UI・台帳列は各正本に維持する。

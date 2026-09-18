@@ -6,7 +6,7 @@
 
 ---
 
-**現在の停止位置**: C0受入確認・オーナーGO待ち。99.2再移植はStep 1（§0・§1）、Step 2（§2）、Step 3（§4と取得確認・点検整備Actorに直接必要な§6の部分）まで。C1前docs再編・本Stepの完了は後続コードの着手承認ではありません。以下§1.2の開始ゲートも適用します。
+**現在の停止位置**: C0受入確認・オーナーGO待ち。99.2再移植はStep 1（§0・§1）、Step 2（§2）、Step 3（§4と取得確認・点検整備Actorに直接必要な§6の部分）、Step 4（§7のDIPS API基盤・固定IP・通信境界のみ）まで。C1前docs再編・本Stepの完了は後続コードの着手承認ではありません。以下§1.2の開始ゲートも適用します。
 
 ## 1. 実装の基本方針（安全な段階的積み上げ）
 
@@ -21,7 +21,7 @@ C0: 基盤・PWA Shell 構築
            └─► C5: 地図・FlightArea (描画ライブラリ未選定 / FlightAreaGeometry)
                 └─► C6: DIPS手動入力支援・Manual/Mock Adapter & 通報状態管理
                      │   ★【DIPS API非依存の主要機能実装完了】
-                     ├─► C7: 【Optional】DIPS実API接続中継 (Workers Proxy / API JSON / 審査承認時)
+                     ├─► C7: 【Optional】DIPS実API接続中継 (DIPS連携バックエンド / API JSON / 審査承認時)
                      ├─► C8: 国交省様式 PDF/CSV 帳票出力 & KML/Google Drive自動保存
                      └─► C9: オフライン強化 & 実機総合検証 (本番運用可能判定)
 ```
@@ -59,7 +59,9 @@ Step 2で§2の人物・環境・権限・離任を[identity-and-access](identit
 
 Step 3の§4と§6の取得確認・点検整備Actor部分は[asset-management](asset-management/README.md)へ再移植した。C1の型・C3の累計管理に接続する意味を同領域で確認する。取得前履歴、取得時BAT状態、Actorの具体FK・列・UI等はPENDINGであり、依存実装の着手条件を満たしたとは扱わない。
 
-以下のC0〜C9は基準commitの実装配分を保持する。§3・§5・§6の残り・§7以降の再移植は未完了である。対象領域のゲートを通過する前に、列挙された型やシート方針をそのまま実装開始の許可として使わない。
+Step 4では[DIPS接続基盤](dips-infrastructure/README.md)と[16](16_security.md)へ§7の限定部分を移した。接続方針は到達済みだが、実行基盤・VPC経路・認証契約・credentialは未確定／確認待ちで、実装や本番設定を開始しない。
+
+以下のC0〜C9は実装配分を保持し、C7の接続先指定だけを現在の正本へ接続する。§3・§5・§6の残り・§7対象外・§8以降の再移植は未完了である。対象領域のゲートを通過する前に、列挙された型やシート方針をそのまま実装開始の許可として使わない。
 
 ---
 
@@ -119,9 +121,9 @@ Step 3の§4と§6の取得確認・点検整備Actor部分は[asset-management]
 - **実装範囲**: `ManualDipsAdapter`、手動入力支援画面（1タップコピーUI、DIPS Webリンク）、`MockDipsAdapter`、DIPS通報状態マシン（`SNAPSHOT_SAVED`, `MANUAL_SUBMIT_WAIT`, `MANUAL_SUBMITTED`, `DIPS_CONFIRMED` 等と、直交する台帳同期状態 `sync_status` の分離）、確認方法（`flight_plan_list_match` / `displayed_id`）対応、誤認防止安全UI。※手動通報支援ではAPI用JSONシリアライズは行わない。
 - **完了条件**: DIPS APIキーが一切存在しなくても、計画作成→ローカル不変スナップショット保存→手動コピー画面→手動通報打刻→通報確認記録（受付番号入力または一覧目視照合）までが正常に動作し、「手動通報記録」と「DIPS確認済み」、および「台帳同期状態」が明確に区別されること。
 
-### Phase C7: 【Optional Integration】DIPS 2.0 実API中継（Cloudflare Workers Proxy & JSON Payload）
+### Phase C7: 【Optional Integration】DIPS 2.0 実API中継（接続基盤33a・API電文25c）
 - **目的**: 国交省審査を通過し、正式なcredential（client_id, client_secret）が発行された場合のみ追加する拡張統合機能。**（※審査未完了・API拒否時でも本フェーズをスキップしてC8・C9へ進むことができ、アプリ完成のブロッカーとならない）**
-- **実装範囲**: Workers OIDCトークン交換プロキシ、`ApiDipsAdapter`、FPR飛行計画通報API（No.1〜88準拠 DipsFlightPlanPayloadDTO および内部JSONシリアライズ）、`api_payload_snapshot` 記録、照合（Reconciliation）自動検索。
+- **実装範囲**: [33a](dips-infrastructure/33a_fixed-egress-and-api-connection.md)のDIPS連携バックエンドと固定出口経路、`ApiDipsAdapter`、FPR API電文・`api_payload_snapshot`（[25c](dips-flight-plan/25c_api-payload-mapping.md)）、照合（[13b](state-machines/13b_dips-submission.md)）。実行コンピュート／VPCはPENDING-C7-INFRA、認証フロー・credential・具体照合APIは[16](16_security.md)のVERIFY。旧Workers OIDC指定からの変更理由は33aへ保持し、型・payload・FSM詳細の追加確定や実装開始を意味しない。
 - **完了条件**: DIPSテスト環境または本番環境との間でトークン取得・JSON計画通報・計画ID自動回収が成立すること。
 
 ### Phase C8: 統合A4運航帳票・国交省様式 PDF/CSV 出力 & KML Geo Export

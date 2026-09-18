@@ -121,7 +121,7 @@ Step 2で人物・資格の詳細正本を[31a](../identity-and-access/31a_perso
 | 74| 無線機器確認フラグ | `radioEquipmentCheckFlag` | **必須** | - | boolean (`true`固定) | `FlightPlan.radio_check_confirmed` | PLAN_INPUT / チェック | ○ | 画面チェック | ○ | プロポ・通信確認 |
 | 75| 不具合・事故時措置フラグ | `accidentActionFlag` | **必須** | - | boolean (`true`固定) | `FlightPlan.accident_action_confirmed` | PLAN_INPUT / チェック | ○ | 画面チェック | ○ | 事故対応手順確認 |
 | 76| 計画書特記事項 | `remarks` | 任意 | - | 文字列 | `FlightPlan.remarks` | PLAN_INPUT | ○ | コピー可 | ○ | 土地所有者許可状況等 |
-| 77| 申請者ID (通報者) | `applicantId` | 任意 / システム | - | 文字列 | ログインユーザー / BFF注入 | SUBMISSION_METADATA | ○ | - | ○ | Workersプロキシにて注入可 |
+| 77| 申請者ID (通報者) | `applicantId` | 任意 / システム | - | 文字列 | ログインユーザー / BFF注入 | SUBMISSION_METADATA | ○ | - | ○ | DIPSバックエンド側の扱いは正式認証契約照合後（[16](../16_security.md)のVERIFY） |
 | 78| 連絡先種別 | `contactType` | **必須** | - | 数値 (1:操縦者, 2:通報者, 3:許可連絡先) | `FlightPlan.emergency_contact_target` | PLAN_INPUT | ○ | 画面選択 | ○ | 優先連絡先選択 |
 | 79| 計画状態コード | `planStatus` | 任意 / 照会 | - | 数値コード | DIPS側ステータス | SUBMISSION_METADATA | - | - | ○ | 応答・照会時の受信項目 |
 | 80| 登録日時 | `registrationDate` | 任意 / 照会 | - | 日時文字列 | DIPS側登録日時 | SUBMISSION_METADATA | - | - | ○ | 応答受領項目 |

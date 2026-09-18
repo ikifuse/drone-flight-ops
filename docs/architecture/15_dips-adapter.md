@@ -1,6 +1,6 @@
 # 15. DIPS 2.0 Adapter境界設計（15_dips-adapter.md）
 
-最終更新: 2026-09-15
+最終更新: 2026-09-18
 プロジェクト: `drone-flight-ops`
 フェーズ: Phase B2（詳細アーキテクチャ・実装前設計）
 
@@ -14,7 +14,7 @@ DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤シス
 > **API JSON 生成の内部局所性と手動アダプターの完全分離**:
 > - **API JSON 生成は `ApiDipsAdapter` の内部責務**です。これは国交省APIとの通信電文（Wire Format）に過ぎず、**ユーザー向けにJSONファイルとして出力・エクスポートするものではありません**。
 > - **`ManualDipsAdapter` は API JSON payload の生成を前提としません**。手動通報支援は意味論的Snapshot（`submission_snapshot`）から直接、人間の視認・1タップコピーに適した ViewModel（`DipsManualEntryViewModel`）を生成します。
-> - 本書に記載された OIDC フロー、認証レルム（`drs-utm`, `drs-req`, `drs-fpl`）、エンドポイント候補、および Cloudflare Workers Proxy 構成は、公式仕様書に基づく調査結果・設計候補資産であり、**正式なAPI利用承認・credential取得前の実装確定事項ではありません**。正式資格が取得された場合のみ Phase C7（Optional Integration）開始時に最新公式仕様と突き合わせて再確認・実装します。
+> - 本書に記載された OIDC フロー、認証レルム（`drs-utm`, `drs-req`, `drs-fpl`）、エンドポイント候補、は、公式仕様書に基づく調査結果・設計候補資産であり、**正式なAPI利用承認・credential取得前の実装確定事項ではありません**。正式資格が取得された場合のみ Phase C7（Optional Integration）開始時に最新公式仕様と突き合わせて再確認します。旧Workers ProxyはHISTORICALであり、現在接続経路と変更理由は[33a](dips-infrastructure/33a_fixed-egress-and-api-connection.md)。C7の実装開始は別の承認・ゲートに従います。
 
 ```text
 ┌────────────────────────────────────────────────────────┐
@@ -36,7 +36,7 @@ DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤シス
 │  └──────────────────────┴────────────────────────────┘ │
 │  ┌───────────────────────────────────────────────────┐ │
 │  │  ApiDipsAdapter 【将来・利用承認時 Optional (C7)】 │ │
-│  │  - DRS / FPA / FPR レルム別 OIDC / REST 通信      │ │
+│  │  - DRS / FPA / FPR 契約別通信（認証はVERIFY）      │ │
 │  │  - DIPS API exact outbound JSON の内部生成        │ │
 │  │  - api_payload_snapshot (nullable) の記録         │ │
 │  └──────────────────────┬────────────────────────────┘ │
@@ -44,9 +44,9 @@ DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤シス
                           │ (API利用可能時のみ中継)
                           ▼
 ┌────────────────────────────────────────────────────────┐
-│ バックエンド中継境界 (Cloudflare Workers Proxy)        │
+│ バックエンド中継境界（固定出口経路は33a正本）        │
 │  - client_secretの安全な秘匿保管                       │
-│  - 各realmのToken Endpoint / API EndpointへのHTTPS中継 │
+│  - 正式契約確認後の認証・API HTTPS中継 │
 └─────────────────────────┬──────────────────────────────┘
                           │
                           ▼
@@ -59,7 +59,7 @@ DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤シス
 
 ## 2. 3系統の認証レルム（Realm）と論理分離
 
-旧設計で記録された国交省公式仕様書（2026年9月確認）の `OFFICIAL_SPEC` に基づき、3系統の独立したアダプターを設けます。
+以下の具体realm・endpoint・メソッドは、旧設計が2026年9月の公式調査として記録したHISTORICAL / EVIDENCE/EXAMPLEです。業務差分の論理分離を維持しますが、現在の接続先契約として再認定しません。正式認証・endpoint・照合の利用条件はVERIFY-S4-API-CONTRACT（[16 §9](16_security.md#9-step-4の認証確認と保持方式の未確定)）。
 
 ### 2.1 DRS Adapter（機体登録系: `drs-utm`）
 - **対象業務**: DIPS登録記号（JU324...）、有効期限、機体スペック情報の自動取得・照合。
@@ -78,22 +78,21 @@ DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤シス
 - **認可エンドポイント**: `/auth/realms/drs-fpl/protocol/openid-connect/auth`
 - **トークンエンドポイント**: `/auth/realms/drs-fpl/protocol/openid-connect/token`
 - **主要メソッド**: `submitFlightPlan(planPayload)`, `queryPlanStatus(planId)`, `reconcileFlightPlan(criteria)`, `cancelFlightPlan(planId)`
-- **冪等性・二重通報防止**: 国交省FPR APIは利用者独自の `Idempotency-Key` ヘッダを解釈しないため、POST切断時の自動再送は行わず、`reconcileFlightPlan()` による既存計画検索で重複登録を防止します。
+- **冪等性・二重通報防止**: 旧調査の「独自 `Idempotency-Key` 未提供」は今回再認定しない。現在の通信安全境界は、未確認の重複防止保証へ依存せず、結果不明時に再POSTしないこと（[33b §2](dips-infrastructure/33b_api-availability-and-retry-boundaries.md#2-通常同期とdips正式通報を分けた因果)）。具体的な検索API契約はVERIFY。
 
 ---
 
 ## 3. 未確認事項の吸収アーキテクチャ
 
-旧設計が国交省公式ガイドラインで確認した事項と未確認事項の分類を保持します。表の確認済は当時の証拠分類であり、C7開始時に最新原文と資格条件へ再照合します。
+旧調査の確認記録と、99.2 §7で追加確認された申請・固定IP条件を区別する。詳細なネットワーク因果は33a、秘密／認証確認は16へ一本化する。
 
-| 項目 | 現状の事実・未確認 | DIPS Adapterでの吸収設計 |
+| 項目 | 旧状態から現在の扱い | Adapterの境界 |
 |---|---|---|
-| **認証プロトコル** | **【確認済】** OIDC / 認可コードフロー | Workers側で標準的なAuthorization Code/Token交換ロジックを実装。 |
-| **`client_secret` 必須性** | **【確認済】** トークン要求に必要 | クライアントへ露出させず、Cloudflare Workers Secretsで安全に保管。 |
-| **重複防止ヘッダ** | **【確認済】** 独自Idempotency-Keyは未提供 | 結果不明時はPOST再送を行わず、検索APIによる照合（Reconciliation）を必須化。 |
-| **credentialの発行単位** | **【未確認】** 3系統共通か個別か | 設定ファイル（Config）で `shared_credentials: true/false` を切り替え可能な構造とし、個別キーでも共通キーでもコード変更なしで対応。 |
-| **利用申請主体（資格）** | **【確認済】** 現行案内は法人・団体対象<br>**【未確認】** 個人の申請条件 | クライアント側には `MockDipsAdapter` を用意。正式キー取得前でも全UI・計画作成・通報キューの動作検証を実施可能にする。 |
-| **複数realmのSSO挙動** | **【未確認】** 1回ログインで全realm有効か | TokenManagerにおいて各realm（`drs-utm`, `drs-req`, `drs-fpl`）ごとに独立したTokenストアを保持し、個別トークンが必要な場合も自動ハンドリング。 |
+| 認証プロトコル・realm・Token Endpoint | 旧公式調査のOIDC／認可コード例はEVIDENCE/EXAMPLE。正式接続仕様・通知への照合はVERIFY | 旧フローをそのまま実装契約にしない |
+| client_secret | クライアントへ置かない意味は維持。通知は未受領 | 16の秘密隔離境界へ接続。Workers Secretsの製品指定は過去設計 |
+| 重複防止契約 | 旧ヘッダ非提供の記録と、現在の仕様保証を区別 | 結果不明時の再POST禁止は33b。検索・照合の具体契約はVERIFY |
+| credentialの発行単位・複数realmのSSO | 旧Config切替・realm別Tokenストア案はHISTORICALな設計候補 | 共通／個別・SSO・保持方式を推定で確定しない |
+| 個人申請・固定IP | 99.2に個人申請可能・専有固定IP条件の確認、最終訂正版送付済みの記録（33a） | API利用承認・credential発行とは別。Manual／Mockの独立を維持 |
 
 ---
 
@@ -139,7 +138,8 @@ export interface IDipsSubmissionAdapter {
   cancelPlan(submissionId: string, reason: string): Promise<boolean>;
 }
 
-// API接続用サービス（承認時 Optional）
+// API接続用サービスの旧realm別インターフェース例（HISTORICAL / VERIFY）
+// 正式契約受領前に具体realmや認証方式を確定しない。共通Manual契約とは別。
 export interface IDipsApiService extends IDipsSubmissionAdapter {
   getAuthStatus(realm: 'drs-utm' | 'drs-req' | 'drs-fpl'): Promise<DipsAuthStatus>;
   login(realm: 'drs-utm' | 'drs-req' | 'drs-fpl'): Promise<void>;
@@ -172,7 +172,7 @@ export interface IDipsApiService extends IDipsSubmissionAdapter {
 ### 5.3 ApiDipsAdapter（DIPS 2.0 APIアダプター - 利用承認時 Optional）
 - **役割**: 国交省審査を通過し、credentialが発行された場合のみ有効化する自動連携プラグイン。
 - **挙動**:
-  - Cloudflare Workers中継プロキシを経由してDIPS 2.0 FPRエンドポイントへJSON送信。
+  - [33a](dips-infrastructure/33a_fixed-egress-and-api-connection.md)の現在接続経路を通して、正式契約で確認したDIPS FPR APIへJSON送信。
   - DIPS公式API仕様で定義された成功レスポンスを受領・検証後、計画ID等を抽出し、`API_CONFIRMED`（confirmation_method: 'api_response'）を記録。
 
 ---

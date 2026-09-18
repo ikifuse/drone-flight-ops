@@ -9,13 +9,14 @@
 
 ## 2. 現行設計の入口
 
-99.2再移植は[Step 1（§0・§1）](../migration/99-2-step-1-causal-audit.md)、[Step 2（§2）](../migration/99-2-step-2-causal-audit.md)、[Step 3（§4と§6の取得確認・点検整備Actor部分）](../migration/99-2-step-3-causal-audit.md)まで。人物領域はidentity-and-access、機材取得・共用・履歴の因果はasset-managementへ配置する。現在の目的・設計順序は[00_goal](../00_goal.md)、依存実装の開始条件は[23](23_implementation-roadmap.md)。他の詳細領域は基準設計を保持し、§3・§5・§6の残り・§7以降との再移植・差分監査は次の指示で扱う。
+99.2再移植は[Step 1（§0・§1）](../migration/99-2-step-1-causal-audit.md)、[Step 2（§2）](../migration/99-2-step-2-causal-audit.md)、[Step 3（§4と§6の取得確認・点検整備Actor部分）](../migration/99-2-step-3-causal-audit.md)、[Step 4（§7のDIPS API基盤・固定IP・通信境界）](../migration/99-2-step-4-causal-audit.md)まで。人物領域はidentity-and-access、機材取得・共用・履歴の因果はasset-managementへ配置する。現在の目的・設計順序は[00_goal](../00_goal.md)、依存実装の開始条件は[23](23_implementation-roadmap.md)。他の詳細領域は基準設計を保持し、Step 4の経路・通信安全の因果はdips-infrastructure、秘密／認証候補は16。§3・§5・§6の残り・§7対象外・§8以降の再移植・差分監査は次の指示で扱う。
 
 | 入口 / 文書 | 主責務・読む場面 |
 |---|---|
 | [domain-model README](domain-model/README.md) | ER・領域別Entity・共通ライフサイクル/ID/監査。C1型・schema実装の入口 |
 | [identity-and-access README](identity-and-access/README.md) | 人物・アカウント・環境、三層権限、運航担当、所属終了の詳細因果と未確定 |
 | [asset-management README](asset-management/README.md) | 機材取得・BAT共用・累計の意味・取得確認と点検整備Actorの因果 |
+| [dips-infrastructure README](dips-infrastructure/README.md) | DIPS API固定出口・限定バックエンド、Manual独立・結果不明時retryの因果 |
 | [presentation README](presentation/README.md) | 画面仕様の記録単位・10項目。Step 1では個別画面を追加しない |
 | [state-machines README](state-machines/README.md) | Operation FSM / DIPS FSM / 法令・安全総合評価。C2/C6/C7の独立状態管理 |
 | [dips-submission README](dips-submission/README.md) | Manual通報業務と独立Sheets台帳。C4/C6の境界 |
@@ -78,7 +79,9 @@
 | My Maps | [27c](output/27c_google-mymaps-workflow.md) | 実アカウントの表示検証はPENDING |
 | Aircraft flight-log import | [27d](output/27d_aircraft-flight-log-import.md) | 将来入力境界、Flight実績の自動確定ではない |
 | Reports / ReportUnit / ReportSnapshot | [18](18_reports.md) | 12はEntity参照・FK、27は形式境界 |
-| Security | [16](16_security.md) | KMLの具体的な開示プロファイルは27a |
+| DIPS固定送信元IP・Google Cloud／Cloud NAT・限定バックエンド | [33a](dips-infrastructure/33a_fixed-egress-and-api-connection.md) | 10/15/23は参照。コンピュート・VPC経路はPENDING |
+| API基盤の非依存・DIPS POST結果不明時の通信安全の因果 | [33b](dips-infrastructure/33b_api-availability-and-retry-boundaries.md) | 13bはFSM、14はキュー、19は障害対応、24はManual |
+| Security / 旧BFF・Token候補と正式認証のVERIFY | [16](16_security.md) | 固定出口は33a、業務権限は31b、KML開示profileは27a |
 
 ## 4. 比較・監査の履歴
 

@@ -10,7 +10,7 @@ iPhone / Android向け 総合ドローン運航管理アプリ（C0 Shell構築�
 
 現行の自作アプリ（`ikifuse/autel-evo-lite-flight-log`）の強みである「バッテリー個体管理」「現場重視の操作性」「データの透明性」を継承し、参考アプリ（DIPS Viewer ワンエビneo等）の機能を取り込んだ次期システムの基盤資料です。
 
-このブランチは`ea73d08`から99.2の因果を保持して再移植する`redo/99-2-causal-migration`です。Step 1（§0・§1）とStep 2（§2）を保持し、今回の範囲は**Step 3（§4、および取得確認・点検整備Actorに直接必要な§6の部分）のみ**。§3・§5・§6の残り・§7以降には進みません。[移植・監査記録](docs/migration/README.md)を参照してください。mainの旧Step 1〜8は比較証拠として保存し、再利用していません。アプリの目的は[記入支援](docs/00_goal.md#11-記入支援を中心に置くまでの因果)、依存実装の着手条件は[23](docs/architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)にあります。
+このブランチは`ea73d08`から99.2の因果を保持して再移植する`redo/99-2-causal-migration`です。Step 1〜3（§0・§1・§2・§4と§6の限定部分）を保持し、今回の範囲は**Step 4（§7のDIPS API基盤・固定IP・秘密情報・通信障害境界のみ）**。§3・§5・§6の残り・§7対象外・§8以降には進みません。[移植・監査記録](docs/migration/README.md)を参照してください。mainの旧Step 1〜8は比較証拠として保存し、再利用していません。アプリの目的は[記入支援](docs/00_goal.md#11-記入支援を中心に置くまでの因果)、依存実装の着手条件は[23](docs/architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)にあります。
 
 ## ドキュメント一覧
 
@@ -30,13 +30,14 @@ iPhone / Android向け 総合ドローン運航管理アプリ（C0 Shell構築�
 - [docs/architecture/README.md](docs/architecture/README.md) - 領域別設計書と主要概念の正本
 - [docs/architecture/identity-and-access/README.md](docs/architecture/identity-and-access/README.md) - 人物・環境・三層権限・運航担当・離任の因果と現在設計
 - [docs/architecture/asset-management/README.md](docs/architecture/asset-management/README.md) - 機体取得と累計、BAT共用と個体履歴、取得確認と点検整備Actorの因果
+- [docs/architecture/dips-infrastructure/README.md](docs/architecture/dips-infrastructure/README.md) - DIPS固定送信元IP経路・限定バックエンド・Manual独立・再試行境界
 - [docs/architecture/presentation/README.md](docs/architecture/presentation/README.md) - 画面仕様の記録10項目
 - [docs/architecture/28_c1-docs-restructure-audit.md](docs/architecture/28_c1-docs-restructure-audit.md) - C1前docs再編・移行対照・最終監査
 
 ## 運用ルール
 
 - **完成形は大前提として「iPhone / Android 両対応の現場用アプリ」です（単なるPC向けWebではありません）。**
-- **PWA ＋ Cloudflare Workers ＋ IndexedDB・Google Sheets（Model D）はADR-0001〜0007に基づく採用済み設計です。出力・復旧と地図ライブラリの部分置換はADR-0008/0009を参照してください。**
+- **PWA・IndexedDB／Google Sheets（Model D）を維持します。DIPS API用Workers経路からGoogle Cloud＋Cloud NATへの変更は33aとADR-0018（Proposed）を参照してください。出力・復旧と地図ライブラリの部分置換はADR-0008/0009を参照してください。**
 - **Phase B設計凍結、Phase C0基盤・PWA Shell構築完了、C1設計準備完了。C1以降は未着手で、C0受入確認・オーナーGO待ちです。**
 - C6 Manual DIPSを第一級機能とし、C7 API接続はOptional。C1前のdocs再編は実装開始を意味しません。
 - ルールや規約の詳細は [AGENTS.md](AGENTS.md) を参照してください。

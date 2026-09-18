@@ -5,6 +5,8 @@
 
 主要責務: DipsSubmissionStatusの全状態・遷移・確認境界。Entity属性は12d、通報要否・安全評価は13cを参照する。
 
+Step 4で移管したAPI非依存・結果不明時の再POST禁止の因果は[33b](../dips-infrastructure/33b_api-availability-and-retry-boundaries.md)。本書の状態名・全遷移・UIは基準設計を保持し、§7全体の正常応答後画面・共有リスト・照合UIの再移植を完了したとは扱わない。
+
 ## 1. DIPS通報状態マシン（DIPS Notification State Machine - B2.3改訂）
 
 APIの有無（手動通報 / API自動通報）にかかわらず、提出予定スナップショットのローカル永続化、手動入力支援、送信成否、そして「通報操作者による手動通報操作」と「DIPS側の登録確認」を明確に分離した状態追跡を行います。通報操作者（SubmissionActor）と実際の操縦者の区別は [12a](../domain-model/12a_organization-and-personnel.md) に従います。

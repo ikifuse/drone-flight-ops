@@ -12,7 +12,7 @@
 
 - **単なるPC向けWebシステムを完成形としないでください。**
 - 現場においてスマートフォン1台で、DIPS確認 → 飛行計画作成 → 地図操作（POLYGON・CIRCLE・BUFFERED_LINE） → DIPS通報 → 飛行前点検 → 離陸 → 着陸 → バッテリー交換 → 機体交代 → 飛行後点検 → 飛行日誌保存 → PDF/CSV/Excel出力 → オフライン利用・通信復帰後同期 を、一続きの現場運用として扱えることを目標とします。
-- **GAS（Google Apps Script）は必須ではありません。** 基準アプリがGASであることは、新アプリもGASで作るという意味ではありません。Phase Bで比較し、PWA ＋ Cloudflare Workers ＋ IndexedDB・Google Sheetsの構成を採用済みです（[ADR一覧](docs/decisions/README.md)）。未選定の地図ライブラリ等を独断で固定せず、承認済み決定の変更は後続ADRで記録してください。
+- **GAS（Google Apps Script）は必須ではありません。** 基準アプリがGASであることは、新アプリもGASで作るという意味ではありません。Phase BのPWA・IndexedDB／Google Sheetsを維持し、DIPS API用Workers経路からの変更は[33a](docs/architecture/dips-infrastructure/33a_fixed-egress-and-api-connection.md)を参照します。Google Cloud＋Cloud NATの現在方針と具体実行基盤の未決を区別し、判断履歴は[ADR一覧](docs/decisions/README.md)に残します。未選定の地図ライブラリ等を独断で固定せず、承認済み決定の変更は後続ADRで記録してください。
 
 ---
 
@@ -27,7 +27,7 @@
 - **追加決定**: ADR-0008（出力・復旧境界）/ ADR-0009（地図ライブラリ選定のC5留保）は、2026-09-15のオーナーの本docs再編指示に基づく部分置換。詳細は[ADR一覧](docs/decisions/README.md)。
 - **現在**: **Phase C0（基盤・PWA Shell 構築完了・Phase C1設計準備完了）**
 - **Phase C1以降**: 未着手（Phase C0受入確認・オーナーGO待ち）
-- **99.2再移植の停止位置**: `redo/99-2-causal-migration`ではStep 1（§0・§1）、Step 2（§2）、Step 3（§4と取得確認・点検整備Actorに直接必要な§6の部分）まで。人物領域は[identity-and-access](docs/architecture/identity-and-access/README.md)、機材取得・共用の因果は[asset-management](docs/architecture/asset-management/README.md)。[移植記録](docs/migration/README.md)と[23の実装開始ゲート](docs/architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)を確認し、次の指示なく§3・§5・§6の残り・§7以降・実装へ進まない。mainの旧移植成果は比較証拠であり再移植元ではない。
+- **99.2再移植の停止位置**: `redo/99-2-causal-migration`ではStep 1（§0・§1）、Step 2（§2）、Step 3（§4と取得確認・点検整備Actorに直接必要な§6の部分）、Step 4（§7のDIPS API基盤・固定IP・通信境界のみ）まで。人物領域は[identity-and-access](docs/architecture/identity-and-access/README.md)、機材取得・共用の因果は[asset-management](docs/architecture/asset-management/README.md)。[移植記録](docs/migration/README.md)と[23の実装開始ゲート](docs/architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)を確認し、Step 4の正本は[dips-infrastructure](docs/architecture/dips-infrastructure/README.md)と[16](docs/architecture/16_security.md)。次の指示なく§3・§5・§6の残り・§7対象外・§8以降・実装へ進まない。mainの旧移植成果は比較証拠であり再移植元ではない。
 
 ---
 
