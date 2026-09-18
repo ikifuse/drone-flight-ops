@@ -40,7 +40,7 @@ Step 5の利用開始・画面入口は[34a 初回セットアップ](architectu
    - 電波圏外でのドラフト計画作成、飛行前点検、離着陸記録、飛行後点検の完全スタンドアロン実行
    - 通信復帰後の外部台帳同期と、別経路のDIPS通報支援。API送信結果不明時は自動再POSTせず照合する。
 7. **標準帳票および統合A4帳票マルチエクスポート機能**
-   - 現場実務用の「A4縦 統合運航帳票（飛行記録＋日常点検＋点検整備サマリー）」出力（1機体×1場所×1運航区間単位、自動改ページ続紙対応）
+   - 現場実務用のA4縦「無人航空機・飛行記録・日常点検記録」。最新実物・固定7枠・物理シート分割・必要時PDFは[35c](architecture/operation-recording/35c_a4-operation-record.md)を正本とし、旧整備サマリー・自動続紙を現在仕様として残さない
    - 国土交通省標準様式1（飛行記録）、様式2（日常点検記録）、様式3（点検整備記録）の個別PDF/Excel直接出力
    - 飛行空域地図画像を含めた「飛行計画書（通報確認書）」のPDF出力
    - 外部ツール連携用の汎用CSV出力およびCSV一括インポート（バルク登録）
@@ -301,3 +301,5 @@ Step 5の利用開始・画面入口は[34a 初回セットアップ](architectu
 ### 9.3 データの透明性とベンダーロックイン排除
 - 特定の独自データベースにデータを囲い込まないという要件を維持する。同期済み確定台帳の長期保管はGoogle Sheets、用途別出力はPDF/CSV/Excel/KMLで扱う。ローカルDB全量backup/restoreのユーザー向け形式・対象・検証はPENDING（[ADR-0008](decisions/ADR-0008-user-facing-export-and-recovery-boundaries.md)）。KMLをDB復旧の代替にせず、C1でユーザー向けJSON import/exportを実装しない。
 - Googleスプレッドシート等との連携も含め、日常的な閲覧・共有が平易であること。
+
+Step 6の通常運航の因果・画面仕様は[35b](architecture/operation-recording/35b_normal-operation-and-final-save.md)、詳細点検整備との責任差は[36](architecture/maintenance-storage/36_aircraft-maintenance-records.md)、01〜07の責任と物理配置の未確定は[37](architecture/drive-structure/37_environment-storage-responsibilities.md)。意味と物理schemaを分ける。

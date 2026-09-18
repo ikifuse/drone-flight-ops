@@ -17,3 +17,5 @@
 ## 2. 読み順と変更境界
 
 [architecture README](../README.md) → 本README → 対象文書。新しい詳細仕様をREADMEへ追記しない。Phase C0完了・C1未着手。各Phaseの範囲は [23](../23_implementation-roadmap.md)。
+
+Step 6の通常画面・因果の詳細正本は[35b](../operation-recording/35b_normal-operation-and-final-save.md)、最終確定と保存責任は[35d](../operation-recording/35d_operation-finalization-and-write-boundary.md)。13aは論理状態を扱い、画面仕様や最終schemaを複製しない。

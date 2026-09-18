@@ -96,3 +96,5 @@ flowchart TB
 ## 5. 詳細正本への接続
 
 固定IP経路・限定責務は[33a](dips-infrastructure/33a_fixed-egress-and-api-connection.md)、API可用性と通信安全の因果は[33b](dips-infrastructure/33b_api-availability-and-retry-boundaries.md)。DIPS Adapter境界は [15](15_dips-adapter.md)、秘密・トークン・Sessionの全規則は [16](16_security.md)、Manual支援原則は [24](dips-submission/24_manual-submission.md)、画面VMは [25b](dips-flight-plan/25b_manual-web-mapping.md)、API電文は [25c](dips-flight-plan/25c_api-payload-mapping.md) が正本。Sheetsは確定台帳、Driveは生成ファイル保存という独立した外部責務であり、片方の障害で現場記録や他方を停止させない。
+
+Step 6のDrive全体の責任配置は[37](drive-structure/37_environment-storage-responsibilities.md)。本書の生成ファイル保存という境界は派生出力のポートを示し、人間向けA4／整備記録も含む実Drive全体の分類ではない。運航全体の最終更新責任は[35d](operation-recording/35d_operation-finalization-and-write-boundary.md)。

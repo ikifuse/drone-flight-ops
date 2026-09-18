@@ -16,3 +16,5 @@
 状態は[7分類規約](../../guidelines/03_design-evidence-and-causality.md)に従う。CURRENT-ACCEPTEDは変更可能な設計ベースラインであり、ADR承認・実装完了・今回の実物再確認を意味しない。実例の2機・7本や具体機種を固定仕様にしない。
 
 §3・§5・§6の保存構造／通常整備運用・§7以降は今回未移植。旧Docsとそれらの後続論点との相違を本Stepで解消しない。C1未着手、依存する物理schema・画面・保存の確定は[23の開始ゲート](../23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)に従う。
+
+上記はStep 3の範囲。Step 6の§6残りは[36](../maintenance-storage/36_aircraft-maintenance-records.md)、保存全体は[37](../drive-structure/37_environment-storage-responsibilities.md)。32a〜32cは累計・取得確認・Actorの詳細正本を維持する。

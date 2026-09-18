@@ -15,3 +15,5 @@
 全量DB backup/restore形式は [ADR-0008](../../decisions/ADR-0008-user-facing-export-and-recovery-boundaries.md) により `PENDING`。KMLをバックアップ代替にしません。上位入口は [architecture/README](../README.md)、総合入口は [docs/00_index](../../00_index.md) です。
 
 Step 5の［飛行履歴・出力］という入口と、04／06を源に07へ接続する画面責任は[34b](../presentation/34b_home-and-navigation.md)。本領域のKML生成・保存・再送・出力詳細は今回の再移植対象外であり、ホーム入口の追加から内容・タイミングを変更しない。
+
+Step 6のA4実物・印刷可能Sheets・必要時PDFは[35c](../operation-recording/35c_a4-operation-record.md)、運用環境全体のDrive配置責任は[37](../drive-structure/37_environment-storage-responsibilities.md)。27bはKML保存だけを担当し、その生成契機・Identity・My Mapsは未変更。

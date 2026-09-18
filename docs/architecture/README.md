@@ -9,7 +9,7 @@
 
 ## 2. 現行設計の入口
 
-99.2再移植は[Step 1（§0・§1）](../migration/99-2-step-1-causal-audit.md)、[Step 2（§2）](../migration/99-2-step-2-causal-audit.md)、[Step 3（§4と§6の取得確認・点検整備Actor部分）](../migration/99-2-step-3-causal-audit.md)、[Step 4（§7のDIPS API基盤・固定IP・通信境界）](../migration/99-2-step-4-causal-audit.md)、[Step 5（§3と§7の正常受付後・共有リスト限定部分）](../migration/99-2-step-5-causal-audit.md)まで。人物領域はidentity-and-access、機材取得・共用・履歴の因果はasset-managementへ配置する。現在の目的・設計順序は[00_goal](../00_goal.md)、依存実装の開始条件は[23](23_implementation-roadmap.md)。他の詳細領域は基準設計を保持し、Step 4の経路・通信安全の因果はdips-infrastructure、秘密／認証候補は16。Step 5の画面因果はpresentationに配置する。§5・§6の残り・§7対象外・§8以降の再移植・差分監査は次の指示で扱う。
+99.2再移植は[Step 1（§0・§1）](../migration/99-2-step-1-causal-audit.md)、[Step 2（§2）](../migration/99-2-step-2-causal-audit.md)、[Step 3（§4と§6の取得確認・点検整備Actor部分）](../migration/99-2-step-3-causal-audit.md)、[Step 4（§7のDIPS API基盤・固定IP・通信境界）](../migration/99-2-step-4-causal-audit.md)、[Step 5（§3と§7の正常受付後・共有リスト限定部分）](../migration/99-2-step-5-causal-audit.md)、[Step 6（§5・§6残り・§10）](../migration/99-2-step-6-causal-audit.md)まで。人物領域はidentity-and-access、機材取得・共用・履歴の因果はasset-managementへ配置する。現在の目的・設計順序は[00_goal](../00_goal.md)、依存実装の開始条件は[23](23_implementation-roadmap.md)。他の詳細領域は基準設計を保持し、Step 4の経路・通信安全の因果はdips-infrastructure、秘密／認証候補は16。Step 5の画面因果はpresentationに配置する。Step 6の詳細因果はoperation-recording／maintenance-storage／drive-structureへ配置。§7対象外・§8・§9全体・§11は未移植。
 
 | 入口 / 文書 | 主責務・読む場面 |
 |---|---|
@@ -18,6 +18,9 @@
 | [asset-management README](asset-management/README.md) | 機材取得・BAT共用・累計の意味・取得確認と点検整備Actorの因果 |
 | [dips-infrastructure README](dips-infrastructure/README.md) | DIPS API固定出口・限定バックエンド、Manual独立・結果不明時retryの因果 |
 | [presentation README](presentation/README.md) | 10項目規約、初回・ホーム4入口・共有飛行リスト・正常受付後の因果と画面仕様 |
+| [operation-recording README](operation-recording/README.md) | 柔軟な1飛行・通常画面・A4最新実物と生成・最終保存の因果 |
+| [maintenance-storage README](maintenance-storage/README.md) | 日常点検から分離した機体別整備媒体・原本コピー |
+| [drive-structure README](drive-structure/README.md) | 旧配置から01〜07、内部正規化と人間向け媒体、物理配置PENDING |
 | [state-machines README](state-machines/README.md) | Operation FSM / DIPS FSM / 法令・安全総合評価。C2/C6/C7の独立状態管理 |
 | [dips-submission README](dips-submission/README.md) | Manual通報業務と独立Sheets台帳。C4/C6の境界 |
 | [dips-flight-plan README](dips-flight-plan/README.md) | 公式88項目、Manual Web UI、C7 payload、要件エンジンの責務分離 |
@@ -28,7 +31,7 @@
 | [15_dips-adapter](15_dips-adapter.md) | Manual / Mock / Optional APIの共通Adapter・DRS/FPA/FPR・結果不明照合 |
 | [16_security](16_security.md) | BFF・秘密情報・セッション・マスキング・開示境界 |
 | [17_map-and-airspace](17_map-and-airspace.md) | 中立Geometry・地図層・編集・空域情報・データ鮮度・ライブラリ留保 |
-| [18_reports](18_reports.md) | 帳票パイプライン・ReportUnit・スナップショット・区切り・続紙・法令UI分離 |
+| [18_reports](18_reports.md) | 帳票生成パイプライン・射影・発行記録・法令UI分離。A4詳細は35c |
 | [19_failure-recovery](19_failure-recovery.md) | 障害分類・業務継続・復旧できる範囲・未決の全DB復旧 |
 | [20_source-structure](20_source-structure.md) | C0実装との関係・将来source責務配置・依存方向 |
 | [21_testing-strategy](21_testing-strategy.md) | 単体/統合/実機の検証境界・Manual/API別シナリオ |
@@ -63,7 +66,13 @@
 | 取得時確認の算入判断・点検整備実施者と作成／転記者 | [32c](asset-management/32c_acquisition-check-and-maintenance-actors.md) | 12e/12fはEntity・監査、通常運航Recorderは31c |
 | Location / Preset / Template | [12c](domain-model/12c_location-and-presets.md) | 17はGeometry参照、25は再利用方法 |
 | FlightPlan / DipsSubmission / semantic snapshot | [12d](domain-model/12d_flight-plan-and-dips.md) | 状態全値は13b、API電文は25c、24aは台帳への保存 |
-| Mission / Flight / Inspection / Maintenance | [12e](domain-model/12e_operation-inspection-maintenance.md) | 13aは状態、18は帳票射影 |
+| 柔軟な1飛行・内部明細・機体交代境界 | [35a](operation-recording/35a_flexible-flight-and-details.md) | 12eは旧schema候補とPENDING。意味を帳票枠から逆算しない |
+| 通常運航の画面と途中入力 | [35b](operation-recording/35b_normal-operation-and-final-save.md) | 13aは論理状態、34dは入口 |
+| A4実物・固定7枠・物理シート・必要時PDF | [35c](operation-recording/35c_a4-operation-record.md) | 18は生成技術。実物観測と後続運用を区別 |
+| 運航全体の最終確定・更新責任・再送要件 | [35d](operation-recording/35d_operation-finalization-and-write-boundary.md) | 11／14は共通権威・同期。§9全体は未移植 |
+| 機体別整備Spreadsheet・原本コピー | [36](maintenance-storage/36_aircraft-maintenance-records.md) | Actorは32c、通常日常点検は35b |
+| Driveの01〜07責任と変遷・媒体境界 | [37](drive-structure/37_environment-storage-responsibilities.md) | 各領域は詳細記録、27bはKML保存のみ |
+| Mission / Flight / Inspection / Maintenanceの属性候補 | [12e](domain-model/12e_operation-inspection-maintenance.md) | 意味・因果は35a／36、13aは状態、18は射影 |
 | 共通Lifecycle / ID / AuditEvent | [12f](domain-model/12f_common-lifecycle-id-and-audit.md) | 各領域は利用する監査イベント・制約だけ |
 | Operation FSM | [13a](state-machines/13a_operation.md) | Missionのデータ項目は12e |
 | DipsSubmission status / lifecycle | [13b](state-machines/13b_dips-submission.md) | DipsSubmissionの保存schemaは12d |
@@ -79,10 +88,10 @@
 | DIPS API JSON | [25c](dips-flight-plan/25c_api-payload-mapping.md) | 通信Adapterは15、27は内部transportという境界のみ |
 | 出力・復旧の形式境界 | [27](output/27_output-boundaries.md) | ADR-0008は決定理由、全量restoreはPENDING |
 | KML | [27a](output/27a_kml-export.md) | Drive/My Mapsは保存・利用のみ |
-| Drive Storage | [27b](output/27b_google-drive-storage.md) | 14はキュー共通契約、KML生成とは別 |
+| KML Drive Storage | [27b](output/27b_google-drive-storage.md) | 14はキュー共通契約、KML生成とは別 |
 | My Maps | [27c](output/27c_google-mymaps-workflow.md) | 実アカウントの表示検証はPENDING |
 | Aircraft flight-log import | [27d](output/27d_aircraft-flight-log-import.md) | 将来入力境界、Flight実績の自動確定ではない |
-| Reports / ReportUnit / ReportSnapshot | [18](18_reports.md) | 12はEntity参照・FK、27は形式境界 |
+| 帳票生成技術 / ReportUnit / ReportSnapshot | [18](18_reports.md) | 12はEntity参照・FK、27は形式境界 |
 | DIPS固定送信元IP・Google Cloud／Cloud NAT・限定バックエンド | [33a](dips-infrastructure/33a_fixed-egress-and-api-connection.md) | 10/15/23は参照。コンピュート・VPC経路はPENDING |
 | API基盤の非依存・DIPS POST結果不明時の通信安全の因果 | [33b](dips-infrastructure/33b_api-availability-and-retry-boundaries.md) | 13bはFSM、14はキュー、19は障害対応、24はManual |
 | Security / 旧BFF・Token候補と正式認証のVERIFY | [16](16_security.md) | 固定出口は33a、業務権限は31b、KML開示profileは27a |

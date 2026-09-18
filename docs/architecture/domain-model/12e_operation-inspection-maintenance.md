@@ -5,7 +5,9 @@
 
 主要責務: 現場で発生する運航実績と点検・整備のEntity定義。FSMと帳票レイアウトを再定義しない。
 
-## 1. Mission（現場運航セッション束）
+Step 6の意味・変遷の正本は[35a](../operation-recording/35a_flexible-flight-and-details.md)。以下のMission／旧Flight／AircraftSwitch属性は**HISTORICALの既存schema候補**として保持し、現在の最終schemaとして採用済みとしない。柔軟な1飛行と明細、交代時の文脈継承はCURRENT-ACCEPTED、具体ID・FK・基数はPENDING-S6-OPERATION-SCHEMA。旧案を削除せず、現在へ至る検討の状態として読む。
+
+## 1. Mission（現場運航セッション束・旧schema候補）
 - **ID**: `mission_id` (UUID v4)
 - **分類**: **History (Session)**
 - **役割**: 現場での一連の作業枠（準備開始〜完全撤収）。操縦者の片手操作フローを束ねる。
@@ -21,10 +23,10 @@
   - `started_at` / `ended_at`: 運航日時
   - `sync_status`: 台帳同期状態
 
-## 2. Flight（個々の離陸〜着陸セッション）
+## 2. Flight（旧: 個々の離陸〜着陸セッション）
 - **ID**: `flight_id` (UUID v4)
 - **分類**: **History (Event)**
-- **役割**: ドローンの1回の離陸から着陸までの実績記録。
+- **旧役割（HISTORICAL）**: 1回の離陸から着陸まで。現在のFlightの意味は35aの柔軟な取扱いとし、下記の単一BAT・離着陸属性は内部明細との再対応が必要。
 - **主な属性**:
   - `mission_id`: 属するミッションID
   - `flight_sequence`: 運航内通番（1, 2, 3... 制限なし）
@@ -35,11 +37,11 @@
   - `start_battery_pct` / `end_battery_pct`: 離陸時・着陸時残量（%）
   - `flight_nature`: 業務・訓練の別
   - `pilot_notes`: 飛行所感・特記不具合
-- **二重保存の排除**: 飛行によるバッテリー使用実績（いつ、どの機体で、何分飛び、何%消費したか）は本 `Flight` レコードから完全に集計・導出可能であるため、別テーブルへ重複保存しない。
+- **二重計上を避ける意味は維持**: 飛行によるBAT使用実績は個々の明細から導出する。旧単一Flight属性だけで複数BATを含む柔軟な1飛行の集計が完成したとはしない。物理的な履歴配置は32b、最終保存の更新責任は[35d](../operation-recording/35d_operation-finalization-and-write-boundary.md)。
 
-中古取得時の短時間状態確認を正式運航時間へ算入せず点検整備記録へ残す個別判断は[32c §1](../asset-management/32c_acquisition-check-and-maintenance-actors.md#1-取得時の短時間動作確認をどう残すか)を参照する。通常のFlight責務を変えず、短時間／屋内／整備目的というだけで一般的に除外しない。
+中古取得時の短時間状態確認を正式運航時間へ算入せず点検整備記録へ残す個別判断は[32c §1](../asset-management/32c_acquisition-check-and-maintenance-actors.md#1-取得時の短時間動作確認をどう残すか)を参照する。取得確認の個別判断を維持し、短時間／屋内／整備目的というだけで一般的に除外しない。
 
-## 3. AircraftSwitch（機体交代イベント記録）
+## 3. AircraftSwitch（旧: 独立イベント候補）
 - **ID**: `switch_id` (UUID v4)
 - **分類**: **History (Event)**
 - **主な属性**: `mission_id`, `from_aircraft_id`, `to_aircraft_id`, `switched_at`, `reason`。
@@ -55,9 +57,12 @@
 - **役割**: 機体の生涯点検整備記録（定期点検20h/100h、修理、改造、部品交換、ファーム更新）。
 - **主な属性**: `aircraft_id`, `maintenance_type`, `performed_at`, `cumulative_flight_minutes_at_maintenance`, `description`, `parts_replaced`, `technician_name`。
 
-取得時確認を本記録へ接続する意味と、実際の点検・整備実施者と記録作成・転記者を同一に固定しない因果は[32c](../asset-management/32c_acquisition-check-and-maintenance-actors.md)。`technician_name`を転記者名へ読み替えない。前歴不明と管理開始後累計の意味は[32a](../asset-management/32a_aircraft-acquisition-and-cumulative-time.md)に従い、既存属性だけでActor・取得履歴の保持が完成したとは扱わない。具体FK・保持形式・UIは32cのPENDINGであり、通常運航Recorderとは統合しない。点検整備全体の保存方式は本Stepの移植対象外。
+取得時確認を本記録へ接続する意味と、実際の点検・整備実施者と記録作成・転記者を同一に固定しない因果は[32c](../asset-management/32c_acquisition-check-and-maintenance-actors.md)。`technician_name`を転記者名へ読み替えない。前歴不明と管理開始後累計の意味は[32a](../asset-management/32a_aircraft-acquisition-and-cumulative-time.md)に従い、既存属性だけでActor・取得履歴の保持が完成したとは扱わない。具体FK・保持形式・UIは32cのPENDINGであり、通常運航Recorderとは統合しない。Step 6の点検整備媒体と通常日常点検からの分離は[36](../maintenance-storage/36_aircraft-maintenance-records.md)。上記の既存属性は1機体1Spreadsheetとの最終物理対応を確定しない。
 
 ## 6. ReportSnapshot（帳票発行不変スナップショット）
+
+必要時の帳票発行を追跡する既存候補であり、運航ごとの自動PDF生成を要求しない。Mission／Flight／物理A4との具体参照は35a／35cのPENDINGへ残す。
+
 - **ID**: `report_snapshot_id` (UUID v4)
 - **分類**: **History (Snapshot)**
 - **役割**: 統合運航帳票または国交省様式PDF/Excel出力時に生成される発行不変スナップショット。提出・監査用に「発行時点でどのような帳票が確定されたか」を恒久保管する。
@@ -65,7 +70,7 @@
 
 ## 7. 予定と実績の参照と帳票境界
 
-予定の数値を実飛行時間として自動確定しない。Missionから計画・提出へ辿り、`Mission.planned_submission_id` から関連Mission全件を逆引きして計画日時・範囲・高度対実際の時刻・時間・点検結果の比較を可能にする。Sheets台帳の旧 `linked_mission_id` は代表表示に限り、全件関係を単一IDへ切り捨てない（[Ledger](../dips-submission/24a_submission-and-sheets-ledger.md)）。ReportSnapshotは発行実績を保持するEntityであり、帳票の組版・3領域・続紙・法令様式の正本は [18_reports](../18_reports.md)。
+予定の数値を実飛行時間として自動確定しない。Missionから計画・提出へ辿り、`Mission.planned_submission_id` から関連Mission全件を逆引きして計画日時・範囲・高度対実際の時刻・時間・点検結果の比較を可能にする。Sheets台帳の旧 `linked_mission_id` は代表表示に限り、全件関係を単一IDへ切り捨てない（[Ledger](../dips-submission/24a_submission-and-sheets-ledger.md)）。ReportSnapshotは発行実績を保持するEntityであり、A4の実物・生成単位の詳細正本は[35c](../operation-recording/35c_a4-operation-record.md)、生成技術・法令UI分離は[18_reports](../18_reports.md)。旧3領域・自動続紙は現行仕様としない。
 
 ## 8. 実績と点検の未定義参照（PENDING-C1-SCHEMA）
 

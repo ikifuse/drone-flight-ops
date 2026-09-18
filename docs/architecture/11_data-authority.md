@@ -138,3 +138,5 @@ Phase B1/B1.1で提示した4つのモデルを、本プロジェクトの目的
 Sheetsは外部同期完了後の確定台帳・長期保管・手修正と累計計算の基点です。PDFは人間向け提出・提示・印刷用スナップショット、KMLは地理表示・共有用スナップショットであり、どちらもSheetsの台帳権威や保存要件を置き換えません。KML/Drive失敗でローカル確定やSheets同期をブロックしません。
 
 4大境界の正本は [27 出力境界](output/27_output-boundaries.md)、帳票の生成・監査保存は [18 Reports](18_reports.md)、KML生成とDrive保存は [output/README](output/README.md) を参照します。JSONはC7 OptionalのDIPS API内部通信であり、ユーザー向けJSON出力・取込は [ADR-0008](../decisions/ADR-0008-user-facing-export-and-recovery-boundaries.md) により採用しません。全量DB backup/restore形式は `PENDING`、KMLは復旧代替ではありません。
+
+Step 6の「運航終了・現場確定」は[35b](operation-recording/35b_normal-operation-and-final-save.md)の飛行後点検後の最後の送信／保存へ接続する。途中下書き、A4／履歴／累計の最終更新、外部反映の区別は[35d](operation-recording/35d_operation-finalization-and-write-boundary.md)。台帳の権威・手修正保護は本書を維持し、具体的媒体は[37](drive-structure/37_environment-storage-responsibilities.md)へ委譲する。

@@ -59,3 +59,5 @@
 **PENDING-S5-HOME-DETAIL**: 各種設定・管理の分類、画面配置・各入口の権限／offline表現。飛行履歴・出力は入口の意味までで、検索条件・出力プレビュー・A4帳票等の詳細画面は対象外。初回・環境復帰の未決は34a、共有と受付後の未決は34c／34dへ分ける。
 
 **VERIFY-S5-SETUP-EVIDENCE**（34a）: 旧99.1 §3、98.2、実Drive現在地資料の「画面遷移」等は未再確認。今回の現在案は99.2を直接読んで移管したもので、旧mainの画面仕様やモックを再利用していない。重要判断の記録は[ADR-0019](../../decisions/ADR-0019-home-entry-and-shared-plan-handoff.md)。
+
+Step 6の保存責任の詳細は[37](../drive-structure/37_environment-storage-responsibilities.md)、［飛行履歴・出力］から確認するA4は[35c](../operation-recording/35c_a4-operation-record.md)。ホーム4入口と画面→保存先の対応の因果は本書に維持する。

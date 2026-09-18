@@ -48,9 +48,9 @@
 
 1. **【境界 A: Google Sheets】（確定台帳権威・原本 - Ledger Authority）**:
    - 外部同期完了後の確定台帳権威は、 [11_data-authority.md](../11_data-authority.md) に基づき Google Sheets が担います。
-   - 飛行計画台帳、運航日誌、日常点検記録、点検整備台帳、機材台帳を正規化テーブルとして保持し、累計時間・サイクルの自動計算や、人間による事後補正（手修正上書き防止ルール適用）を可能にします。
+   - 内部履歴・機材等の正規化と、人間向け04のA4／05の機体別整備媒体を[37](../drive-structure/37_environment-storage-responsibilities.md)に従って区別し、累計時間・サイクルの自動計算や、人間による事後補正（手修正上書き防止ルール適用）を可能にします。
 2. **【境界 B: PDF / 印刷帳票】（人間向け印刷帳票 - Human-readable Report）**:
-   - [18_reports.md](../18_reports.md) に基づく派生帳票（A4縦 統合運航帳票、国交省様式1・2・3別紙、地図付き飛行計画書）。
+   - [18_reports.md](../18_reports.md)に基づく生成技術と、[35c](../operation-recording/35c_a4-operation-record.md)のA4実物・必要時PDF。A4はSheets標準印刷／PDFの経路も残す。国交省様式1・2・3別紙、地図付き飛行計画書とは区別する。
    - 航空局への提出、立ち入り検査時の提示、コンビニ・現地印刷、紙面保管用。KMLをPDFの代替にすることはできません。
 3. **【境界 C: KML】（ユーザー向け地図出力 - User-facing Geo Export）**:
    - 飛行計画の空域形状および運航結果を地図として視覚的に確認・保管するための派生ファイル。

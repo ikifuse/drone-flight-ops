@@ -24,3 +24,5 @@
 人物・環境・権限・離任の詳細は[identity-and-access](../identity-and-access/README.md)へ分離した。31a〜31dが因果・現在案・未確定を保持し、本領域はEntityの保持先と共通規則を扱う。新しい人物・所属の物理schemaを旧12aの役割配列から確定しない。
 
 機材取得・累計・共用・取得確認Actorの詳細因果は[asset-management](../asset-management/README.md)の32a〜32cへ分離する。12bの正規化属性、12eの実績・整備Entity、12fの共通監査は保持し、取得前履歴やActorの物理schemaを先取りしない。
+
+Step 6の運航の意味・明細と旧schema候補の差は[35a](../operation-recording/35a_flexible-flight-and-details.md)、A4は[35c](../operation-recording/35c_a4-operation-record.md)、機体別整備媒体は[36](../maintenance-storage/36_aircraft-maintenance-records.md)。12eの旧属性がそのまま現在の最終schemaではない。

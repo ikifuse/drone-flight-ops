@@ -82,3 +82,5 @@ Phase Cの実装・検証において、DIPS API非依存性および台帳・�
 ## 3. 再編後の正本と追加の境界検証
 
 仕様を本書へ複製せず、[Domain](domain-model/README.md)、[状態・離陸評価](state-machines/README.md)、[Sheets台帳](dips-submission/24a_submission-and-sheets-ledger.md)、[項目判定](dips-flight-plan/25d_requirement-validation.md)、[出力](output/README.md) に対応する検証を置く。通報要否は150mちょうど、未確定、非特定、公式障害と通常圏外を区別し、通報なしでも実離陸の記録が保持されることを確認する。C1では本タスクによる機能追加・実装を行わない。
+
+Step 6の通常運航・最終保存の受入観点は[35a〜35d](operation-recording/README.md)、詳細整備媒体は[36](maintenance-storage/36_aircraft-maintenance-records.md)、責任配置は[37](drive-structure/37_environment-storage-responsibilities.md)を参照する。最新Drive A4の読取り・PDF目視と、アプリによる生成／再送／実紙印刷の成功は別の検証である。本Stepではコード・実機試験を実施しない。

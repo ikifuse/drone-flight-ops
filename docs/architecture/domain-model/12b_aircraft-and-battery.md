@@ -96,3 +96,5 @@
 ## 8. 業務上の状態と保存enumの対応（PENDING-C1-SCHEMA）
 
 統合要件が求める保管・点検・劣化・紛失の管理と、本書の既存 `Battery.status` / 非飛行イベントの対応は未確定である。これらの業務状態を省略せず、ライフサイクル、使用中/放電等の運用状態、健全性を1つのenumに統合すべきか別軸にすべきかをC1 schema確定前に整理する。既存enumを完成済みと扱わず、推測で新しい保存値を追加しない。
+
+Step 6の柔軟な1飛行・内部明細の意味は[35a](../operation-recording/35a_flexible-flight-and-details.md)。本書の飛行由来使用履歴の参照を、1Flight1BATという最終schemaの決定に使わない。32bの物理履歴配置PENDINGは維持する。

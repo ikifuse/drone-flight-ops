@@ -19,3 +19,5 @@ C6の通報支援とC4の外部台帳を分離する。画面入力の詳細は2
 API未承認・接続基盤障害時もManualが独立する因果は[dips-infrastructure](../dips-infrastructure/README.md)。固定IP経路を本領域へ複製せず、手動UI・台帳列は各正本に維持する。
 
 Step 5の共有作業リストと通常受付画面は[Presentation](../presentation/README.md)の34c／34d。24aの履歴保存を作業リストと同一視せず、Manualの確認方式・番号任意性は維持する。
+
+Step 6のDrive全体は[37](../drive-structure/37_environment-storage-responsibilities.md)。24aの論理台帳案と04のA4／05の整備媒体を分ける。DIPS提出列・取消・Snapshot詳細は本Stepで再移植していない。

@@ -168,3 +168,18 @@
 | PENDING-S5-ACCEPTED-UI / VERIFY-S5-RESPONSE-EVIDENCE | [34d](architecture/presentation/34d_dips-accepted-and-plan-content.md)：通常画面の残る詳細、原本が参照した正常応答資料の照合 |
 
 前回環境の初期選択、drive.file、場所／機体／BATの選択時登録、リスト絞り込みは各正本のCURRENT-PROPOSAL。4入口やAPI正常受付時の掲載はCURRENT-ACCEPTEDであり、上記の未確定と混同しない。Step 1〜4のPENDING／WARN、DIPS認証VERIFYを解消したとは扱わない。
+
+## Step 6の未確定・検証先
+
+詳細理由を本書へ複製せず、各正本へ進む。到達済みの意味と未検証を混同しない。
+
+| ID | 詳細正本 |
+|---|---|
+| PENDING-S6-OPERATION-SCHEMA / VERIFY-S6-OPERATION-EVIDENCE | [35a](architecture/operation-recording/35a_flexible-flight-and-details.md) |
+| PENDING-S6-OPERATION-UI | [35b](architecture/operation-recording/35b_normal-operation-and-final-save.md) |
+| PENDING-S6-A4-DETAIL / VERIFY-S6-A4-PRINT | [35c](architecture/operation-recording/35c_a4-operation-record.md) |
+| PENDING-S6-FINAL-SAVE-CONTRACT / VERIFY-S6-FINAL-SAVE-EVIDENCE | [35d](architecture/operation-recording/35d_operation-finalization-and-write-boundary.md) |
+| PENDING-S6-MAINTENANCE-PHYSICAL / VERIFY-S6-MAINTENANCE-EVIDENCE | [36](architecture/maintenance-storage/36_aircraft-maintenance-records.md) |
+| PENDING-S6-DRIVE-PLACEMENT / VERIFY-S6-DRIVE-EVIDENCE | [37](architecture/drive-structure/37_environment-storage-responsibilities.md) |
+
+CURRENT-PROPOSALの機体交代時の新Flight接続を最終schemaとしない。A4の物理日付連番・固定7枠は現在99.2と追加指示に従うCURRENT-ACCEPTEDであり、旧依頼本文の未決表現は最新実物・後続判断と照合済み。採番アルゴリズムや年度分割は未決を維持する。

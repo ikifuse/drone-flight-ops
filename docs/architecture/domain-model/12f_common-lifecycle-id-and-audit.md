@@ -22,7 +22,7 @@
 |---|---|---|---|
 | **Master** | 実在する管理対象・運用資産。他エンティティから参照される親データ。 | `Organization`, `Client`, `Project`, `AircraftModel`, `Aircraft`, `BatteryModel`, `BatteryCompatibility`, `Battery`, `Personnel`, `Location`, `Permission`, `InsurancePolicy`, `AppSetting` | **物理削除禁止**。`ACTIVE`, `INACTIVE`, `RETIRED`, `DISPOSED`, `EXPIRED` 等の論理状態で管理。過去履歴の参照を保護。 |
 | **Preset** | 現場入力の手間を省くための再利用可能な条件セット。 | `FlightAreaPreset`, `FlightPurposePreset`, `SafetyMeasurePreset`, `OperationTemplate` | **コピーソース原則**。新規計画へ値をコピー実体化。後日のプリセット変更は過去データへ影響しない。 |
-| **History** | 現場で実際に発生・確定した不可逆の運航・点検・通報・監査実績。 | `FlightPlan`, `DipsSubmission`, `Mission`, `Flight`, `AircraftSwitch`, `PreflightInspection`, `PostflightInspection`, `MaintenanceRecord`, `BatteryUsage`, `ReportSnapshot`, `AuditEvent` | **確定時点を区別**。FlightPlan Draftは編集可能、計画変更はRevision管理。確定提出・帳票Snapshot本文は不変。実績訂正は監査履歴を保持してData Authorityの手修正規則に従い、ライフサイクルメタデータ更新も `AuditEvent` で追跡する。 |
+| **History** | 現場で実際に発生・確定した不可逆の運航・点検・通報・監査実績。 | `FlightPlan`, `DipsSubmission`, `Mission`, `Flight`（35a参照）, `AircraftSwitch`（旧候補）, `PreflightInspection`, `PostflightInspection`, `MaintenanceRecord`, `BatteryUsage`, `ReportSnapshot`, `AuditEvent` | **確定時点を区別**。FlightPlan Draftは編集可能、計画変更はRevision管理。確定提出・帳票Snapshot本文は不変。実績訂正は監査履歴を保持してData Authorityの手修正規則に従い、ライフサイクルメタデータ更新も `AuditEvent` で追跡する。 |
 | **Projection** | 複数のエンティティから画面表示、帳票レンダリング、地図エクスポートのために導出される参照ビュー。 | `DipsNotification`, `ReportUnit` / `FlightLogReportViewModel`, `KmlExportModel` | **一時的・導出モデル**。正本を持たず、元データから動的に計算・構築（KMLやPDF用に専用入力画面を作らず、Domain単一入力から生成）。 |
 
 人員の離任はPersonnel全体のRETIREDではなく、[31d](../identity-and-access/31d_membership-lifecycle.md)の環境への所属終了として読む。共通の物理削除禁止・過去履歴保護は維持する。人物・アカウント・Membership・QualificationsのID対応とschemaの未確定は[31a](../identity-and-access/31a_person-account-and-environment.md)へ接続し、本書のUUID方針だけで新しい列・関連を確定しない。
@@ -50,7 +50,7 @@
 ### 4.2. 冪等キー（Idempotency Key）の設計原則
 - **不変操作（Flight打刻、点検記録、提出スナップショット等）**: 操作発生時に発行された不変の `operation_id`（UUID v4）を用いて再送時の重複登録を防止。
 - **状態更新エンティティ（Mission、機体設定等）**: `idempotency_key = SHA256(entity_type + ":" + entity_id + ":" + sync_revision)` により、実質的な更新のみを安全に反映。
-- **外部同期**: Googleスプレッドシート側で `operation_id` または `record_id` + `sync_revision` によるUPSERTを実施し、多重送信による二重書き込みを完全に防止。
+- **外部同期**: Googleスプレッドシート側で `operation_id` または `record_id` + `sync_revision` によるUPSERTを実施し、同一行の多重書込みを防止する設計。複数のA4・履歴・累計への最終保存全体をこの行UPSERTだけで保証せず、[35d](../operation-recording/35d_operation-finalization-and-write-boundary.md)の契約未確定へ接続する。
 
 ## 5. 共通監査と専門評価の関係
 

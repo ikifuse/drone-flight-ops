@@ -58,3 +58,5 @@ export interface ExportDestinationConfig {
 `drive_kml_export_status` は `ledger_sync_status` と独立します。KML/Drive失敗でSheets保存・離着陸・運航確定を止めず、Drive成功によってSheets同期待ちを同期済みにしません。Drive認証切れ・容量超過等は当該ジョブの手動解決として表示し、一般的な一時通信エラーは14の再試行規則に従います。全量DB backupの保存先・形式は [ADR-0008](../../decisions/ADR-0008-user-facing-export-and-recovery-boundaries.md) で `PENDING` です。
 
 関連する再インポート検証は [27c My Maps](27c_google-mymaps-workflow.md) を参照してください。
+
+Step 6の運用環境全体の01〜07責任は[37](../drive-structure/37_environment-storage-responsibilities.md)。本書のDrive保存は生成済みKMLの保管境界を指す。04のA4や05の整備Spreadsheetを派生KMLと同一視しない。本書のKML詳細の再移植は未実施。

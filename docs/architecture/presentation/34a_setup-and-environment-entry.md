@@ -71,3 +71,5 @@
 2026-09-18の公式補助読解では、[Google Identity Services](https://developers.google.com/identity/oauth2/web/guides/overview)がサインインとAPI利用同意を分けて扱うこと、[Driveフォルダー生成](https://developers.google.com/workspace/drive/api/guides/folder)で`files.create`を使うことを確認した。[Drive scope資料](https://developers.google.com/workspace/drive/api/guides/api-specific-auth)もファイル単位の`drive.file`を説明する。これは原本の過去確認とは別の補助証拠であり、アプリの認証フロー、必要scope全体、再発見方式、実環境参加の成功を確定しない。Google認証をDIPSの認証VERIFYと混同しない。
 
 **VERIFY-S5-SETUP-EVIDENCE**: 旧99.1／98.2、01〜07の実Drive、現在地資料の版と画面・保存責任の対応。**VERIFY-S5-GOOGLE-CONTRACT**: 正式実装時のGoogle認証・認可・必要scopeと既存環境アクセス。新しい技術案は追加しておらず、未確認だけを理由に§1の到達済み初回方針を降格しない。
+
+Step 6の01〜07責任・設計資料と運用領域の分離は[37](../drive-structure/37_environment-storage-responsibilities.md)。本書の作成／参加・root再発見・必須初期登録の未確定は維持する。

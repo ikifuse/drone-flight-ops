@@ -80,3 +80,5 @@
 DIPS結果不明のまま別経路で再通報しない。通常同期とDIPS正式POSTを分ける理由・未登録確認後だけ再送する境界は33bを正本とし、詳細遷移は13bを参照する。
 
 DIPS通信の有無から法的な離陸可否を判断しません。現場の安全確認・通報要否・例外判断は [13 状態管理設計](state-machines/README.md)、PDF出力の事前キャッシュ条件は [18](18_reports.md) に従います。
+
+§2.6の「Drive保存失敗」は派生KMLの保存を指す。Step 6の04運航記録・05整備Spreadsheet全体を派生物と読み替えない。最終保存が未反映／部分完了の場合の保護・同一運航再送は[35d](operation-recording/35d_operation-finalization-and-write-boundary.md)、媒体責任は[37](drive-structure/37_environment-storage-responsibilities.md)。

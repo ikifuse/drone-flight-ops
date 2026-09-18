@@ -29,17 +29,13 @@ erDiagram
     FlightPlan ||--o| DipsNotification : projects_latest
     FlightPlan o|--o{ Mission : planned_for
     DipsSubmission o|--o{ Mission : applied_submission
-    Mission ||--o{ Flight : records
     Mission ||--o{ PreflightInspection : records
     Mission ||--o{ PostflightInspection : records
-    Mission ||--o{ AircraftSwitch : records
-    Aircraft ||--o{ Flight : flown_by
-    Battery ||--o{ Flight : powered_by
     Aircraft ||--o{ MaintenanceRecord : maintained
     Battery ||--o{ BatteryUsage : nonflight_events
 ```
 
-機体とバッテリーを所有関係で結ばない。実際に使用した組合せはFlightで保持し、型式互換をBatteryCompatibilityで表す。ERは全属性を複製する図ではない。独立管理するPermission / InsurancePolicy、発行履歴ReportSnapshot、変更履歴AuditEvent、設定AppSettingの属性は領域文書を参照する。SyncQueueは同期インフラ制御、DIPS Sheets台帳は提出記録の外部保持先であり、Domain Entityとの混在を避ける。
+機体とバッテリーを所有関係で結ばない。実際に使用した組合せは飛行明細で保持し、型式互換をBatteryCompatibilityで表す。ERは全属性を複製する図ではない。独立管理するPermission / InsurancePolicy、発行履歴ReportSnapshot、変更履歴AuditEvent、設定AppSettingの属性は領域文書を参照する。SyncQueueは同期インフラ制御、DIPS Sheets台帳は提出記録の外部保持先であり、Domain Entityとの混在を避ける。
 
 ## 2. 正本と境界
 
@@ -58,4 +54,6 @@ C1のDomain schema / type・基本Repository設計は、本領域の該当Entity
 
 99.2 §0・§1の再移植により、読む順序とコード着手条件を区別する。[00_goalの記入支援目的](../../00_goal.md#11-記入支援を中心に置くまでの因果)から必要な記録・保存先・出力を確かめ、[23の開始ゲート](../23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)を満たした依存範囲だけを実装対象とする。型が既に文書化されていることだけで保存・出力の確認完了としない。正規化の理由は[ADR-0007](../../decisions/ADR-0007-normalized-masters-and-business-reporting.md)に保持し、Step 1ではEntityや§2以降の人物・機材の詳細設計を変更していない。
 
-Step 2では99.2 §2に基づき人物・所属を具体化した。上図の旧`Organization → Personnel`を単一所属の現行制約として残さず、複数環境所属とOrganizationの未確定対応は[31a §2](../identity-and-access/31a_person-account-and-environment.md#2-現在の概念境界とorganization)へ委ねる。確定していないER基数を図へ追加しない。§3以降の機材等は未移植。
+Step 2では99.2 §2に基づき人物・所属を具体化した。上図の旧`Organization → Personnel`を単一所属の現行制約として残さず、複数環境所属とOrganizationの未確定対応は[31a §2](../identity-and-access/31a_person-account-and-environment.md#2-現在の概念境界とorganization)へ委ねる。確定していないER基数を図へ追加しない。Step 2時点では§3以降の機材等は未移植だった。現在の各移管範囲は[architecture README](../README.md)を参照する。
+
+Step 6では旧Mission→Flight／AircraftSwitchと機体・BAT→旧Flightの基数を現行ERから外した。旧候補属性は[12e](12e_operation-inspection-maintenance.md)、変更の因果と最終schemaの未確定は[35a](../operation-recording/35a_flexible-flight-and-details.md)に保持する。残るMission関連線も概念参照を示し、35aの最終schemaを先取りしない。
