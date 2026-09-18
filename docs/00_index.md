@@ -45,7 +45,7 @@ docs/
     ├── domain-model/           # C1のEntity / schema参照
     ├── identity-and-access/    # 三層権限・業務役割・運用環境・所属ライフサイクル
     ├── state-machines/         # 運航・通報・離陸評価
-    ├── presentation/           # ホーム4大入口 / 画面仕様記述規約 / 共有飛行リストUI
+    ├── presentation/           # ホーム4大入口 / 画面仕様記述規約 / 共有飛行リストUI / 飛行履歴・出力UI
     ├── dips-submission/        # Manual業務 / Sheets Ledger
     ├── dips-flight-plan/       # カタログ / Manual UI / API / 入力評価
     ├── dips-infrastructure/    # DIPS API接続インフラ / 固定送信元IP / ゲートウェイ

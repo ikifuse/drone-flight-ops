@@ -39,6 +39,7 @@
 | [30a. ホーム画面・全体ナビゲーション設計](30a_home-and-navigation.md) | ホーム4大入口の役割固定、ナビゲーション原則、運用環境表示・切替UI、マスターその場登録UX | `CURRENT-ACCEPTED` / 一部 `CURRENT-PROPOSAL` |
 | [30b. 画面仕様共通記述規約](30b_screen-specification-standard.md) | 全画面を均一な粒度で記述・保守するための11標準項目テンプレート | `CURRENT-ACCEPTED` |
 | [30c. 共有飛行リスト画面仕様](30c_shared-flight-list-ui.md) | 共有作業キュー画面仕様（30b規約準拠）、カード5項目、操作導線、非同期引継ぎ、Online/Offline境界 | `CURRENT-ACCEPTED` / 一部 `CURRENT-PROPOSAL`, `PENDING` |
+| [30d. 飛行履歴・出力画面仕様](30d_history-and-export-ui.md) | 過去運航閲覧・オンデマンドPDF/KML出力画面仕様（30b規約準拠）、A4原本保護、出力選択導線 | `CURRENT-ACCEPTED` / 一部 `NEW-PROPOSAL`, `PENDING` |
 
 ---
 

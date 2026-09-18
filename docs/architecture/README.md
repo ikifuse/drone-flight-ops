@@ -56,6 +56,7 @@
 | [30a_home-and-navigation](presentation/30a_home-and-navigation.md) | ホーム4大入口、ナビゲーション原則、マスターその場登録UX、環境切替UI |
 | [30b_screen-specification-standard](presentation/30b_screen-specification-standard.md) | 画面仕様共通記述規約（11標準項目テンプレート） |
 | [30c_shared-flight-list-ui](presentation/30c_shared-flight-list-ui.md) | 共有飛行リスト画面仕様（カード5項目、操作導線、非同期引継ぎ、Online/Offline） |
+| [30d_history-and-export-ui](presentation/30d_history-and-export-ui.md) | 飛行履歴・出力画面仕様（過去運航閲覧・オンデマンドPDF/KML出力・A4原本保護） |
 | [31_dedicated-egress-ip-gateway](dips-infrastructure/31_dedicated-egress-ip-gateway.md) | Google Cloud NAT・VPC Egress・固定IP・認証トークン隔離詳細 |
 
 設計の基準は確定でも、PENDINGは未解決です。26番は証拠資料であり、現行型・UI契約は上表の対応する設計正本に置きます。
@@ -88,6 +89,7 @@
 | Drive物理階層 / 01〜07台帳配置 | [drive-storage-schema](drive-storage-schema/README.md) | 11/14はAuthority/同期境界、18はA4レイアウト、27はKML/PDF出力先 |
 | ホーム4大入口 / 画面ナビゲーション / 画面仕様記述規約 | [presentation](presentation/README.md) | 13a/13bはFSMトリガー、01は権限表示制御の参照 |
 | 共有飛行リストUI / 非同期引継ぎ | [30c](presentation/30c_shared-flight-list-ui.md) | ADR-0011は決定背景、24aは共有台帳正本、12dは計画Entity |
+| 飛行履歴・出力UI / オンデマンドPDF出力 | [30d](presentation/30d_history-and-export-ui.md) | 18は帳票パイプライン、27は出力境界、29は07出力保存先 |
 | 出力・復旧の形式境界 | [27](output/27_output-boundaries.md) | ADR-0008は決定理由、全量restoreはPENDING |
 | KML | [27a](output/27a_kml-export.md) | Drive/My Mapsは保存・利用のみ |
 | Drive Storage | [27b](output/27b_google-drive-storage.md) | 14はキュー共通契約、KML生成とは別 |
