@@ -1,9 +1,9 @@
 # 12a. 組織・案件・人員と操作主体
 
-最終更新: 2026-09-15\
+最終更新: 2026-09-18\
 状態: Phase C0完了・Phase C1未着手（docs再編）
 
-主要責務: 組織・顧客・案件・人員マスター、SubmissionActor / Actual Pilot / Contactの概念境界。
+主要責務: 組織・顧客・案件マスターと、人物・環境・運航担当の外部正本への接続。
 
 ## 1. Organization（運用主体・企業/個人事業主マスター）
 - **ID**: `organization_id` (UUID v4)
@@ -32,54 +32,12 @@
   - `notes`: 案件特記事項
 - **リレーション**: `FlightPlan`, `Mission`, `OperationTemplate` から任意参照。
 
-## 3. Personnel（人員マスター）& ユーザーアカウント分離
-- **ID**: `personnel_id` (UUID v4)
-- **分類**: **Master**
-- **役割**: 操縦者、日常点検者、立入管理補助者等を1人物1レコードとして一元管理。
-- **ユーザーアカウントとの分離原則**: 運航記録に登場する人物（`Personnel`）と、アプリを操作するログインアカウント（`UserAccount`）を概念上分離し、補助者や同行パイロットがアプリアカウントを持たない場合でも適正に記録可能とする。
-- **主な属性**:
-  - `name`: 氏名（漢字）
-  - `kana`: フリガナ
-  - `contact_phone`: 緊急連絡先電話番号
-  - `contact_email`: 連絡先メール
-  - `roles`: 担当可能役割配列（`['pilot', 'inspector', 'assistant', 'administrator', 'viewer']`）
-  - **操縦者プロファイル（`roles` に `pilot` を含む場合のみ有効）**:
-    - `license_number`: 技能証明書番号 / 技能認証番号
-    - `certificate_type`: 区分（一等、二等、民間修了等）
-    - `certificate_expires_at`: 有効期限 (ISO8601)
-    - `warning_days`: 期限前警告日数（初期値: 30日）
-  - `is_default_pilot`: 既定の主操縦者フラグ
-  - `is_default_inspector`: 既定の日常点検者フラグ
-  - `status`: 状態（`ACTIVE`, `INACTIVE`, `RETIRED`）
+## 3. 人物・アカウント・環境の外部正本
 
-## 4. 業務利用における関係者の責務分離（SubmissionActor / Pilot / Contact）
+Step 2で99.2 §2の因果を[31a](../identity-and-access/31a_person-account-and-environment.md)へ移管した。基準の1人物一元管理・UserAccount分離を維持し、人物に直接寄せたroles・資格・退職状態から、環境別所属・役割、独立した資格、所属終了へ具体化した経緯も同書と[31d](../identity-and-access/31d_membership-lifecycle.md)で読める。旧属性表をもう一つの現行schemaとして残さない。Organization / Client / Projectの上記定義は維持し、OrganizationとOperationalEnvironmentの関連・ID対応は31aのPENDINGを参照する。
 
-法人・組織でのドローン運航管理を想定し、以下の関係者ロールを概念上明確に分離します：
+## 4. 運航関係者と権限への接続
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│ [運航管理・事務担当] SubmissionActor (アプリアカウント/操作者) │
-│  - オフィスのPCやスマホで飛行計画を作成・DIPS通報手続きを実行 │
-└──────────────────────────────┬──────────────────────────────┘
-                               │ 計画にアサイン
-                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│ [現場パイロット] Pilot / Personnel (実運航操縦者)            │
-│  - 現場で機体を操縦し、飛行前点検・離着陸打刻を実施          │
-└──────────────────────────────┬──────────────────────────────┘
-                               │ 連絡先として指定
-                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│ [緊急時連絡窓口] EmergencyContactPerson (連絡先)             │
-│  - 飛行中に近隣住民や関係機関からの連絡を受ける電話・メール   │
-│  - 操縦者自身、運航管理者、または許可申請書記載窓口から選択 │
-└─────────────────────────────────────────────────────────────┘
-```
+Pilot、Assistant、日常点検実施者、Submitter / SubmissionActor、Recorder、Contactの意味・分離理由・初期値は[31c](../identity-and-access/31c_operational-actors.md)を唯一の詳細正本とする。第三者代理通報の法的範囲という基準の未確認も同書で保持する。計画の保持先は[12d](12d_flight-plan-and-dips.md)、実績・点検は[12e](12e_operation-inspection-maintenance.md)、操作アカウントとの監査接続は[12f](12f_common-lifecycle-id-and-audit.md)。
 
-- **委任・代理通報に関する留意事項**:
-  - DIPS Web画面において操縦者と連絡先が分離選択可能であることは `OBSERVED` ですが、「第三者による代理通報が法的にどの範囲で認められているか」は、国土交通省のDIPS利用規約および行政手続き法令に基づく確認を要します。
-  - アプリ設計としては、属性を分離して保持できる柔軟なスキーマを用意し、法的な委任関係の成立可否は運用主体の責任において設定するものとします。
-
-## 5. 役割の参照関係
-
-`Pilot`、`Assistant`、`Inspector` は `Personnel.roles` と各記録の割当を表し、別人物マスターを作らない。`SubmissionActor` は操作した `UserAccount` を指し、実際に飛行した人物や緊急連絡先と同一とは限らない。`ContactPerson` / `EmergencyContactPerson` は連絡先として選択された役割名であり、新しい人物正本ではない。FlightPlanの `submitted_by_user_id`、`pilot_ids`、`contact_source` / `contact_person_id` の保持先は [12d](12d_flight-plan-and-dips.md)。UserAccountの認証・権限詳細は [Security](../16_security.md) に従い、C1で認証機能・複数組織UIを追加しない。
+アプリの業務権限・管理者・設定変更は[31b](../identity-and-access/31b_roles-and-access-control.md)、秘密・認証機構は[16](../16_security.md)。C1で認証・複数環境UIを追加実装する指示ではない。新しい型・schemaは未確定の対応を解消し、[23の開始ゲート](../23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)を満たしてから扱う。

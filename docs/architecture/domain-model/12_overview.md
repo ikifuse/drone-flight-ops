@@ -12,7 +12,6 @@
 ```mermaid
 erDiagram
     Organization ||--o{ Client : scopes
-    Organization ||--o{ Personnel : scopes
     Client ||--o{ Project : owns
     Project o|--o{ FlightPlan : optional
     AircraftModel ||--o{ Aircraft : models
@@ -44,7 +43,7 @@ erDiagram
 
 ## 2. 正本と境界
 
-- [12a](12a_organization-and-personnel.md): Organization / Client / Project / Personnel / Actor・Pilot・Contact。
+- [12a](12a_organization-and-personnel.md): Organization / Client / Project、人物領域への接続。人物・アカウント・環境・所属・資格は[31a](../identity-and-access/31a_person-account-and-environment.md)、運航担当は[31c](../identity-and-access/31c_operational-actors.md)、権限・離任は同領域READMEから辿る。
 - [12b](12b_aircraft-and-battery.md): AircraftModel / Aircraft / BatteryModel / BatteryCompatibility / Battery / BatteryUsage。
 - [12c](12c_location-and-presets.md): Location / FlightAreaPreset / FlightPurposePreset / SafetyMeasurePreset / OperationTemplate。
 - [12d](12d_flight-plan-and-dips.md): Permission / InsurancePolicy / FlightPlan / DipsSubmission / DipsNotification。
@@ -57,4 +56,6 @@ erDiagram
 
 C1のDomain schema / type・基本Repository設計は、本領域の該当Entityと12fを起点とし、関連する外部正本だけを読む。C1で複数組織UI、Bulk Import UI、API通信、Map editor、KML生成、Drive保存を追加実装しない。現フェーズの機能範囲は [23](../23_implementation-roadmap.md) が正本。
 
-99.2 §0・§1の再移植により、読む順序とコード着手条件を区別する。[00_goalの記入支援目的](../../00_goal.md#11-記入支援を中心に置くまでの因果)から必要な記録・保存先・出力を確かめ、[23の開始ゲート](../23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)を満たした依存範囲だけを実装対象とする。型が既に文書化されていることだけで保存・出力の確認完了としない。正規化の理由は[ADR-0007](../../decisions/ADR-0007-normalized-masters-and-business-reporting.md)に保持し、本StepでEntityや§2以降の人物・機材の詳細設計を変更しない。
+99.2 §0・§1の再移植により、読む順序とコード着手条件を区別する。[00_goalの記入支援目的](../../00_goal.md#11-記入支援を中心に置くまでの因果)から必要な記録・保存先・出力を確かめ、[23の開始ゲート](../23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)を満たした依存範囲だけを実装対象とする。型が既に文書化されていることだけで保存・出力の確認完了としない。正規化の理由は[ADR-0007](../../decisions/ADR-0007-normalized-masters-and-business-reporting.md)に保持し、Step 1ではEntityや§2以降の人物・機材の詳細設計を変更していない。
+
+Step 2では99.2 §2に基づき人物・所属を具体化した。上図の旧`Organization → Personnel`を単一所属の現行制約として残さず、複数環境所属とOrganizationの未確定対応は[31a §2](../identity-and-access/31a_person-account-and-environment.md#2-現在の概念境界とorganization)へ委ねる。確定していないER基数を図へ追加しない。§3以降の機材等は未移植。

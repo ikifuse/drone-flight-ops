@@ -1,6 +1,6 @@
 # 新アプリ（drone-flight-ops）統合要件定義書
 
-最終更新: 2026-09-15
+最終更新: 2026-09-18
 プロジェクト: `drone-flight-ops`
 目的: 現行自作アプリの強み（バッテリー個体管理・現場フロー）とワンエビneoの利便性（DIPS連携・地図機能）を統合した次世代システムの要件整理
 
@@ -45,7 +45,7 @@
 8. **業務・組織拡張性マスター（任意利用）**
    - 組織・運用主体（Organization）のスコープ管理（個人から法人・部署まで）
    - 顧客（Client）・案件（Project / Job）の任意紐付け
-   - 人員（Personnel）の一元化マスター（操縦者・点検者・補助者等を1人物複数Roleで管理、UserAccountと分離）
+   - 人員（Personnel）の一元化マスター（操縦者・点検者・補助者等を1人物複数Roleで管理、UserAccountと分離）。環境別所属・役割・資格への具体化とその因果は[identity-and-access](architecture/identity-and-access/README.md)を参照し、旧人物直下の役割配列を物理schemaとして固定しない。
    - 現場飛行場所（Location）および飛行範囲プリセット（FlightAreaPreset）の独立管理
    - 運航テンプレート（OperationTemplate: コピーソース原則、デフォルト機体nullable）
 

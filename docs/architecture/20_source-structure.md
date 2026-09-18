@@ -102,3 +102,5 @@ src/
 - 旧`spreadsheet/`のSheets・Drive・GAS一括配置案を、台帳同期とファイル保存に分けた。GASはSheets接続に用いる場合の実装選択肢であり、新アプリ全体の必須基盤ではない。
 - API contract-awareなRequirement EngineはApplication側と契約定義の境界で扱い、Coreへ公式API数値コードやtransport DTOを持ち込まない。
 - KMLはDB backupではない。全量restoreの形式・実装は[ADR-0008](../decisions/ADR-0008-user-facing-export-and-recovery-boundaries.md)でPENDING。C1で新しいexport/import実装を追加しない。
+
+Step 2の人物・環境・権限・離任の概念は[identity-and-access](identity-and-access/README.md)を参照する。本書のpersonnel配置に認証・Google共有・業務権限の詳細を集約せず、具体的モジュール配置はschema・保存・権限の未確定と開始ゲートを確認して判断する。今回コードおよびsourceツリー案の追加は行わない。

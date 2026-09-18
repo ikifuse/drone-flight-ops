@@ -10,7 +10,7 @@ iPhone / Android向け 総合ドローン運航管理アプリ（C0 Shell構築�
 
 現行の自作アプリ（`ikifuse/autel-evo-lite-flight-log`）の強みである「バッテリー個体管理」「現場重視の操作性」「データの透明性」を継承し、参考アプリ（DIPS Viewer ワンエビneo等）の機能を取り込んだ次期システムの基盤資料です。
 
-このブランチは`ea73d08`から99.2の因果を保持して再移植する`redo/99-2-causal-migration`です。今回の範囲は**Step 1（§0・§1）のみ**。[移植・監査記録](docs/migration/README.md)を参照してください。mainの旧Step 1〜8は比較証拠として保存し、再利用していません。アプリの目的は[記入支援](docs/00_goal.md#11-記入支援を中心に置くまでの因果)、依存実装の着手条件は[23](docs/architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)にあります。
+このブランチは`ea73d08`から99.2の因果を保持して再移植する`redo/99-2-causal-migration`です。Step 1（§0・§1）を保持し、今回の範囲は**Step 2（§2）のみ**。§3以降には進みません。[移植・監査記録](docs/migration/README.md)を参照してください。mainの旧Step 1〜8は比較証拠として保存し、再利用していません。アプリの目的は[記入支援](docs/00_goal.md#11-記入支援を中心に置くまでの因果)、依存実装の着手条件は[23](docs/architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)にあります。
 
 ## ドキュメント一覧
 
@@ -28,6 +28,7 @@ iPhone / Android向け 総合ドローン運航管理アプリ（C0 Shell構築�
 - [docs/decisions/README.md](docs/decisions/README.md) - アーキテクチャ決定記録（ADR）
 
 - [docs/architecture/README.md](docs/architecture/README.md) - 領域別設計書と主要概念の正本
+- [docs/architecture/identity-and-access/README.md](docs/architecture/identity-and-access/README.md) - 人物・環境・三層権限・運航担当・離任の因果と現在設計
 - [docs/architecture/presentation/README.md](docs/architecture/presentation/README.md) - 画面仕様の記録10項目
 - [docs/architecture/28_c1-docs-restructure-audit.md](docs/architecture/28_c1-docs-restructure-audit.md) - C1前docs再編・移行対照・最終監査
 

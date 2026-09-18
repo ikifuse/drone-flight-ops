@@ -15,7 +15,7 @@
   - `initial_aircraft_id`: 運航開始時の機体。途中交代は `AircraftSwitch`、各飛行の実機体は `Flight.aircraft_id`。
   - `location_id`: 現場場所ID
   - `pilot_id`: 主操縦者ID
-  - `assistant_id`: 補助者ID（任意）
+  - `assistant_id`: 旧単一参照名。現在の補助者0人以上という意味と複数割当schemaの未確定は[31c §2](../identity-and-access/31c_operational-actors.md#2-現場役割の現在到達点)を参照し、0〜1人の上限として固定しない
   - `weather`: 天候、`wind_speed_ms`: 風速、`temperature_c`: 気温
   - `status`: セッションの粗粒度ライフサイクル（`preparing`, `in_progress`, `completed`, `aborted`）。点検・飛行・交換など詳細進行は [Operation FSM](../state-machines/13a_operation.md) を参照し、両者を同じenumとしない。
   - `started_at` / `ended_at`: 運航日時
@@ -68,3 +68,5 @@
 各Flightの実際の操縦者は、計画の `pilot_ids` やMissionの主操縦者と区別して追跡し、[帳票](../18_reports.md)・[KMLの実績表示](../output/27a_kml-export.md) が正しい人員を参照できなければならない。現属性一覧にはFlight単位の実操縦者参照が未定義であり、Mission.pilot_idを全飛行の実操縦者と無条件に代用しない。単独/複数交代を含む具体的FK・保持形式はC1 schema確定前のPENDINGとする。
 
 飛行前/飛行後点検は、その点検が属するMissionと実施日時を保持し、日常点検帳票や機体交代後の点検を実績へ結び付ける必要がある。現属性一覧に不足するMission参照・実施日時の具体的フィールド名と型・関連基数はC1 schema確定前に決定し、作成日時から実施日時を推測しない。
+
+Step 2の[31c](../identity-and-access/31c_operational-actors.md)を人物役割の詳細正本とする。Recorderと操縦者の区別・初期値、通常日常点検で常時別実施者を選択させない理由を参照する。点検記録の実施者参照は維持し、初期値から実施者の事実を推測で上書きしない。Recorderの物理的保持先・UIは同書のPENDINGであり、現在の属性一覧で完成したとは扱わない。

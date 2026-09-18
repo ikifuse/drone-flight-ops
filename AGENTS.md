@@ -27,7 +27,7 @@
 - **追加決定**: ADR-0008（出力・復旧境界）/ ADR-0009（地図ライブラリ選定のC5留保）は、2026-09-15のオーナーの本docs再編指示に基づく部分置換。詳細は[ADR一覧](docs/decisions/README.md)。
 - **現在**: **Phase C0（基盤・PWA Shell 構築完了・Phase C1設計準備完了）**
 - **Phase C1以降**: 未着手（Phase C0受入確認・オーナーGO待ち）
-- **99.2再移植の停止位置**: `redo/99-2-causal-migration`では§0・§1のStep 1のみ。[移植記録](docs/migration/README.md)と[23の実装開始ゲート](docs/architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)を確認し、次の指示なく§2以降・実装へ進まない。mainの旧移植成果は比較証拠であり再移植元ではない。
+- **99.2再移植の停止位置**: `redo/99-2-causal-migration`ではStep 1（§0・§1）とStep 2（§2）まで。人物・権限・離任の詳細正本は[identity-and-access](docs/architecture/identity-and-access/README.md)。[移植記録](docs/migration/README.md)と[23の実装開始ゲート](docs/architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)を確認し、次の指示なく§3以降・実装へ進まない。mainの旧移植成果は比較証拠であり再移植元ではない。
 
 ---
 

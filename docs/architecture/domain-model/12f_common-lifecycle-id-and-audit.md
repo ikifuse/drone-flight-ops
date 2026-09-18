@@ -25,6 +25,8 @@
 | **History** | 現場で実際に発生・確定した不可逆の運航・点検・通報・監査実績。 | `FlightPlan`, `DipsSubmission`, `Mission`, `Flight`, `AircraftSwitch`, `PreflightInspection`, `PostflightInspection`, `MaintenanceRecord`, `BatteryUsage`, `ReportSnapshot`, `AuditEvent` | **確定時点を区別**。FlightPlan Draftは編集可能、計画変更はRevision管理。確定提出・帳票Snapshot本文は不変。実績訂正は監査履歴を保持してData Authorityの手修正規則に従い、ライフサイクルメタデータ更新も `AuditEvent` で追跡する。 |
 | **Projection** | 複数のエンティティから画面表示、帳票レンダリング、地図エクスポートのために導出される参照ビュー。 | `DipsNotification`, `ReportUnit` / `FlightLogReportViewModel`, `KmlExportModel` | **一時的・導出モデル**。正本を持たず、元データから動的に計算・構築（KMLやPDF用に専用入力画面を作らず、Domain単一入力から生成）。 |
 
+人員の離任はPersonnel全体のRETIREDではなく、[31d](../identity-and-access/31d_membership-lifecycle.md)の環境への所属終了として読む。共通の物理削除禁止・過去履歴保護は維持する。人物・アカウント・Membership・QualificationsのID対応とschemaの未確定は[31a](../identity-and-access/31a_person-account-and-environment.md)へ接続し、本書のUUID方針だけで新しい列・関連を確定しない。
+
 ### 3.1. 共通監査メタデータ方針
 すべてのMasterおよびHistoryエンティティは、以下の標準メタデータ属性を保持可能な構造とします：
 - `created_at`: 作成日時 (ISO8601)
@@ -50,10 +52,10 @@
 
 ## 5. 共通監査と専門評価の関係
 
-`AuditEvent.action` はCRUD等の共通分類。離陸時等の具体的な監査イベントを識別する `event_type` と必要な理由・メモは [13c](../state-machines/13c_takeoff-readiness.md) が定義する。操作アカウントと記録対象人物を同一視せず、[12a](12a_organization-and-personnel.md) の役割を維持する。
+`AuditEvent.action` はCRUD等の共通分類。離陸時等の具体的な監査イベントを識別する `event_type` と必要な理由・メモは [13c](../state-machines/13c_takeoff-readiness.md) が定義する。操作アカウントと記録対象人物を同一視せず、[31c](../identity-and-access/31c_operational-actors.md)の役割分離を維持する。
 
 冪等キーは自前Sheets台帳への書込に用いる。DIPS APIが同じキーを解釈する前提は置かず、送信結果不明時は [13b](../state-machines/13b_dips-submission.md) の照合へ進む。同期キューの型・実行・再試行は [14](../14_offline-and-sync.md)、手動修正優先順位は [11](../11_data-authority.md)。
 
 ## 6. 操作アカウントと人員の監査接続（PENDING-C1-SCHEMA）
 
-本書の既存 `actor_personnel_id` / `created_by` / `updated_by` はPersonnel参照を示すが、[12a](12a_organization-and-personnel.md) のSubmissionActorはUserAccountであり同一人物・同一IDとは限らない。通報・編集した操作主体と、操縦・点検等を行った記録対象人員の両方を識別可能にする証跡要件を保持する。操作アカウントの監査参照、Personnelとの任意関連、未ログイン運用時の識別方法はC1 schema確定前に整理するPENDINGであり、UserAccount IDをPersonnel ID欄へ無条件に代入しない。これはC1で認証機能を追加する指示ではない。
+本書の既存 `actor_personnel_id` / `created_by` / `updated_by` はPersonnel参照を示すが、[31c](../identity-and-access/31c_operational-actors.md)のSubmitter / SubmissionActorはUserAccountであり同一人物・同一IDとは限らない。通報・編集した操作主体と、操縦・点検等を行った記録対象人員の両方を識別可能にする証跡要件を保持する。操作アカウントの監査参照、Personnelとの任意関連、未ログイン運用時の識別方法はC1 schema確定前に整理するPENDINGであり、UserAccount IDをPersonnel ID欄へ無条件に代入しない。これはC1で認証機能を追加する指示ではない。

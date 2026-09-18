@@ -1,6 +1,6 @@
 # 25a. DIPSフィールドカタログ
 
-最終更新: 2026-09-15\
+最終更新: 2026-09-18\
 状態: 設計整合（C1未着手）\
 主責務: 記録済API 1.9 No.1〜88、外部契約とCore意味論の対応参照\
 入口: [DIPS Flight Plan設計群](README.md)
@@ -40,6 +40,8 @@
 この入力分類は旧調査表の複数タグを保持した凡例である。`PLAN_INPUT → USER_INPUT`、`DIPS_REGISTERED → DIPS_REGISTERED_SELECTION`、`SUBMISSION_METADATA → SYSTEM_METADATA` と25dの入力責任へ対応付ける。`CONDITIONAL` / `LEGACY` は条件・契約属性、`UNVERIFIED` は証拠状態であり、入力責任enumへ混入させない。
 
 ### 2.2. No.1〜No.88 完全対比表
+
+Step 2で人物・資格の詳細正本を[31a](../identity-and-access/31a_person-account-and-environment.md)へ移した。下表の旧取得元`Personnel.has_license / license_number / legacy_private_license`は調査時の対応名であり、人物直下の現行物理列を確定するものではない。資格の分離と正確な列の未確定は31aに従う。API項番・契約値自体は本Stepで変更しない。
 
 | No | DIPS項目名 | API parameter | 必須区分 | 条件 | データ型/値域 | 新アプリの取得元 | 入力分類 | API送信 | 手動Web支援 | Snapshot保存 | 備考 |
 |---|---|---|---|---|---|---|---|:---:|:---:|:---:|---|

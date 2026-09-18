@@ -6,7 +6,7 @@
 
 ---
 
-**現在の停止位置**: C0受入確認・オーナーGO待ち。99.2再移植はStep 1（§0・§1）のみ。C1前docs再編・本Stepの完了は後続コードの着手承認ではありません。以下§1.2の開始ゲートも適用します。
+**現在の停止位置**: C0受入確認・オーナーGO待ち。99.2再移植はStep 1（§0・§1）とStep 2（§2）まで。C1前docs再編・本Stepの完了は後続コードの着手承認ではありません。以下§1.2の開始ゲートも適用します。
 
 ## 1. 実装の基本方針（安全な段階的積み上げ）
 
@@ -51,11 +51,13 @@ C0: 基盤・PWA Shell 構築
 
 この流れが固まってから画面・保存処理・内部実装を安定させる。出力先が未確定なら、その出力先に依存するコードへ進まない。後続Phaseに残る未決事項を全件解消しなければ独立した設計検討もできないという意味ではない。画面の記録粒度は[Presentationの10項目規約](presentation/30_screen-specification-standard.md)へ接続する。
 
-**未移植・未監査の範囲（設計状態ではない）**: §0・§1は上記の決め方を示す。個々の保存先・列・更新タイミング・出力単位・権限構造について、同節だけでは後続章の到達点まで対照できない。該当論点の正式Docsと実物を照合する作業は、§2以降の指示されたStepへ残す。後続節で到達済みの内容を未確定へ戻す判断ではなく、本Stepではその移植・監査を完了していないという境界である。
+**Step 1時点の未移植・未監査の範囲（設計状態ではない）**: §0・§1は上記の決め方を示す。個々の保存先・列・更新タイミング・出力単位・権限構造について、同節だけでは後続章の到達点まで対照できない。該当論点の正式Docsと実物を照合する作業は、§2以降の指示されたStepへ残す。後続節で到達済みの内容を未確定へ戻す判断ではなく、本Stepではその移植・監査を完了していないという境界である。
 
 **VERIFY-S1-EVIDENCE**は[設計証拠規約§4](../guidelines/03_design-evidence-and-causality.md#4-実物確認と設計への反映)を正本とする。C0実機受入・オーナーGO、[既存PENDING](../04_open-questions.md#3-c1前docs再編で追跡するpending)も未解決のまま保持する。
 
-以下のC0〜C9は基準commitの実装配分を保持する。個別帳票・権限・DIPSインフラ等の§2以降の再移植が完了したことを意味しない。対象領域のゲートを通過する前に、列挙された型やシート方針をそのまま実装開始の許可として使わない。
+Step 2で§2の人物・環境・権限・離任を[identity-and-access](identity-and-access/README.md)へ再移植した。§3以降は未移植。§2の物理schema・UI・所有等のPENDINGと実物VERIFYは同領域に保持し、上記ゲートを完了したとは扱わない。
+
+以下のC0〜C9は基準commitの実装配分を保持する。Step 2の人物・権限参照を除き、個別帳票・DIPSインフラ等の後続章の再移植は未完了である。対象領域のゲートを通過する前に、列挙された型やシート方針をそのまま実装開始の許可として使わない。
 
 ---
 
@@ -73,7 +75,7 @@ C0: 基盤・PWA Shell 構築
 - **実装範囲**:
   - `src/domain/` の型定義およびDexie.js（IndexedDB）スキーマ定義:
     - **機材系**: `AircraftModel`, `Aircraft`, `BatteryModel`, `BatteryCompatibility`, `Battery`
-    - **人員・組織系**: `Organization`, `Personnel`（Role配列管理、UserAccount分離設計準拠）, `Client`, `Project`, 役割分離（`SubmissionActor` 通報操作者, `Pilot` 現場操縦者, `ContactPerson` 緊急連絡先の独立保持設計）
+    - **人員・組織系**: `Organization`, `Personnel`, `Client`, `Project`。人物・アカウント・環境・所属・資格・担当の意味は[31a〜31d](identity-and-access/README.md)を参照する。旧Personnel直下のRole配列を現行schemaとして実装せず、環境・ID・操作主体の未確定を該当型の固定前に照合する
     - **現場・プリセット系**: `Location`, `FlightAreaGeometry`（`POLYGON` / `CIRCLE` / `BUFFERED_LINE` の中立Domainモデル型）, `FlightAreaPreset`, `InternalFlightPurpose`（内部目的定義）, `FlightPurposePreset`, `SafetyMeasurePreset`, `OperationTemplate`（Copy Source原則、`default_aircraft_id` nullable）
     - **法務・計画・保険系**: `Permission`（包括許可）, `InsurancePolicy`（ドローン賠償責任保険台帳）, `FlightPlan`（複数機体・複数操縦者・総重量・航続時間・FlightAreaGeometryスナップショット対応、複数日指定拡張 `planned_occurrences` 互換フィールド、`draft`/`submission_ready`状態、`effective_value`/`override_value`セマンティクス）, `DipsSubmission`（`dips_contract_version`, 不変の意味論的 `submission_snapshot` 保持, `api_payload_snapshot` [nullable]）
     - **通報要件・離陸評価型**: `DipsFieldRequirementEngine` インターフェース、`DipsReportingRequirementEvaluator`（特定飛行/非特定飛行要否判定）、`DipsContractRequirement`, `DipsFieldApplicability`, `DipsInputResponsibility`, `DipsFieldValidationResult`, `DipsSubmissionReadiness`, `TakeoffReadinessAssessment`（離陸前多軸評価）型定義

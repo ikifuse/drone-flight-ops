@@ -130,3 +130,14 @@
 | 個別画面の未確定・実機確認 | [画面記録規約§3](architecture/presentation/30_screen-specification-standard.md#3-未確定と証拠の扱い)。10項目規約の成立で画面内容を埋めない |
 
 この一覧は後続章の既決内容をPENDINGへ降格するものではない。状態の意味とADR承認の区別は[設計証拠規約§3](guidelines/03_design-evidence-and-causality.md#3-状態ラベルと由来)を参照する。
+
+## 5. 99.2再移植Step 2の未確定と確認境界
+
+§2の到達済み設計を未決へ戻さず、個別の判断・実物確認を次の正本へ残す。前節はStep 1時点の記録であり、現在の移植済み範囲は§2まで。既存PENDING / WARNは解消していない。
+
+| 対象 | 詳細正本 |
+|---|---|
+| PENDING-S2-IDENTITY / PENDING-S2-ENVIRONMENT-UI / VERIFY-S2-IDENTITY-EVIDENCE | [31a](architecture/identity-and-access/31a_person-account-and-environment.md)：組織・環境・ID・資格列・切替UI・試作確認 |
+| PENDING-S2-ACCESS-DETAIL / VERIFY-S2-ACCESS-EVIDENCE | [31b](architecture/identity-and-access/31b_roles-and-access-control.md)：未定義の複合役割・機能詳細と実共有確認 |
+| PENDING-S2-ACTOR-SCHEMA/UI / VERIFY-S2-ACTOR-EVIDENCE・代理通報範囲 | [31c](architecture/identity-and-access/31c_operational-actors.md)：担当の保持先・別人点検UI・観測証拠。基準C1 schema未確定へ接続 |
+| PENDING-S2-MEMBERSHIP / PENDING-S2-OWNERSHIP | [31d](architecture/identity-and-access/31d_membership-lifecycle.md)：離任実行権限・UI・offline・履歴列・再所属形式・会社所有 |

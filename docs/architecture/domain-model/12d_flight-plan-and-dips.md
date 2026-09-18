@@ -63,7 +63,7 @@ export interface InsurancePolicy {
   - `organization_id`: 運用組織ID
   - `project_id`: 関連業務案件ID（任意）
   - `name`: 飛行計画名称（例: "架空公園A_定期空撮_20261020"。DIPS Web自動生成名称は表示用参考とし、UUIDを内部正本IDとする）
-  - `submitted_by_user_id`: 通報・入力操作者（SubmissionActor。現場パイロットや連絡先と同一である必要はない）
+  - `submitted_by_user_id`: 実際にDIPSへ当該計画を送信した利用者（Submitter / SubmissionActor。単なる下書き入力者や実飛行時Recorderと同一視しない。意味と因果は[31c §3](../identity-and-access/31c_operational-actors.md#3-さらに通報者と操縦者を分離した理由)）
   - `primary_aircraft_id`: 主使用機体ID
   - `aircraft_ids`: 対象機体ID配列（**複数機体対応**）
   - `planned_total_weight_kg`: 当該運航での最大離陸総重量（自重＋装備品、kg）
@@ -108,6 +108,8 @@ export interface InsurancePolicy {
   - **値の上書き追跡（Effective/Override）**: 各項目について `source_master_value`（マスター/プリセット元値）と `override_value`（今回計画の上書き値）を区別し、通報・スナップショットには `effective_value`（上書き優先確定値）を採用する。
 
 上記6つの確認項目は [25a No.70〜75](../dips-flight-plan/25a_field-catalog.md) で `PLAN_INPUT / チェック` とされる項目であり、API契約上の `true` 指定を初期値の無条件自動確認と解釈しない。Draftは未確認のまま保存できる。提出準備評価では [25d](../dips-flight-plan/25d_requirement-validation.md) に従い明示確認と有効値を必要とし、未確認を自動的に `true` へ変換しない。手動Webの固有validationで未確認の事項は26のPENDINGに残す。
+
+Step 2の人物役割の正本は[31c](../identity-and-access/31c_operational-actors.md)。操縦者と通報者を一覧で識別する要件を参照し、共有飛行リストの後続章の画面・遷移はここで追加しない。既存`organization_id`とOperationalEnvironmentの対応は[31a](../identity-and-access/31a_person-account-and-environment.md)のPENDINGであり、全計画キーを置換済みと扱わない。
 
 ## 4. DipsSubmission（DIPS提出試行・不変スナップショット台帳 - SSoT）
 - **ID**: `submission_id` (UUID v4)

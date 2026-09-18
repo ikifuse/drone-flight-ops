@@ -1,6 +1,6 @@
 # 16. セキュリティ・秘密情報・トークン管理設計（16_security.md）
 
-最終更新: 2026-09-15
+最終更新: 2026-09-18
 プロジェクト: `drone-flight-ops`
 フェーズ: Phase B2 / B2.1（詳細アーキテクチャ・監査・実装前設計）
 
@@ -107,3 +107,7 @@ BFF方式におけるユーザーAccess Token / Refresh Tokenの保持先候補�
 固定 `client_secret` は暗号化Cookieへも含めず、Workersの機密保管境界から出さない。OAuth Access/Refresh Tokenについては「ブラウザへ平文を渡さず、JavaScriptから読めない」が境界である。§4の暗号化Cookie案は暗号文をブラウザに保持する候補であり、サーバーストア＋不透明Session ID案と物理保持先が異なる。どちらの候補も本docs再編で新たに実装確定しない。
 
 運航人員の実名・電話・メール・住所・機体登録記号等は業務上の機微データとして扱うが、本リポジトリの設計例へ実値を含めない。DIPS入力支援に必要な表示と、共有用KMLの最小情報化は異なる目的であり、[KML SHARE_SAFE](output/27a_kml-export.md)の除外方針を維持する。
+
+## 8. 人物・アプリ機能権限とGoogle実アクセスへの接続
+
+Step 2では業務権限の詳細正本を[31b](identity-and-access/31b_roles-and-access-control.md)とする。人物・アカウント・環境は[31a](identity-and-access/31a_person-account-and-environment.md)、離任・Google共有残存・物理所有の未確定は[31d](identity-and-access/31d_membership-lifecycle.md)。共有設定をアプリ管理者の根拠にしない因果、初期管理者・最後の1人保護、設定権限は31bだけに定義する。本書のBFF・DIPSトークン保管を、そのままGoogle認証方式や業務権限実装として確定しない。
