@@ -5,6 +5,8 @@
 
 主要責務: 通信状態に依存しない現場作業・点検・離着陸・交換の進行。
 
+Step 5のホーム入口は[34b](../presentation/34b_home-and-navigation.md)、通報済み計画の選択は[34c](../presentation/34c_shared-flight-worklist.md)、点検への通常画面接続は[34d](../presentation/34d_dips-accepted-and-plan-content.md)。下図の「運航開始」は現場状態の開始であり、ホームの新規／続行を一つの入口へ統合する指定ではない。通常運航FSM全体の再移植は今回行わない。
+
 ## 1. 運航状態マシン（Operation State Machine）
 
 現場での操縦者の操作負荷を極小化し、現行アプリ（`autel-evo-lite-flight-log`）の俊敏な現場打刻フローを完全に継承・強化した状態遷移を定義します。

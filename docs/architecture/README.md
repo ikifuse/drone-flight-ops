@@ -9,7 +9,7 @@
 
 ## 2. 現行設計の入口
 
-99.2再移植は[Step 1（§0・§1）](../migration/99-2-step-1-causal-audit.md)、[Step 2（§2）](../migration/99-2-step-2-causal-audit.md)、[Step 3（§4と§6の取得確認・点検整備Actor部分）](../migration/99-2-step-3-causal-audit.md)、[Step 4（§7のDIPS API基盤・固定IP・通信境界）](../migration/99-2-step-4-causal-audit.md)まで。人物領域はidentity-and-access、機材取得・共用・履歴の因果はasset-managementへ配置する。現在の目的・設計順序は[00_goal](../00_goal.md)、依存実装の開始条件は[23](23_implementation-roadmap.md)。他の詳細領域は基準設計を保持し、Step 4の経路・通信安全の因果はdips-infrastructure、秘密／認証候補は16。§3・§5・§6の残り・§7対象外・§8以降の再移植・差分監査は次の指示で扱う。
+99.2再移植は[Step 1（§0・§1）](../migration/99-2-step-1-causal-audit.md)、[Step 2（§2）](../migration/99-2-step-2-causal-audit.md)、[Step 3（§4と§6の取得確認・点検整備Actor部分）](../migration/99-2-step-3-causal-audit.md)、[Step 4（§7のDIPS API基盤・固定IP・通信境界）](../migration/99-2-step-4-causal-audit.md)、[Step 5（§3と§7の正常受付後・共有リスト限定部分）](../migration/99-2-step-5-causal-audit.md)まで。人物領域はidentity-and-access、機材取得・共用・履歴の因果はasset-managementへ配置する。現在の目的・設計順序は[00_goal](../00_goal.md)、依存実装の開始条件は[23](23_implementation-roadmap.md)。他の詳細領域は基準設計を保持し、Step 4の経路・通信安全の因果はdips-infrastructure、秘密／認証候補は16。Step 5の画面因果はpresentationに配置する。§5・§6の残り・§7対象外・§8以降の再移植・差分監査は次の指示で扱う。
 
 | 入口 / 文書 | 主責務・読む場面 |
 |---|---|
@@ -17,7 +17,7 @@
 | [identity-and-access README](identity-and-access/README.md) | 人物・アカウント・環境、三層権限、運航担当、所属終了の詳細因果と未確定 |
 | [asset-management README](asset-management/README.md) | 機材取得・BAT共用・累計の意味・取得確認と点検整備Actorの因果 |
 | [dips-infrastructure README](dips-infrastructure/README.md) | DIPS API固定出口・限定バックエンド、Manual独立・結果不明時retryの因果 |
-| [presentation README](presentation/README.md) | 画面仕様の記録単位・10項目。Step 1では個別画面を追加しない |
+| [presentation README](presentation/README.md) | 10項目規約、初回・ホーム4入口・共有飛行リスト・正常受付後の因果と画面仕様 |
 | [state-machines README](state-machines/README.md) | Operation FSM / DIPS FSM / 法令・安全総合評価。C2/C6/C7の独立状態管理 |
 | [dips-submission README](dips-submission/README.md) | Manual通報業務と独立Sheets台帳。C4/C6の境界 |
 | [dips-flight-plan README](dips-flight-plan/README.md) | 公式88項目、Manual Web UI、C7 payload、要件エンジンの責務分離 |
@@ -47,6 +47,10 @@
 | 保存・出力確認と依存実装の開始ゲート | [23 §1.2](23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート) | ADR-0015は選択理由、21は検証との接続 |
 | 設計因果・7状態・試作証拠・質問境界 | [設計証拠規約](../guidelines/03_design-evidence-and-causality.md) | 移植監査は対象と移管先の記録のみ |
 | 画面仕様の記録10項目 | [30](presentation/30_screen-specification-standard.md) | 個別画面は規約を適用し本文を複製しない |
+| 初回作成／参加・root再発見・通常起動 | [34a](presentation/34a_setup-and-environment-entry.md) | 人物・環境・権限は31a〜31d。物理方式は未確定 |
+| ホーム4入口・画面→保存責任の接続 | [34b](presentation/34b_home-and-navigation.md) | 各領域は到達先。Drive全体構造の追加正本を作らない |
+| 共有飛行リスト・カード5系統・対象選択 | [34c](presentation/34c_shared-flight-worklist.md) | 24aは提出履歴保存。画面カードへ列全体を複製しない |
+| API正常受付時の掲載・後で飛行する・通報内容確認 | [34d](presentation/34d_dips-accepted-and-plan-content.md) | 13bはFSM、33bは通信安全、取消／重複調整の詳細は対象外 |
 | FlightAreaGeometry | [17](17_map-and-airspace.md) | 12は型参照、25cはDIPS変換、27aはKML変換 |
 | Organization / Client / Project | [12a](domain-model/12a_organization-and-personnel.md) | OperationalEnvironmentとの未確定対応は31a |
 | Personnel / GoogleIdentity・UserAccount / OperationalEnvironment / Membership / Qualifications | [31a](identity-and-access/31a_person-account-and-environment.md) | Domainは概念とschema未決の参照、Presentationは環境表示を参照 |

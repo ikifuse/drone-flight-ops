@@ -156,3 +156,15 @@
 | API非依存と結果不明時の安全境界 | [33b](architecture/dips-infrastructure/33b_api-availability-and-retry-boundaries.md)：到達済み境界を維持し、具体照合契約・UIを先取りしない |
 
 §7の固定IP／API基盤／通信境界のみ移管した。既存WARNや他領域のPENDINGは解消していない。対象外の移植待ちと、設計自体の未確定を区別する。
+
+## 8. 99.2再移植Step 5の未確定と確認境界
+
+| 対象 | 詳細正本 |
+|---|---|
+| PENDING-S5-ROOT-DISCOVERY / INITIAL-REQUIRED | [34a](architecture/presentation/34a_setup-and-environment-entry.md)：root再発見方式、参加・中断復旧、初回機体／BAT等の必須範囲 |
+| VERIFY-S5-SETUP-EVIDENCE / GOOGLE-CONTRACT | 34a：旧資料・実Driveとの対応、Google認証・認可・scopeの実装時確認 |
+| PENDING-S5-HOME-DETAIL | [34b](architecture/presentation/34b_home-and-navigation.md)：設定管理分類、配置・権限／offline表現 |
+| PENDING-S5-LIST-DETAIL / MANUAL-LIST、VERIFY-S5-LIST-EVIDENCE | [34c](architecture/presentation/34c_shared-flight-worklist.md)：絞り込み方向・共有反映・cache・Manual接続、1枚作業台帳の確認 |
+| PENDING-S5-ACCEPTED-UI / VERIFY-S5-RESPONSE-EVIDENCE | [34d](architecture/presentation/34d_dips-accepted-and-plan-content.md)：通常画面の残る詳細、原本が参照した正常応答資料の照合 |
+
+前回環境の初期選択、drive.file、場所／機体／BATの選択時登録、リスト絞り込みは各正本のCURRENT-PROPOSAL。4入口やAPI正常受付時の掲載はCURRENT-ACCEPTEDであり、上記の未確定と混同しない。Step 1〜4のPENDING／WARN、DIPS認証VERIFYを解消したとは扱わない。

@@ -8,6 +8,8 @@
 
 ## 1. 新アプリで追加が必要な機能一覧
 
+Step 5の利用開始・画面入口は[34a 初回セットアップ](architecture/presentation/34a_setup-and-environment-entry.md)と[34b ホーム4入口](architecture/presentation/34b_home-and-navigation.md)、通報済み計画の選択は[34c](architecture/presentation/34c_shared-flight-worklist.md)、正常受付後は[34d](architecture/presentation/34d_dips-accepted-and-plan-content.md)を正本とする。以下の機能一覧から旧「通常飛行」入口やホーム件数widget、初回操縦者登録の強制を導かない。
+
 現行アプリを基準とし、将来の「現場スマホ1台による一気通貫運用」を実現するための機能一覧です。C6 Manualを第一級の完成経路とし、C7 APIは承認・credential取得時のみのOptional拡張です。以下の一覧はC1に全機能を実装する指示ではありません。Phase配分は [ロードマップ](architecture/23_implementation-roadmap.md) を正本とします。
 
 1. **DIPS手動通報支援およびOptional API連携**

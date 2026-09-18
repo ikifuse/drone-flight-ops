@@ -93,8 +93,9 @@
 | [ADR-0016](ADR-0016-environment-membership-and-access-separation.md) | 人物・環境所属と三層権限の分離、離任の所属終了化 | **提案中（Proposed）** | 未承認（記録2026-09-18） | 0007 §2.3の役割・資格の部分置換を記録。詳細は31a〜31d |
 | [ADR-0017](ADR-0017-asset-acquisition-history-and-cumulative-scope.md) | 機材取得履歴・管理累計の意味と点検整備Actorを分ける | **提案中（Proposed）** | 未承認（記録2026-09-18） | 0007の型式／個体・互換と0002の累計基点を具体化。詳細は32a〜32c |
 | [ADR-0018](ADR-0018-dips-fixed-egress-and-limited-backend.md) | DIPS APIの専有固定IP経路・限定バックエンド | **提案中（Proposed）** | 未承認（記録2026-09-18） | 0001／0004のDIPS用Workers指定の限定置換を記録。詳細は33a／33b／16 |
+| [ADR-0019](ADR-0019-home-entry-and-shared-plan-handoff.md) | ホーム4入口と共有計画の引継ぎ | **提案中（Proposed）** | 未承認（記録2026-09-18） | 0005の独立した手続き／現場状態を入口・通常画面に具体化。詳細は34a〜34d |
 
-ADR-0010〜0014は比較用main `6344d7a`にProposedとして存在する。本ブランチはその作成前の`ea73d08`から再移植しており、旧Step成果をコピーしないため収録しない。番号を再利用せずStep 1で0015、Step 2で0016、Step 3で0017、Step 4で0018を新設した。mainの0010〜0014をAcceptedへ変更していない。
+ADR-0010〜0014は比較用main `6344d7a`にProposedとして存在する。本ブランチはその作成前の`ea73d08`から再移植しており、旧Step成果をコピーしないため収録しない。番号を再利用せずStep 1で0015、Step 2で0016、Step 3で0017、Step 4で0018、Step 5で0019を新設した。mainの0010〜0014をAcceptedへ変更していない。
 
 CURRENT-ACCEPTEDは現在の設計ベースラインを表し、ADRの承認ではない。[7状態の正本](../guidelines/03_design-evidence-and-causality.md#3-状態ラベルと由来)に従う。0015がProposedであることを理由に、99.2 §0・§1で到達した設計方法を未決へ戻さない。
 
@@ -119,3 +120,5 @@ ADR-0001〜0006は承認コミット `00bd729`（2026-09-14）でAcceptedにな�
 0017は0007の機材正規化と0002の累計基点の意味をClarifiesとして記録する。32a〜32cの現在設計ベースラインとADR Proposedを区別し、承認済みADRの正式な上書きや、§6全体・保存構造の移植完了とは扱わない。
 
 0018は0001 §3のDIPS用Workers境界、0004 §2・§3項3のWorkers指定について、現在ベースライン上の限定置換をPartially Supersedesとして記録する。0018はProposedであり、0001／0004の承認履歴を正式承認済みの新決定で上書きしたとは扱わない。現在経路の詳細は[33a](../architecture/dips-infrastructure/33a_fixed-egress-and-api-connection.md)、旧認証候補とVERIFYは[16](../architecture/16_security.md)。
+
+0019は0005のDIPS手続きと現場運航の分離を、ホーム入口と日付・担当者をまたぐ共有計画の引継ぎへ具体化するClarifies。Proposedであり、既存Accepted本文や状態遷移・離陸評価を変更しない。画面の詳細因果・未確定は[Presentation](../architecture/presentation/README.md)へ保持する。

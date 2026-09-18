@@ -13,3 +13,5 @@
 最初に27で境界を確認し、変更対象の詳細1冊へ進みます。Geometryは [17](../17_map-and-airspace.md)、Data Authorityは [11](../11_data-authority.md)、SyncQueueは [14](../14_offline-and-sync.md)、Reportsは [18](../18_reports.md)、Securityは [16](../16_security.md) が正本です。API JSONの詳細は [25c](../dips-flight-plan/25c_api-payload-mapping.md) へ進みます。
 
 全量DB backup/restore形式は [ADR-0008](../../decisions/ADR-0008-user-facing-export-and-recovery-boundaries.md) により `PENDING`。KMLをバックアップ代替にしません。上位入口は [architecture/README](../README.md)、総合入口は [docs/00_index](../../00_index.md) です。
+
+Step 5の［飛行履歴・出力］という入口と、04／06を源に07へ接続する画面責任は[34b](../presentation/34b_home-and-navigation.md)。本領域のKML生成・保存・再送・出力詳細は今回の再移植対象外であり、ホーム入口の追加から内容・タイミングを変更しない。

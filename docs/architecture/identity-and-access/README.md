@@ -15,3 +15,5 @@
 設計状態は[7状態規約](../../guidelines/03_design-evidence-and-causality.md#3-状態ラベルと由来)に従う。到達済みの内容はCURRENT-ACCEPTED、検討方向はCURRENT-PROPOSAL、列・UI等の未決はPENDING、証拠の確認待ちはVERIFYとする。原本が記録する観測はEVIDENCE/EXAMPLEであり、今回の直接再検証と区別する。重要な置換判断の記録は[ADR-0016（Proposed）](../../decisions/ADR-0016-environment-membership-and-access-separation.md)。
 
 本領域は[構造規約](../../guidelines/01_structure-and-maintenance-rules.md#6-docs変更時のresponsibility-check)に従い、人物同一性、権限判定、運航時割当、所属ライフサイクルという独立した変更理由で分けた。将来のコードの分割・認証方式・保存テーブルをこの目次から確定しない。[実装開始ゲート](../23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)は継続する。
+
+Step 5の利用側画面は[34a](../presentation/34a_setup-and-environment-entry.md)の初回・環境入口、[34c](../presentation/34c_shared-flight-worklist.md)の共有リストへ接続する。31a〜31dの人物・所属・権限・Actorの詳細と未確定は変更せず、画面から別の環境モデルを作らない。

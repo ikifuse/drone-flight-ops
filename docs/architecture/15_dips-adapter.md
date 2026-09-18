@@ -184,3 +184,5 @@ export interface IDipsApiService extends IDipsSubmissionAdapter {
 状態名・遷移の正本は[状態設計群](state-machines/README.md)、DipsSubmission / Snapshot型は[12d](domain-model/12d_flight-plan-and-dips.md)。共通インターフェースの `DipsSubmissionSnapshot` は12dの `submission_snapshot` 型を指し、API wire DTOではない。`DipsSubmissionResult.success` は操作結果であり、手動通報時にDIPS受理を独立に保証するboolではない。
 
 C7送信DTO・コード変換・API契約版・exact outbound JSONの正本は[25c](dips-flight-plan/25c_api-payload-mapping.md)。認証および機密管理は[16](16_security.md)に従う。API未承認時はこれらの実装を要求しない。
+
+Step 5の正常API受付後・重複なしの画面と共有リスト掲載契機は[34d](presentation/34d_dips-accepted-and-plan-content.md)。Adapterは正常応答の意味を画面へ渡し、表示文言・ボタンを本書へ複製しない。Manualの既存確認契約、正式認証VERIFY、payload責任は維持する。

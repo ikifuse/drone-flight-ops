@@ -66,3 +66,5 @@
 ## 2. 正本の分担
 
 [13a](13a_operation.md) は現場運航FSM、[13b](13b_dips-submission.md) はDIPS提出FSM、[13c](13c_takeoff-readiness.md) は通報要否・障害例外・離陸総合評価を定義する。本書のフローは接続説明であり、各状態や判定ルールの重複正本ではない。通報なし・計画なしで開始する運航も [12e](../domain-model/12e_operation-inspection-maintenance.md) に従う。SUBMISSION_READYの全判定条件は [25d](../dips-flight-plan/25d_requirement-validation.md)。
+
+Step 5の人間向け入口・正常受付後の導線は[Presentation 34b〜34d](../presentation/README.md)。本書の状態分離・接続Gateをホームの画面遷移と同一視しない。API正常受付経路の具体化によって、Manual・通報対象外・結果不明時の現場記録の境界を変更しない。

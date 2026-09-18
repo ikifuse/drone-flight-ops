@@ -5,7 +5,7 @@
 
 主要責務: DipsSubmissionStatusの全状態・遷移・確認境界。Entity属性は12d、通報要否・安全評価は13cを参照する。
 
-Step 4で移管したAPI非依存・結果不明時の再POST禁止の因果は[33b](../dips-infrastructure/33b_api-availability-and-retry-boundaries.md)。本書の状態名・全遷移・UIは基準設計を保持し、§7全体の正常応答後画面・共有リスト・照合UIの再移植を完了したとは扱わない。
+Step 4で移管したAPI非依存・結果不明時の再POST禁止の因果は[33b](../dips-infrastructure/33b_api-availability-and-retry-boundaries.md)。Step 5で正常受付後・共有リストの限定した画面を[34c](../presentation/34c_shared-flight-worklist.md)／[34d](../presentation/34d_dips-accepted-and-plan-content.md)へ移した。状態名・全遷移は保持し、重複調整・照合UI等の§7全体を再移植済みとは扱わない。
 
 ## 1. DIPS通報状態マシン（DIPS Notification State Machine - B2.3改訂）
 
@@ -67,7 +67,7 @@ stateDiagram-v2
 | **`MANUAL_SUBMITTED`** | 通報操作者がアプリ上で「DIPS手動通報を完了した」と記録打刻した状態。**※DIPS側の登録・受理確認ではない**。 | **「手動通報実施を記録（DIPS登録確認待ち）」** | `DIPS_CONFIRMED` |
 | **`DIPS_CONFIRMED`** | 通報操作者がDIPS画面で計画登録を確認した状態（飛行計画一覧との目視照合、または受付番号の確認入力）。 | **「DIPS通報確認完了（手動確認済）」** | 運航完了 / 取消 / 訂正 |
 | **`SENDING`** | バックエンド経由で国交省DIPS APIとHTTP通信中。 | 「DIPS API通報中...（通信中）」 | 成功/失敗/結果不明 |
-| **`API_CONFIRMED`** | DIPS公式API仕様で定義された成功レスポンスを受領し、受付番号/計画ID等の必要条件がシステム的に自動確認された状態。 | **「DIPS通報完了（API自動受理・受付番号: XXXXX）」** | 運航完了 / 取消 / 訂正 |
+| **`API_CONFIRMED`** | DIPS公式API仕様で定義された成功レスポンスを受領し、受付番号/計画ID等の必要条件がシステム的に自動確認された状態。 | 正常受付後・重複なしの表示は[34d](../presentation/34d_dips-accepted-and-plan-content.md)、リスト表示は34cを参照 | 運航完了 / 取消 / 訂正 |
 | **`SUBMISSION_UNCERTAIN`** | API送出後に通信切断・タイムアウトが発生し、登録成否が不明な状態。**自動再POSTは行わない**。 | 「通報結果照合中...（二重登録防止のため照合中）」 | DIPS計画検索照合へ |
 | **`RECONCILIATION_REQUIRED`**| API照合でも成否を判定できず、通報操作者によるDIPS Web画面での目視確認を要求する状態。 | 「要確認: DIPS登録状況を照合できません。DIPS画面で確認してください」 | 通報操作者の確認入力 |
 | **`FAILED`** | バリデーションエラーや恒久拒否（4xx）。不変履歴としてそのまま保存（下書きへの巻き戻しやpayload改変は不可）。 | 「通報失敗: 計画を修正して再作成してください」 | 履歴保存（FlightPlan修正・新Submission起票へ） |
@@ -91,3 +91,5 @@ stateDiagram-v2
 `DIPS_CONFIRMED` は `confirmation_method: displayed_id`（表示された番号を確認入力）または `flight_plan_list_match`（日時・機体・範囲の一覧目視照合）で成立する。後者は `dips_plan_id: null` を許容する。`API_CONFIRMED` は `api_response` によるシステム確認として区別する。操作ボタン/確認欄の仕様は [25b](../dips-flight-plan/25b_manual-web-mapping.md)。
 
 `SYSTEM_OUTAGE_EXCEPTION` の記録条件と法令保証をしない表示は [13c](13c_takeoff-readiness.md) が正本。通常FSMの初期状態は `SNAPSHOT_SAVED` であり、まだSubmissionがない `NOT_SUBMITTED` 等の表示を永続状態へ混入させない。障害例外後の事後通報では同じ提出内容を確認してManual/API経路へ進み、内容を修正する場合は新Submissionを作成する。
+
+基準のAPI成功時表示は「DIPS通報完了（API自動受理・受付番号: XXXXX）」であった（HISTORICAL）。Step 5では34dに正常応答後の選択を具体化した。これはAPI_CONFIRMEDの意味や「通報完了≠飛行可能」を変更するものではない。内部状態だけから重複なしや外部共有書込み成功まで推定せず、UI条件は34d、保存軸は24aに従う。
