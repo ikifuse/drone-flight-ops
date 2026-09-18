@@ -35,6 +35,8 @@
 - `updated_by`: 更新者Personnel ID（任意）
 - `version`: 楽観的ロック・競合検出用リビジョン番号（整数、1から開始）
 
+点検整備の実施者と記録作成・転記者の意味は[32c §3](../asset-management/32c_acquisition-check-and-maintenance-actors.md#3-実施者と作成転記者を分ける理由)に従う。作成・更新者だけから実施者を推測せず、既存共通メタデータをそのまま新しい整備Actorの完成schemaとしない。具体的なFK・操作アカウントとの対応は同書と本書§6のPENDINGを保持する。
+
 ### 3.2. 一括登録（Bulk Import/Export）対応準備
 会社利用における大量機材（機体20機、バッテリー50本、人員30人等）の登録に対応するため、以下の原則を適用します：
 - Masterは原則として安定したUUID v4を主キーとしつつ、`external_code`（社内管理番号等）による重複判定・UPSERTを許容。既存の例外として `AppSetting.setting_key` は安定した文字列キー、`BatteryCompatibility` はUUID v4または型式IDの複合キーを許容する（後者の採用方式はC1 schema確定時に決定）。

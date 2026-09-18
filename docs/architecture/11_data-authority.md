@@ -55,6 +55,8 @@ Phase B1/B1.1で提示した4つのモデルを、本プロジェクトの目的
   機体累計飛行時間、バッテリー個体別累積回数は、**手動修正後の確定台帳の値を基点として以後の計算を継続**する。
 ```
 
+上記の台帳権威・手修正追従は維持する。累計基点がどの期間を表すか、取得前履歴の不明と管理開始後00:00を分ける因果は[32a](asset-management/32a_aircraft-acquisition-and-cumulative-time.md)、中古BAT取得時の観測と現在累計の区別は[32b](asset-management/32b_battery-sharing-and-acquisition-history.md)を参照する。最新値の取得だけで不明な過去が判明したとは扱わず、具体的な保存列・継承処理は両書のPENDINGに従う。
+
 ### 2.1 DIPS飛行計画データのライフサイクルと独立台帳権威（B2.2/B2.3改訂）
 
 飛行計画（FlightPlan）およびそのDIPS通報スナップショット（DipsSubmission）は、飛行日誌実績とは異なる以下の独立したライフサイクルを持ちます：

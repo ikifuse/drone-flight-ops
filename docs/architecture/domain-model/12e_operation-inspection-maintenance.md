@@ -37,6 +37,8 @@
   - `pilot_notes`: 飛行所感・特記不具合
 - **二重保存の排除**: 飛行によるバッテリー使用実績（いつ、どの機体で、何分飛び、何%消費したか）は本 `Flight` レコードから完全に集計・導出可能であるため、別テーブルへ重複保存しない。
 
+中古取得時の短時間状態確認を正式運航時間へ算入せず点検整備記録へ残す個別判断は[32c §1](../asset-management/32c_acquisition-check-and-maintenance-actors.md#1-取得時の短時間動作確認をどう残すか)を参照する。通常のFlight責務を変えず、短時間／屋内／整備目的というだけで一般的に除外しない。
+
 ## 3. AircraftSwitch（機体交代イベント記録）
 - **ID**: `switch_id` (UUID v4)
 - **分類**: **History (Event)**
@@ -52,6 +54,8 @@
 - **分類**: **History**
 - **役割**: 機体の生涯点検整備記録（定期点検20h/100h、修理、改造、部品交換、ファーム更新）。
 - **主な属性**: `aircraft_id`, `maintenance_type`, `performed_at`, `cumulative_flight_minutes_at_maintenance`, `description`, `parts_replaced`, `technician_name`。
+
+取得時確認を本記録へ接続する意味と、実際の点検・整備実施者と記録作成・転記者を同一に固定しない因果は[32c](../asset-management/32c_acquisition-check-and-maintenance-actors.md)。`technician_name`を転記者名へ読み替えない。前歴不明と管理開始後累計の意味は[32a](../asset-management/32a_aircraft-acquisition-and-cumulative-time.md)に従い、既存属性だけでActor・取得履歴の保持が完成したとは扱わない。具体FK・保持形式・UIは32cのPENDINGであり、通常運航Recorderとは統合しない。点検整備全体の保存方式は本Stepの移植対象外。
 
 ## 6. ReportSnapshot（帳票発行不変スナップショット）
 - **ID**: `report_snapshot_id` (UUID v4)

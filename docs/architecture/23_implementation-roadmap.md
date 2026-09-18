@@ -6,7 +6,7 @@
 
 ---
 
-**現在の停止位置**: C0受入確認・オーナーGO待ち。99.2再移植はStep 1（§0・§1）とStep 2（§2）まで。C1前docs再編・本Stepの完了は後続コードの着手承認ではありません。以下§1.2の開始ゲートも適用します。
+**現在の停止位置**: C0受入確認・オーナーGO待ち。99.2再移植はStep 1（§0・§1）、Step 2（§2）、Step 3（§4と取得確認・点検整備Actorに直接必要な§6の部分）まで。C1前docs再編・本Stepの完了は後続コードの着手承認ではありません。以下§1.2の開始ゲートも適用します。
 
 ## 1. 実装の基本方針（安全な段階的積み上げ）
 
@@ -55,9 +55,11 @@ C0: 基盤・PWA Shell 構築
 
 **VERIFY-S1-EVIDENCE**は[設計証拠規約§4](../guidelines/03_design-evidence-and-causality.md#4-実物確認と設計への反映)を正本とする。C0実機受入・オーナーGO、[既存PENDING](../04_open-questions.md#3-c1前docs再編で追跡するpending)も未解決のまま保持する。
 
-Step 2で§2の人物・環境・権限・離任を[identity-and-access](identity-and-access/README.md)へ再移植した。§3以降は未移植。§2の物理schema・UI・所有等のPENDINGと実物VERIFYは同領域に保持し、上記ゲートを完了したとは扱わない。
+Step 2で§2の人物・環境・権限・離任を[identity-and-access](identity-and-access/README.md)へ再移植した。§2の物理schema・UI・所有等のPENDINGと実物VERIFYは同領域に保持し、上記ゲートを完了したとは扱わない。
 
-以下のC0〜C9は基準commitの実装配分を保持する。Step 2の人物・権限参照を除き、個別帳票・DIPSインフラ等の後続章の再移植は未完了である。対象領域のゲートを通過する前に、列挙された型やシート方針をそのまま実装開始の許可として使わない。
+Step 3の§4と§6の取得確認・点検整備Actor部分は[asset-management](asset-management/README.md)へ再移植した。C1の型・C3の累計管理に接続する意味を同領域で確認する。取得前履歴、取得時BAT状態、Actorの具体FK・列・UI等はPENDINGであり、依存実装の着手条件を満たしたとは扱わない。
+
+以下のC0〜C9は基準commitの実装配分を保持する。§3・§5・§6の残り・§7以降の再移植は未完了である。対象領域のゲートを通過する前に、列挙された型やシート方針をそのまま実装開始の許可として使わない。
 
 ---
 

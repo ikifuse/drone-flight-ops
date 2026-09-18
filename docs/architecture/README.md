@@ -9,12 +9,13 @@
 
 ## 2. 現行設計の入口
 
-99.2再移植は[Step 1（§0・§1）](../migration/99-2-step-1-causal-audit.md)と[Step 2（§2）](../migration/99-2-step-2-causal-audit.md)まで。人物・環境・権限・離任の因果はidentity-and-accessへ配置する。現在の目的・設計順序は[00_goal](../00_goal.md)、依存実装の開始条件は[23](23_implementation-roadmap.md)。他の詳細領域は基準設計を保持し、§3以降との再移植・差分監査は次の指示で扱う。
+99.2再移植は[Step 1（§0・§1）](../migration/99-2-step-1-causal-audit.md)、[Step 2（§2）](../migration/99-2-step-2-causal-audit.md)、[Step 3（§4と§6の取得確認・点検整備Actor部分）](../migration/99-2-step-3-causal-audit.md)まで。人物領域はidentity-and-access、機材取得・共用・履歴の因果はasset-managementへ配置する。現在の目的・設計順序は[00_goal](../00_goal.md)、依存実装の開始条件は[23](23_implementation-roadmap.md)。他の詳細領域は基準設計を保持し、§3・§5・§6の残り・§7以降との再移植・差分監査は次の指示で扱う。
 
 | 入口 / 文書 | 主責務・読む場面 |
 |---|---|
 | [domain-model README](domain-model/README.md) | ER・領域別Entity・共通ライフサイクル/ID/監査。C1型・schema実装の入口 |
 | [identity-and-access README](identity-and-access/README.md) | 人物・アカウント・環境、三層権限、運航担当、所属終了の詳細因果と未確定 |
+| [asset-management README](asset-management/README.md) | 機材取得・BAT共用・累計の意味・取得確認と点検整備Actorの因果 |
 | [presentation README](presentation/README.md) | 画面仕様の記録単位・10項目。Step 1では個別画面を追加しない |
 | [state-machines README](state-machines/README.md) | Operation FSM / DIPS FSM / 法令・安全総合評価。C2/C6/C7の独立状態管理 |
 | [dips-submission README](dips-submission/README.md) | Manual通報業務と独立Sheets台帳。C4/C6の境界 |
@@ -49,9 +50,12 @@
 | Organization / Client / Project | [12a](domain-model/12a_organization-and-personnel.md) | OperationalEnvironmentとの未確定対応は31a |
 | Personnel / GoogleIdentity・UserAccount / OperationalEnvironment / Membership / Qualifications | [31a](identity-and-access/31a_person-account-and-environment.md) | Domainは概念とschema未決の参照、Presentationは環境表示を参照 |
 | 業務役割・アプリ機能・Google実アクセス / アプリ管理者 | [31b](identity-and-access/31b_roles-and-access-control.md) | 16は秘密・認証、Driveは保存処理。権限の二重正本を作らない |
-| Pilot / Submitter・SubmissionActor / Recorder / Assistant / 点検実施者 / Contact境界 | [31c](identity-and-access/31c_operational-actors.md) | 12d/12eは保持先、18は帳票射影、25bは選択UI、26は観測 |
+| Pilot / Submitter・SubmissionActor / Recorder / Assistant / 日常点検実施者 / Contact境界 | [31c](identity-and-access/31c_operational-actors.md) | 12d/12eは保持先、18は帳票射影、25bは選択UI、26は観測 |
 | 所属終了・離任履歴・再所属 / 物理所有の未確定 | [31d](identity-and-access/31d_membership-lifecycle.md) | 12fは共通Lifecycle・Audit、Google共有は31b |
-| Aircraft / Battery / Compatibility | [12b](domain-model/12b_aircraft-and-battery.md) | 18/24aは射影・外部保存 |
+| AircraftModel / Aircraft / BatteryModel / Battery / Compatibilityの属性 | [12b](domain-model/12b_aircraft-and-battery.md) | 取得・共用の詳細因果は32a/32b、18/24aは射影・外部保存 |
+| 機体取得前履歴・管理開始累計・後日継承の意味 | [32a](asset-management/32a_aircraft-acquisition-and-cumulative-time.md) | 12bは属性、11は権威、22は移行への参照 |
+| BAT共用・セット表示・取得時状態・個体履歴の意味 | [32b](asset-management/32b_battery-sharing-and-acquisition-history.md) | Flight / BatteryUsage属性は12b/12e、物理配置は未確定 |
+| 取得時確認の算入判断・点検整備実施者と作成／転記者 | [32c](asset-management/32c_acquisition-check-and-maintenance-actors.md) | 12e/12fはEntity・監査、通常運航Recorderは31c |
 | Location / Preset / Template | [12c](domain-model/12c_location-and-presets.md) | 17はGeometry参照、25は再利用方法 |
 | FlightPlan / DipsSubmission / semantic snapshot | [12d](domain-model/12d_flight-plan-and-dips.md) | 状態全値は13b、API電文は25c、24aは台帳への保存 |
 | Mission / Flight / Inspection / Maintenance | [12e](domain-model/12e_operation-inspection-maintenance.md) | 13aは状態、18は帳票射影 |

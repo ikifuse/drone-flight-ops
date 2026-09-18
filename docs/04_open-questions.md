@@ -133,7 +133,7 @@
 
 ## 5. 99.2再移植Step 2の未確定と確認境界
 
-§2の到達済み設計を未決へ戻さず、個別の判断・実物確認を次の正本へ残す。前節はStep 1時点の記録であり、現在の移植済み範囲は§2まで。既存PENDING / WARNは解消していない。
+§2の到達済み設計を未決へ戻さず、個別の判断・実物確認を次の正本へ残す。前節はStep 1時点、本節はStep 2時点の確認境界である。現在の移植済み範囲は[総合INDEX](00_index.md)を参照する。既存PENDING / WARNは解消していない。
 
 | 対象 | 詳細正本 |
 |---|---|
@@ -141,3 +141,14 @@
 | PENDING-S2-ACCESS-DETAIL / VERIFY-S2-ACCESS-EVIDENCE | [31b](architecture/identity-and-access/31b_roles-and-access-control.md)：未定義の複合役割・機能詳細と実共有確認 |
 | PENDING-S2-ACTOR-SCHEMA/UI / VERIFY-S2-ACTOR-EVIDENCE・代理通報範囲 | [31c](architecture/identity-and-access/31c_operational-actors.md)：担当の保持先・別人点検UI・観測証拠。基準C1 schema未確定へ接続 |
 | PENDING-S2-MEMBERSHIP / PENDING-S2-OWNERSHIP | [31d](architecture/identity-and-access/31d_membership-lifecycle.md)：離任実行権限・UI・offline・履歴列・再所属形式・会社所有 |
+
+## 6. 99.2再移植Step 3の未確定と確認境界
+
+§4および取得確認・点検整備Actorに直接必要な§6の到達済み設計を未決へ戻さず、具体化待ちと実物照合を区別する。既存PENDING / WARNは解消していない。
+
+| 対象 | 詳細正本 |
+|---|---|
+| PENDING-S3-AIRCRAFT-HISTORY / VERIFY-S3-AIRCRAFT-EVIDENCE | [32a](architecture/asset-management/32a_aircraft-acquisition-and-cumulative-time.md)：前歴・管理累計・後日継承の物理保持／表示、旧資料・実物照合 |
+| PENDING-S3-BATTERY-HISTORY / VERIFY-S3-BATTERY-EVIDENCE | [32b](architecture/asset-management/32b_battery-sharing-and-acquisition-history.md)：取得時観測・個体履歴の表／行、共用表示と実物対応 |
+| PENDING-S3-MAINTENANCE-ACTOR / PENDING-S3-ACQUISITION-RECORD / VERIFY-S3-MAINTENANCE-EVIDENCE | [32c](architecture/asset-management/32c_acquisition-check-and-maintenance-actors.md)：実施者／転記者・取得確認の具体FK／保存／UIと原本照合 |
+| 後続の移植範囲（設計状態を降格しない） | [移植記録](migration/README.md)：§3・§5・§6の残り・§7以降。整備全体・保存構造の既存Docsとの相違を本Stepで解消していない |

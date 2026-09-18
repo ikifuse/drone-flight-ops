@@ -5,6 +5,8 @@
 
 主要責務: 機材の型式と個体、N:M互換、バッテリーの非飛行ライフサイクル。
 
+99.2 §4の取得・共用・累計の詳細因果は[asset-management](../asset-management/README.md)を正本とする。本書は既存の正規化と属性定義を保持し、未確定の取得履歴schemaを追加しない。
+
 ## 1. AircraftModel（機種・型式マスター）
 - **ID**: `model_id` (UUID v4)
 - **分類**: **Master**
@@ -38,6 +40,8 @@
     - `maintenance_due_flight_minutes`: 次回点検飛行時間閾値（例: 20時間/100時間）
 - **リレーション**: `AircraftModel` (N:1), `Flight` (1:N), `MaintenanceRecord` (1:N)
 
+`cumulative_flight_minutes`を取得以前を含む正確な総飛行時間と無条件に同一視しない。[32a](../asset-management/32a_aircraft-acquisition-and-cumulative-time.md)が前歴不明・管理開始00:00・後日の記録継承の意味と根拠を定める。既存の累計・管理開始日だけで取得前履歴を保持済みとはせず、具体的な追加列・関連は同書のPENDINGに残す。
+
 ## 3. BatteryModel（バッテリー型式マスター）
 - **ID**: `battery_model_id` (UUID v4)
 - **分類**: **Master**
@@ -58,6 +62,8 @@
   - `(EVO Lite+ Series, AUTEL-LITE-BAT)`
   - これにより、同一モデルの複数機体間だけでなく、互換性のある異機種間でも同一バッテリー個体を安全・適正に共有可能。
 
+固定スロット／主所属機体から現在の分離に至った因果、機体セット別表示を固定所有にしない理由と実例は[32b §1・§2](../asset-management/32b_battery-sharing-and-acquisition-history.md)へ集約する。例示された機種・機数・BAT数を固定仕様としない。
+
 ## 5. Battery（実物バッテリー個体台帳）
 - **ID**: `battery_id` (UUID v4)
 - **分類**: **Master**
@@ -73,6 +79,8 @@
   - `status`: 状態（`ACTIVE`, `IN_USE`, `DISCHARGED`, `MAINTENANCE`, `RETIRED`, `DISPOSED`）
   - `last_health_note`: 直近の異常・所感・セル電圧バランスメモ
 
+中古BATの取得時確認値と取得後履歴の意味は[32b §3](../asset-management/32b_battery-sharing-and-acquisition-history.md#3-中古batの取得時確認とその後の履歴)。現在累計と取得時観測値を混同せず、物理フィールド名を本書で先取りしない。
+
 ## 6. BatteryUsage（バッテリーライフサイクルイベント）
 - **ID**: `usage_id` (UUID v4)
 - **分類**: **History**
@@ -82,6 +90,8 @@
 ## 7. 飛行実績との責務境界
 
 バッテリー交換は次のFlightの `battery_id` 選択であり、交換だけで `BatteryUsage` に飛行使用記録を重複生成しない。実使用の機体・バッテリー・時間の正本は [Flight](12e_operation-inspection-maintenance.md)、非飛行の充放電・保管等は本書 `BatteryUsage`。累計値の手動修正と同期優先順位は [Data Authority](../11_data-authority.md)。
+
+この論理責任と、旧BatteryUsageモックや現03の表・行構造を区別する。[32b §4・§5](../asset-management/32b_battery-sharing-and-acquisition-history.md#4-飛行実績と非飛行履歴の責任を保持する)に従い、最終的な物理保存の配置はPENDINGとする。
 
 ## 8. 業務上の状態と保存enumの対応（PENDING-C1-SCHEMA）
 
