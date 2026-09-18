@@ -14,7 +14,7 @@ DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤シス
 > **API JSON 生成の内部局所性と手動アダプターの完全分離**:
 > - **API JSON 生成は `ApiDipsAdapter` の内部責務**です。これは国交省APIとの通信電文（Wire Format）に過ぎず、**ユーザー向けにJSONファイルとして出力・エクスポートするものではありません**。
 > - **`ManualDipsAdapter` は API JSON payload の生成を前提としません**。手動通報支援は意味論的Snapshot（`submission_snapshot`）から直接、人間の視認・1タップコピーに適した ViewModel（`DipsManualEntryViewModel`）を生成します。
-> - 本書に記載された OIDC フロー、認証レルム（`drs-utm`, `drs-req`, `drs-fpl`）、エンドポイント候補、および Cloudflare Workers Proxy 構成は、公式仕様書に基づく調査結果・設計候補資産であり、**正式なAPI利用承認・credential取得前の実装確定事項ではありません**。正式資格が取得された場合のみ Phase C7（Optional Integration）開始時に最新公式仕様と突き合わせて再確認・実装します。
+> - 本書に記載された OIDC フロー、認証レルム（`drs-utm`, `drs-req`, `drs-fpl`）、エンドポイント候補、および DIPS連携中継バックエンド構成は、初期調査結果・設計候補資産であり、国交省API接続インフラの現行正本は [31 DIPS 専用固定送信元IPゲートウェイ設計](dips-infrastructure/31_dedicated-egress-ip-gateway.md) です。正式資格が取得された場合のみ Phase C7（Optional Integration）開始時に最新公式仕様と突き合わせて再確認・実装します。
 
 ```text
 ┌────────────────────────────────────────────────────────┐
@@ -44,9 +44,9 @@ DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤シス
                           │ (API利用可能時のみ中継)
                           ▼
 ┌────────────────────────────────────────────────────────┐
-│ バックエンド中継境界 (Cloudflare Workers Proxy)        │
-│  - client_secretの安全な秘匿保管                       │
-│  - 各realmのToken Endpoint / API EndpointへのHTTPS中継 │
+│ DIPS中継バックエンド境界（Google Cloud / 専用固定IP）  │
+│  - client_secret・認証情報の安全な隔離保管             │
+│  - 専有固定送信元IP (Cloud NAT) 経由のHTTPS中継        │
 └─────────────────────────┬──────────────────────────────┘
                           │
                           ▼
@@ -88,8 +88,8 @@ DIPS Adapterは、国土交通省の「DIPS 2.0（ドローン情報基盤シス
 
 | 項目 | 現状の事実・未確認 | DIPS Adapterでの吸収設計 |
 |---|---|---|
-| **認証プロトコル** | **【確認済】** OIDC / 認可コードフロー | Workers側で標準的なAuthorization Code/Token交換ロジックを実装。 |
-| **`client_secret` 必須性** | **【確認済】** トークン要求に必要 | クライアントへ露出させず、Cloudflare Workers Secretsで安全に保管。 |
+| **認証プロトコル** | **【確認済】** OIDC / 認可コードフロー | DIPS中継バックエンド側で標準的なAuthorization Code/Token交換ロジックを実装。 |
+| **`client_secret` 必須性** | **【確認済】** トークン要求に必要 | クライアントへ露出させず、DIPS中継バックエンドの安全な環境で保管。 |
 | **重複防止ヘッダ** | **【確認済】** 独自Idempotency-Keyは未提供 | 結果不明時はPOST再送を行わず、検索APIによる照合（Reconciliation）を必須化。 |
 | **credentialの発行単位** | **【未確認】** 3系統共通か個別か | 設定ファイル（Config）で `shared_credentials: true/false` を切り替え可能な構造とし、個別キーでも共通キーでもコード変更なしで対応。 |
 | **利用申請主体（資格）** | **【確認済】** 現行案内は法人・団体対象<br>**【未確認】** 個人の申請条件 | クライアント側には `MockDipsAdapter` を用意。正式キー取得前でも全UI・計画作成・通報キューの動作検証を実施可能にする。 |
@@ -172,7 +172,7 @@ export interface IDipsApiService extends IDipsSubmissionAdapter {
 ### 5.3 ApiDipsAdapter（DIPS 2.0 APIアダプター - 利用承認時 Optional）
 - **役割**: 国交省審査を通過し、credentialが発行された場合のみ有効化する自動連携プラグイン。
 - **挙動**:
-  - Cloudflare Workers中継プロキシを経由してDIPS 2.0 FPRエンドポイントへJSON送信。
+  - DIPS中継バックエンド（Google Cloud NAT専有固定送信元IPゲートウェイ）を経由してDIPS 2.0 FPRエンドポイントへJSON送信。
   - DIPS公式API仕様で定義された成功レスポンスを受領・検証後、計画ID等を抽出し、`API_CONFIRMED`（confirmation_method: 'api_response'）を記録。
 
 ---
