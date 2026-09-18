@@ -23,7 +23,7 @@
    - **`EVIDENCE/EXAMPLE`**: 観察事実・実例・設計根拠。実測値や特定環境の例示（一般規範と区別）。
    - **`NEW-PROPOSAL`**: 新規提案。整合や標準化のために新たに起票された提案。
 3. **最終監査**:
-   - Step 8において、`32_99-2-migration-and-audit.md` で全状態と監査証跡を網羅的に整理します。
+   - Step 8において、[32_99-2-migration-and-audit](32_99-2-migration-and-audit.md) で99.2全12セクションの移植対応・状態分類・横断監査証跡を網羅的に整理しています。
 
 ## 3. 現行設計の入口
 
@@ -58,6 +58,7 @@
 | [30c_shared-flight-list-ui](presentation/30c_shared-flight-list-ui.md) | 共有飛行リスト画面仕様（カード5項目、操作導線、非同期引継ぎ、Online/Offline） |
 | [30d_history-and-export-ui](presentation/30d_history-and-export-ui.md) | 飛行履歴・出力画面仕様（過去運航閲覧・オンデマンドPDF/KML出力・A4原本保護） |
 | [31_dedicated-egress-ip-gateway](dips-infrastructure/31_dedicated-egress-ip-gateway.md) | Google Cloud NAT・VPC Egress・固定IP・認証トークン隔離詳細 |
+| [32_99-2-migration-and-audit](32_99-2-migration-and-audit.md) | 99.2検討正本からの最終移植・状態分類・横断差分監査正本 |
 
 設計の基準は確定でも、PENDINGは未解決です。26番は証拠資料であり、現行型・UI契約は上表の対応する設計正本に置きます。
 

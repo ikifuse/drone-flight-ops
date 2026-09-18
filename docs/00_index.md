@@ -11,7 +11,7 @@
 
 - Phase A/A.5、B1〜B2最終監査完了、Phase B設計凍結。
 - ADR-0001〜0007 Accepted。2026-09-15のdocs再編指示に基づく部分置換はADR-0008/0009。
-- **C0基盤・PWA Shell構築完了、C1設計準備完了。C1以降は未着手、C0受入確認・オーナーGO待ち。**
+- **C0基盤・PWA Shell構築完了、C1設計準備完了。99.2検討正本からの設計論点移植・状態分類監査（32番）を反映（保留課題はPENDINGとして保護）。C1以降は未着手、C0受入確認・オーナーGO待ち。**
 - 状態は **確定**（承認済み基準）、**検討中**（判断待ち）、**調査**（観測・根拠・未検証）、**将来**（後続Phase）、**履歴**（当時の判断）、**移行案内**（詳細の移転入口）を区別します。文書の確定はアプリ実装・外部仕様の最新性の検証完了を意味しません。
 
 ## 2. 要件・規約・設計への入口
@@ -29,6 +29,7 @@
 | [構造・分割・保守規約](guidelines/01_structure-and-maintenance-rules.md) | 9原則・Responsibility Check・レビュー手順 | 確定 / docs・source・変更管理 |
 | [法令・運用規約](guidelines/02_legal-and-operations-rules.md) | 法令8区分・正式記録全体評価・柔軟運用 | 確定 / 法令・帳票・現場 |
 | [architecture README](architecture/README.md) | 設計領域・概念正本・比較/監査履歴への入口 | 確定 / 全アーキテクチャ |
+| [32_99-2-migration-and-audit](architecture/32_99-2-migration-and-audit.md) | 99.2検討正本の最終移植・状態分類・横断差分監査正本 | 確定・監査済 / 全体 |
 | [decisions README](decisions/README.md) | ADR運用・承認状態・部分置換範囲・決定履歴 | 確定 / 重要意思決定 |
 
 ## 3. ディレクトリ配置
@@ -51,7 +52,7 @@ docs/
     ├── dips-infrastructure/    # DIPS API接続インフラ / 固定送信元IP / ゲートウェイ
     ├── drive-storage-schema/    # Drive物理階層 / 01〜07フォルダー / 台帳配置 / 原本複製
     ├── output/                 # 出力境界 / KML / Drive / My Maps / 機体ログ
-    └── 単一責務設計・比較履歴・監査記録（architecture READMEから参照）
+    └── 単一責務設計・比較履歴・監査記録（32番監査正本・28番再編監査含む。architecture READMEから参照）
 ```
 
 ## 4. 外部正本・参照リポジトリ
