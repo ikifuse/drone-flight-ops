@@ -1,6 +1,6 @@
 # 12. Domain Modelの全体構造と正本
 
-最終更新: 2026-09-15\
+最終更新: 2026-09-18\
 状態: Phase C0完了・Phase C1未着手（docs再編）
 
 主要責務: Entity間の関連と正本の所在。詳細型・外部仕様をここへ再集約しない。
@@ -56,3 +56,5 @@ erDiagram
 ## 3. C1で読む範囲
 
 C1のDomain schema / type・基本Repository設計は、本領域の該当Entityと12fを起点とし、関連する外部正本だけを読む。C1で複数組織UI、Bulk Import UI、API通信、Map editor、KML生成、Drive保存を追加実装しない。現フェーズの機能範囲は [23](../23_implementation-roadmap.md) が正本。
+
+99.2 §0・§1の再移植により、読む順序とコード着手条件を区別する。[00_goalの記入支援目的](../../00_goal.md#11-記入支援を中心に置くまでの因果)から必要な記録・保存先・出力を確かめ、[23の開始ゲート](../23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)を満たした依存範囲だけを実装対象とする。型が既に文書化されていることだけで保存・出力の確認完了としない。正規化の理由は[ADR-0007](../../decisions/ADR-0007-normalized-masters-and-business-reporting.md)に保持し、本StepでEntityや§2以降の人物・機材の詳細設計を変更しない。

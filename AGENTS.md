@@ -1,6 +1,6 @@
 # AGENTS.md — AIエージェント向け案内・開発規約
 
-最終更新: 2026-09-15
+最終更新: 2026-09-18
 対象リポジトリ: `ikifuse/drone-flight-ops`
 
 ---
@@ -27,6 +27,7 @@
 - **追加決定**: ADR-0008（出力・復旧境界）/ ADR-0009（地図ライブラリ選定のC5留保）は、2026-09-15のオーナーの本docs再編指示に基づく部分置換。詳細は[ADR一覧](docs/decisions/README.md)。
 - **現在**: **Phase C0（基盤・PWA Shell 構築完了・Phase C1設計準備完了）**
 - **Phase C1以降**: 未着手（Phase C0受入確認・オーナーGO待ち）
+- **99.2再移植の停止位置**: `redo/99-2-causal-migration`では§0・§1のStep 1のみ。[移植記録](docs/migration/README.md)と[23の実装開始ゲート](docs/architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)を確認し、次の指示なく§2以降・実装へ進まない。mainの旧移植成果は比較証拠であり再移植元ではない。
 
 ---
 
@@ -125,3 +126,5 @@
 
 ### 6.8 docs変更時のResponsibility Check
 仕様を追加する前に、[構造・保守規約のResponsibility Check](docs/guidelines/01_structure-and-maintenance-rules.md#6-docs変更時のresponsibility-check)を実施してください。既存主責務、ライフサイクル、外部依存、セキュリティ境界、Phase、独立変更可能性のうち2つ以上で明確な分離が必要なら、新文書またはサブ文書へ分けます。正本は[architecture READMEの概念対応表](docs/architecture/README.md#3-主要概念の正本)で特定し、他文書は要約とリンクに留めます。旧12/13/24/25/27は移行案内であり、詳細を追記する場所ではありません。
+
+99.2からの移植では[因果・状態・実物証拠の規約](docs/guidelines/03_design-evidence-and-causality.md)に従い、最新結論だけへの短縮、根拠・却下理由・例外の脱落を防ぎます。CURRENT-ACCEPTEDとADR Acceptedを同一視しません。

@@ -1,6 +1,6 @@
 # 20. ソースコード構造とモジュール依存関係設計（20_source-structure.md）
 
-最終更新: 2026-09-15
+最終更新: 2026-09-18
 プロジェクト: `drone-flight-ops`
 フェーズ: Phase B設計凍結 / C0 Shell構築完了 / C1未着手
 
@@ -9,6 +9,8 @@
 ## 1. ディレクトリ構造設計（Phase C 実装基準）
 
 現在のC0は `src/main.ts`、`app/App.ts`、`app/service-worker-reg.ts`、`presentation/styles/` によるVanilla TypeScriptです。下記は後続Phaseの責務配置案を含み、全ディレクトリが実装済みという意味ではありません。React/TSX導入は決定していません。
+
+設計を決める順序は[記入支援の目的](../00_goal.md#11-記入支援を中心に置くまでの因果)と[23の開始ゲート](23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)に従う。下記のモジュール配置があることを、出力先が未確定でもコードを先に作ってよい根拠にしない。画面仕様の記録単位は[Presentation](presentation/README.md)を参照する。今回のStep 1で下記のsource構造やコードを変更しない。
 
 `docs/guidelines/01_structure-and-maintenance-rules.md` で定めた構造設計9原則（堅牢性、セキュリティ、追加実装性、責務分離、保守性、テスト容易性、変更影響最小化、可読性、分割しすぎない）に基づき、以下のモジュールツリーを策定します。
 

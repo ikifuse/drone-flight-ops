@@ -1,6 +1,6 @@
 # アーキテクチャ決定記録（ADR: Architecture Decision Records）
 
-最終更新: 2026-09-15
+最終更新: 2026-09-18
 プロジェクト: `drone-flight-ops`
 
 ---
@@ -89,6 +89,11 @@
 | [ADR-0007](ADR-0007-normalized-masters-and-business-reporting.md) | 正規化マスター体系・共有機材モデル・業務利用拡張性・再利用プリセットおよび統合帳票境界の策定 | **承認済み** | 2026-09-14 | 機種/機体分離、バッテリー型式/個体分離・共有(N:M)、人員/場所マスター、プリセット・運航テンプレート、組織/案件拡張性、シート増殖禁止、統合A4縦帳票・続紙設計 |
 | [ADR-0008](ADR-0008-user-facing-export-and-recovery-boundaries.md) | ユーザー向けJSON出力廃止と出力・復旧境界の再定義 | **承認済み** | 2026-09-15 | 0003のuser-facing JSON部分と0001の同一JSON退避条項を部分置換。全量DB復旧形式はPENDING、KML代替禁止 |
 | [ADR-0009](ADR-0009-map-renderer-selection-deferred-to-c5.md) | 地図描画ライブラリの選定をPhase C5実機評価へ留保 | **承認済み** | 2026-09-15 | 0001のMapLibre固定のみ部分置換。今回はライブラリ未選定 |
+| [ADR-0015](ADR-0015-record-first-design-and-implementation-gate.md) | 記録・保存先から設計し、差分監査後に依存実装へ進む | **提案中（Proposed）** | 未承認（記録2026-09-18） | 99.2 §0・§1の設計順序と理由を記録。詳細ゲートは23 |
+
+ADR-0010〜0014は比較用main `6344d7a`にProposedとして存在する。本ブランチはその作成前の`ea73d08`から再移植しており、旧Step成果をコピーしないため収録しない。番号を再利用せず0015を新設した。mainの0010〜0014をAcceptedへ変更していない。
+
+CURRENT-ACCEPTEDは現在の設計ベースラインを表し、ADRの承認ではない。[7状態の正本](../guidelines/03_design-evidence-and-causality.md#3-状態ラベルと由来)に従う。0015がProposedであることを理由に、99.2 §0・§1で到達した設計方法を未決へ戻さない。
 
 ## 4. 承認時点・履歴と現行仕様の読み方
 

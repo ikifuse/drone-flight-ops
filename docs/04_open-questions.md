@@ -118,3 +118,15 @@
 | My Maps / Drive / 機体ログ | 既存PENDING-MYMAPS各項目、実KML表示・Drive更新方針・機体ログ取得形式 | [Output README](architecture/output/README.md)。C8および将来拡張 |
 
 既知の未決事項を明示することと、今回の文書構造の不整合を放置することは区別します。後続Phaseの未検証事項を解決済みとは報告しません。
+
+## 4. 99.2再移植Step 1の確認境界
+
+§0・§1で到達した設計方法はCURRENT-ACCEPTEDとして保持し、§3の既存PENDING/WARNは解消しない。新たな詳細定義を本書へ複製せず、次の正本へ案内する。
+
+| 識別子・対象 | 詳細正本 |
+|---|---|
+| 後続の移植・確認範囲（PENDINGへの再分類ではない） | [23の開始ゲート](architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)。依存する保存・出力・操作・権限の個別内容について、本Stepでは後続章の移植・確認を完了していない |
+| VERIFY-S1-EVIDENCE | [設計証拠規約§4](guidelines/03_design-evidence-and-causality.md#4-実物確認と設計への反映)。99.2が参照する実Drive・旧資料を今回の直接検証済みとしない |
+| 個別画面の未確定・実機確認 | [画面記録規約§3](architecture/presentation/30_screen-specification-standard.md#3-未確定と証拠の扱い)。10項目規約の成立で画面内容を埋めない |
+
+この一覧は後続章の既決内容をPENDINGへ降格するものではない。状態の意味とADR承認の区別は[設計証拠規約§3](guidelines/03_design-evidence-and-causality.md#3-状態ラベルと由来)を参照する。

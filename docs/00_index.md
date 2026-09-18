@@ -1,6 +1,6 @@
 # ドキュメント総合目次
 
-最終更新: 2026-09-15\
+最終更新: 2026-09-18\
 プロジェクト: `drone-flight-ops`
 
 ## 1. 役割・読み順・現在状態
@@ -12,7 +12,10 @@
 - Phase A/A.5、B1〜B2最終監査完了、Phase B設計凍結。
 - ADR-0001〜0007 Accepted。2026-09-15のdocs再編指示に基づく部分置換はADR-0008/0009。
 - **C0基盤・PWA Shell構築完了、C1設計準備完了。C1以降は未着手、C0受入確認・オーナーGO待ち。**
+- **99.2再移植はStep 1（§0・§1）のみ**。[移植記録](migration/README.md)から確認範囲へ進む。§2以降は未移植で、既存詳細を99.2全体との監査済み仕様と扱わない。依存実装は[23の開始ゲート](architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)に従う。
 - 状態は **確定**（承認済み基準）、**検討中**（判断待ち）、**調査**（観測・根拠・未検証）、**将来**（後続Phase）、**履歴**（当時の判断）、**移行案内**（詳細の移転入口）を区別します。文書の確定はアプリ実装・外部仕様の最新性の検証完了を意味しません。
+
+上記は既存文書の案内区分です。99.2再移植の7状態とその意味は[設計証拠規約§3](guidelines/03_design-evidence-and-causality.md#3-状態ラベルと由来)を正本とし、CURRENT-ACCEPTEDをADR Acceptedや変更不可と同一視しません。
 
 ## 2. 要件・規約・設計への入口
 
@@ -28,6 +31,8 @@
 | [04_open-questions](04_open-questions.md) | 未確認事項と過去論点の決定状況・PENDING入口 | 検討中 / C1前確認・後続Phase |
 | [構造・分割・保守規約](guidelines/01_structure-and-maintenance-rules.md) | 9原則・Responsibility Check・レビュー手順 | 確定 / docs・source・変更管理 |
 | [法令・運用規約](guidelines/02_legal-and-operations-rules.md) | 法令8区分・正式記録全体評価・柔軟運用 | 確定 / 法令・帳票・現場 |
+| [設計証拠・因果規約](guidelines/03_design-evidence-and-causality.md) | 因果保持・7状態・実物証拠・質問と技術判断の境界 | CURRENT-ACCEPTED / 設計方法 |
+| [移植記録README](migration/README.md) | 99.2再移植の対象・根拠・移管先・検査 | 監査記録 / Step 1のみ |
 | [architecture README](architecture/README.md) | 設計領域・概念正本・比較/監査履歴への入口 | 確定 / 全アーキテクチャ |
 | [decisions README](decisions/README.md) | ADR運用・承認状態・部分置換範囲・決定履歴 | 確定 / 重要意思決定 |
 
@@ -36,13 +41,15 @@
 ```text
 docs/
 ├── 00_index.md / 00_goal.md / 01〜04の要件・分析
-├── guidelines/                 # 構造・保守、法令・運用の規約
+├── guidelines/                 # 構造・保守、法令・運用、設計証拠・因果
+├── migration/                  # 移管対応・証拠・検査の記録（仕様を複製しない）
 ├── decisions/
 │   ├── README.md               # ADR-0000はこの中の運用決定（独立ファイルなし）
-│   └── ADR-0001〜0009           # 決定履歴と限定置換
+│   └── ADR-0001〜0009 / 0015    # 既存決定とStep 1のProposed記録（0010〜0014はmainに保全）
 └── architecture/
     ├── README.md               # 設計領域と概念の正本表
     ├── domain-model/           # C1のEntity / schema参照
+    ├── presentation/           # 画面仕様の記録10項目（個別画面の再移植は後続）
     ├── state-machines/         # 運航・通報・離陸評価
     ├── dips-submission/        # Manual業務 / Sheets Ledger
     ├── dips-flight-plan/       # カタログ / Manual UI / API / 入力評価

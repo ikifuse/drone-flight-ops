@@ -1,6 +1,6 @@
 # アーキテクチャ設計目次
 
-最終更新: 2026-09-15\
+最終更新: 2026-09-18\
 状態: Phase B設計凍結 / C0 Shell構築完了・C1設計準備完了 / C1未着手（C0受入確認・オーナーGO待ち）
 
 ## 1. 本目次の役割と読み順
@@ -9,9 +9,12 @@
 
 ## 2. 現行設計の入口
 
+99.2再移植は[Step 1（§0・§1）](../migration/99-2-step-1-causal-audit.md)まで。現在の目的・設計順序は[00_goal](../00_goal.md)、依存実装の開始条件は[23](23_implementation-roadmap.md)。他の詳細領域は基準設計を保持し、§2以降との再移植・差分監査は次の指示で扱う。
+
 | 入口 / 文書 | 主責務・読む場面 |
 |---|---|
 | [domain-model README](domain-model/README.md) | ER・領域別Entity・共通ライフサイクル/ID/監査。C1型・schema実装の入口 |
+| [presentation README](presentation/README.md) | 画面仕様の記録単位・10項目。Step 1では個別画面を追加しない |
 | [state-machines README](state-machines/README.md) | Operation FSM / DIPS FSM / 法令・安全総合評価。C2/C6/C7の独立状態管理 |
 | [dips-submission README](dips-submission/README.md) | Manual通報業務と独立Sheets台帳。C4/C6の境界 |
 | [dips-flight-plan README](dips-flight-plan/README.md) | 公式88項目、Manual Web UI、C7 payload、要件エンジンの責務分離 |
@@ -37,6 +40,10 @@
 
 | 概念 | 唯一の詳細正本 | 他文書で扱う範囲 |
 |---|---|---|
+| 記入支援の目的・優先対象 | [00_goal §1.1](../00_goal.md#11-記入支援を中心に置くまでの因果) | 18/Domainは利用上の参照 |
+| 保存・出力確認と依存実装の開始ゲート | [23 §1.2](23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート) | ADR-0015は選択理由、21は検証との接続 |
+| 設計因果・7状態・試作証拠・質問境界 | [設計証拠規約](../guidelines/03_design-evidence-and-causality.md) | 移植監査は対象と移管先の記録のみ |
+| 画面仕様の記録10項目 | [30](presentation/30_screen-specification-standard.md) | 個別画面は規約を適用し本文を複製しない |
 | FlightAreaGeometry | [17](17_map-and-airspace.md) | 12は型参照、25cはDIPS変換、27aはKML変換 |
 | Personnel / Actor / Pilot / Contact | [12a](domain-model/12a_organization-and-personnel.md) | 26は観測/未確認、25bは選択UI |
 | Aircraft / Battery / Compatibility | [12b](domain-model/12b_aircraft-and-battery.md) | 18/24aは射影・外部保存 |
