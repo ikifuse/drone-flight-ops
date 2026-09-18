@@ -3,7 +3,7 @@
 - **作成日**: 2026-09-18
 - **ステータス**: **提案中（Proposed）**
 - **決定者**: 検討中（99.2設計検討正本反映 / オーナー最終監査待ち）
-- **関連設計**: [18 帳票出力・監査](../architecture/18_reports.md)、[新設予定: drive-storage-schema](../architecture/drive-storage-schema/README.md)
+- **関連設計**: [18 帳票出力・監査](../architecture/18_reports.md)、[29 Drive物理階層・ストレージ設計](../architecture/drive-storage-schema/29_drive-folder-and-sheets-structure.md)
 - **関連ADR**: [ADR-0007](ADR-0007-normalized-masters-and-business-reporting.md)、[ADR-0008](ADR-0008-user-facing-export-and-recovery-boundaries.md)
 
 ## 1. 背景と課題（Context）

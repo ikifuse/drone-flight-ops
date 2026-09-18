@@ -37,6 +37,7 @@
 | [dips-infrastructure README](dips-infrastructure/README.md) | DIPS API接続インフラ・固定送信元IPゲートウェイ・秘密情報保護。C7インフラ境界 |
 | [output README](output/README.md) | JSON/KML/Sheets/PDF境界、KML生成、Drive保存、My Maps操作、将来機体ログ |
 | [identity-and-access README](identity-and-access/README.md) | 三層権限・業務役割・アプリ機能権限・運用環境・所属ライフサイクル |
+| [drive-storage-schema README](drive-storage-schema/README.md) | 運用環境ルート配下の01〜07物理フォルダー・台帳配置・原本複製シート構造 |
 | [10_system-boundaries](10_system-boundaries.md) | システム間責務・障害境界・将来ネイティブ拡張ポート |
 | [11_data-authority](11_data-authority.md) | Model Dのライフサイクル別権威・確定台帳・手修正保護 |
 | [14_offline-and-sync](14_offline-and-sync.md) | オフライン成立条件・Storage保護・SyncQueue・再試行 |
@@ -51,6 +52,7 @@
 | [23_implementation-roadmap](23_implementation-roadmap.md) | C0〜C9の範囲・受入基準・C7スキップ経路・現在の停止位置 |
 | [26_dips-web-ui-verification](26_dips-web-ui-verification.md) | OBSERVED / OFFICIAL_SPEC / INFERRED / PENDINGを保つ実画面の証拠資料 |
 | [28_c1-docs-restructure-audit](28_c1-docs-restructure-audit.md) | 今回の全docs責務監査・移行対照・整合修正・最終検査記録 |
+| [29_drive-folder-and-sheets-structure](drive-storage-schema/29_drive-folder-and-sheets-structure.md) | 01〜07物理階層ツリー・台帳配置・A4原本複製・点検整備機体別フォルダー |
 | [30a_home-and-navigation](presentation/30a_home-and-navigation.md) | ホーム4大入口、ナビゲーション原則、マスターその場登録UX、環境切替UI |
 | [30b_screen-specification-standard](presentation/30b_screen-specification-standard.md) | 画面仕様共通記述規約（11標準項目テンプレート） |
 | [30c_shared-flight-list-ui](presentation/30c_shared-flight-list-ui.md) | 共有飛行リスト画面仕様（カード5項目、操作導線、非同期引継ぎ、Online/Offline） |
@@ -83,6 +85,7 @@
 | Sheets Ledger | [24a](dips-submission/24a_submission-and-sheets-ledger.md) | 12にSheets列を重複定義しない |
 | DIPS API JSON | [25c](dips-flight-plan/25c_api-payload-mapping.md) | 通信Adapterは15、27は内部transportという境界のみ |
 | DIPS API接続インフラ / 固定送信元IP | [dips-infrastructure](dips-infrastructure/README.md) | 10は全体境界、16はセキュリティ境界、31は詳細設計、25cはAPI payload |
+| Drive物理階層 / 01〜07台帳配置 | [drive-storage-schema](drive-storage-schema/README.md) | 11/14はAuthority/同期境界、18はA4レイアウト、27はKML/PDF出力先 |
 | ホーム4大入口 / 画面ナビゲーション / 画面仕様記述規約 | [presentation](presentation/README.md) | 13a/13bはFSMトリガー、01は権限表示制御の参照 |
 | 共有飛行リストUI / 非同期引継ぎ | [30c](presentation/30c_shared-flight-list-ui.md) | ADR-0011は決定背景、24aは共有台帳正本、12dは計画Entity |
 | 出力・復旧の形式境界 | [27](output/27_output-boundaries.md) | ADR-0008は決定理由、全量restoreはPENDING |

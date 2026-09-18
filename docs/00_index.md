@@ -49,6 +49,7 @@ docs/
     ├── dips-submission/        # Manual業務 / Sheets Ledger
     ├── dips-flight-plan/       # カタログ / Manual UI / API / 入力評価
     ├── dips-infrastructure/    # DIPS API接続インフラ / 固定送信元IP / ゲートウェイ
+    ├── drive-storage-schema/    # Drive物理階層 / 01〜07フォルダー / 台帳配置 / 原本複製
     ├── output/                 # 出力境界 / KML / Drive / My Maps / 機体ログ
     └── 単一責務設計・比較履歴・監査記録（architecture READMEから参照）
 ```
