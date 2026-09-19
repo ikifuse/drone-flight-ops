@@ -1,7 +1,7 @@
 # 37. 運用環境のDrive責任構造と人間向け記録
 
-最終更新: 2026-09-18\
-由来: 99.2 §10。Drive全体の配置責任と変遷の正本。各記録の詳細schema・KML階層を集約しない。
+最終更新: 2026-09-19\
+由来: 99.2 §10、2026-09-19のオーナーによる04の機体別保存追補。Drive全体の配置責任と変遷の正本。各記録の詳細schema・KML階層を集約しない。
 
 ## 1. 一冊中心・技術分類から責任領域へ
 
@@ -20,12 +20,14 @@
 | 01 人員 | 人物・所属・役割・資格等の管理 | [31a〜31d](../identity-and-access/README.md)。論理概念ごとに別Spreadsheetを作る決定ではない |
 | 02 機体 | 機体と取得・管理情報 | [32a](../asset-management/32a_aircraft-acquisition-and-cumulative-time.md)。累計・履歴の具体列は未確定 |
 | 03 バッテリー | BAT個体・取得・共用と履歴 | [32b](../asset-management/32b_battery-sharing-and-acquisition-history.md)。機体別の見せ方は所有固定を意味しない |
-| 04 運航記録 | 正式実飛行・日常点検のA4記録 | [35a〜35d](../operation-recording/README.md)。テストと正式記録を区別 |
+| 04 運航記録 | 機体個体別の運航記録Spreadsheetに正式実飛行・日常点検のA4を保存 | 個体別保存・日付連番の詳細因果は[35c §3](../operation-recording/35c_a4-operation-record.md#3-その後の運用判断による現在ベースライン)。テストと正式記録を区別 |
 | 05 点検整備記録 | 機体別の詳細点検整備 | [36](../maintenance-storage/36_aircraft-maintenance-records.md)。通常日常点検と分離 |
 | 06 DIPS関連 | 運用環境の飛行計画と通報台帳 | [24a](../dips-submission/24a_submission-and-sheets-ledger.md)。個人専用の手続き履歴に閉じない。§7残りの再移植を本書で代行しない |
 | 07 出力 PDF／KML | 必要時の派生出力 | [27](../output/27_output-boundaries.md)。04／06等の正式記録を代替しない |
 
 これは責任と発見性の現在ベースラインである。個別ファイル数、全表・列・索引、ACL・所有権移管の手順を一括確定する表ではない。環境別の保存先を選んでから現場操作へ入る画面の因果は[34a](../presentation/34a_setup-and-environment-entry.md)と[34b](../presentation/34b_home-and-navigation.md)にあり、本書へ複製しない。
+
+**04の追補**: オーナーが2026-09-19に提示した機体個体別の現Drive確認結果はEVIDENCE/EXAMPLE、その既存境界を使う判断はCURRENT-ACCEPTED。前回のA4一枚の直接観測から導いたものではない。機体交代時の保存先切替・次空き連番・高度な競合対策を採らない因果は35cへ一元化する。05の整備媒体を一般化して04へ適用した判断ではなく、01〜07の他領域の物理配置を確定するものでもない。
 
 ## 3. 内部正規化と物理シートを混同しない
 
@@ -45,7 +47,7 @@ Locations／Clients／Projects／Permissions／InsurancePolicies等は、旧案�
 
 07配下の操縦者・年・飛行等の旧サンプルは**EVIDENCE/EXAMPLE**に留める。KML生成契機・Identity・命名・My Maps・ログ突合は今回対象外で、既存[output](../output/README.md)へ参照するだけとする。説明のために空フォルダーを大量生成したり、実Driveを再編したりしない。
 
-**PENDING-S6-DRIVE-PLACEMENT**には具体的なSpreadsheet／schema／索引・更新責任の対応、複数ユーザー・複数組織での所有とアクセスの物理契約も残る。到達済みの七責任、04と05の媒体を一般論で未決へ戻さない。**VERIFY-S6-DRIVE-EVIDENCE**は01〜07全体・旧配置の再照合であり、最新A4だけを確認した今回の範囲を超える。
+**PENDING-S6-DRIVE-PLACEMENT**には具体的なschema／索引・更新責任の対応、未決領域のSpreadsheet配置、複数ユーザー・複数組織での所有とアクセスの物理契約も残る。到達済みの七責任、04の機体個体別保存と05の媒体を一般論で未決へ戻さない。04の長期／年度分割は35cのPENDINGを維持する。**VERIFY-S6-DRIVE-EVIDENCE**は01〜07全体・旧配置の再照合であり、前回の最新A4直接確認および今回のオーナーによる04確認報告を超える。
 
 ## 5. 分割・保守の確認点
 

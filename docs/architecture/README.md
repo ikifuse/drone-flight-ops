@@ -1,6 +1,6 @@
 # アーキテクチャ設計目次
 
-最終更新: 2026-09-18\
+最終更新: 2026-09-19\
 状態: Phase B設計凍結 / C0 Shell構築完了・C1設計準備完了 / C1未着手（C0受入確認・オーナーGO待ち）
 
 ## 1. 本目次の役割と読み順
@@ -68,7 +68,7 @@
 | FlightPlan / DipsSubmission / semantic snapshot | [12d](domain-model/12d_flight-plan-and-dips.md) | 状態全値は13b、API電文は25c、24aは台帳への保存 |
 | 柔軟な1飛行・内部明細・機体交代境界 | [35a](operation-recording/35a_flexible-flight-and-details.md) | 12eは旧schema候補とPENDING。意味を帳票枠から逆算しない |
 | 通常運航の画面と途中入力 | [35b](operation-recording/35b_normal-operation-and-final-save.md) | 13aは論理状態、34dは入口 |
-| A4実物・固定7枠・物理シート・必要時PDF | [35c](operation-recording/35c_a4-operation-record.md) | 18は生成技術。実物観測と後続運用を区別 |
+| A4実物・機体個体別保存・次空き連番・特殊競合の非採用・必要時PDF | [35c](operation-recording/35c_a4-operation-record.md) | 18は生成技術、37は配置要約。実物観測とオーナー追加判断を区別 |
 | 運航全体の最終確定・更新責任・再送要件 | [35d](operation-recording/35d_operation-finalization-and-write-boundary.md) | 11／14は共通権威・同期。§9全体は未移植 |
 | 機体別整備Spreadsheet・原本コピー | [36](maintenance-storage/36_aircraft-maintenance-records.md) | Actorは32c、通常日常点検は35b |
 | Driveの01〜07責任と変遷・媒体境界 | [37](drive-structure/37_environment-storage-responsibilities.md) | 各領域は詳細記録、27bはKML保存のみ |

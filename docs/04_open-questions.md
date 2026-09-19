@@ -1,6 +1,6 @@
 # 未確認事項と将来の設計判断論点
 
-最終更新: 2026-09-18
+最終更新: 2026-09-19
 プロジェクト: `drone-flight-ops`
 
 
@@ -182,4 +182,4 @@
 | PENDING-S6-MAINTENANCE-PHYSICAL / VERIFY-S6-MAINTENANCE-EVIDENCE | [36](architecture/maintenance-storage/36_aircraft-maintenance-records.md) |
 | PENDING-S6-DRIVE-PLACEMENT / VERIFY-S6-DRIVE-EVIDENCE | [37](architecture/drive-structure/37_environment-storage-responsibilities.md) |
 
-CURRENT-PROPOSALの機体交代時の新Flight接続を最終schemaとしない。A4の物理日付連番・固定7枠は現在99.2と追加指示に従うCURRENT-ACCEPTEDであり、旧依頼本文の未決表現は最新実物・後続判断と照合済み。採番アルゴリズムや年度分割は未決を維持する。
+CURRENT-PROPOSALの機体交代時の新Flight接続を最終schemaとしない。固定7枠は現在99.2と最新実物に基づく到達点。2026-09-19のオーナー追補による機体個体別Spreadsheet、`YY.M.D`と同日次空き連番、交代時の保存先切替はCURRENT-ACCEPTEDとして[35c §3](architecture/operation-recording/35c_a4-operation-record.md#3-その後の運用判断による現在ベースライン)へ記録した。高度な同時競合対策の意図的非採用を未解決の必須対策としない。場所変更の厳密条件・柔軟な1飛行との境界・最終schema、年度／長期分割、複製・通常再送の詳細は各正本のPENDINGを維持する。前回のA4印刷VERIFYは変更しない。

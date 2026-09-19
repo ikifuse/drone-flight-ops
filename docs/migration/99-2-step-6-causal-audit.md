@@ -1,6 +1,8 @@
 # 99.2再移植 Step 6 — 通常運航・A4・点検整備・Drive責任の監査
 
-最終更新: 2026-09-18
+最終更新: 2026-09-19
+
+§1〜§6は初回Step 6（完了commit `b1d5788`）時点の監査記録を保持する。2026-09-19の機体別保存・命名の補正と確認範囲は[§7](#7-step-6追補機体個体別保存と日付連番)。現在仕様はリンク先の正式正本を読む。
 
 ## 1. 対象と基準点
 
@@ -160,3 +162,57 @@ ADR-0020〜0022を**Proposed**で新設。0019までの現ブランチと、旧m
 - main／origin/mainは開始値を保持。push先は作業ブランチのみ。commit SHA・remote一致・最終working tree状態はcommit／push後にチャットで報告し、その後は停止する。
 
 これは文書移管・構造検査の完了であり、未確定schema、長期運用、実機・印刷・保存実装の受入完了ではない。既存PENDING／WARNを独自解決していない。
+
+## 7. Step 6追補：機体個体別保存と日付連番
+
+### 7.1 基準と証拠の区別
+
+開始HEADは`b1d57880aa7f6438b1d2683372f193d9b99f3dfd`、作業ブランチは`redo/99-2-causal-migration`、開始working treeはclean。対象はStep 6のA4保存先・命名・特殊競合の因果のみ。§7以降の新規移植、コード・C1実装、Drive操作、99.2原本変更は行わない。mainの開始値は§1と同じ。
+
+| 証拠・判断 | 確認範囲と出典 |
+|---|---|
+| オーナーの2026-09-19追補指示 | 04の機体個体別フォルダー／Spreadsheetを実物確認結果として提示。EVIDENCE/EXAMPLEはオーナーの報告であり、今回エージェントがDriveを直接再取得した事実とはしない |
+| 同指示で到達した判断 | 機体別保存、2桁年の日付・次空き連番、交代時の保存先切替、高度な特殊競合対策の非採用と再検討条件。CURRENT-ACCEPTEDは今回の追加判断に由来し、元の99.2に既に書かれていたとは扱わない |
+| 現在原本・Git基準 | 99.2 §5と開始commitの35c等を直接照合。原本の`YYYY.M.D`と機体交代のまとめ方を過去の状態として追跡し、原本を変更せず正式Docsの因果へ補正を保持 |
+| 前回の最新A4直接確認 | §3・35c §2の記録を保持。レイアウト再調査は行わず、今回の機体別構造の確認報告と混同しない |
+| 既存正本・参照 | 35c／35d／37／18／ADR-0021／04／本監査と、docs内の命名・分割条件参照を照合。ADR-0021は同じ責任のProposedなので追補し、新ADRを作らない |
+| 過去エージェント履歴 | ctxは読取専用、取得失敗49件のため部分的。対象語「同じ機体 次の空き連番」「操縦者コード」は検索範囲で該当なし。今回の判断根拠はオーナー指示と現Docsであり、履歴の不存在を断定しない |
+
+### 7.2 詳細正本と状態の処置
+
+| 論点 | 詳細正本・処置 |
+|---|---|
+| 機体別実物→旧解釈の問題→個体境界を使う理由 | [35c §3.1](../architecture/operation-recording/35c_a4-operation-record.md#31-機体個体別の保存先を確認したことによる補正)。旧解釈はHISTORICAL、現在の境界はCURRENT-ACCEPTED |
+| 日付・次空き連番、機体交代、同一機体の追加A4 | [35c §3.2](../architecture/operation-recording/35c_a4-operation-record.md#32-機体内の日付と次空き連番)。操縦者コードや新ID体系を追加しない |
+| 競合の成立条件・稀とする判断・非採用・再検討 | [35c §3.3](../architecture/operation-recording/35c_a4-operation-record.md#33-特殊な同時競合を検討したうえで簡素な方式を選ぶ理由)。頻度はオーナーの運用判断であって実測値ではない。詳細を本監査へ複製しない |
+| 通常再送と新規A4採番の違い | [35d §3](../architecture/operation-recording/35d_operation-finalization-and-write-boundary.md#3-保存に到達できない場合と重複防止)。既存の保持・冪等性要件を維持。PENDINGを特殊競合向け高度機構の必須実装と読まない |
+| Drive責任・帳票生成との接続 | [37](../architecture/drive-structure/37_environment-storage-responsibilities.md)・[18](../architecture/18_reports.md)は要約と35c参照。七領域全体や3層Report Modelを再設計しない |
+| 残る未確定 | 場所の厳密な区切り・柔軟な1飛行との関係・最終schema、長期／年度分割、複製・通常再送等の詳細はPENDINGを保持。A4印刷VERIFYと対象外のPENDING／WARNは解消しない |
+
+Responsibility Checkでは、追加対象は既存A4保存・命名の主要責務と同じで、ライフサイクル・外部依存・セキュリティ境界・Phaseも増えないと判断した。新文書へ分割せず35cへ詳細を置き、ADRは重要判断の要約、37は全体配置、35dは保存・再送契約に留める。保守性・追加実装性は単一正本、堅牢性・障害復旧性は再送要件と再検討条件、セキュリティ・複数ユーザー／複数組織対応は既存環境・個体境界、検証可能性・監査性・可観測性は出典主体の区別と実際に観測された競合による再検討で確認した。監視基盤や新モジュールは追加しない。
+
+### 7.3 追補の変更ファイルと検査
+
+| 変更文書 | 追補の責任 |
+|---|---|
+| [35c](../architecture/operation-recording/35c_a4-operation-record.md) | 保存先・命名・競合非採用の詳細因果、旧解釈の履歴化 |
+| [35d](../architecture/operation-recording/35d_operation-finalization-and-write-boundary.md) | 通常再送と新規採番の境界・PENDINGの限定 |
+| [37](../architecture/drive-structure/37_environment-storage-responsibilities.md) | 04の保存境界と詳細正本への接続 |
+| [18](../architecture/18_reports.md) | 生成先と旧分割解釈の参照訂正 |
+| [ADR-0021](../decisions/ADR-0021-a4-record-layout-and-sheet-boundary.md) | 同一判断領域の追補。Proposedを維持 |
+| [04_open-questions](../04_open-questions.md) | 到達点と残るPENDINGの案内 |
+| [00_index](../00_index.md) | 追補の入口 |
+| [architecture README](../architecture/README.md) | 概念別正本の範囲 |
+| [operation-recording README](../architecture/operation-recording/README.md) | 保存・命名の詳細入口 |
+| [drive-structure README](../architecture/drive-structure/README.md) | 04追補への案内 |
+| [decisions README](../decisions/README.md) | ADR-0021追補の案内 |
+| 本監査 | 証拠主体・修正対応・確認範囲の索引 |
+| [migration README](README.md) | 初回完了点と追補への入口 |
+
+- 変更は上記既存13文書のみ、新規・削除0。差分を読み、A4保存・命名の補正とその参照・監査以外へ拡張していないことを確認した。
+- Markdown 119文書・141表・52コードブロック・相対リンク1,540件を検査し、参照先・アンカー・表列・閉じ忘れのエラー0。INDEXから119文書へ到達する。
+- 35cの旧帳票経緯・直接実物確認（§1・§2）と印刷VERIFY、初回Step 6監査本文（§1〜§6）を開始commitと比較して保持。最終schemaの35a、Step 1〜5、23開始ゲート、他ADRを含む変更一覧外の追跡ファイルは不変。
+- 99.2原本のSHA-256は`f31b4856ad4a35e643df46f17f257ef4d16be8484b67f0f10e4dc65ddc03f358`で開始時と一致。コード変更0、Drive操作・編集0、§7以降の追加移植0。
+- 公開予定13文書の秘密情報スキャナーはSAFE（findings 0、unknowns 0）。差分の文脈確認でも実名・実登録記号・非公開Drive IDを追加していない。commit直前にステージ内容の一致と公開対象を再検査する。
+
+commit／push後のSHA・remote一致・working tree状態はチャットで報告し、そこで停止する。
