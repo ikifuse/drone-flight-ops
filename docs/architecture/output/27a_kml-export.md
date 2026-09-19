@@ -1,15 +1,17 @@
 # 27a. KML生成・変換・出力プロファイル
 
-最終更新: 2026-09-15\
-状態: 設計確定（Phase C1 未着手。個別 `PENDING` は未決）\
-主要責務: DomainからのKML射影、ファイル単位・命名・プライバシー\
+最終更新: 2026-09-19\
+状態: 設計整合（Phase C1 未着手）。§1.1の単位・§1.2の運航実績フォルダ・§3.2・§4はHISTORICAL（旧案）で、現在の単位・生成契機・内容は[27e](27e_kml-generation-timing-and-content.md)。§1.2のXML構造・§2のGeometry変換・§5の命名は、99.2が具体表現を未確定とするためCURRENT-PROPOSAL。個別 `PENDING` は未決\
+主要責務: DomainからのKML射影（形式・Geometry変換・命名・共有プロファイル）\
 入口: [出力設計目次](README.md)
 
 ---
 
-## 1. 1 FlightPlan = 1 KML 原則とファイル構造
+## 1. ファイル構造と旧単位原則（「1 FlightPlan = 1 KML」はHISTORICAL）
 
 ### 1.1 単位原則
+
+**HISTORICAL（旧案）**: 以下の「1 FlightPlan = 1 KML」は、現在の「柔軟な運用上の1飛行につき1KML」（[27e §3](27e_kml-generation-timing-and-content.md#3-単位1飛行につき1kmlと階層)）へ置き換えられた。計画と1飛行の対応はPENDING-S7C-KML-UNIT-MAPPING（27e）。以下は旧案の記録として保持する。
 
 - **基本単位**: **1 FlightPlan = 1 KML ファイル**
 - KMLのIdentityはFlightPlan単位です。1計画に複数の通報リビジョンが存在し得るため、「1通報リビジョン＝1計画」とは扱いません。過去の通報証跡はDipsSubmissionで保持します。
@@ -57,7 +59,7 @@
       </Placemark>
     </Folder>
 
-    <!-- 3. 現場運航実績フォルダ (Mission完了時追加) -->
+    <!-- 3. 現場運航実績フォルダ (HISTORICAL旧案: 現在は含めない。27e §5) -->
     <Folder>
       <name>Operational Execution</name>
       <Placemark>
@@ -86,7 +88,7 @@
 
 ## 2. FlightAreaGeometry から KML への変換仕様
 
-アプリ内部の中立Domainモデル `FlightAreaGeometry`（[17_map-and-airspace.md](../17_map-and-airspace.md)）を正本とし、`KmlExporter` がKML形式へ射影変換します。KML自体をDomain Modelに固定してはなりません。
+アプリ内部の中立Domainモデル `FlightAreaGeometry`（[17_map-and-airspace.md](../17_map-and-airspace.md)）を正本とし、`KmlExporter` がKML形式へ射影変換します。KML自体をDomain Modelに固定してはなりません。円・線＋幅の具体的なKML表現は99.2が未確定とし、以下の変換規則はCURRENT-PROPOSALとして保持する（実機での描画再現性は[27c](27c_google-mymaps-workflow.md)のPENDING-MYMAPS-03）。
 
 ### 2.1 幾何形状別の変換ルール
 
@@ -107,7 +109,7 @@
 
 ## 3. KML射影の入力候補となる計画情報と運航実績
 
-以下はDomainから参照できる属性カタログです。全項目を無条件出力する指示ではありません。実際のXML・name・description・ExtendedData・ファイル名は第6節のプロファイルにより選別し、既定の `SHARE_SAFE` を適用します。
+KMLの内容の意味の範囲は、DIPSへ通報する内容と共通Geometryである（[27e §5](27e_kml-generation-timing-and-content.md#5-内容の確定境界)）。以下はDomainから参照できる、形式上の属性カタログです。全項目を無条件出力する指示ではありません。実際のXML・name・description・ExtendedData・ファイル名は第6節のプロファイルにより選別し、既定の `SHARE_SAFE` を適用します。
 
 ### 3.1 計画確定時（Plan Snapshot）
 
@@ -130,6 +132,8 @@
 
 ### 3.2 運航完了時（Operational Execution Snapshot）
 
+**HISTORICAL（旧案）**: 現在はKMLへ運航実績を追記しない（[27e §4・§5](27e_kml-generation-timing-and-content.md#4-生成契機保存未同期保持再送)）。以下は旧案の記録として保持する。
+
 運航完了時には、上記計画情報に加えて以下の実績情報が同一KMLへ追記されます：
 - **飛行前点検（Preflight Inspection）**: 実施日時、点検実施者、判定結果（合格/不合格）、特記不具合
 - **個別フライト実績（Flights）**: 各フライトの離陸日時、着陸日時、実飛行時間（分）、使用機体（機体交代対応）、使用バッテリー個体、操縦者、飛行所感・不具合記録
@@ -142,6 +146,8 @@
 ---
 
 ## 4. KMLライフサイクル（1計画1ファイルの更新モデル）
+
+**HISTORICAL（旧案）**: 初回生成後にMission完了で最終KMLへ再生成・更新するモデルは採らない。現在は飛行計画の通報時に生成・保存し、保存できなかったKMLは未同期として保持して、飛行後点検後の最後の送信時にも再送する（[27e §4](27e_kml-generation-timing-and-content.md#4-生成契機保存未同期保持再送)）。以下は旧案の記録として保持する。
 
 運航の進行に伴い、1つのFlightPlanに対応するKMLは以下のライフサイクルを辿ります。
 
@@ -179,7 +185,9 @@
 
 ## 5. ファイル名規則（Filename Policy）
 
-Google Drive上で人間が日付順に整列・検索しやすい命名規則を採用します。
+**CURRENT-PROPOSAL**: 99.2は最終的なファイル名を未確定とし、Driveの操縦者・年度階層のサンプルも構成確認用とする（[27e §3](27e_kml-generation-timing-and-content.md#3-単位1飛行につき1kmlと階層)）。以下は提案であり、確定ではない。
+
+Google Drive上で人間が日付順に整列・検索しやすい命名規則を提案します。
 
 ### 5.1 推奨形式
 
@@ -218,4 +226,4 @@ KMLは Google My Maps 等を通じて第三者や社外関係者へ共有され�
 
 - `SHARE_SAFE` の出力内容欄を許可対象とし、元のカタログにある氏名、連絡先、機体登録記号、DIPS計画番号、保険・許可の詳細、内部メモを無条件で流出させません。
 - `MINIMAL_MAP` はファイル名を含む全出力から内部ID・機体個体番号・個人情報を除外します。第5節の通常ファイル名はプロファイルによる除外より優先しません。
-- 共有前に対象プロファイルと出力内容を確認できるようにし、`PRIVATE_FULL` への変更を暗黙に行いません。認証情報はどのプロファイルにも含めません。全般の秘密情報境界は [16 Security](../16_security.md) が正本です。
+- 共有前に対象プロファイルと出力内容を確認できるようにし、`PRIVATE_FULL` への変更を暗黙に行いません。認証情報はどのプロファイルにも含めません。全般の秘密情報境界は [16 Security](../16_security.md) が正本です。「提出項目を同じ意味内容としてKMLに保持する」（27e）との合成はPENDING-S7C-KML-SHARE-PROJECTION（[27e §5](27e_kml-generation-timing-and-content.md#5-内容の確定境界)）で、現時点では本節の安全側の制限を緩めない。

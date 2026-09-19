@@ -205,3 +205,15 @@ Step 7a節が挙げる未移植のうち、06の保存構造と、取消・重�
 | PENDING-S7B-FLIGHT-KEY / PENDING-S7B-CLEANUP-CONDITION / PENDING-S7B-DUPLICATE-ADJUST | [24b §5](architecture/dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md#5-未確定確認待ちと再検討条件)：06の結合キー、作業対象でなくなる正確な時点・条件、重複あり調整 |
 
 06の記録責任、人が見る作業台帳と内部の履歴・証跡の分離、取消・整理の意味はCURRENT-ACCEPTED（[24b](architecture/dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)、追補は[ADR-0022](decisions/ADR-0022-drive-responsibilities-and-human-records.md) Proposed）。既存のPENDING-S5-LIST-DETAIL、VERIFY-S5-LIST-EVIDENCE、PENDING-LEDGER-SNAPSHOT、PENDING-S6-DRIVE-PLACEMENTは解消していない。
+
+## Step 7cの未確定・検証先
+
+Step 7a節が挙げる未移植のうち、KMLの位置づけ・単位・生成契機・内容・再送は本節で扱った。詳細理由を本書へ複製せず、各正本へ進む。
+
+| ID | 詳細正本 |
+|---|---|
+| PENDING-S7C-KML-UNIT-MAPPING / PENDING-S7C-KML-SHARE-PROJECTION | [27e §6](architecture/output/27e_kml-generation-timing-and-content.md#6-未確定確認待ちと再検討条件)：意味上の1飛行と計画・改訂・複数日・複数機体・DIPS対象外の対応、共有時の秘匿投影との合成 |
+| PENDING-S7C-KML-DESTINATION | [27b §1.1](architecture/output/27b_google-drive-storage.md#11-保存先設定exportdestination)：利用者指定フォルダーの旧設定と、環境root下の07配置 |
+| PENDING-S7C-KML-FINAL-SEND | [35d §4](architecture/operation-recording/35d_operation-finalization-and-write-boundary.md#4-検証と残る範囲)：最後の送信での再送を最終保存契約の一部とするか、独立した再送とするか |
+
+KMLの生成契機（飛行計画の通報時）・内容（通報内容と共通Geometry、運航後情報を含めない）・単位（意味上の1飛行）・未同期の保持と最後の送信時の再送はCURRENT-ACCEPTED（[27e](architecture/output/27e_kml-generation-timing-and-content.md)、判断の要約は[ADR-0024](decisions/ADR-0024-kml-generated-at-plan-submission-from-report-content.md) Proposed）。旧「運航完了時に実績を追記して更新」「1 FlightPlan = 1 KML」はHISTORICAL。99.2が具体表現を未確定とするファイル名・XML構造・Geometry変換（27a）はCURRENT-PROPOSAL、既存のPENDING-MYMAPS-01〜06（27c）は解消していない。

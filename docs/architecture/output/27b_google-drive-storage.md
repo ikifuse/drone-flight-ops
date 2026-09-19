@@ -1,7 +1,7 @@
 # 27b. Google Drive保存
 
-最終更新: 2026-09-15\
-状態: 設計確定（Phase C1 未着手。個別 `PENDING` は未決）\
+最終更新: 2026-09-19\
+状態: 設計整合（Phase C1 未着手）。運航完了時の自動更新（旧案）はHISTORICAL、生成契機・再送の意味は[27e](27e_kml-generation-timing-and-content.md)。個別 `PENDING` は未決\
 主要責務: KML保存先設定、CloudFileStoragePort、非同期アップロードと更新方針\
 入口: [出力設計目次](README.md)
 
@@ -18,8 +18,8 @@ export interface ExportDestinationConfig {
   provider: 'GOOGLE_DRIVE';
   folder_id: string;               // Google Drive フォルダID
   folder_display_path: string;     // 表示用パス (例: "マイドライブ/ドローン運航記録/飛行計画KML")
-  auto_export_on_plan_locked: boolean; // 計画確定時に自動保存するか
-  auto_export_on_mission_complete: boolean; // 運航完了時に自動更新するか
+  auto_export_on_plan_locked: boolean; // 飛行計画を確定してDIPSへ通報する段階で生成・保存するか（27e §4）
+  auto_export_on_mission_complete: boolean; // HISTORICAL（旧案）: 運航完了時に自動更新。現在は採らない（27e §4）
   enabled: boolean;
 }
 ```
@@ -34,24 +34,26 @@ export interface ExportDestinationConfig {
 │  保存先フォルダ  : マイドライブ/ドローン関係/飛行計画KML    │
 │  [ 保存先フォルダを変更 ]                                    │
 │                                                             │
-│  [✓] 飛行計画確定時にKMLを自動出力・Driveへ保存             │
-│  [✓] 現場運航完了時に実績を含む最終KMLへ自動更新            │
+│  [✓] 飛行計画の通報時にKMLを自動出力・Driveへ保存           │
+│  [—] （旧案・廃止）運航完了時に実績を含む最終KMLへ更新      │
 │                                                             │
 │  ※Google Drive連携にはGoogleアカウントの認証が必要です。   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
+**PENDING-S7C-KML-DESTINATION**: 利用者が設定画面でフォルダーを指定する旧設定と、環境rootの下の07配置（[37](../drive-structure/37_environment-storage-responsibilities.md)・[34a](../presentation/34a_setup-and-environment-entry.md)）との関係は未確定。99.2は07配下の階層をサンプル（構成確認用）とし、保存先の確定方法を述べていない。旧設定を現在仕様とせず、root再発見とdrive.fileの方式（34a）に従って決める。
+
 ### 1.3 オフライン現場での非同期同期
 
 - 現場が完全圏外の場合でも、KMLファイルデータ自体はブラウザ内で即時生成可能です。
 - Google Driveへのアップロードジョブは、既存の [14_offline-and-sync.md](../14_offline-and-sync.md) に基づき `SyncQueue`（`target: 'google_drive_kml'`）へ投入されます。
-- 電波復帰時に実行環境が利用可能ならキューを再試行し、アプリ再開時にも再開します。モバイルOSによるアプリ停止中のバックグラウンド実行は保証しません。Google Driveの通信失敗が現場の運航記録・離着陸打刻を妨げることは絶対にありません。
+- 電波復帰時に実行環境が利用可能ならキューを再試行し、アプリ再開時にも再開します。モバイルOSによるアプリ停止中のバックグラウンド実行は保証しません。Google Driveの通信失敗が現場の運航記録・離着陸打刻を妨げることは絶対にありません。未同期KMLの再送の機会（通信復帰時と、飛行後点検後の最後の送信時）と、保存済みのKMLを重複して保存しない扱いは[27e §4](27e_kml-generation-timing-and-content.md#4-生成契機保存未同期保持再送)。
 
 ---
 
 ## 2. 更新・Revision方針と独立ステータス
 
-「1 FlightPlan＝1 KML」のIdentityは [27a KML](27a_kml-export.md) が定義します。Google Drive上で同一ファイルを更新するか、Revision付き別ファイル（`_rev2.kml`）として保存するかは、実装Phase前にStorage Policyとして決定します（`PENDING-MYMAPS-04` の再インポート挙動とも関連）。My Maps側の更新挙動とDriveのファイル保存方針は別の検証事項です。
+KMLの単位は[27e §3](27e_kml-generation-timing-and-content.md#3-単位1飛行につき1kmlと階層)（柔軟な運用上の1飛行につき1つ）が正本で、旧「1 FlightPlan＝1 KML」はHISTORICALです。KMLは運航実績で更新しないため、以下の更新／Revisionは、計画の改訂等でKMLを修正・再生成する場合に限ります（99.2は上書き・版管理を未確定とします）。Google Drive上で同一ファイルを更新するか、Revision付き別ファイル（`_rev2.kml`）として保存するかは、実装Phase前にStorage Policyとして決定します（`PENDING-MYMAPS-04` の再インポート挙動とも関連）。My Maps側の更新挙動とDriveのファイル保存方針は別の検証事項です。
 
 `CloudFileStoragePort` / `GoogleDriveAdapter` は生成済みファイルの保管を担当します。KML内容・命名・プロファイルは [27a](27a_kml-export.md)、認証・秘密情報は [16](../16_security.md)、SyncQueue型・再試行は [14](../14_offline-and-sync.md) が正本です。全体のポート図は [27 出力境界](27_output-boundaries.md) を参照します。
 

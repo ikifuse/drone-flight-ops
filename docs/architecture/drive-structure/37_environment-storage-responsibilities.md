@@ -23,7 +23,7 @@
 | 04 運航記録 | 機体個体別の運航記録Spreadsheetに正式実飛行・日常点検のA4を保存 | 個体別保存・日付連番の詳細因果は[35c §3](../operation-recording/35c_a4-operation-record.md#3-その後の運用判断による現在ベースライン)。テストと正式記録を区別 |
 | 05 点検整備記録 | 機体別の詳細点検整備 | [36](../maintenance-storage/36_aircraft-maintenance-records.md)。通常日常点検と分離 |
 | 06 DIPS関連 | 運用環境の飛行計画と通報台帳。人が見る作業台帳と内部の履歴・証跡を分ける | [24b](../dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)（記録責任・作業台帳・取消／整理の意味）と[24a](../dips-submission/24a_submission-and-sheets-ledger.md)（提出台帳schema）。個人専用の手続き履歴に閉じない |
-| 07 出力 PDF／KML | 必要時の派生出力 | [27](../output/27_output-boundaries.md)。04／06等の正式記録を代替しない |
+| 07 出力 PDF／KML | 派生出力（KMLは飛行計画の通報時、PDFは必要時） | [27](../output/27_output-boundaries.md)・[27e](../output/27e_kml-generation-timing-and-content.md)（KMLの生成契機・内容・単位）。04／06等の正式記録を代替しない |
 
 これは責任と発見性の現在ベースラインである。個別ファイル数、全表・列・索引、ACL・所有権移管の手順を一括確定する表ではない。環境別の保存先を選んでから現場操作へ入る画面の因果は[34a](../presentation/34a_setup-and-environment-entry.md)と[34b](../presentation/34b_home-and-navigation.md)にあり、本書へ複製しない。
 
@@ -45,7 +45,7 @@
 
 Locations／Clients／Projects／Permissions／InsurancePolicies等は、旧案から消す判断があったわけではない。どの責任領域へ置き、設定としてどう分類するかは**PENDING-S6-DRIVE-PLACEMENT**。01〜07の表に行がないことを、概念廃止の証拠にしない。
 
-07配下の操縦者・年・飛行等の旧サンプルは**EVIDENCE/EXAMPLE**に留める。KML生成契機・Identity・命名・My Maps・ログ突合は今回対象外で、既存[output](../output/README.md)へ参照するだけとする。説明のために空フォルダーを大量生成したり、実Driveを再編したりしない。
+07配下の操縦者・年・飛行等の旧サンプルは**EVIDENCE/EXAMPLE**に留める。KMLの生成契機・単位・内容は[27e](../output/27e_kml-generation-timing-and-content.md)、命名・My Maps・ログ突合は既存の[output](../output/README.md)へ参照するだけとする。説明のために空フォルダーを大量生成したり、実Driveを再編したりしない。
 
 **PENDING-S6-DRIVE-PLACEMENT**には具体的なschema／索引・更新責任の対応、未決領域のSpreadsheet配置、複数ユーザー・複数組織での所有とアクセスの物理契約も残る。到達済みの七責任、04の機体個体別保存と05の媒体を一般論で未決へ戻さない。04の長期／年度分割は35cのPENDINGを維持する。**VERIFY-S6-DRIVE-EVIDENCE**は01〜07全体・旧配置の再照合であり、前回の最新A4直接確認および今回のオーナーによる04確認報告を超える。
 

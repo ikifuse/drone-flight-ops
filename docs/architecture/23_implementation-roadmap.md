@@ -6,7 +6,7 @@
 
 ---
 
-**現在の停止位置**: C0受入確認・オーナーGO待ち。99.2再移植はStep 1（§0・§1）、Step 2（§2）、Step 3（§4と取得確認・点検整備Actorに直接必要な§6の部分）、Step 4（§7のDIPS API基盤・固定IP・通信境界のみ）、Step 5（§3と§7の正常受付後・共有リストに必要な限定部分）、Step 6（§5・§6残り・§10）、Step 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）、Step 7b（§7の06の記録責任・作業台帳・取消／リスト整理の境界）まで。C1前docs再編・本Stepの完了は後続コードの着手承認ではありません。以下§1.2の開始ゲートも適用します。
+**現在の停止位置**: C0受入確認・オーナーGO待ち。99.2再移植はStep 1（§0・§1）、Step 2（§2）、Step 3（§4と取得確認・点検整備Actorに直接必要な§6の部分）、Step 4（§7のDIPS API基盤・固定IP・通信境界のみ）、Step 5（§3と§7の正常受付後・共有リストに必要な限定部分）、Step 6（§5・§6残り・§10）、Step 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）、Step 7b（§7の06の記録責任・作業台帳・取消／リスト整理の境界）、Step 7c（KMLの位置づけ・単位・生成契機・内容・再送）まで。C1前docs再編・本Stepの完了は後続コードの着手承認ではありません。以下§1.2の開始ゲートも適用します。
 
 ## 1. 実装の基本方針（安全な段階的積み上げ）
 
@@ -66,6 +66,8 @@ Step 5では[presentation](presentation/README.md)へ§3と§7の正常受付後
 Step 7aでは[25e](dips-flight-plan/25e_common-source-and-submission-boundaries.md)と[26 §1.3](26_dips-web-ui-verification.md#13-証拠系列と回収範囲)へ、実画面の証拠系列・共通の源・Manual／API経路・DIPS対象外の因果を移した。C1の`FlightAreaGeometry`・`DipsSubmission`型はこの因果に接続するが、計画Draftの`geometry`と旧`geometry_snapshot`の統合（PENDING-C1-SCHEMA）、作図操作の未回収、`flyRoute`表現のVERIFY、DIPS対象外の定義（PENDING-S7A-NON-DIPS-SCOPE）は未確定であり、ゲートを通過したとも実装開始とも扱わない。
 
 Step 7bでは[24b](dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)へ、06の記録責任、人が見る作業台帳と内部の履歴・証跡の分離、取消・リスト整理の意味を移した。C4の外部台帳同期は、35dのPENDINGに加え、履歴・証跡と作業台帳の物理保持（PENDING-LEDGER-SNAPSHOT、PENDING-S5-LIST-DETAIL）、06の結合キー（PENDING-S7B-FLIGHT-KEY）が未確定であり、依存実装の着手条件を満たしたとは扱わない。
+
+Step 7cでは[27e](output/27e_kml-generation-timing-and-content.md)へ、KMLの位置づけ・単位・飛行計画通報時の生成・未同期の保持と最後の送信時の再送・内容の確定境界を移し、旧27a・27b・03・C8にあった運航実績追記モデルをHISTORICALにした。C8のKML実装は、単位と計画の対応（PENDING-S7C-KML-UNIT-MAPPING）、共有時の秘匿投影（PENDING-S7C-KML-SHARE-PROJECTION）、保存先の指定方法（PENDING-S7C-KML-DESTINATION）、最後の送信との契約（PENDING-S7C-KML-FINAL-SEND）が未確定であり、着手条件を満たしたとは扱わない。
 
 以下のC0〜C9は実装配分を保持し、C7のStep 4接続先指定も維持する。Step 6の通常運航・A4は[35a〜35d](operation-recording/README.md)、整備媒体は[36](maintenance-storage/README.md)、Drive責任は[37](drive-structure/README.md)。§7の残り・§8・§9全体・§11の再移植は未完了である。対象領域のゲートを通過する前に、列挙された型やシート方針をそのまま実装開始の許可として使わない。
 
@@ -139,8 +141,8 @@ Step 7bでは[24b](dips-submission/24b_dips-plan-records-and-worklist-lifecycle.
   - 国交省標準様式1（飛行記録）、様式2（日常点検記録）、様式3（点検整備記録）の個別PDF/CSV出力。
   - DIPS飛行計画台帳のエクスポート機能。
   - **KML Geo Export & Google Drive自動保存（詳細は [output README](output/README.md) 参照）**:
-    - `KmlExporter`: `FlightAreaGeometry`（Polygon, 近似Circle, Buffered Line）および計画属性・運航実績を「1 FlightPlan = 1 KML」形式で生成。
-    - `GoogleDriveAdapter`: 設定された保存先フォルダへKMLを自動保存（計画確定時・運航完了時更新）。オフライン時は `SyncQueue` 経由で電波復帰時に非同期アップロード。
+    - `KmlExporter`: `FlightAreaGeometry`（Polygon, 近似Circle, Buffered Line）とDIPSへ通報する内容を「1飛行につき1KML」で生成する（運航実績は含めない。[27e](output/27e_kml-generation-timing-and-content.md)）。生成の契機は飛行計画の通報確定で、KmlExporterとDrive保存の実装配分はC8のまま。
+    - `GoogleDriveAdapter`: KMLを飛行計画の通報時に保存する（保存先の指定方法は27bのPENDING）。保存できなかったKMLは未同期として保持し、`SyncQueue` 経由で通信復帰時と飛行後点検後の最後の送信時に再送する。
     - プライバシー保護プロファイル（`SHARE_SAFE` 既定による個人連絡先除外）。
   - 帳票発行時点の不変スナップショット保存（`ReportSnapshot`）。
 - **完了条件**: オフライン環境でもブラウザ内で必要項目を満たしたPDFが生成・保存でき、KMLがGoogle Driveへ自動保存（または圏外時キューイング）されGoogle My Mapsへの手動インポートにより視覚的確認ができること。DIPS通報履歴が監査用に出力できること。

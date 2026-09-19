@@ -1,7 +1,7 @@
 # 27. 出力・データ連携の境界
 
-最終更新: 2026-09-18\
-状態: 設計確定（Phase C1 未着手。個別 `PENDING` は未決）\
+最終更新: 2026-09-19\
+状態: 設計整合（Phase C1 未着手）。KMLの単位・生成契機・内容は[27e](27e_kml-generation-timing-and-content.md)。個別 `PENDING` は未決\
 主要責務: Sheets・帳票・KML・内部通信の役割分担、ポートと障害の独立性\
 入口: [出力設計目次](README.md)
 
@@ -28,7 +28,7 @@
 │ ・確定台帳権威 (原本)   │ │ ・法的提出・紙面保管    │ │ ・ユーザー向けGeo Export│
 │ ・長期保管・手動修正    │ │ ・A4縦 統合運航帳票     │ │ ・Google Drive自動保存  │
 │ ・複数機体/BAT累計計算  │ │ ・国交省様式1・2・3     │ │ ・Google My Mapsインポート│
-│ ・PDF生成元・検索・集計 │ │ ・人間向け印刷フォーマット│ │ ・1計画1KML・視覚的確認 │
+│ ・PDF生成元・検索・集計 │ │ ・人間向け印刷フォーマット│ │ ・1飛行1KML・視覚的確認 │
 │ ※原本はSheetsに帰属    │ │ ※KMLをPDF代替にしない  │ │ ※台帳原本ではない      │
 └─────────────────────────┘ └─────────────────────────┘ └─────────────────────────┘
                                                                    ▲
@@ -53,7 +53,7 @@
    - [18_reports.md](../18_reports.md)に基づく生成技術と、[35c](../operation-recording/35c_a4-operation-record.md)のA4実物・必要時PDF。A4はSheets標準印刷／PDFの経路も残す。国交省様式1・2・3別紙、地図付き飛行計画書とは区別する。
    - 航空局への提出、立ち入り検査時の提示、コンビニ・現地印刷、紙面保管用。KMLをPDFの代替にすることはできません。
 3. **【境界 C: KML】（ユーザー向け地図出力 - User-facing Geo Export）**:
-   - 飛行計画の空域形状および運航結果を地図として視覚的に確認・保管するための派生ファイル。
+   - 飛行計画の通報内容と共通Geometryを地図として視覚的に確認・保管するための派生ファイル（運航結果は含めない。[27e](27e_kml-generation-timing-and-content.md)）。
    - 利用者が Google My Maps や Google Earth へ取り込んで確認するための地理情報交換フォーマットであり、台帳原本ではありません。
 4. **【境界 D: DIPS API JSON】（DIPS API内部通信限定 - Internal DIPS API Transport）**:
    - 国交省 DIPS 2.0 飛行計画通報API（FPR）との通信時にのみ `ApiDipsAdapter` 内部で生成される内部電文。
@@ -114,6 +114,7 @@ KML生成およびDrive保存は、Domain層やSheets同期ロジックから完
 - **Sheets同期成功 ＋ KML生成/Drive保存失敗**: 正式な運航記録・法定台帳保存は「成功」として扱います。KML保存エラーは非ブロッキングな警告ログとして記録し、再試行キューに留めます。
 - **KML保存成功 ＋ Sheets同期失敗**: KMLがDriveに保存されても、台帳同期は `sync_pending` / `sync_failed` として追跡され、電波回復時に再同期されます。
 - 各出力系統は独立したステータス（`ledger_sync_status`, `drive_kml_export_status`）を保持します。
+- 未同期KMLの端末保持と、飛行後点検後の最後の送信時の再送の意味は[27e §4](27e_kml-generation-timing-and-content.md#4-生成契機保存未同期保持再送)。
 
 ---
 

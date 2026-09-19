@@ -1,6 +1,6 @@
 # 新アプリ（drone-flight-ops）統合要件定義書
 
-最終更新: 2026-09-18
+最終更新: 2026-09-19
 プロジェクト: `drone-flight-ops`
 目的: 現行自作アプリの強み（バッテリー個体管理・現場フロー）とワンエビneoの利便性（DIPS連携・地図機能）を統合した次世代システムの要件整理
 
@@ -276,11 +276,11 @@ Step 5の利用開始・画面入口は[34a 初回セットアップ](architectu
 - **4大出力・連携境界の確立**: 
   1. **Google Sheets**: 確定台帳（Ledger Authority、原本・長期保存・検索・修正・集計・PDF生成元）。
   2. **PDF**: 人間向け帳票（Human-readable Report、印刷・提出・保管・現場携行原本）。
-  3. **KML**: ユーザー向け地図出力（User-facing Geo Export、Google Drive保存、Google My Maps / Google Earthインポート、1計画1KML）。
+  3. **KML**: ユーザー向け地図出力（User-facing Geo Export、Google Drive保存、Google My Maps / Google Earthインポート、1飛行1KML）。
   4. **JSON**: DIPS API内部通信限定（Internal DIPS API Transport、Phase C7 Optional、ユーザー向けファイル出力・要求は一切行わない）。
-- **1計画1KML原則**: 1 FlightPlan = 1 KML ファイルを生成し、計画空域（Polygon、近似Circle、Buffered Line）、計画属性、および運航完了後の点検・飛行実績を集約。
-- **Google Drive自動保存**: 設定された保存先フォルダへKMLを自動保存（計画確定時および運航完了時更新）。オフライン時は電波復帰時に非同期同期。
-- **Google My Maps手動連携**: 利用者がGoogle My Mapsへ手動インポートして視覚的に確認・共有（1 FlightPlan = 1 My Map推奨）。
+- **1飛行1KML原則**: 柔軟な運用上の1飛行につき1つの独立したKMLを生成し、飛行範囲（Polygon、近似Circle、Buffered Line）とDIPSへ通報する内容を保持する。運航後の点検・飛行実績は含めない（詳細と旧案の位置づけは[27e](architecture/output/27e_kml-generation-timing-and-content.md)）。
+- **Google Drive自動保存**: 飛行計画の通報時にKMLを生成して保存する。保存できなかったKMLは未同期として保持し、通信復帰時と飛行後点検後の最後の送信時に再送する。保存先の指定方法は27bのPENDING。
+- **Google My Maps手動連携**: 利用者がGoogle My Mapsへ手動インポートして視覚的に確認・共有（1地図あたりの飛行数はMy Mapsの実機検証まで確定しない）。
 - **機体実飛行GPSログ重畳（将来拡張）**: 機体から取得したGPSログ（CSV/GPX）を同一My Map上へ重ね合わせて計画と実績を視覚対比できる拡張境界を確保（GPX等は入力側の候補であり、アプリの必須出力ではない）。
 - **プライバシー保護**: 個人連絡先（電話・メール・住所）を除外した共有用プロファイル（`SHARE_SAFE`）による安全なエクスポート。
 

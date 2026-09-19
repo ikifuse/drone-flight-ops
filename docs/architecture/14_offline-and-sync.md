@@ -174,6 +174,6 @@ DIPSへの通報（API通報または手動通報）にあたっては、「DIPS
 
 SyncQueueのジョブ型・送信先別再試行は本書が正本です。Data Authorityと手修正尊重は [11](11_data-authority.md)、DipsSubmission型は [12d](domain-model/12d_flight-plan-and-dips.md)、状態の定義・遷移は [13 状態管理目次](state-machines/README.md)、Manual手順は [24](dips-submission/24_manual-submission.md)、Sheets論理台帳は [24a](dips-submission/24a_submission-and-sheets-ledger.md) に従います。第3.4節は保存順序の説明であり、状態や確認条件を独立定義しません。
 
-KML保存ジョブは [27b](output/27b_google-drive-storage.md)、PDFのオフライン成立条件は [18](18_reports.md)、地図エンジンの選定留保は [ADR-0009](../decisions/ADR-0009-map-renderer-selection-deferred-to-c5.md) を参照します。アプリ停止中のバックグラウンド再試行は保証せず、実行可能時・アプリ再開時に未完了キューを再開します。
+KML保存ジョブは [27b](output/27b_google-drive-storage.md)（未同期KMLの保持と最後の送信時の再送の意味は[27e](output/27e_kml-generation-timing-and-content.md)）、PDFのオフライン成立条件は [18](18_reports.md)、地図エンジンの選定留保は [ADR-0009](../decisions/ADR-0009-map-renderer-selection-deferred-to-c5.md) を参照します。アプリ停止中のバックグラウンド再試行は保証せず、実行可能時・アプリ再開時に未完了キューを再開します。
 
 Step 6で§5の運航全体最終保存を[35d](operation-recording/35d_operation-finalization-and-write-boundary.md)へ移管した。同一行UPSERTと、物理A4・BAT履歴・機体累計全体の割当／部分完了／再送契約は別で、後者はPENDING。SyncQueueの型・既存retryを変更せず、§9全体の再移植は行っていない。

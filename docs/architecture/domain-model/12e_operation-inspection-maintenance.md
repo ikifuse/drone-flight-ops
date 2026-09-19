@@ -74,7 +74,7 @@ Step 6の意味・変遷の正本は[35a](../operation-recording/35a_flexible-fl
 
 ## 8. 実績と点検の未定義参照（PENDING-C1-SCHEMA）
 
-各Flightの実際の操縦者は、計画の `pilot_ids` やMissionの主操縦者と区別して追跡し、[帳票](../18_reports.md)・[KMLの実績表示](../output/27a_kml-export.md) が正しい人員を参照できなければならない。現属性一覧にはFlight単位の実操縦者参照が未定義であり、Mission.pilot_idを全飛行の実操縦者と無条件に代用しない。単独/複数交代を含む具体的FK・保持形式はC1 schema確定前のPENDINGとする。
+各Flightの実際の操縦者は、計画の `pilot_ids` やMissionの主操縦者と区別して追跡し、[帳票](../18_reports.md)が正しい人員を参照できなければならない（KMLは運航実績を含まないため対象外。[27e](../output/27e_kml-generation-timing-and-content.md)）。現属性一覧にはFlight単位の実操縦者参照が未定義であり、Mission.pilot_idを全飛行の実操縦者と無条件に代用しない。単独/複数交代を含む具体的FK・保持形式はC1 schema確定前のPENDINGとする。
 
 飛行前/飛行後点検は、その点検が属するMissionと実施日時を保持し、日常点検帳票や機体交代後の点検を実績へ結び付ける必要がある。現属性一覧に不足するMission参照・実施日時の具体的フィールド名と型・関連基数はC1 schema確定前に決定し、作成日時から実施日時を推測しない。
 

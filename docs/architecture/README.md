@@ -9,7 +9,7 @@
 
 ## 2. 現行設計の入口
 
-99.2再移植は[Step 1（§0・§1）](../migration/99-2-step-1-causal-audit.md)、[Step 2（§2）](../migration/99-2-step-2-causal-audit.md)、[Step 3（§4と§6の取得確認・点検整備Actor部分）](../migration/99-2-step-3-causal-audit.md)、[Step 4（§7のDIPS API基盤・固定IP・通信境界）](../migration/99-2-step-4-causal-audit.md)、[Step 5（§3と§7の正常受付後・共有リスト限定部分）](../migration/99-2-step-5-causal-audit.md)、[Step 6（§5・§6残り・§10）](../migration/99-2-step-6-causal-audit.md)、[Step 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）](../migration/99-2-step-7a-causal-audit.md)、[Step 7b（§7の06の記録責任・作業台帳・取消／リスト整理の境界）](../migration/99-2-step-7b-causal-audit.md)まで。人物領域はidentity-and-access、機材取得・共用・履歴の因果はasset-managementへ配置する。現在の目的・設計順序は[00_goal](../00_goal.md)、依存実装の開始条件は[23](23_implementation-roadmap.md)。他の詳細領域は基準設計を保持し、Step 4の経路・通信安全の因果はdips-infrastructure、秘密／認証候補は16。Step 5の画面因果はpresentationに配置する。Step 6の詳細因果はoperation-recording／maintenance-storage／drive-structureへ配置。Step 7aの因果は[25e](dips-flight-plan/25e_common-source-and-submission-boundaries.md)、実画面の証拠系列は[26](26_dips-web-ui-verification.md)へ配置し、判断はADR-0023（Proposed）に要約した。Step 7bの因果は[24b](dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)へ配置し、06の作業台帳と履歴・証跡の分離をADR-0022（Proposed）へ追補した。KML・§8・§9全体・§11は未移植。
+99.2再移植は[Step 1（§0・§1）](../migration/99-2-step-1-causal-audit.md)、[Step 2（§2）](../migration/99-2-step-2-causal-audit.md)、[Step 3（§4と§6の取得確認・点検整備Actor部分）](../migration/99-2-step-3-causal-audit.md)、[Step 4（§7のDIPS API基盤・固定IP・通信境界）](../migration/99-2-step-4-causal-audit.md)、[Step 5（§3と§7の正常受付後・共有リスト限定部分）](../migration/99-2-step-5-causal-audit.md)、[Step 6（§5・§6残り・§10）](../migration/99-2-step-6-causal-audit.md)、[Step 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）](../migration/99-2-step-7a-causal-audit.md)、[Step 7b（§7の06の記録責任・作業台帳・取消／リスト整理の境界）](../migration/99-2-step-7b-causal-audit.md)、[Step 7c（KMLの位置づけ・単位・生成契機・内容・再送）](../migration/99-2-step-7c-causal-audit.md)まで。人物領域はidentity-and-access、機材取得・共用・履歴の因果はasset-managementへ配置する。現在の目的・設計順序は[00_goal](../00_goal.md)、依存実装の開始条件は[23](23_implementation-roadmap.md)。他の詳細領域は基準設計を保持し、Step 4の経路・通信安全の因果はdips-infrastructure、秘密／認証候補は16。Step 5の画面因果はpresentationに配置する。Step 6の詳細因果はoperation-recording／maintenance-storage／drive-structureへ配置。Step 7aの因果は[25e](dips-flight-plan/25e_common-source-and-submission-boundaries.md)、実画面の証拠系列は[26](26_dips-web-ui-verification.md)へ配置し、判断はADR-0023（Proposed）に要約した。Step 7bの因果は[24b](dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)へ配置し、06の作業台帳と履歴・証跡の分離をADR-0022（Proposed）へ追補した。Step 7cの因果は[27e](output/27e_kml-generation-timing-and-content.md)へ配置し、判断をADR-0024（Proposed）に要約した。PDF・履歴出力・§9全体・§11は未移植。
 
 | 入口 / 文書 | 主責務・読む場面 |
 |---|---|
@@ -24,7 +24,7 @@
 | [state-machines README](state-machines/README.md) | Operation FSM / DIPS FSM / 法令・安全総合評価。C2/C6/C7の独立状態管理 |
 | [dips-submission README](dips-submission/README.md) | Manual通報業務と独立Sheets台帳、06の記録責任と作業台帳（24b）。C4/C6の境界 |
 | [dips-flight-plan README](dips-flight-plan/README.md) | 公式88項目、Manual Web UI、C7 payload、要件エンジンの責務分離、共通の源とManual／API・DIPS対象外の境界の因果（25e） |
-| [output README](output/README.md) | JSON/KML/Sheets/PDF境界、KML生成、Drive保存、My Maps操作、将来機体ログ |
+| [output README](output/README.md) | JSON/KML/Sheets/PDF境界、KML生成、KMLの生成契機・内容・単位（27e）、Drive保存、My Maps操作、将来機体ログ |
 | [10_system-boundaries](10_system-boundaries.md) | システム間責務・障害境界・将来ネイティブ拡張ポート |
 | [11_data-authority](11_data-authority.md) | Model Dのライフサイクル別権威・確定台帳・手修正保護 |
 | [14_offline-and-sync](14_offline-and-sync.md) | オフライン成立条件・Storage保護・SyncQueue・再試行 |
@@ -90,7 +90,8 @@
 | 06の記録責任・人が見る作業台帳と内部の履歴・証跡の分離・取消と作業リスト整理の意味 | [24b](dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md) | 履歴schemaは24a、画面は34c／34d、取消の状態は13b。判断の追補はADR-0022 |
 | DIPS API JSON | [25c](dips-flight-plan/25c_api-payload-mapping.md) | 通信Adapterは15、27は内部transportという境界のみ |
 | 出力・復旧の形式境界 | [27](output/27_output-boundaries.md) | ADR-0008は決定理由、全量restoreはPENDING |
-| KML | [27a](output/27a_kml-export.md) | Drive/My Mapsは保存・利用のみ |
+| KMLの形式・Geometry変換・命名・共有プロファイル | [27a](output/27a_kml-export.md) | 生成契機・内容・単位は27e、Drive/My Mapsは保存・利用のみ |
+| KMLの位置づけ・単位・生成契機・未同期の保持と最後の送信時の再送・内容の確定境界 | [27e](output/27e_kml-generation-timing-and-content.md) | 形式は27a、保存は27b、キューは14、最後の送信は35d。判断の要約はADR-0024 |
 | KML Drive Storage | [27b](output/27b_google-drive-storage.md) | 14はキュー共通契約、KML生成とは別 |
 | My Maps | [27c](output/27c_google-mymaps-workflow.md) | 実アカウントの表示検証はPENDING |
 | Aircraft flight-log import | [27d](output/27d_aircraft-flight-log-import.md) | 将来入力境界、Flight実績の自動確定ではない |
