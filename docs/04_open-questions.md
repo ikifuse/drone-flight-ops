@@ -165,6 +165,7 @@
 | VERIFY-S5-SETUP-EVIDENCE / GOOGLE-CONTRACT | 34a：旧資料・実Driveとの対応、Google認証・認可・scopeの実装時確認 |
 | PENDING-S5-HOME-DETAIL | [34b](architecture/presentation/34b_home-and-navigation.md)：設定管理分類、配置・権限／offline表現 |
 | PENDING-S5-LIST-DETAIL / MANUAL-LIST、VERIFY-S5-LIST-EVIDENCE | [34c](architecture/presentation/34c_shared-flight-worklist.md)：絞り込み方向・共有反映・cache・Manual接続、1枚作業台帳の確認 |
+| PENDING-S5-LIST-EXTERNAL-DIPS / LIST-CONCURRENT-START | 34c §5：旧mainが起案した論点（99.2に記述なし）。アプリ外で作られたDIPS計画の扱い、同一計画への現場の二重着手。2026-09-19のGit本線の整理で引き継いだ（[記録](migration/99-2-git-mainline-cutover.md)） |
 | PENDING-S5-ACCEPTED-UI / VERIFY-S5-RESPONSE-EVIDENCE | [34d](architecture/presentation/34d_dips-accepted-and-plan-content.md)：通常画面の残る詳細、原本が参照した正常応答資料の照合 |
 
 前回環境の初期選択、drive.file、場所／機体／BATの選択時登録、リスト絞り込みは各正本のCURRENT-PROPOSAL。4入口やAPI正常受付時の掲載はCURRENT-ACCEPTEDであり、上記の未確定と混同しない。Step 1〜4のPENDING／WARN、DIPS認証VERIFYを解消したとは扱わない。

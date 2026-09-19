@@ -103,7 +103,7 @@
 | [ADR-0026](ADR-0026-shared-source-confirmation-and-timing-separation.md) | 共有データの正本とcache、正本確認、確定処理の三時点への分離 | **提案中（Proposed）** | 未承認（記録2026-09-19） | 0002／0003のClarifies。重要な時点で正本を確認し、確定処理を計画確定・逐次保存・最終送信に分ける。詳細は38a／38b |
 | [ADR-0027](ADR-0027-storage-ownership-and-cost-boundary.md) | 各環境のDriveを保存先とし、中央ストレージへ集約せず、従量課金を必要機能に限定 | **提案中（Proposed）** | 未承認（記録2026-09-19） | 0001／0002／0018のClarifies。保存の所有と費用の境界。詳細は37 §6 |
 
-ADR-0010〜0014は比較用main `6344d7a`にProposedとして存在する。本ブランチはその作成前の`ea73d08`から再移植しており、旧Step成果をコピーしないため収録しない。番号を再利用せずStep 1で0015、Step 2で0016、Step 3で0017、Step 4で0018、Step 5で0019、Step 6で0020〜0022、Step 7aで0023、Step 7cで0024、Step 7dで0025、Step 7eで0026・0027を新設した。mainの0010〜0014をAcceptedへ変更していない。
+ADR-0010〜0014は整理前の旧main（`6344d7a`。バックアップ`archive/main-before-99-2-redo-20260919`／タグ`backup/main-6344d7a-20260919`）にProposedとして存在する。本線はその作成前の`ea73d08`から再移植しており、旧Step成果をコピーしないため収録しない（対応関係は[Git本線の整理](../migration/99-2-git-mainline-cutover.md)）。番号を再利用せずStep 1で0015、Step 2で0016、Step 3で0017、Step 4で0018、Step 5で0019、Step 6で0020〜0022、Step 7aで0023、Step 7cで0024、Step 7dで0025、Step 7eで0026・0027を新設した。旧mainの0010〜0014をAcceptedへ変更していない。
 
 CURRENT-ACCEPTEDは現在の設計ベースラインを表し、ADRの承認ではない。[7状態の正本](../guidelines/03_design-evidence-and-causality.md#3-状態ラベルと由来)に従う。0015がProposedであることを理由に、99.2 §0・§1で到達した設計方法を未決へ戻さない。
 

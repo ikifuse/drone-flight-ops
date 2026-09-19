@@ -55,5 +55,7 @@
 
 - **PENDING-S5-LIST-DETAIL**: UI候補のフィルタ・初期値・件数表示、具体的な作業リストの物理保持・cache・共有反映。既存24aの履歴列をそのままリストschemaにしたり、別Spreadsheetの新設を決めたりしない。cache・正本確認の方針は[38a](../sync-and-cache/38a_shared-source-and-device-cache.md)。
 - **PENDING-S5-MANUAL-LIST**: API正常受付の条件と、番号なしの目視照合も認める既存Manual確認からリストへ接続する詳細との照合。今回のAPI通常系からManualへ計画ID必須を機械適用しない。[24](../dips-submission/24_manual-submission.md)と[25b](../dips-flight-plan/25b_manual-web-mapping.md)の第一級Manualを維持し、別の完成フローを推測しない。
+- **PENDING-S5-LIST-EXTERNAL-DIPS**（旧mainが起案した論点。99.2に記述はない）: アプリを使わずDIPS Webで直接作成・通報された計画は、共有飛行リストへ自動では現れない可能性がある。取り込む機能を持つか、番号なしの目視照合を認めるManual確認（PENDING-S5-MANUAL-LIST）とどう関係づけるかは決めていない。
+- **PENDING-S5-LIST-CONCURRENT-START**（同上）: 同じ計画を複数の人が同時に開き、飛行前点検を始めようとした場合の現場での扱い（警告の要否と表示）。決めていない。A4の採番に排他制御を戻す根拠にはしない（[35c §3.3](../operation-recording/35c_a4-operation-record.md#33-特殊な同時競合を検討したうえで簡素な方式を選ぶ理由)）。
 - **後続範囲**: 重複調整、日時等の変更・再通報、取消、予定日時経過・中止・完了時のリスト／cache整理。原本の正確な自動整理時点・条件は未確定だが、作業リストを履歴DBとしない意味は到達済み。本Stepではこれらの詳細移植を行わない。後続のStep 7bで、取消・整理の意味と06の記録責任・作業台帳との関係を[24b](../dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)へ配置した。正確な時点・条件と重複あり調整は未確定のまま。
 - **VERIFY-S5-LIST-EVIDENCE**: 原本が挙げる実Driveの1枚作業台帳、旧画面資料と表示5系統との対応。今回は再操作していない。通信成否不明の因果は[33b](../dips-infrastructure/33b_api-availability-and-retry-boundaries.md)を参照し、本書へ複写しない。

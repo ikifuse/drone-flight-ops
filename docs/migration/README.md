@@ -17,6 +17,9 @@
 | [99.2 再移植 Step 7c](99-2-step-7c-causal-audit.md) | 48435d9から§7・§8・§9のKMLの位置づけ・単位・生成契機・内容・未同期の保持と再送のみ（`claude/99-2-continuation`）。完了commit 99b47b1。正式設計はoutputの27e、判断はADR-0024（Proposed）。PDF・履歴出力・§9のcache等・§11は対象外 |
 | [99.2 再移植 Step 7d](99-2-step-7d-causal-audit.md) | 99b47b1から§8のPDFの役割分離・生成方針・地図付きPDFと、飛行履歴・出力の画面のみ（`claude/99-2-continuation`）。完了commit 41d0dd4。正式設計はoutputの27fとpresentationの34e、判断はADR-0025（Proposed）。§9のcache等・§11は対象外 |
 | [99.2 再移植 Step 7e](99-2-step-7e-causal-audit.md) | 41d0dd4から§9の正本・端末cache・正本確認・確定／保存／外部反映の時点分離・費用の境界と未確定のみ（`claude/99-2-continuation`）。完了commit 15471f8。正式設計はsync-and-cacheの38a・38bと37 §6、判断はADR-0026・0027（Proposed）。§11は対象外 |
-| [99.2 再移植 Step 8](99-2-step-8-diff-audit.md) | 15471f8から§11の差分監査のみ（`claude/99-2-continuation`）。現状差分8項目・旧案の残存・回収12項目・原本の行の使用状況を対照し、00_goalの旧記述を訂正。新しい設計判断・ADRなし。完了commitはGit履歴。PENDING／VERIFYの解決ではない |
+| [99.2 再移植 Step 8](99-2-step-8-diff-audit.md) | 15471f8から§11の差分監査のみ（`claude/99-2-continuation`）。現状差分8項目・旧案の残存・回収12項目・原本の行の使用状況を対照し、00_goalの旧記述を訂正。新しい設計判断・ADRなし。完了commit 24c3e63。PENDING／VERIFYの解決ではない |
+| [Git本線の整理](99-2-git-mainline-cutover.md) | 24c3e63時点で旧main（`6344d7a`）と現在の本線を内容・履歴の両面で比較し、`main`を99.2再移植の本線へ整理した記録（2026-09-19）。旧mainのバックアップと復旧方法を含む。設計仕様の追加正本ではない |
 
-99.2全文や旧Step 1〜8の移植結果をコピーしない。mainの旧成果は比較証拠として保存し、このブランチの移植元にはしない。
+99.2全文や旧Step 1〜8の移植結果をコピーしない。旧main（整理前の`6344d7a`）の成果は比較証拠として保存し、このブランチの移植元にはしない。
+
+各監査記録の「main」「比較用main／origin/main（`6344d7a…`）」は、2026-09-19の[Git本線の整理](99-2-git-mainline-cutover.md)前の旧mainを指す。当時の記録として書き換えていない。
