@@ -97,6 +97,7 @@
 | KMLの位置づけ・単位・生成契機・未同期の保持と最後の送信時の再送・内容の確定境界 | [27e](output/27e_kml-generation-timing-and-content.md) | 形式は27a、保存は27b、キューは14、最後の送信は35d。判断の要約はADR-0024 |
 | 派生PDF（A4運航記録PDF・地図付きPDF）の役割分離・必要な時だけ生成する方針・地図付きPDFの配置の方向 | [27f](output/27f_derived-pdf-roles-and-map-pdf.md) | A4の実物・生成単位は35c、生成技術・発行記録は18。判断の要約はADR-0025 |
 | 飛行履歴・出力の画面（検索・選択・出力への導線） | [34e](presentation/34e_history-and-output.md) | 入口は34b、出力の内容・生成契機は27e／27f、A4は35c |
+| 画面の並びと画面間の行き先の俯瞰、設計の到達範囲、未設計領域 | [34f](presentation/34f_screen-map-and-design-coverage.md) | 各画面の中身と遷移の正本は各画面仕様（34a〜34e・35b）。食い違えば各画面仕様が優先 |
 | KML Drive Storage | [27b](output/27b_google-drive-storage.md) | 14はキュー共通契約、KML生成とは別 |
 | My Maps | [27c](output/27c_google-mymaps-workflow.md) | 実アカウントの表示検証はPENDING |
 | Aircraft flight-log import | [27d](output/27d_aircraft-flight-log-import.md) | 将来入力境界、Flight実績の自動確定ではない |

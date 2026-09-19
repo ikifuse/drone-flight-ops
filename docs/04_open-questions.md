@@ -246,3 +246,17 @@ Step 7a節が挙げる未移植のうち、§9の正本・端末cache・正本�
 §11の差分監査を[Step 8監査](migration/99-2-step-8-diff-audit.md)で行った。原本の現状差分8項目の対照、旧案（Workers前提・KML運航実績追記・KML属性未確定・自動ページネーション・「設計確定」表記）の残存、回収した12項目の所在、原本の全行の使用状況を確かめ、00_goalの旧記述を訂正した。新しい未確定は追加せず、既存のPENDING／VERIFYを解決していない。
 
 残る未確定の定義は各正本にあり、所在の索引は[Step 8監査 §9](migration/99-2-step-8-diff-audit.md#9-残る未確定と着手前の照合の索引)。C1の開始は、本書 §3のPENDING-C0-ACCEPTANCE（C0受入確認とオーナーGO）を待つ。該当のC1型・schemaを固定する前に、PENDING-DOMAIN-SEMANTIC-KEYS・PENDING-C1-SCHEMAと、対象領域のPENDINGを照合する（[23 §1.2](architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)）。
+
+## 設計検討フェーズの未設計領域
+
+実装凍結中の設計検討で、コードを書かなくても決められる領域を[34f](architecture/presentation/34f_screen-map-and-design-coverage.md)で棚卸しした。ここでは所在だけを示し、定義は34f §4に置く。
+
+| ID | 領域 |
+|---|---|
+| PENDING-D-SETTINGS-SCREENS | 各種設定・管理の画面体系（人員・機体・BAT・場所・プリセット・環境） |
+| PENDING-D-BAT-LEDGER | 多数の機体・BATの共有運用、BAT台帳の表示、状態と履歴 |
+| PENDING-D-HUMAN-OUTPUT | KMLの内容を人が閲覧・印刷するための復元と構成（地図付きPDF・印刷物） |
+| PENDING-D-NEW-FLIGHT-SCREENS | 新規飛行の入力から通報内容の確認までの共通の画面の流れ、飛行範囲の作成画面 |
+| PENDING-D-STATUS-DISPLAY | オフライン・未同期・エラー・保存・確定・取消・戻るの共通の見せ方と操作 |
+
+進める順序の案は34f §5（NEW-PROPOSAL）。既存のPENDINGを解決したものではない。

@@ -11,6 +11,7 @@
 | [34c 共有飛行リスト](34c_shared-flight-worklist.md) | 軽量作業リスト、カード5系統、絞り込み方向、通報内容への直接導線 |
 | [34d DIPS正常受付後・通報内容](34d_dips-accepted-and-plan-content.md) | 正式掲載契機、後で飛行する、重複なし通常画面の主操作 |
 | [34e 飛行履歴・出力](34e_history-and-output.md) | 過去の飛行の検索・選択、必要な出力（KML・PDF）への導線、出力選択方式の位置づけ |
+| [34f 画面体系と遷移の俯瞰](34f_screen-map-and-design-coverage.md) | ホームから先の画面の並びと行き先、各画面の設計の到達範囲、未設計領域（設計検討フェーズの入口） |
 
 [architecture README](../README.md) → 本書 → 30の規約と対象画面の正本の順に読む。個別画面の仕様は担当領域の正本に置き、10項目の規約本文を複製しない。既存の[DIPS手動画面](../dips-flight-plan/25b_manual-web-mapping.md)も個別仕様の正本を維持する。
 

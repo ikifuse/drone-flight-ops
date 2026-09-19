@@ -1,0 +1,79 @@
+# 34f. 画面体系と遷移の俯瞰・設計の到達範囲
+
+最終更新: 2026-09-19\
+状態: 俯瞰の索引（既存の各画面仕様を並べたもの）。新しい画面仕様・業務ルールは決めない。未設計領域の`PENDING`と、進め方の`NEW-PROPOSAL`を含む\
+主責務: アプリ全体の画面の並びと画面間の行き先、各画面の設計がどこまで進んでいるか、まだ設計されていない領域。各画面の中身と、画面ごとの遷移の正本は各画面仕様（項目6）\
+入口: [Presentation設計の入口](README.md)
+
+## 1. 本書の位置づけ
+
+「ホームの次にどの画面へ進むのか」を一か所で追えるようにするための俯瞰。各画面の表示・操作・保存の詳細は、[30の10項目規約](30_screen-specification-standard.md)に沿った各画面仕様が正本で、本書は複写しない。行き先が本書と各画面仕様で食い違う場合は、各画面仕様を正とし、本書を直す。画面が増えたときは、先に各画面仕様、次に本書の順で更新する。
+
+## 2. 画面の遷移（既存の正本から並べたもの）
+
+```mermaid
+flowchart TD
+  FIRST["初回：環境の作成か参加"] --> HOME
+  START["通常の起動"] --> ENV["環境の選択"] --> HOME["ホーム（4入口）"]
+  HOME --> NEW["新規飛行"]
+  HOME --> LIST["飛行リスト"]
+  HOME --> HIST["飛行履歴・出力"]
+  HOME --> SET["各種設定・管理（未設計）"]
+  NEW --> PLAN["計画入力 → 飛行範囲の作成か選択 → 通報内容の確認"]
+  PLAN --> SEND["DIPS通報（API送信か、Manual転記と確認）"]
+  SEND -->|"API経路で正常受付・重複なし"| ACC["正常受付画面"]
+  ACC -->|"飛行前点検へ"| PRE
+  ACC -->|"後で飛行する"| HOME
+  LIST -->|"カードを選ぶ"| CONTENT["DIPS通報内容"]
+  CONTENT -->|"飛行前点検へ"| PRE["飛行前点検"]
+  CONTENT -->|"飛行中止／削除"| CANCEL["取消（詳細は後続）"]
+  PRE --> STBY["離陸待機"] --> FLY["飛行中"] --> LAND["着陸後入力"]
+  LAND -->|"続行"| STBY
+  LAND -->|"BAT交換"| BAT["BAT交換"] --> STBY
+  LAND -->|"機体交代"| SWITCH["機体交代"]
+  SWITCH -->|"未点検の機体"| PRE
+  SWITCH -->|"点検済みの機体"| STBY
+  LAND -->|"終了"| POST["飛行後点検"] --> FINAL["最終送信・保存"]
+  FINAL --> AFTER["保存後の戻り先（未確定）"]
+  HIST --> DETAIL["飛行の詳細"] --> OUT["出力：KML／A4運航記録PDF／地図付きPDF"]
+```
+
+図の各行き先の根拠は§3の正本。Manualで通報した計画が飛行リストへ入る条件は、API経路と同じとは決まっていない（PENDING-S5-MANUAL-LIST、[34c §5](34c_shared-flight-worklist.md#5-未確定と適用限界)）。図の「離陸」と「着陸」は、それぞれ離陸待機・飛行中の画面内の打刻で、独立した画面ではない（[35b §2](../operation-recording/35b_normal-operation-and-final-save.md#2-現在の論理画面順)）。
+
+## 3. 画面ごとの到達範囲
+
+| 画面・領域 | 設計の状態 | 正本 |
+|---|---|---|
+| 初回の環境作成／参加 | 10項目あり。必須登録範囲などの詳細はPENDING | [34a §4](34a_setup-and-environment-entry.md#4-初回セットアップ画面の10項目) |
+| 通常起動・環境の選択 | 10項目あり。専用画面かホーム内かはPENDING | [34a §5](34a_setup-and-environment-entry.md#5-通常起動と環境選択の10項目) |
+| ホーム | 4入口の役割まで。10項目の画面仕様はない | [34b](34b_home-and-navigation.md) |
+| 新規飛行（計画入力〜通報内容の確認） | Manual入力支援の画面とコピー導線は個別仕様がある（10項目の形式ではない）。飛行範囲の作成は機能の一覧まで。Manual／API共通の画面の流れは未整理 | [25b](../dips-flight-plan/25b_manual-web-mapping.md)、[17 §2.2](../17_map-and-airspace.md) |
+| 正常受付（重複なし） | 10項目あり | [34d §3](34d_dips-accepted-and-plan-content.md#3-正常受付重複なし画面の10項目) |
+| DIPS通報内容 | 10項目あり。取消の詳細は後続 | [34d §4](34d_dips-accepted-and-plan-content.md#4-dips通報内容画面の10項目) |
+| 飛行リスト | 10項目あり。絞り込み・共有反映などの詳細はPENDING | [34c §3](34c_shared-flight-worklist.md#3-飛行リスト画面の10項目) |
+| 飛行前点検、離陸待機、飛行中、着陸後入力、BAT交換、機体交代、飛行後点検、最終送信・保存 | いずれも10項目あり。物理画面数・保存後の戻り先・再送のUIは未確定 | [35b §3〜§10](../operation-recording/35b_normal-operation-and-final-save.md#3-飛行前点検の10項目) |
+| 飛行履歴・出力 | 10項目あり。詳細画面・出力の実行画面・出力の単位は未確定 | [34e](34e_history-and-output.md) |
+| 各種設定・管理 | 入口の意味だけで、画面は未設計（人員・機体・BAT・場所・環境などの管理） | 34b、下記PENDING-D-SETTINGS-SCREENS |
+| 同期・オフライン・エラーの共通の表示 | 記録ごとの状態表示（[14 §3.4](../14_offline-and-sync.md)）と、鮮度の判断の方向（[38a §4](../sync-and-cache/38a_shared-source-and-device-cache.md#4-正本を確認する時点とcacheの表示)）はある。全画面に共通する見せ方は未設計 | 下記PENDING-D-STATUS-DISPLAY |
+
+## 4. まだ設計されていない領域
+
+コードを書かなくても決められる領域を、設計の対象として明示する。いずれも、既存のCURRENT-ACCEPTEDを変更せず、業務ルールを新たに決める場合はオーナーの確認を待つ。
+
+- **PENDING-D-SETTINGS-SCREENS**: 各種設定・管理の画面体系（人員・機体・BAT・場所・プリセット・環境）。ホームの4番目の入口から先の画面、一覧・登録・変更・状態の見せ方。既存の関連: 人員は[31](../identity-and-access/README.md)、機体・BATは[32b](../asset-management/32b_battery-sharing-and-acquisition-history.md)・[12b](../domain-model/12b_aircraft-and-battery.md)、内部分類はPENDING-S5-HOME-DETAIL（34b）。
+- **PENDING-D-BAT-LEDGER**: 多数の機体・BATを共有して使う場合のBAT台帳の表示、状態（使用中・使用済み・充電・保管・異常・廃棄など）と履歴、機体固定にしない共有運用、複数ユーザー・複数組織でも破綻しない管理。状態の定義と遷移は業務ルールであり、設計案を作ったうえでオーナーが確認する。PENDING-S3-BATTERY-HISTORY（32b）に接続する。
+- **PENDING-D-HUMAN-OUTPUT**: KMLに保存した内容を、人が閲覧・印刷するときの復元と構成。KMLの文字列を見せず、地図付きPDF・印刷物として、地図と通報情報をどう並べるか。PENDING-S7D-MAPPDF-DETAIL（[27f](../output/27f_derived-pdf-roles-and-map-pdf.md)）と、飛行履歴・出力のPENDING-S7D-HISTORY-*（34e）に接続する。
+- **PENDING-D-NEW-FLIGHT-SCREENS**: 新規飛行の入力から通報内容の確認までの、Manual／API共通の画面の流れと、飛行範囲の作成画面。
+- **PENDING-D-STATUS-DISPLAY**: オフライン・未同期・エラー・保存・確定・取消・戻るを、全画面で共通にどう見せ、どう操作するか。
+
+## 5. 進める順序の案（NEW-PROPOSAL）
+
+依存関係と、オーナーが挙げた優先の論点から、次の順を提案する。順序はオーナーが変えてよい。
+
+1. **PENDING-D-BAT-LEDGER**（＋各種設定・管理のうち機体・BAT）: 3系統の優先記録の一つで、BAT交換の画面（35b §7）や飛行の明細（35a）の選択のしかたにも影響する。
+2. **PENDING-D-HUMAN-OUTPUT**: 保存済みのKMLとA4記録を、人が使える形にする部分。BAT台帳とA4の出力を合わせて、帳票見本で確かめられる。
+3. **PENDING-D-NEW-FLIGHT-SCREENS**: 通報までの入口。25bと17の画面を、ホームから通報内容の確認までの一本の流れにつなぐ。
+4. **PENDING-D-STATUS-DISPLAY**: 1〜3の画面が揃ってから、共通の見せ方と操作を決める（先に決めると各画面の詳細に引きずられる）。
+5. 残りの各種設定（人員・場所・プリセット・環境）と、飛行履歴・出力の詳細（34e）。
+
+**適用限界**: 本書は設計の棚卸しで、実装の順序や着手を意味しない。C1を含む実装は、オーナーが明示的に実装開始を指示するまで凍結する。
