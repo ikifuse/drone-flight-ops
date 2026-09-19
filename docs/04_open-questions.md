@@ -254,7 +254,7 @@ Step 7a節が挙げる未移植のうち、§9の正本・端末cache・正本�
 | ID | 領域 |
 |---|---|
 | PENDING-D-SETTINGS-SCREENS | 各種設定・管理の画面体系（人員・機体・BAT・場所・プリセット・環境） |
-| PENDING-D-BAT-LEDGER | 多数の機体・BATの共有運用、BAT台帳の表示、状態と履歴 |
+| PENDING-D-BAT-LEDGER | 多数の機体・BATの共有運用、BAT台帳の表示、状態と履歴。設計案は[32d](architecture/asset-management/32d_battery-ledger-and-status-design.md)（PENDING-D-BAT-STATES／-SET-VIEW／-CROSS-ENVがオーナー確認事項） |
 | PENDING-D-HUMAN-OUTPUT | KMLの内容を人が閲覧・印刷するための復元と構成（地図付きPDF・印刷物） |
 | PENDING-D-NEW-FLIGHT-SCREENS | 新規飛行の入力から通報内容の確認までの共通の画面の流れ、飛行範囲の作成画面 |
 | PENDING-D-STATUS-DISPLAY | オフライン・未同期・エラー・保存・確定・取消・戻るの共通の見せ方と操作 |

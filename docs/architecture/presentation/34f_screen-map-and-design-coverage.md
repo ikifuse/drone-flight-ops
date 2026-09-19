@@ -61,7 +61,7 @@ flowchart TD
 コードを書かなくても決められる領域を、設計の対象として明示する。いずれも、既存のCURRENT-ACCEPTEDを変更せず、業務ルールを新たに決める場合はオーナーの確認を待つ。
 
 - **PENDING-D-SETTINGS-SCREENS**: 各種設定・管理の画面体系（人員・機体・BAT・場所・プリセット・環境）。ホームの4番目の入口から先の画面、一覧・登録・変更・状態の見せ方。既存の関連: 人員は[31](../identity-and-access/README.md)、機体・BATは[32b](../asset-management/32b_battery-sharing-and-acquisition-history.md)・[12b](../domain-model/12b_aircraft-and-battery.md)、内部分類はPENDING-S5-HOME-DETAIL（34b）。
-- **PENDING-D-BAT-LEDGER**: 多数の機体・BATを共有して使う場合のBAT台帳の表示、状態（使用中・使用済み・充電・保管・異常・廃棄など）と履歴、機体固定にしない共有運用、複数ユーザー・複数組織でも破綻しない管理。状態の定義と遷移は業務ルールであり、設計案を作ったうえでオーナーが確認する。PENDING-S3-BATTERY-HISTORY（32b）に接続する。
+- **PENDING-D-BAT-LEDGER**（設計案は[32d](../asset-management/32d_battery-ledger-and-status-design.md)。オーナー確認待ち）: 多数の機体・BATを共有して使う場合のBAT台帳の表示、状態（使用中・使用済み・充電・保管・異常・廃棄など）と履歴、機体固定にしない共有運用、複数ユーザー・複数組織でも破綻しない管理。状態の定義と遷移は業務ルールであり、設計案を作ったうえでオーナーが確認する。PENDING-S3-BATTERY-HISTORY（32b）に接続する。
 - **PENDING-D-HUMAN-OUTPUT**: KMLに保存した内容を、人が閲覧・印刷するときの復元と構成。KMLの文字列を見せず、地図付きPDF・印刷物として、地図と通報情報をどう並べるか。PENDING-S7D-MAPPDF-DETAIL（[27f](../output/27f_derived-pdf-roles-and-map-pdf.md)）と、飛行履歴・出力のPENDING-S7D-HISTORY-*（34e）に接続する。
 - **PENDING-D-NEW-FLIGHT-SCREENS**: 新規飛行の入力から通報内容の確認までの、Manual／API共通の画面の流れと、飛行範囲の作成画面。
 - **PENDING-D-STATUS-DISPLAY**: オフライン・未同期・エラー・保存・確定・取消・戻るを、全画面で共通にどう見せ、どう操作するか。
