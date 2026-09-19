@@ -100,8 +100,10 @@
 | [ADR-0023](ADR-0023-common-source-and-derived-submission-paths.md) | 共通の源（計画・Geometry・不変Snapshot）と派生する通報経路・出力 | **提案中（Proposed）** | 未承認（記録2026-09-19） | 0004／0006／0009のClarifies。飛行範囲を用途別に作らない判断とDIPS対象外との境界を記録。詳細は25e |
 | [ADR-0024](ADR-0024-kml-generated-at-plan-submission-from-report-content.md) | KMLは飛行計画通報時に通報内容と共通Geometryから生成し、運航実績を含めない | **提案中（Proposed）** | 未承認（記録2026-09-19） | 0008／0023のClarifies。旧27a等の運航実績追記案を現在ベースライン上で置換。詳細は27e |
 | [ADR-0025](ADR-0025-derived-pdf-roles-and-on-demand-generation.md) | 派生PDFを役割で分け、必要な時だけ生成する | **提案中（Proposed）** | 未承認（記録2026-09-19） | 0021／0023／0024のClarifies。A4運航記録PDFと地図付きPDFの役割分離、毎飛行の自動生成をしない方針。詳細は27f／34e |
+| [ADR-0026](ADR-0026-shared-source-confirmation-and-timing-separation.md) | 共有データの正本とcache、正本確認、確定処理の三時点への分離 | **提案中（Proposed）** | 未承認（記録2026-09-19） | 0002／0003のClarifies。重要な時点で正本を確認し、確定処理を計画確定・逐次保存・最終送信に分ける。詳細は38a／38b |
+| [ADR-0027](ADR-0027-storage-ownership-and-cost-boundary.md) | 各環境のDriveを保存先とし、中央ストレージへ集約せず、従量課金を必要機能に限定 | **提案中（Proposed）** | 未承認（記録2026-09-19） | 0001／0002／0018のClarifies。保存の所有と費用の境界。詳細は37 §6 |
 
-ADR-0010〜0014は比較用main `6344d7a`にProposedとして存在する。本ブランチはその作成前の`ea73d08`から再移植しており、旧Step成果をコピーしないため収録しない。番号を再利用せずStep 1で0015、Step 2で0016、Step 3で0017、Step 4で0018、Step 5で0019、Step 6で0020〜0022、Step 7aで0023、Step 7cで0024、Step 7dで0025を新設した。mainの0010〜0014をAcceptedへ変更していない。
+ADR-0010〜0014は比較用main `6344d7a`にProposedとして存在する。本ブランチはその作成前の`ea73d08`から再移植しており、旧Step成果をコピーしないため収録しない。番号を再利用せずStep 1で0015、Step 2で0016、Step 3で0017、Step 4で0018、Step 5で0019、Step 6で0020〜0022、Step 7aで0023、Step 7cで0024、Step 7dで0025、Step 7eで0026・0027を新設した。mainの0010〜0014をAcceptedへ変更していない。
 
 CURRENT-ACCEPTEDは現在の設計ベースラインを表し、ADRの承認ではない。[7状態の正本](../guidelines/03_design-evidence-and-causality.md#3-状態ラベルと由来)に従う。0015がProposedであることを理由に、99.2 §0・§1で到達した設計方法を未決へ戻さない。
 
@@ -137,3 +139,5 @@ Step 7aの0023は、0004のAdapter分離、0006のAPI非依存と提出Snapshot�
 Step 7cの0024は、0008のKMLの位置づけと0023の共通の源をClarifiesとして記録し、KMLの生成契機・内容・単位を加える。Proposedであり、Accepted本文を変更しない。旧設計文書（27a・27b・03・23）の運航実績追記案は、ADRに記録されていなかったため、Supersedesではなく設計文書側のHISTORICAL化として扱った。詳細因果・限界・未確定は[27e](../architecture/output/27e_kml-generation-timing-and-content.md)へ保持し、PDF・履歴出力や§9へ本判断を拡張しない。
 
 Step 7dの0025は、0021のA4運航記録と必要時PDF、0023の共通の源、0024のKMLの生成契機をClarifiesとして記録し、PDFの役割分離と必要な時だけ生成する方針を加える。Proposedであり、Accepted本文を変更しない。詳細因果・限界・未確定は[27f](../architecture/output/27f_derived-pdf-roles-and-map-pdf.md)へ保持し、画面の詳細（[34e](../architecture/presentation/34e_history-and-output.md)）や§9へ本判断を拡張しない。
+
+Step 7eの0026は、0002のライフサイクル連動型ハイブリッド正本モデルと0003のローカル永続化をClarifiesとして記録し、共有データのcacheと正本確認、確定処理の時点分離を加える。cacheは共有のマスター・リスト・確定済みの台帳の複製を指し、現場で作成中の下書きと未同期の確定データは0002・11のライフサイクル権威に従うため、0002の決定は変更しない。0027は0001の低コスト運用、0002のSheets台帳、0018の中央運航DB非採用をClarifiesとして記録し、保存の所有と費用の境界を加える。いずれもProposedであり、Accepted本文を変更しない。詳細因果・限界・未確定は[38a](../architecture/sync-and-cache/38a_shared-source-and-device-cache.md)・[38b](../architecture/sync-and-cache/38b_confirmation-and-sync-timing-separation.md)・[37 §6](../architecture/drive-structure/37_environment-storage-responsibilities.md#6-保存の所有と費用の境界)へ保持する。

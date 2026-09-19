@@ -1,7 +1,7 @@
 # 35d. 運航の最終確定と一括保存の責任
 
 最終更新: 2026-09-19\
-由来: 99.2 §5の途中下書き・飛行後点検後の最終保存、2026-09-19のA4保存追補。§9の同期全体は再移植しない。
+由来: 99.2 §5の途中下書き・飛行後点検後の最終保存、2026-09-19のA4保存追補。§9の同期・cacheと時点分離は[38a](../sync-and-cache/38a_shared-source-and-device-cache.md)・[38b](../sync-and-cache/38b_confirmation-and-sync-timing-separation.md)。
 
 ## 1. 旧一括保存が守っていたもの
 
@@ -36,7 +36,7 @@
 
 **2026-09-19追補との境界**: 新規A4が必要な通常保存は[35c §3.2](35c_a4-operation-record.md#32-機体内の日付と次空き連番)の機体別・日付次空き連番に従う。同じ保存要求の再送のたびに新しいA4へ採番する意味ではない。不変の識別という既存要件から、今回新しい帳票ID・採番ID体系を追加しない。同一機体への極端な同時保存専用の中央採番・高度な排他を現時点で採らない因果と再検討条件は[35c §3.3](35c_a4-operation-record.md#33-特殊な同時競合を検討したうえで簡素な方式を選ぶ理由)が唯一の詳細正本であり、本書のPENDINGをその実装要求と読まない。
 
-外部反映前の端末保持と反映済みを区別し、[11](../11_data-authority.md)の確定台帳・手修正保護を維持する。端末ストレージ自体を失った場合の限界は[19](../19_failure-recovery.md)。通常保存の再送をDIPSの結果不明POSTと混同せず、後者の理由は[33b](../dips-infrastructure/33b_api-availability-and-retry-boundaries.md)へ委譲する。
+外部反映前の端末保持と反映済みを区別し、[11](../11_data-authority.md)の確定台帳・手修正保護を維持する。端末ストレージ自体を失った場合の限界は[19](../19_failure-recovery.md)。計画確定・逐次保存・最終送信の三時点の分離は[38b](../sync-and-cache/38b_confirmation-and-sync-timing-separation.md)。通常保存の再送をDIPSの結果不明POSTと混同せず、後者の理由は[33b](../dips-infrastructure/33b_api-availability-and-retry-boundaries.md)へ委譲する。
 
 ## 4. 検証と残る範囲
 

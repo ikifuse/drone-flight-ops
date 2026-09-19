@@ -1,6 +1,6 @@
 # 10. システム境界と責務分離設計（10_system-boundaries.md）
 
-最終更新: 2026-09-18
+最終更新: 2026-09-19
 プロジェクト: `drone-flight-ops`
 フェーズ: Phase B2（詳細アーキテクチャ・実装前設計）
 
@@ -45,7 +45,7 @@ flowchart TB
 ### 2.2 DIPS連携バックエンド境界の責務
 
 - **主要責務**: DIPS API秘密情報の隔離と、登録する固定送信元IP経路によるDIPS通信。Google Cloud上の限定バックエンドとCloud NATの役割・旧方式からの因果は[33a](dips-infrastructure/33a_fixed-egress-and-api-connection.md)。認証フロー・Token Endpoint・Cookie・実行コンピュートをこの責務要約から確定しない。
-- **担当しない責任**: 現場の直接状態制御、全利用者の運航データの中央DB化、API障害時のアプリ起動停止。必要最小限の一時状態まで禁止する意味ではなく、保持方式は[16](16_security.md)のPENDING。
+- **担当しない責任**: 現場の直接状態制御、全利用者の運航データの中央DB化、API障害時のアプリ起動停止。必要最小限の一時状態まで禁止する意味ではなく、保持方式は[16](16_security.md)のPENDING。保存の所有と費用の境界は[37 §6](drive-structure/37_environment-storage-responsibilities.md#6-保存の所有と費用の境界)。
 - **送受信境界**: 秘密の過剰返却を防ぐ規則は16。API電文の意味変換・Mapper・DTOは[25c](dips-flight-plan/25c_api-payload-mapping.md)であり、バックエンド／ネットワーク文書に別のpayload正本を置かない。Manual独立と結果不明時の安全境界は[33b](dips-infrastructure/33b_api-availability-and-retry-boundaries.md)。
 
 ### 2.3 DIPS Adapter境界の責務

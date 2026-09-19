@@ -53,7 +53,7 @@
 
 ## 5. 未確定と適用限界
 
-- **PENDING-S5-LIST-DETAIL**: UI候補のフィルタ・初期値・件数表示、具体的な作業リストの物理保持・cache・共有反映。既存24aの履歴列をそのままリストschemaにしたり、別Spreadsheetの新設を決めたりしない。
+- **PENDING-S5-LIST-DETAIL**: UI候補のフィルタ・初期値・件数表示、具体的な作業リストの物理保持・cache・共有反映。既存24aの履歴列をそのままリストschemaにしたり、別Spreadsheetの新設を決めたりしない。cache・正本確認の方針は[38a](../sync-and-cache/38a_shared-source-and-device-cache.md)。
 - **PENDING-S5-MANUAL-LIST**: API正常受付の条件と、番号なしの目視照合も認める既存Manual確認からリストへ接続する詳細との照合。今回のAPI通常系からManualへ計画ID必須を機械適用しない。[24](../dips-submission/24_manual-submission.md)と[25b](../dips-flight-plan/25b_manual-web-mapping.md)の第一級Manualを維持し、別の完成フローを推測しない。
 - **後続範囲**: 重複調整、日時等の変更・再通報、取消、予定日時経過・中止・完了時のリスト／cache整理。原本の正確な自動整理時点・条件は未確定だが、作業リストを履歴DBとしない意味は到達済み。本Stepではこれらの詳細移植を行わない。後続のStep 7bで、取消・整理の意味と06の記録責任・作業台帳との関係を[24b](../dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)へ配置した。正確な時点・条件と重複あり調整は未確定のまま。
 - **VERIFY-S5-LIST-EVIDENCE**: 原本が挙げる実Driveの1枚作業台帳、旧画面資料と表示5系統との対応。今回は再操作していない。通信成否不明の因果は[33b](../dips-infrastructure/33b_api-availability-and-retry-boundaries.md)を参照し、本書へ複写しない。

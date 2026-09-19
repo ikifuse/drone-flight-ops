@@ -52,3 +52,13 @@ Locations／Clients／Projects／Permissions／InsurancePolicies等は、旧案�
 ## 5. 分割・保守の確認点
 
 配置を変更する際は、関係者が見付けられ、責任ごとに変更できること（保守性・追加実装性）、他領域の失敗が波及しないこと（堅牢性）、環境とGoogle実アクセスの境界（セキュリティ・複数ユーザー／複数組織）、記録と根拠・変更を辿れること（検証可能性・監査性）、部分失敗と復旧・反映状況が分かること（障害復旧性・可観測性）を確認する。具体的な仕組みを原本の根拠なしに採用済みへ昇格させず、各詳細正本の未確定事項を解決してから依存実装へ進む。
+
+## 6. 保存の所有と費用の境界
+
+**当初状態**: ADR-0001は無料枠を活用した低コスト運用を、ADR-0018はDIPS連携のバックエンドが全運航データを中央DBへ集約しないことを定めた。旧の費用分析（[04_cost-and-operations-analysis](../04_cost-and-operations-analysis.md)）は当時の構成・無料枠の記録で、現行のサービス条件の保証には使わない。
+
+**現在の到達点（CURRENT-ACCEPTED。99.2 §9）**: 全利用者のデータを運営の中央サーバーへ集約せず、各環境のDrive容量を利用する。Webアプリ／PWA、Google認証、Drive／Sheets保存を基本構成とし、従量課金のサービスは必要な機能だけに限定する。運営側が全利用者の飛行記録・PDF・KMLの保存費を負担する中央ストレージ構造を、当然の前提にしない。DIPSのcredential上必要な場合は、DIPS用の小規模なバックエンドのみを検討する（[33a](../dips-infrastructure/33a_fixed-egress-and-api-connection.md)・[10 §2.2](../10_system-boundaries.md#22-dips連携バックエンド境界の責務)）。
+
+**方向（CURRENT-PROPOSAL）**: Google Maps等の従量APIも、飛行場所の表示・検索等で必要な場合に限定し、利用量と無料枠を見ながら使う。
+
+**未確定・限界**: 従量課金サービスの具体的な利用量・上限・監視は決めていない。複数組織での物理的な所有・移管はPENDING-S6-DRIVE-PLACEMENTと[31d](../identity-and-access/31d_membership-lifecycle.md)のPENDING-S2-OWNERSHIP。判断の要約は[ADR-0027](../../decisions/ADR-0027-storage-ownership-and-cost-boundary.md)（Proposed）。

@@ -176,4 +176,4 @@ SyncQueueのジョブ型・送信先別再試行は本書が正本です。Data 
 
 KML保存ジョブは [27b](output/27b_google-drive-storage.md)（未同期KMLの保持と最後の送信時の再送の意味は[27e](output/27e_kml-generation-timing-and-content.md)）、PDFのオフライン成立条件は [18](18_reports.md)、地図エンジンの選定留保は [ADR-0009](../decisions/ADR-0009-map-renderer-selection-deferred-to-c5.md) を参照します。アプリ停止中のバックグラウンド再試行は保証せず、実行可能時・アプリ再開時に未完了キューを再開します。
 
-Step 6で§5の運航全体最終保存を[35d](operation-recording/35d_operation-finalization-and-write-boundary.md)へ移管した。同一行UPSERTと、物理A4・BAT履歴・機体累計全体の割当／部分完了／再送契約は別で、後者はPENDING。SyncQueueの型・既存retryを変更せず、§9全体の再移植は行っていない。
+Step 6で§5の運航全体最終保存を[35d](operation-recording/35d_operation-finalization-and-write-boundary.md)へ移管した。同一行UPSERTと、物理A4・BAT履歴・機体累計全体の割当／部分完了／再送契約は別で、後者はPENDING。SyncQueueの型・既存retryは変更しない。共有データのcache・正本確認は[38a](sync-and-cache/38a_shared-source-and-device-cache.md)、確定・保存・外部反映の時点分離は[38b](sync-and-cache/38b_confirmation-and-sync-timing-separation.md)（Step 7e）。

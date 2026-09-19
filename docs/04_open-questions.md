@@ -228,3 +228,14 @@ Step 7a・7c節が挙げる未移植のうち、PDFの役割分離・生成方�
 | PENDING-S7D-HISTORY-DETAIL / PENDING-S7D-HISTORY-OUTPUT-UNIT / PENDING-S7D-HISTORY-KML | [34e §3](architecture/presentation/34e_history-and-output.md#3-未確定確認待ちと適用限界)：履歴画面の詳細と出力選択方式、複数シートにまたがる飛行の出力単位、履歴からのKML取得 |
 
 A4運航記録PDFと地図付きPDFの役割分離、PDFを必要な時だけ生成する方針、［飛行履歴・出力］から対象の飛行を選んで出力へ進む導線はCURRENT-ACCEPTED（[27f](architecture/output/27f_derived-pdf-roles-and-map-pdf.md)・[34e](architecture/presentation/34e_history-and-output.md)、判断の要約は[ADR-0025](decisions/ADR-0025-derived-pdf-roles-and-on-demand-generation.md) Proposed）。出力選択の方式（［A4運航記録PDF］［地図付きPDF］［両方作成］）は99.2が第一候補とするCURRENT-PROPOSAL。既存のPENDING-S5-HOME-DETAIL（各種設定・管理の分類等）、PENDING-S6-A4-DETAIL、VERIFY-S6-A4-PRINTは解消していない。
+
+## Step 7eの未確定・検証先
+
+Step 7a節が挙げる未移植のうち、§9の正本・端末cache・正本確認、確定・保存・外部反映の時点分離、費用の境界は本節で扱った。詳細理由を本書へ複製せず、各正本へ進む。
+
+| ID | 詳細正本 |
+|---|---|
+| PENDING-S7E-CACHE-DETAIL / VERIFY-S7E-DEVICE-DIFF | [38a §5](architecture/sync-and-cache/38a_shared-source-and-device-cache.md#5-未確定確認待ちと再検討条件)：cacheの具体実装・retryの回数と間隔・競合の解決方針・backgroundの挙動・UI、iPhone／Androidの実機差 |
+| PENDING-S7E-SYNCQUEUE-AUDIT | [38b §3](architecture/sync-and-cache/38b_confirmation-and-sync-timing-separation.md#3-中央のsyncqueue監査の未確定)：06または別の領域にSyncQueue・監査・エラーの記録を残すか |
+
+共有データの正本とcache、cacheの捨て方、正本確認の時点、三つの時点への分離、保存の所有と費用の境界はCURRENT-ACCEPTED（[38a](architecture/sync-and-cache/38a_shared-source-and-device-cache.md)・[38b](architecture/sync-and-cache/38b_confirmation-and-sync-timing-separation.md)・[37 §6](architecture/drive-structure/37_environment-storage-responsibilities.md#6-保存の所有と費用の境界)、判断の要約は[ADR-0026](decisions/ADR-0026-shared-source-confirmation-and-timing-separation.md)・[ADR-0027](decisions/ADR-0027-storage-ownership-and-cost-boundary.md) Proposed）。同期状態の判断の方向と従量APIの限定はCURRENT-PROPOSAL。既存のPENDING-S5-LIST-DETAIL、PENDING-S6-FINAL-SAVE-CONTRACT、PENDING-S7C-KML-FINAL-SEND、PENDING-LOCAL-RESTORE、PENDING-S6-DRIVE-PLACEMENTは解消していない。
