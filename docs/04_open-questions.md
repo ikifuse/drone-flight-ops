@@ -239,3 +239,9 @@ Step 7a節が挙げる未移植のうち、§9の正本・端末cache・正本�
 | PENDING-S7E-SYNCQUEUE-AUDIT | [38b §3](architecture/sync-and-cache/38b_confirmation-and-sync-timing-separation.md#3-中央のsyncqueue監査の未確定)：06または別の領域にSyncQueue・監査・エラーの記録を残すか |
 
 共有データの正本とcache、cacheの捨て方、正本確認の時点、三つの時点への分離、保存の所有と費用の境界はCURRENT-ACCEPTED（[38a](architecture/sync-and-cache/38a_shared-source-and-device-cache.md)・[38b](architecture/sync-and-cache/38b_confirmation-and-sync-timing-separation.md)・[37 §6](architecture/drive-structure/37_environment-storage-responsibilities.md#6-保存の所有と費用の境界)、判断の要約は[ADR-0026](decisions/ADR-0026-shared-source-confirmation-and-timing-separation.md)・[ADR-0027](decisions/ADR-0027-storage-ownership-and-cost-boundary.md) Proposed）。同期状態の判断の方向と従量APIの限定はCURRENT-PROPOSAL。既存のPENDING-S5-LIST-DETAIL、PENDING-S6-FINAL-SAVE-CONTRACT、PENDING-S7C-KML-FINAL-SEND、PENDING-LOCAL-RESTORE、PENDING-S6-DRIVE-PLACEMENTは解消していない。
+
+## Step 8の差分監査と残る未確定
+
+§11の差分監査を[Step 8監査](migration/99-2-step-8-diff-audit.md)で行った。原本の現状差分8項目の対照、旧案（Workers前提・KML運航実績追記・KML属性未確定・自動ページネーション・「設計確定」表記）の残存、回収した12項目の所在、原本の全行の使用状況を確かめ、00_goalの旧記述を訂正した。新しい未確定は追加せず、既存のPENDING／VERIFYを解決していない。
+
+残る未確定の定義は各正本にあり、所在の索引は[Step 8監査 §9](migration/99-2-step-8-diff-audit.md#9-残る未確定と着手前の照合の索引)。C1の開始は、本書 §3のPENDING-C0-ACCEPTANCE（C0受入確認とオーナーGO）を待つ。該当のC1型・schemaを固定する前に、PENDING-DOMAIN-SEMANTIC-KEYS・PENDING-C1-SCHEMAと、対象領域のPENDINGを照合する（[23 §1.2](architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)）。

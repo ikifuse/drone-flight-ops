@@ -6,7 +6,7 @@
 
 ---
 
-**現在の停止位置**: C0受入確認・オーナーGO待ち。99.2再移植はStep 1（§0・§1）、Step 2（§2）、Step 3（§4と取得確認・点検整備Actorに直接必要な§6の部分）、Step 4（§7のDIPS API基盤・固定IP・通信境界のみ）、Step 5（§3と§7の正常受付後・共有リストに必要な限定部分）、Step 6（§5・§6残り・§10）、Step 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）、Step 7b（§7の06の記録責任・作業台帳・取消／リスト整理の境界）、Step 7c（KMLの位置づけ・単位・生成契機・内容・再送）、Step 7d（PDFの役割分離・生成契機、飛行履歴・出力の画面）、Step 7e（§9の正本・端末cache・時点分離・費用の境界）まで。C1前docs再編・本Stepの完了は後続コードの着手承認ではありません。以下§1.2の開始ゲートも適用します。
+**現在の停止位置**: C0受入確認・オーナーGO待ち。99.2再移植はStep 1（§0・§1）、Step 2（§2）、Step 3（§4と取得確認・点検整備Actorに直接必要な§6の部分）、Step 4（§7のDIPS API基盤・固定IP・通信境界のみ）、Step 5（§3と§7の正常受付後・共有リストに必要な限定部分）、Step 6（§5・§6残り・§10）、Step 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）、Step 7b（§7の06の記録責任・作業台帳・取消／リスト整理の境界）、Step 7c（KMLの位置づけ・単位・生成契機・内容・再送）、Step 7d（PDFの役割分離・生成契機、飛行履歴・出力の画面）、Step 7e（§9の正本・端末cache・時点分離・費用の境界）、Step 8（§11の差分監査）まで。C1前docs再編・本Stepの完了は後続コードの着手承認ではありません。以下§1.2の開始ゲートも適用します。
 
 ## 1. 実装の基本方針（安全な段階的積み上げ）
 
@@ -73,7 +73,9 @@ Step 7dでは[27f](output/27f_derived-pdf-roles-and-map-pdf.md)へ、A4運航記
 
 Step 7eでは[38a](sync-and-cache/38a_shared-source-and-device-cache.md)・[38b](sync-and-cache/38b_confirmation-and-sync-timing-separation.md)へ、共有データの正本と端末cache・正本確認の時点・計画確定／逐次保存／最終送信の時点分離を、[37 §6](drive-structure/37_environment-storage-responsibilities.md#6-保存の所有と費用の境界)へ保存の所有と費用の境界を移した。C4の同期・再送とC9のオフライン強化・実機検証は、cacheの具体実装・retry・競合の解決方針・background・UI（PENDING-S7E-CACHE-DETAIL）、iPhone／Androidの実機差（VERIFY-S7E-DEVICE-DIFF）、中央のSyncQueue・監査（PENDING-S7E-SYNCQUEUE-AUDIT）が未確定であり、着手条件を満たしたとは扱わない。§9の「競合解決」の未確定を、A4の採番の排他制御を戻す根拠にしない。
 
-以下のC0〜C9は実装配分を保持し、C7のStep 4接続先指定も維持する。Step 6の通常運航・A4は[35a〜35d](operation-recording/README.md)、整備媒体は[36](maintenance-storage/README.md)、Drive責任は[37](drive-structure/README.md)。§11の差分監査は未完了である。対象領域のゲートを通過する前に、列挙された型やシート方針をそのまま実装開始の許可として使わない。
+Step 8では、§11の現状差分8項目・旧案の残存・回収12項目の所在・原本の全行の使用状況を[Step 8監査](../migration/99-2-step-8-diff-audit.md)で確かめた。§0〜§11の再移植と差分監査は完了したが、これは設計文書の移管・照合の完了であり、上記の各PENDING／VERIFYの解決でも、C0受入確認・オーナーGO（PENDING-C0-ACCEPTANCE）の代替でもない。C1以降は、開始ゲートと該当型のPENDING照合を通すまで着手しない。
+
+以下のC0〜C9は実装配分を保持し、C7のStep 4接続先指定も維持する。Step 6の通常運航・A4は[35a〜35d](operation-recording/README.md)、整備媒体は[36](maintenance-storage/README.md)、Drive責任は[37](drive-structure/README.md)。§11の差分監査はStep 8で実施した（[監査記録](../migration/99-2-step-8-diff-audit.md)）。対象領域のゲートを通過する前に、列挙された型やシート方針をそのまま実装開始の許可として使わない。
 
 ---
 

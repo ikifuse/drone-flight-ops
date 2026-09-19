@@ -1,6 +1,6 @@
 # 新アプリの最終ゴール・ビジョン・運用思想
 
-最終更新: 2026-09-18
+最終更新: 2026-09-19
 プロジェクト: drone-flight-ops
 
 ---
@@ -18,7 +18,7 @@
 
 > [!IMPORTANT]
 > **GAS（Google Apps Script）は必須ではありません。**
-> 基準アプリがGASで作られていることは、新アプリもGASで作るという意味ではありません。Phase BでPWA、クロスプラットフォーム、ネイティブ、Web、バックエンドサービス等を比較し、PWA ＋ Cloudflare Workers ＋ IndexedDB・Google Sheets構成を採用しました。選定理由は [ADR一覧](decisions/README.md)、未選定の地図ライブラリはC5の実機評価で扱います。
+> 基準アプリがGASで作られていることは、新アプリもGASで作るという意味ではありません。Phase BでPWA、クロスプラットフォーム、ネイティブ、Web、バックエンドサービス等を比較し、PWA ＋ Cloudflare Workers ＋ IndexedDB・Google Sheets構成を採用しました。その後、DIPS API用の接続経路のみ、固定送信元IPの要件により旧Workers前提から変更しています（現在経路は[33a](architecture/dips-infrastructure/33a_fixed-egress-and-api-connection.md)・[ADR-0018](decisions/ADR-0018-dips-fixed-egress-and-limited-backend.md) Proposed）。PWA・IndexedDB・Google Sheetsの方針は維持しています。選定理由は [ADR一覧](decisions/README.md)、未選定の地図ライブラリはC5の実機評価で扱います。
 
 ---
 
@@ -67,7 +67,7 @@
 
 【保存・帳票出力フェーズ】
 16. 飛行日誌の一括確定・安全保存（二重保存防止・端末内一時退避）
-17. 国土交通省様式1〜3準拠の各種帳票出力（PDF / CSV / Excel / 地図付き飛行計画書）
+17. 国土交通省様式1〜3準拠の各種帳票出力（PDF / CSV / Excel / 地図付き飛行計画書。現在は必要な時だけ生成する地図付きPDFとして[27f](architecture/output/27f_derived-pdf-roles-and-map-pdf.md)）
 ```
 
 ---
