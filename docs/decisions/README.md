@@ -99,8 +99,9 @@
 | [ADR-0022](ADR-0022-drive-responsibilities-and-human-records.md) | 七責任領域と人間向け04／05媒体 | **提案中（Proposed）** | 未承認（記録2026-09-18） | 0007 §2.8の全面禁止の限定置換記録。2026-09-19に06の作業台帳と履歴・証跡の分離を追補。詳細は36／37／24b |
 | [ADR-0023](ADR-0023-common-source-and-derived-submission-paths.md) | 共通の源（計画・Geometry・不変Snapshot）と派生する通報経路・出力 | **提案中（Proposed）** | 未承認（記録2026-09-19） | 0004／0006／0009のClarifies。飛行範囲を用途別に作らない判断とDIPS対象外との境界を記録。詳細は25e |
 | [ADR-0024](ADR-0024-kml-generated-at-plan-submission-from-report-content.md) | KMLは飛行計画通報時に通報内容と共通Geometryから生成し、運航実績を含めない | **提案中（Proposed）** | 未承認（記録2026-09-19） | 0008／0023のClarifies。旧27a等の運航実績追記案を現在ベースライン上で置換。詳細は27e |
+| [ADR-0025](ADR-0025-derived-pdf-roles-and-on-demand-generation.md) | 派生PDFを役割で分け、必要な時だけ生成する | **提案中（Proposed）** | 未承認（記録2026-09-19） | 0021／0023／0024のClarifies。A4運航記録PDFと地図付きPDFの役割分離、毎飛行の自動生成をしない方針。詳細は27f／34e |
 
-ADR-0010〜0014は比較用main `6344d7a`にProposedとして存在する。本ブランチはその作成前の`ea73d08`から再移植しており、旧Step成果をコピーしないため収録しない。番号を再利用せずStep 1で0015、Step 2で0016、Step 3で0017、Step 4で0018、Step 5で0019、Step 6で0020〜0022、Step 7aで0023、Step 7cで0024を新設した。mainの0010〜0014をAcceptedへ変更していない。
+ADR-0010〜0014は比較用main `6344d7a`にProposedとして存在する。本ブランチはその作成前の`ea73d08`から再移植しており、旧Step成果をコピーしないため収録しない。番号を再利用せずStep 1で0015、Step 2で0016、Step 3で0017、Step 4で0018、Step 5で0019、Step 6で0020〜0022、Step 7aで0023、Step 7cで0024、Step 7dで0025を新設した。mainの0010〜0014をAcceptedへ変更していない。
 
 CURRENT-ACCEPTEDは現在の設計ベースラインを表し、ADRの承認ではない。[7状態の正本](../guidelines/03_design-evidence-and-causality.md#3-状態ラベルと由来)に従う。0015がProposedであることを理由に、99.2 §0・§1で到達した設計方法を未決へ戻さない。
 
@@ -134,3 +135,5 @@ Step 6の0020〜0022もProposed。現在ベースラインへの移管とADR正�
 Step 7aの0023は、0004のAdapter分離、0006のAPI非依存と提出Snapshot、0009のGeometryの描画ライブラリ非依存をClarifiesとして記録する。Proposedであり、Accepted本文や状態遷移・通報要否の判定を変更しない。判断の詳細因果・限界・未確定は[25e](../architecture/dips-flight-plan/25e_common-source-and-submission-boundaries.md)へ保持し、KMLの生成契機・内容・単位や§7の残りへ本判断を拡張しない。
 
 Step 7cの0024は、0008のKMLの位置づけと0023の共通の源をClarifiesとして記録し、KMLの生成契機・内容・単位を加える。Proposedであり、Accepted本文を変更しない。旧設計文書（27a・27b・03・23）の運航実績追記案は、ADRに記録されていなかったため、Supersedesではなく設計文書側のHISTORICAL化として扱った。詳細因果・限界・未確定は[27e](../architecture/output/27e_kml-generation-timing-and-content.md)へ保持し、PDF・履歴出力や§9へ本判断を拡張しない。
+
+Step 7dの0025は、0021のA4運航記録と必要時PDF、0023の共通の源、0024のKMLの生成契機をClarifiesとして記録し、PDFの役割分離と必要な時だけ生成する方針を加える。Proposedであり、Accepted本文を変更しない。詳細因果・限界・未確定は[27f](../architecture/output/27f_derived-pdf-roles-and-map-pdf.md)へ保持し、画面の詳細（[34e](../architecture/presentation/34e_history-and-output.md)）や§9へ本判断を拡張しない。

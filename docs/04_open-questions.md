@@ -217,3 +217,14 @@ Step 7a節が挙げる未移植のうち、KMLの位置づけ・単位・生成�
 | PENDING-S7C-KML-FINAL-SEND | [35d §4](architecture/operation-recording/35d_operation-finalization-and-write-boundary.md#4-検証と残る範囲)：最後の送信での再送を最終保存契約の一部とするか、独立した再送とするか |
 
 KMLの生成契機（飛行計画の通報時）・内容（通報内容と共通Geometry、運航後情報を含めない）・単位（意味上の1飛行）・未同期の保持と最後の送信時の再送はCURRENT-ACCEPTED（[27e](architecture/output/27e_kml-generation-timing-and-content.md)、判断の要約は[ADR-0024](decisions/ADR-0024-kml-generated-at-plan-submission-from-report-content.md) Proposed）。旧「運航完了時に実績を追記して更新」「1 FlightPlan = 1 KML」はHISTORICAL。99.2が具体表現を未確定とするファイル名・XML構造・Geometry変換（27a）はCURRENT-PROPOSAL、既存のPENDING-MYMAPS-01〜06（27c）は解消していない。
+
+## Step 7dの未確定・検証先
+
+Step 7a・7c節が挙げる未移植のうち、PDFの役割分離・生成方針と、飛行履歴・出力の画面は本節で扱った。詳細理由を本書へ複製せず、各正本へ進む。
+
+| ID | 詳細正本 |
+|---|---|
+| PENDING-S7D-MAPPDF-DETAIL / VERIFY-S7D-MAPPDF-REGEN / PENDING-S7D-MAPPDF-SCOPE | [27f §4](architecture/output/27f_derived-pdf-roles-and-map-pdf.md#4-地図付きpdfの配置の方向と未確定)：詳細レイアウト・命名・生成画面、同じ正本・Geometryから再生成できる範囲の実物確認、旧「地図付き飛行計画書」との関係 |
+| PENDING-S7D-HISTORY-DETAIL / PENDING-S7D-HISTORY-OUTPUT-UNIT / PENDING-S7D-HISTORY-KML | [34e §3](architecture/presentation/34e_history-and-output.md#3-未確定確認待ちと適用限界)：履歴画面の詳細と出力選択方式、複数シートにまたがる飛行の出力単位、履歴からのKML取得 |
+
+A4運航記録PDFと地図付きPDFの役割分離、PDFを必要な時だけ生成する方針、［飛行履歴・出力］から対象の飛行を選んで出力へ進む導線はCURRENT-ACCEPTED（[27f](architecture/output/27f_derived-pdf-roles-and-map-pdf.md)・[34e](architecture/presentation/34e_history-and-output.md)、判断の要約は[ADR-0025](decisions/ADR-0025-derived-pdf-roles-and-on-demand-generation.md) Proposed）。出力選択の方式（［A4運航記録PDF］［地図付きPDF］［両方作成］）は99.2が第一候補とするCURRENT-PROPOSAL。既存のPENDING-S5-HOME-DETAIL（各種設定・管理の分類等）、PENDING-S6-A4-DETAIL、VERIFY-S6-A4-PRINTは解消していない。

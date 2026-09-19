@@ -35,7 +35,7 @@
 
 ### 1.1 確定台帳・Geo Export・内部通信との関係
 
-本書はPDF/印刷/CSV/Excelの生成パイプライン・射影責任を定義します。A4の実物・分割・日付連番シートと因果の詳細正本は[35c](operation-recording/35c_a4-operation-record.md)です。Sheetsは確定台帳、KMLは地理表示・共有、JSONはOptional DIPS APIの内部transportです。4境界の全体契約は [27 出力境界](output/27_output-boundaries.md) を参照します。KML導入によりPDF生成要件やSheets保存を縮小しません。
+本書はPDF/印刷/CSV/Excelの生成パイプライン・射影責任を定義します。A4の実物・分割・日付連番シートと因果の詳細正本は[35c](operation-recording/35c_a4-operation-record.md)です。Sheetsは確定台帳、KMLは地理表示・共有、JSONはOptional DIPS APIの内部transportです。4境界の全体契約は [27 出力境界](output/27_output-boundaries.md) を参照します。KML導入によりPDF生成要件やSheets保存を縮小しません。派生PDF（A4運航記録PDFと地図付きPDF）の役割分離と、必要な時だけ生成する方針は[27f](output/27f_derived-pdf-roles-and-map-pdf.md)。
 
 同一のDomain正本データから、帳票は `ReportModelBuilder -> PdfGenerator`、KMLは `KmlExportModelBuilder -> KmlExporter` として独立生成します。KMLはPDF帳票・Sheets台帳の代替ではありません。
 
@@ -61,7 +61,7 @@
 | **国交省様式1: 飛行記録** | PDF / CSV | 年月日、操縦者名、離着陸場所、離着陸時刻、飛行時間、飛行理由、不具合事項（航空法第132条の89関係） | 公的提出時、機体別月間台帳 |
 | **国交省様式2: 日常点検記録** | PDF / CSV | 作成年月日、点検実施場所、点検項目合否、不具合処置（飛行前・飛行後点検） | 公的提出時、日誌監査 |
 | **国交省様式3: 点検整備記録** | PDF / Excel | 点検整備実施日時、実施理由（定期/修理）、実施内容、実施者名、交換部品 | 機体生涯整備台帳出力時 |
-| **地図付き飛行計画書** | PDF | 計画概要、飛行範囲地図（静止画レンダリング）、高度、周辺注意事項 | 計画作成後（事前印刷/提出用） |
+| **地図付き飛行計画書**（現在は地図付きPDF） | PDF | 旧: 計画概要・飛行範囲地図（静止画レンダリング）・高度・周辺注意事項。現在の位置づけはDIPS通報内容とGeometryの地図で、内容・生成契機・旧記述との関係は[27f](output/27f_derived-pdf-roles-and-map-pdf.md)（PENDING-S7D-MAPPDF-SCOPE） | 必要な時だけ生成（旧: 計画作成後の事前印刷／提出用） |
 | **DIPS飛行計画台帳・提出履歴**| CSV / Excel / Sheets | 計画ID、リビジョン、提出日時、通報方式(手動/API)、DIPS計画番号、飛行予定日時、場所、機体、操縦者、取消情報、紐付運航実績ID（予定と実績の監査対比） | 計画確定時、監査提出時 |
 | **バッテリー生涯履歴台帳** | CSV / Excel | 個体別、累積サイクル数、累積飛行時間、異常メモ（旧スロット表示からの因果は[32b](asset-management/32b_battery-sharing-and-acquisition-history.md)） | 定期台帳点検時 |
 
@@ -122,6 +122,6 @@
 
 操縦者・記録者を帳票の別欄で保持する要件、日常点検実施者の意味、法定欄とアプリ独自Recorderを分けた因果は[31c](identity-and-access/31c_operational-actors.md)を正本とする。本書はその射影先であり、役割規則を複製しない。具体的な欄・配置はStep 6の[35c](operation-recording/35c_a4-operation-record.md)、物理schemaの未確定は35a／35dへ接続する。
 
-Step 5では[34b](presentation/34b_home-and-navigation.md)へ［飛行履歴・出力］の入口責任だけを移した。04／06を確認して07の派生出力へ進む画面接続であり、本書のA4帳票・射影・出力単位の再移植や変更ではない。
+Step 5では[34b](presentation/34b_home-and-navigation.md)へ［飛行履歴・出力］の入口責任だけを移した。04／06を確認して07の派生出力へ進む画面接続であり、本書のA4帳票・射影・出力単位の再移植や変更ではない。Step 7dでは、PDFの役割分離・生成契機を[27f](output/27f_derived-pdf-roles-and-map-pdf.md)、［飛行履歴・出力］の画面を[34e](presentation/34e_history-and-output.md)へ移した。
 
 Step 6のA4印刷経路・実物とのフォント／改行一致は35cのVERIFY-S6-A4-PRINT。§6の端末PDF生成条件はその検証完了を意味しない。

@@ -6,7 +6,7 @@
 
 ---
 
-**現在の停止位置**: C0受入確認・オーナーGO待ち。99.2再移植はStep 1（§0・§1）、Step 2（§2）、Step 3（§4と取得確認・点検整備Actorに直接必要な§6の部分）、Step 4（§7のDIPS API基盤・固定IP・通信境界のみ）、Step 5（§3と§7の正常受付後・共有リストに必要な限定部分）、Step 6（§5・§6残り・§10）、Step 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）、Step 7b（§7の06の記録責任・作業台帳・取消／リスト整理の境界）、Step 7c（KMLの位置づけ・単位・生成契機・内容・再送）まで。C1前docs再編・本Stepの完了は後続コードの着手承認ではありません。以下§1.2の開始ゲートも適用します。
+**現在の停止位置**: C0受入確認・オーナーGO待ち。99.2再移植はStep 1（§0・§1）、Step 2（§2）、Step 3（§4と取得確認・点検整備Actorに直接必要な§6の部分）、Step 4（§7のDIPS API基盤・固定IP・通信境界のみ）、Step 5（§3と§7の正常受付後・共有リストに必要な限定部分）、Step 6（§5・§6残り・§10）、Step 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）、Step 7b（§7の06の記録責任・作業台帳・取消／リスト整理の境界）、Step 7c（KMLの位置づけ・単位・生成契機・内容・再送）、Step 7d（PDFの役割分離・生成契機、飛行履歴・出力の画面）まで。C1前docs再編・本Stepの完了は後続コードの着手承認ではありません。以下§1.2の開始ゲートも適用します。
 
 ## 1. 実装の基本方針（安全な段階的積み上げ）
 
@@ -68,6 +68,8 @@ Step 7aでは[25e](dips-flight-plan/25e_common-source-and-submission-boundaries.
 Step 7bでは[24b](dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)へ、06の記録責任、人が見る作業台帳と内部の履歴・証跡の分離、取消・リスト整理の意味を移した。C4の外部台帳同期は、35dのPENDINGに加え、履歴・証跡と作業台帳の物理保持（PENDING-LEDGER-SNAPSHOT、PENDING-S5-LIST-DETAIL）、06の結合キー（PENDING-S7B-FLIGHT-KEY）が未確定であり、依存実装の着手条件を満たしたとは扱わない。
 
 Step 7cでは[27e](output/27e_kml-generation-timing-and-content.md)へ、KMLの位置づけ・単位・飛行計画通報時の生成・未同期の保持と最後の送信時の再送・内容の確定境界を移し、旧27a・27b・03・C8にあった運航実績追記モデルをHISTORICALにした。C8のKML実装は、単位と計画の対応（PENDING-S7C-KML-UNIT-MAPPING）、共有時の秘匿投影（PENDING-S7C-KML-SHARE-PROJECTION）、保存先の指定方法（PENDING-S7C-KML-DESTINATION）、最後の送信との契約（PENDING-S7C-KML-FINAL-SEND）が未確定であり、着手条件を満たしたとは扱わない。
+
+Step 7dでは[27f](output/27f_derived-pdf-roles-and-map-pdf.md)へ、A4運航記録PDFと地図付きPDFの役割分離・必要な時だけ生成する方針・地図付きPDFの配置の方向を、[34e](presentation/34e_history-and-output.md)へ［飛行履歴・出力］の画面を移した。C8のPDF・履歴出力は、地図付きPDFの詳細（PENDING-S7D-MAPPDF-DETAIL・SCOPE、VERIFY-S7D-MAPPDF-REGEN）、履歴画面の詳細と出力単位・KML取得（PENDING-S7D-HISTORY-*）が未確定であり、着手条件を満たしたとは扱わない。
 
 以下のC0〜C9は実装配分を保持し、C7のStep 4接続先指定も維持する。Step 6の通常運航・A4は[35a〜35d](operation-recording/README.md)、整備媒体は[36](maintenance-storage/README.md)、Drive責任は[37](drive-structure/README.md)。§7の残り・§8・§9全体・§11の再移植は未完了である。対象領域のゲートを通過する前に、列挙された型やシート方針をそのまま実装開始の許可として使わない。
 
@@ -138,6 +140,7 @@ Step 7cでは[27e](output/27e_kml-generation-timing-and-content.md)へ、KMLの�
 - **目的**: 実務用「A4縦 統合運航帳票」（最新A4実物の飛行記録・日常点検・記事等、詳細は35c）、法定飛行日誌（様式1・2・3別）、DIPS飛行計画台帳の出力、および Google My Maps 連携用 KML エクスポート・Google Drive 自動保存機能の確立。
 - **実装範囲**:
   - `pdf-lib`によるA4出力を[35c](operation-recording/35c_a4-operation-record.md)の実物・現在運用へ合わせる。固定7枠とDomain明細を区別し、旧自動続紙は採用しない。必要時PDFとGoogle Sheets標準印刷の検証も35cへ接続する。
+  - 地図付きPDF（DIPS通報内容とGeometryの地図。必要な時だけ生成。[27f](output/27f_derived-pdf-roles-and-map-pdf.md)）と、［飛行履歴・出力］画面（[34e](presentation/34e_history-and-output.md)）からの出力選択。詳細レイアウト・命名・関係者提出用途との関係は未確定（PENDING-S7D-*）で、着手条件を満たしたとは扱わない。
   - 国交省標準様式1（飛行記録）、様式2（日常点検記録）、様式3（点検整備記録）の個別PDF/CSV出力。
   - DIPS飛行計画台帳のエクスポート機能。
   - **KML Geo Export & Google Drive自動保存（詳細は [output README](output/README.md) 参照）**:

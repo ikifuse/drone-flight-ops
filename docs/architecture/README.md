@@ -9,7 +9,7 @@
 
 ## 2. 現行設計の入口
 
-99.2再移植は[Step 1（§0・§1）](../migration/99-2-step-1-causal-audit.md)、[Step 2（§2）](../migration/99-2-step-2-causal-audit.md)、[Step 3（§4と§6の取得確認・点検整備Actor部分）](../migration/99-2-step-3-causal-audit.md)、[Step 4（§7のDIPS API基盤・固定IP・通信境界）](../migration/99-2-step-4-causal-audit.md)、[Step 5（§3と§7の正常受付後・共有リスト限定部分）](../migration/99-2-step-5-causal-audit.md)、[Step 6（§5・§6残り・§10）](../migration/99-2-step-6-causal-audit.md)、[Step 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）](../migration/99-2-step-7a-causal-audit.md)、[Step 7b（§7の06の記録責任・作業台帳・取消／リスト整理の境界）](../migration/99-2-step-7b-causal-audit.md)、[Step 7c（KMLの位置づけ・単位・生成契機・内容・再送）](../migration/99-2-step-7c-causal-audit.md)まで。人物領域はidentity-and-access、機材取得・共用・履歴の因果はasset-managementへ配置する。現在の目的・設計順序は[00_goal](../00_goal.md)、依存実装の開始条件は[23](23_implementation-roadmap.md)。他の詳細領域は基準設計を保持し、Step 4の経路・通信安全の因果はdips-infrastructure、秘密／認証候補は16。Step 5の画面因果はpresentationに配置する。Step 6の詳細因果はoperation-recording／maintenance-storage／drive-structureへ配置。Step 7aの因果は[25e](dips-flight-plan/25e_common-source-and-submission-boundaries.md)、実画面の証拠系列は[26](26_dips-web-ui-verification.md)へ配置し、判断はADR-0023（Proposed）に要約した。Step 7bの因果は[24b](dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)へ配置し、06の作業台帳と履歴・証跡の分離をADR-0022（Proposed）へ追補した。Step 7cの因果は[27e](output/27e_kml-generation-timing-and-content.md)へ配置し、判断をADR-0024（Proposed）に要約した。PDF・履歴出力・§9全体・§11は未移植。
+99.2再移植は[Step 1（§0・§1）](../migration/99-2-step-1-causal-audit.md)、[Step 2（§2）](../migration/99-2-step-2-causal-audit.md)、[Step 3（§4と§6の取得確認・点検整備Actor部分）](../migration/99-2-step-3-causal-audit.md)、[Step 4（§7のDIPS API基盤・固定IP・通信境界）](../migration/99-2-step-4-causal-audit.md)、[Step 5（§3と§7の正常受付後・共有リスト限定部分）](../migration/99-2-step-5-causal-audit.md)、[Step 6（§5・§6残り・§10）](../migration/99-2-step-6-causal-audit.md)、[Step 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）](../migration/99-2-step-7a-causal-audit.md)、[Step 7b（§7の06の記録責任・作業台帳・取消／リスト整理の境界）](../migration/99-2-step-7b-causal-audit.md)、[Step 7c（KMLの位置づけ・単位・生成契機・内容・再送）](../migration/99-2-step-7c-causal-audit.md)、[Step 7d（PDFの役割分離・生成契機、飛行履歴・出力の画面）](../migration/99-2-step-7d-causal-audit.md)まで。人物領域はidentity-and-access、機材取得・共用・履歴の因果はasset-managementへ配置する。現在の目的・設計順序は[00_goal](../00_goal.md)、依存実装の開始条件は[23](23_implementation-roadmap.md)。他の詳細領域は基準設計を保持し、Step 4の経路・通信安全の因果はdips-infrastructure、秘密／認証候補は16。Step 5の画面因果はpresentationに配置する。Step 6の詳細因果はoperation-recording／maintenance-storage／drive-structureへ配置。Step 7aの因果は[25e](dips-flight-plan/25e_common-source-and-submission-boundaries.md)、実画面の証拠系列は[26](26_dips-web-ui-verification.md)へ配置し、判断はADR-0023（Proposed）に要約した。Step 7bの因果は[24b](dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)へ配置し、06の作業台帳と履歴・証跡の分離をADR-0022（Proposed）へ追補した。Step 7cの因果は[27e](output/27e_kml-generation-timing-and-content.md)へ配置し、判断をADR-0024（Proposed）に要約した。Step 7dの因果は[27f](output/27f_derived-pdf-roles-and-map-pdf.md)と[34e](presentation/34e_history-and-output.md)へ配置し、判断をADR-0025（Proposed）に要約した。§9全体・§11は未移植。
 
 | 入口 / 文書 | 主責務・読む場面 |
 |---|---|
@@ -17,14 +17,14 @@
 | [identity-and-access README](identity-and-access/README.md) | 人物・アカウント・環境、三層権限、運航担当、所属終了の詳細因果と未確定 |
 | [asset-management README](asset-management/README.md) | 機材取得・BAT共用・累計の意味・取得確認と点検整備Actorの因果 |
 | [dips-infrastructure README](dips-infrastructure/README.md) | DIPS API固定出口・限定バックエンド、Manual独立・結果不明時retryの因果 |
-| [presentation README](presentation/README.md) | 10項目規約、初回・ホーム4入口・共有飛行リスト・正常受付後の因果と画面仕様 |
+| [presentation README](presentation/README.md) | 10項目規約、初回・ホーム4入口・共有飛行リスト・正常受付後・飛行履歴・出力の因果と画面仕様 |
 | [operation-recording README](operation-recording/README.md) | 柔軟な1飛行・通常画面・A4最新実物と生成・最終保存の因果 |
 | [maintenance-storage README](maintenance-storage/README.md) | 日常点検から分離した機体別整備媒体・原本コピー |
 | [drive-structure README](drive-structure/README.md) | 旧配置から01〜07、内部正規化と人間向け媒体、物理配置PENDING |
 | [state-machines README](state-machines/README.md) | Operation FSM / DIPS FSM / 法令・安全総合評価。C2/C6/C7の独立状態管理 |
 | [dips-submission README](dips-submission/README.md) | Manual通報業務と独立Sheets台帳、06の記録責任と作業台帳（24b）。C4/C6の境界 |
 | [dips-flight-plan README](dips-flight-plan/README.md) | 公式88項目、Manual Web UI、C7 payload、要件エンジンの責務分離、共通の源とManual／API・DIPS対象外の境界の因果（25e） |
-| [output README](output/README.md) | JSON/KML/Sheets/PDF境界、KML生成、KMLの生成契機・内容・単位（27e）、Drive保存、My Maps操作、将来機体ログ |
+| [output README](output/README.md) | JSON/KML/Sheets/PDF境界、KML生成、KMLの生成契機・内容・単位（27e）、派生PDFの役割・生成契機（27f）、Drive保存、My Maps操作、将来機体ログ |
 | [10_system-boundaries](10_system-boundaries.md) | システム間責務・障害境界・将来ネイティブ拡張ポート |
 | [11_data-authority](11_data-authority.md) | Model Dのライフサイクル別権威・確定台帳・手修正保護 |
 | [14_offline-and-sync](14_offline-and-sync.md) | オフライン成立条件・Storage保護・SyncQueue・再試行 |
@@ -92,6 +92,8 @@
 | 出力・復旧の形式境界 | [27](output/27_output-boundaries.md) | ADR-0008は決定理由、全量restoreはPENDING |
 | KMLの形式・Geometry変換・命名・共有プロファイル | [27a](output/27a_kml-export.md) | 生成契機・内容・単位は27e、Drive/My Mapsは保存・利用のみ |
 | KMLの位置づけ・単位・生成契機・未同期の保持と最後の送信時の再送・内容の確定境界 | [27e](output/27e_kml-generation-timing-and-content.md) | 形式は27a、保存は27b、キューは14、最後の送信は35d。判断の要約はADR-0024 |
+| 派生PDF（A4運航記録PDF・地図付きPDF）の役割分離・必要な時だけ生成する方針・地図付きPDFの配置の方向 | [27f](output/27f_derived-pdf-roles-and-map-pdf.md) | A4の実物・生成単位は35c、生成技術・発行記録は18。判断の要約はADR-0025 |
+| 飛行履歴・出力の画面（検索・選択・出力への導線） | [34e](presentation/34e_history-and-output.md) | 入口は34b、出力の内容・生成契機は27e／27f、A4は35c |
 | KML Drive Storage | [27b](output/27b_google-drive-storage.md) | 14はキュー共通契約、KML生成とは別 |
 | My Maps | [27c](output/27c_google-mymaps-workflow.md) | 実アカウントの表示検証はPENDING |
 | Aircraft flight-log import | [27d](output/27d_aircraft-flight-log-import.md) | 将来入力境界、Flight実績の自動確定ではない |
