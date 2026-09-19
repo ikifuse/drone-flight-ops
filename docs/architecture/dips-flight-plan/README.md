@@ -1,8 +1,8 @@
 # DIPS Flight Plan設計群
 
-最終更新: 2026-09-15
+最終更新: 2026-09-19
 
-手動入力支援はC6第一級、API送信はC7 Optional。まず[25 overview](25_overview.md)で通報入力支援原則と境界を読み、変更対象だけへ進む。
+手動入力支援はC6第一級、API送信はC7 Optional。まず[25 overview](25_overview.md)で通報入力支援原則と境界を読み、変更対象だけへ進む。共通の源からManual／APIを分ける因果は25eに置く。
 
 | 文書 | 主要責務 | 読む場面 |
 |---|---|---|
@@ -11,6 +11,7 @@
 | [25b manual web mapping](25b_manual-web-mapping.md) | 登録Picker・checkbox・コピー・確認ViewModel | C6手動支援を変更 |
 | [25c API payload mapping](25c_api-payload-mapping.md) | DTO・コード変換・内部JSON・送信証跡 | C7承認後にAPI契約を変更 |
 | [25d requirement validation](25d_requirement-validation.md) | 3軸評価・有効値・入力充足 | 必須性・提出準備を変更 |
+| [25e common source and boundaries](25e_common-source-and-submission-boundaries.md) | 共通の源（計画・Geometry・不変Snapshot）、Manual／API経路、DIPS対象外の境界の因果・却下案・再検討条件 | 経路・出力・対象外の扱いを変更する前に理由を確認 |
 
 Geometry一般仕様は[17](../17_map-and-airspace.md)、Entity schemaは[Domain設計群](../domain-model/README.md)、Web観測・PENDINGは[26](../26_dips-web-ui-verification.md)。本READMEに詳細定義を追加しない。
 

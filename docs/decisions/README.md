@@ -97,8 +97,9 @@
 | [ADR-0020](ADR-0020-flexible-flight-and-finalization.md) | 柔軟な1飛行と最終確定 | **提案中（Proposed）** | 未承認（記録2026-09-18） | 意味とschemaを分ける。詳細は35a／35b／35d |
 | [ADR-0021](ADR-0021-a4-record-layout-and-sheet-boundary.md) | 最新A4実物・固定明細・物理シート | **提案中（Proposed）** | 未承認（記録2026-09-18） | 0007 §2.9の限定置換記録。2026-09-19に機体別保存・次空き連番・特殊競合の非採用を追補。詳細は35c |
 | [ADR-0022](ADR-0022-drive-responsibilities-and-human-records.md) | 七責任領域と人間向け04／05媒体 | **提案中（Proposed）** | 未承認（記録2026-09-18） | 0007 §2.8の全面禁止の限定置換記録。詳細は36／37 |
+| [ADR-0023](ADR-0023-common-source-and-derived-submission-paths.md) | 共通の源（計画・Geometry・不変Snapshot）と派生する通報経路・出力 | **提案中（Proposed）** | 未承認（記録2026-09-19） | 0004／0006／0009のClarifies。飛行範囲を用途別に作らない判断とDIPS対象外との境界を記録。詳細は25e |
 
-ADR-0010〜0014は比較用main `6344d7a`にProposedとして存在する。本ブランチはその作成前の`ea73d08`から再移植しており、旧Step成果をコピーしないため収録しない。番号を再利用せずStep 1で0015、Step 2で0016、Step 3で0017、Step 4で0018、Step 5で0019、Step 6で0020〜0022を新設した。mainの0010〜0014をAcceptedへ変更していない。
+ADR-0010〜0014は比較用main `6344d7a`にProposedとして存在する。本ブランチはその作成前の`ea73d08`から再移植しており、旧Step成果をコピーしないため収録しない。番号を再利用せずStep 1で0015、Step 2で0016、Step 3で0017、Step 4で0018、Step 5で0019、Step 6で0020〜0022、Step 7aで0023を新設した。mainの0010〜0014をAcceptedへ変更していない。
 
 CURRENT-ACCEPTEDは現在の設計ベースラインを表し、ADRの承認ではない。[7状態の正本](../guidelines/03_design-evidence-and-causality.md#3-状態ラベルと由来)に従う。0015がProposedであることを理由に、99.2 §0・§1で到達した設計方法を未決へ戻さない。
 
@@ -128,3 +129,5 @@ ADR-0001〜0006は承認コミット `00bd729`（2026-09-14）でAcceptedにな�
 0019は0005のDIPS手続きと現場運航の分離を、ホーム入口と日付・担当者をまたぐ共有計画の引継ぎへ具体化するClarifies。Proposedであり、既存Accepted本文や状態遷移・離陸評価を変更しない。画面の詳細因果・未確定は[Presentation](../architecture/presentation/README.md)へ保持する。
 
 Step 6の0020〜0022もProposed。現在ベースラインへの移管とADR正式承認を同一視しない。0007の内部正規化・機材共用・人物等の未置換範囲を維持する。
+
+Step 7aの0023は、0004のAdapter分離、0006のAPI非依存と提出Snapshot、0009のGeometryの描画ライブラリ非依存をClarifiesとして記録する。Proposedであり、Accepted本文や状態遷移・通報要否の判定を変更しない。判断の詳細因果・限界・未確定は[25e](../architecture/dips-flight-plan/25e_common-source-and-submission-boundaries.md)へ保持し、KMLの生成契機・内容・単位や§7の残りへ本判断を拡張しない。

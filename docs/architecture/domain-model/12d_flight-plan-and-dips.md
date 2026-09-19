@@ -1,6 +1,6 @@
 # 12d. 許可・保険・飛行計画とDIPS提出記録
 
-最終更新: 2026-09-18\
+最終更新: 2026-09-19\
 状態: Phase C0完了・Phase C1未着手（docs再編）
 
 主要責務: FlightPlan / Permission / InsurancePolicy / DipsSubmissionのデータ意味論。外部API DTO、状態遷移、要件判定は別正本から参照する。
@@ -133,6 +133,8 @@ Step 2の人物役割の正本は[31c](../identity-and-access/31c_operational-ac
   - `supersedes_id` / `superseded_by_id`: 訂正前・訂正後の提出ID（任意）。
   - `sync_status`: 外部台帳への同期状態。定義は [14](../14_offline-and-sync.md) と [24a](../dips-submission/24a_submission-and-sheets-ledger.md)。
   - `notes`: 提出特記事項
+
+`submission_snapshot`を通報方式にかかわらず必須とし、提出内容のGeometryを含めて不変に保持する理由と、共通の源・Manual／API経路・DIPS対象外との関係は[25e §3](../dips-flight-plan/25e_common-source-and-submission-boundaries.md#3-不変submission_snapshotをapiの有無に関わらず持つ理由)が詳細正本。型と不変性の正本は本書である。
 
 ## 5. DipsNotification（通報状態集約プロジェクション）
 - **分類**: **Projection (集約ビュー)**

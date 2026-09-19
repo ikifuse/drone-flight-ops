@@ -1,6 +1,6 @@
 # 25. DIPS Flight Plan設計の全体境界
 
-最終更新: 2026-09-15\
+最終更新: 2026-09-19\
 状態: 設計整合（C1未着手）\
 主責務: 入力済情報の再利用原則、Manual/APIの責務と読む順番\
 入口: [DIPS Flight Plan設計群](README.md)
@@ -12,6 +12,8 @@
 **Master / Preset / FlightPlan → 不変submission_snapshot → DipsManualEntryViewModel → DIPS Webで必要最小限の選択・入力・確認 → 通報確認記録**を標準経路とする。手動通報の利用者へAPI JSONの表示・作成・保存・コピーを要求しない。
 
 正式なAPI利用承認・credential取得時のみ、同じsnapshotから **API Mapper → DIPS API内部JSON → DIPS API** の送信経路を追加する。APIの有無でFlightPlanや現場運航設計を作り直さない。ローカル不変保存とSheets同期ジョブ登録の業務フローは[24 Manual通報設計](../dips-submission/24_manual-submission.md)を参照する。
+
+共通の源（FlightPlan・Geometry・不変Snapshot）から二経路を分ける因果、却下案、DIPS対象外との境界は[25e](25e_common-source-and-submission-boundaries.md)が詳細正本。本節は原則の正本である。
 
 - **C6 Manualは第一級**: API JSON生成を前提とせず、オフラインで支援表示・コピーが可能。DIPS Webへの送信自体には通信が必要。
 - **C7 APIはOptional**: 公式契約・資格情報を再確認してから実装する。未承認時にはMapper、API DTO、JSON serializerの実装は不要。
@@ -87,6 +89,7 @@ DIPS APIのリクエストパラメータ名（例: `flightPurpose`, `flightAirs
 | DipsSubmissionと意味論的Snapshotの型 | [12d Domain](../domain-model/12d_flight-plan-and-dips.md) |
 | Geometry一般仕様 | [17 Map / Geometry](../17_map-and-airspace.md) |
 | 状態遷移・通報要否・離陸判断 | [状態設計群](../state-machines/README.md) |
-| Webの観測・推論・未確認事項 | [26 実画面証拠](../26_dips-web-ui-verification.md) |
+| Webの観測・推論・未確認事項、実画面の証拠系列 | [26 実画面証拠](../26_dips-web-ui-verification.md) |
+| 共通の源・Manual／API・DIPS対象外の境界の因果 | [25e](25e_common-source-and-submission-boundaries.md) |
 
 26の `OBSERVED` は2026-09-14の観測範囲の事実、`OFFICIAL_SPEC` は記録された版の一次資料の仕様、`INFERRED` は推論、`PENDING` は未確認を表す。アプリが採用する設計要件とDIPS内部実装の事実は区別する。手動/API等価性は同じ意味論的Snapshotを起点にすることを意味し、未確認のWeb/API機能差まで同一と断定しない。

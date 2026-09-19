@@ -9,7 +9,7 @@
 
 ## 2. 現行設計の入口
 
-99.2再移植は[Step 1（§0・§1）](../migration/99-2-step-1-causal-audit.md)、[Step 2（§2）](../migration/99-2-step-2-causal-audit.md)、[Step 3（§4と§6の取得確認・点検整備Actor部分）](../migration/99-2-step-3-causal-audit.md)、[Step 4（§7のDIPS API基盤・固定IP・通信境界）](../migration/99-2-step-4-causal-audit.md)、[Step 5（§3と§7の正常受付後・共有リスト限定部分）](../migration/99-2-step-5-causal-audit.md)、[Step 6（§5・§6残り・§10）](../migration/99-2-step-6-causal-audit.md)まで。人物領域はidentity-and-access、機材取得・共用・履歴の因果はasset-managementへ配置する。現在の目的・設計順序は[00_goal](../00_goal.md)、依存実装の開始条件は[23](23_implementation-roadmap.md)。他の詳細領域は基準設計を保持し、Step 4の経路・通信安全の因果はdips-infrastructure、秘密／認証候補は16。Step 5の画面因果はpresentationに配置する。Step 6の詳細因果はoperation-recording／maintenance-storage／drive-structureへ配置。§7対象外・§8・§9全体・§11は未移植。
+99.2再移植は[Step 1（§0・§1）](../migration/99-2-step-1-causal-audit.md)、[Step 2（§2）](../migration/99-2-step-2-causal-audit.md)、[Step 3（§4と§6の取得確認・点検整備Actor部分）](../migration/99-2-step-3-causal-audit.md)、[Step 4（§7のDIPS API基盤・固定IP・通信境界）](../migration/99-2-step-4-causal-audit.md)、[Step 5（§3と§7の正常受付後・共有リスト限定部分）](../migration/99-2-step-5-causal-audit.md)、[Step 6（§5・§6残り・§10）](../migration/99-2-step-6-causal-audit.md)、[Step 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）](../migration/99-2-step-7a-causal-audit.md)まで。人物領域はidentity-and-access、機材取得・共用・履歴の因果はasset-managementへ配置する。現在の目的・設計順序は[00_goal](../00_goal.md)、依存実装の開始条件は[23](23_implementation-roadmap.md)。他の詳細領域は基準設計を保持し、Step 4の経路・通信安全の因果はdips-infrastructure、秘密／認証候補は16。Step 5の画面因果はpresentationに配置する。Step 6の詳細因果はoperation-recording／maintenance-storage／drive-structureへ配置。Step 7aの因果は[25e](dips-flight-plan/25e_common-source-and-submission-boundaries.md)、実画面の証拠系列は[26](26_dips-web-ui-verification.md)へ配置し、判断はADR-0023（Proposed）に要約した。§7の残り・§8・§9全体・§11は未移植。
 
 | 入口 / 文書 | 主責務・読む場面 |
 |---|---|
@@ -23,7 +23,7 @@
 | [drive-structure README](drive-structure/README.md) | 旧配置から01〜07、内部正規化と人間向け媒体、物理配置PENDING |
 | [state-machines README](state-machines/README.md) | Operation FSM / DIPS FSM / 法令・安全総合評価。C2/C6/C7の独立状態管理 |
 | [dips-submission README](dips-submission/README.md) | Manual通報業務と独立Sheets台帳。C4/C6の境界 |
-| [dips-flight-plan README](dips-flight-plan/README.md) | 公式88項目、Manual Web UI、C7 payload、要件エンジンの責務分離 |
+| [dips-flight-plan README](dips-flight-plan/README.md) | 公式88項目、Manual Web UI、C7 payload、要件エンジンの責務分離、共通の源とManual／API・DIPS対象外の境界の因果（25e） |
 | [output README](output/README.md) | JSON/KML/Sheets/PDF境界、KML生成、Drive保存、My Maps操作、将来機体ログ |
 | [10_system-boundaries](10_system-boundaries.md) | システム間責務・障害境界・将来ネイティブ拡張ポート |
 | [11_data-authority](11_data-authority.md) | Model Dのライフサイクル別権威・確定台帳・手修正保護 |
@@ -37,7 +37,7 @@
 | [21_testing-strategy](21_testing-strategy.md) | 単体/統合/実機の検証境界・Manual/API別シナリオ |
 | [22_migration-plan](22_migration-plan.md) | 旧GAS非破壊移行・Shadow Run・資産継承・切替/復帰 |
 | [23_implementation-roadmap](23_implementation-roadmap.md) | C0〜C9の範囲・受入基準・C7スキップ経路・現在の停止位置 |
-| [26_dips-web-ui-verification](26_dips-web-ui-verification.md) | OBSERVED / OFFICIAL_SPEC / INFERRED / PENDINGを保つ実画面の証拠資料 |
+| [26_dips-web-ui-verification](26_dips-web-ui-verification.md) | OBSERVED / OFFICIAL_SPEC / INFERRED / PENDINGを保つ実画面の証拠資料。PC版・スマホ版の証拠系列と回収範囲を含む |
 | [28_c1-docs-restructure-audit](28_c1-docs-restructure-audit.md) | 今回の全docs責務監査・移行対照・整合修正・最終検査記録 |
 
 設計の基準は確定でも、PENDINGは未解決です。26番は証拠資料であり、現行型・UI契約は上表の対応する設計正本に置きます。
@@ -54,7 +54,7 @@
 | ホーム4入口・画面→保存責任の接続 | [34b](presentation/34b_home-and-navigation.md) | 各領域は到達先。Drive全体構造の追加正本を作らない |
 | 共有飛行リスト・カード5系統・対象選択 | [34c](presentation/34c_shared-flight-worklist.md) | 24aは提出履歴保存。画面カードへ列全体を複製しない |
 | API正常受付時の掲載・後で飛行する・通報内容確認 | [34d](presentation/34d_dips-accepted-and-plan-content.md) | 13bはFSM、33bは通信安全、取消／重複調整の詳細は対象外 |
-| FlightAreaGeometry | [17](17_map-and-airspace.md) | 12は型参照、25cはDIPS変換、27aはKML変換 |
+| FlightAreaGeometry | [17](17_map-and-airspace.md) | 12は型参照、25cはDIPS変換、27aはKML変換。共通の源とする因果は25e |
 | Organization / Client / Project | [12a](domain-model/12a_organization-and-personnel.md) | OperationalEnvironmentとの未確定対応は31a |
 | Personnel / GoogleIdentity・UserAccount / OperationalEnvironment / Membership / Qualifications | [31a](identity-and-access/31a_person-account-and-environment.md) | Domainは概念とschema未決の参照、Presentationは環境表示を参照 |
 | 業務役割・アプリ機能・Google実アクセス / アプリ管理者 | [31b](identity-and-access/31b_roles-and-access-control.md) | 16は秘密・認証、Driveは保存処理。権限の二重正本を作らない |
@@ -65,7 +65,7 @@
 | BAT共用・セット表示・取得時状態・個体履歴の意味 | [32b](asset-management/32b_battery-sharing-and-acquisition-history.md) | Flight / BatteryUsage属性は12b/12e、物理配置は未確定 |
 | 取得時確認の算入判断・点検整備実施者と作成／転記者 | [32c](asset-management/32c_acquisition-check-and-maintenance-actors.md) | 12e/12fはEntity・監査、通常運航Recorderは31c |
 | Location / Preset / Template | [12c](domain-model/12c_location-and-presets.md) | 17はGeometry参照、25は再利用方法 |
-| FlightPlan / DipsSubmission / semantic snapshot | [12d](domain-model/12d_flight-plan-and-dips.md) | 状態全値は13b、API電文は25c、24aは台帳への保存 |
+| FlightPlan / DipsSubmission / semantic snapshot | [12d](domain-model/12d_flight-plan-and-dips.md) | 状態全値は13b、API電文は25c、24aは台帳への保存。Snapshotを必須とする因果は25e |
 | 柔軟な1飛行・内部明細・機体交代境界 | [35a](operation-recording/35a_flexible-flight-and-details.md) | 12eは旧schema候補とPENDING。意味を帳票枠から逆算しない |
 | 通常運航の画面と途中入力 | [35b](operation-recording/35b_normal-operation-and-final-save.md) | 13aは論理状態、34dは入口 |
 | A4実物・機体個体別保存・次空き連番・特殊競合の非採用・必要時PDF | [35c](operation-recording/35c_a4-operation-record.md) | 18は生成技術、37は配置要約。実物観測とオーナー追加判断を区別 |
@@ -82,6 +82,8 @@
 | Manual DIPS業務 | [24](dips-submission/24_manual-submission.md) | 15はAdapter呼出、25bは画面・ViewModel |
 | Manual Web mapping / Assistance ViewModel | [25b](dips-flight-plan/25b_manual-web-mapping.md) | 24は通報記録フローのみ |
 | DIPS Submission Assistance Principle | [25 overview](dips-flight-plan/25_overview.md) | 要件と24は要約/リンク |
+| 共通の源（FlightPlan・Geometry・不変Snapshot）とManual／API・DIPS対象外の境界の因果・却下案・再検討条件 | [25e](dips-flight-plan/25e_common-source-and-submission-boundaries.md) | 型は17／12d、原則は25 overview、電文は25c、通報要否は13c。判断の要約はADR-0023 |
+| DIPS実画面の証拠系列・観測・確認待ち | [26](26_dips-web-ui-verification.md) | 採用した設計要件は25b／25e。観測をDIPS内部仕様の事実へ拡張しない |
 | Data Authority | [11](11_data-authority.md) | 台帳/同期/出力はこの権威分担に従う |
 | SyncQueue | [14](14_offline-and-sync.md) | 各Adapterは対象ジョブ・失敗処理を参照 |
 | Sheets Ledger | [24a](dips-submission/24a_submission-and-sheets-ledger.md) | 12にSheets列を重複定義しない |

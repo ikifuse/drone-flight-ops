@@ -1,12 +1,12 @@
 # 23. Phase C 実装ロードマップとマイルストーン（23_implementation-roadmap.md）
 
-最終更新: 2026-09-18
+最終更新: 2026-09-19
 プロジェクト: `drone-flight-ops`
 フェーズ: Phase B設計凍結（ADR-0001〜0007承認済、追加部分置換ADR-0008/0009）/ C0構築完了・C1設計準備完了・C1未着手
 
 ---
 
-**現在の停止位置**: C0受入確認・オーナーGO待ち。99.2再移植はStep 1（§0・§1）、Step 2（§2）、Step 3（§4と取得確認・点検整備Actorに直接必要な§6の部分）、Step 4（§7のDIPS API基盤・固定IP・通信境界のみ）、Step 5（§3と§7の正常受付後・共有リストに必要な限定部分）、Step 6（§5・§6残り・§10）まで。C1前docs再編・本Stepの完了は後続コードの着手承認ではありません。以下§1.2の開始ゲートも適用します。
+**現在の停止位置**: C0受入確認・オーナーGO待ち。99.2再移植はStep 1（§0・§1）、Step 2（§2）、Step 3（§4と取得確認・点検整備Actorに直接必要な§6の部分）、Step 4（§7のDIPS API基盤・固定IP・通信境界のみ）、Step 5（§3と§7の正常受付後・共有リストに必要な限定部分）、Step 6（§5・§6残り・§10）、Step 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）まで。C1前docs再編・本Stepの完了は後続コードの着手承認ではありません。以下§1.2の開始ゲートも適用します。
 
 ## 1. 実装の基本方針（安全な段階的積み上げ）
 
@@ -63,7 +63,9 @@ Step 4では[DIPS接続基盤](dips-infrastructure/README.md)と[16](16_security
 
 Step 5では[presentation](presentation/README.md)へ§3と§7の正常受付後・共有リスト限定部分を移した。初回必須範囲、root再発見、詳細UI・共有反映等は未確定であり、画面仕様の記録をゲート通過・実装開始と扱わない。
 
-以下のC0〜C9は実装配分を保持し、C7のStep 4接続先指定も維持する。Step 6の通常運航・A4は[35a〜35d](operation-recording/README.md)、整備媒体は[36](maintenance-storage/README.md)、Drive責任は[37](drive-structure/README.md)。§7対象外・§8・§9全体・§11の再移植は未完了である。対象領域のゲートを通過する前に、列挙された型やシート方針をそのまま実装開始の許可として使わない。
+Step 7aでは[25e](dips-flight-plan/25e_common-source-and-submission-boundaries.md)と[26 §1.3](26_dips-web-ui-verification.md#13-証拠系列と回収範囲)へ、実画面の証拠系列・共通の源・Manual／API経路・DIPS対象外の因果を移した。C1の`FlightAreaGeometry`・`DipsSubmission`型はこの因果に接続するが、計画Draftの`geometry`と旧`geometry_snapshot`の統合（PENDING-C1-SCHEMA）、作図操作の未回収、`flyRoute`表現のVERIFY、DIPS対象外の定義（PENDING-S7A-NON-DIPS-SCOPE）は未確定であり、ゲートを通過したとも実装開始とも扱わない。
+
+以下のC0〜C9は実装配分を保持し、C7のStep 4接続先指定も維持する。Step 6の通常運航・A4は[35a〜35d](operation-recording/README.md)、整備媒体は[36](maintenance-storage/README.md)、Drive責任は[37](drive-structure/README.md)。§7の残り・§8・§9全体・§11の再移植は未完了である。対象領域のゲートを通過する前に、列挙された型やシート方針をそのまま実装開始の許可として使わない。
 
 ---
 

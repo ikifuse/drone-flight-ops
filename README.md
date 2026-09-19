@@ -10,7 +10,7 @@ iPhone / Android向け 総合ドローン運航管理アプリ（C0 Shell構築�
 
 現行の自作アプリ（`ikifuse/autel-evo-lite-flight-log`）の強みである「バッテリー個体管理」「現場重視の操作性」「データの透明性」を継承し、参考アプリ（DIPS Viewer ワンエビneo等）の機能を取り込んだ次期システムの基盤資料です。
 
-このブランチは`ea73d08`から99.2の因果を保持して再移植する`redo/99-2-causal-migration`です。Step 1〜5を保持し、今回の範囲は**Step 6（§5、§6の未移植部分、§10）**。最新A4のDrive実物を閲覧確認し、通常運航・A4・整備媒体・Drive責任を移植しました。§7残り・§8・§9全体・§11には進みません。[移植・監査記録](docs/migration/README.md)を参照してください。mainの旧Step 1〜8は比較証拠として保存し、再利用していません。アプリの目的は[記入支援](docs/00_goal.md#11-記入支援を中心に置くまでの因果)、依存実装の着手条件は[23](docs/architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)にあります。
+`ea73d08`から99.2の因果を保持して再移植する作業は`redo/99-2-causal-migration`で進め、`01eeac3`から分岐した`claude/99-2-continuation`で継続しています。Step 1〜6を保持し、今回の範囲は**Step 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）**。共通の源とManual／APIの境界の因果を[25e](docs/architecture/dips-flight-plan/25e_common-source-and-submission-boundaries.md)、実画面の証拠系列を[26](docs/architecture/26_dips-web-ui-verification.md)へ移しました。§7の残り・§8・§9全体・§11には進みません。[移植・監査記録](docs/migration/README.md)を参照してください。mainの旧Step 1〜8は比較証拠として保存し、再利用していません。アプリの目的は[記入支援](docs/00_goal.md#11-記入支援を中心に置くまでの因果)、依存実装の着手条件は[23](docs/architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)にあります。
 
 ## ドキュメント一覧
 

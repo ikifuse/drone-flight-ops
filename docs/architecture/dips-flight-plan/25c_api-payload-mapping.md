@@ -1,6 +1,6 @@
 # 25c. DIPS API payload mapping（C7 Optional）
 
-最終更新: 2026-09-15\
+最終更新: 2026-09-19\
 状態: 設計整合（C1未着手）\
 主責務: API契約境界、コード変換、JSON serializationと送信証跡\
 入口: [DIPS Flight Plan設計群](README.md)
@@ -79,3 +79,4 @@ DIPS APIでは、飛行目的（1〜16）、飛行空域（1: DID, 2: 150m以上
 - Domainの `LatLngPoint` から外部の `[longitude, latitude]` 表現への変換はこの境界だけで行う。CircleはDIPS固有の形状表現であり、標準GeoJSON仕様にCircleがあるという意味ではない。
 - `BUFFERED_LINE` は `PENDING-WEB-05` が解決するまで `MANUAL_ONLY`。KML向けの近似PolygonをDIPS APIへ転用しない。
 - 版別Mapper検証では無制限保険、複数機体/操縦者、その他条件、未対応Geometry、送信DTOと記録した文字列の一致を確認する。これは将来C7の検証設計であり、本docs作業で実装しない。
+- **VERIFY-S7A-FLYROUTE-CONTRACT**: `flyRoute`の表現。99.2 §7は過去調査の整理として「GeoJSON文字列」と記録し、[25a](25a_field-catalog.md)のNo.41は「Object（GeoJSON準拠）」と記録していて食い違う。どちらも今回は公式原文と突合していないため、文字列かObjectか、座標順序、Circleの表現は上記の契約再確認まで確定しない。証拠の系列と限界は[26 §1.3](../26_dips-web-ui-verification.md#13-証拠系列と回収範囲)、共通の源との関係は[25e](25e_common-source-and-submission-boundaries.md)。

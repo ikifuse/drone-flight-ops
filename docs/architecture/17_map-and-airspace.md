@@ -1,6 +1,6 @@
 # 17. 地図・飛行範囲（FlightArea）・空域データソース設計（17_map-and-airspace.md）
 
-最終更新: 2026-09-15
+最終更新: 2026-09-19
 プロジェクト: `drone-flight-ops`
 フェーズ: Phase B2（詳細アーキテクチャ・実装前設計）
 
@@ -37,6 +37,8 @@
 ## 2. 飛行範囲（FlightAreaGeometry）の中立Domainモデル
 
 2026-09-14のDIPS Web実画面検証（`OBSERVED`）に基づき、新アプリはDIPS API専用形式ではなく、ユーザー向けGeo Export（KML）、地図描画内部変換（GeoJSON）、将来のAPI連携（Phase C7 Optional）等へ元形状を保ち、各境界で変換する中立Domainモデル `FlightAreaGeometry` を採用します。
+
+飛行範囲をDIPS用・KML用・アプリ用に別々に作らず共通の源として扱う理由、却下案、全形状を全経路へ同じ形で送れるとは限らない限界、提出Snapshotとの関係は[25e §2](dips-flight-plan/25e_common-source-and-submission-boundaries.md#2-実画面の観測から共通geometryへ至った因果)が詳細正本。本節は型の正本である。
 
 ### 2.1 データ定義（Domain Model）
 本節を `FlightAreaGeometry` の唯一の型正本とする。旧26の重複型は移管済み。アプリの形状識別子は大文字 `kind` に統一し、外部API/GeoJSONの座標配列はAdapterだけで生成する。

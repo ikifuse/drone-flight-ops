@@ -183,3 +183,15 @@
 | PENDING-S6-DRIVE-PLACEMENT / VERIFY-S6-DRIVE-EVIDENCE | [37](architecture/drive-structure/37_environment-storage-responsibilities.md) |
 
 CURRENT-PROPOSALの機体交代時の新Flight接続を最終schemaとしない。固定7枠は現在99.2と最新実物に基づく到達点。2026-09-19のオーナー追補による機体個体別Spreadsheet、`YY.M.D`と同日次空き連番、交代時の保存先切替はCURRENT-ACCEPTEDとして[35c §3](architecture/operation-recording/35c_a4-operation-record.md#3-その後の運用判断による現在ベースライン)へ記録した。高度な同時競合対策の意図的非採用を未解決の必須対策としない。場所変更の厳密条件・柔軟な1飛行との境界・最終schema、年度／長期分割、複製・通常再送の詳細は各正本のPENDINGを維持する。前回のA4印刷VERIFYは変更しない。
+
+## Step 7aの未確定・検証先
+
+詳細理由を本書へ複製せず、各正本へ進む。到達済みの意味と未検証を混同しない。
+
+| ID | 詳細正本 |
+|---|---|
+| PENDING-S7A-DRAW-OPERATION / VERIFY-S7A-EVIDENCE | [26 §1.3](architecture/26_dips-web-ui-verification.md#13-証拠系列と回収範囲)：作図操作の未回収、PC版・スマホ版の証拠系列の再確認と相違比較 |
+| VERIFY-S7A-FLYROUTE-CONTRACT | [25c §6](architecture/dips-flight-plan/25c_api-payload-mapping.md#6-c7契約再確認と検証)：`flyRoute`の表現の相違と公式原文との突合 |
+| PENDING-S7A-NON-DIPS-SCOPE | [25e §6](architecture/dips-flight-plan/25e_common-source-and-submission-boundaries.md#6-未確定確認待ちと再検討条件)：「DIPS対象外／対象」の定義と、任意に通報した場合の扱い |
+
+共通の源、不変`submission_snapshot`、Manual／API経路の責任境界、DIPS対象外との境界の意味はCURRENT-ACCEPTED（詳細は[25e](architecture/dips-flight-plan/25e_common-source-and-submission-boundaries.md)、判断の要約は[ADR-0023](decisions/ADR-0023-common-source-and-derived-submission-paths.md) Proposed）。既存のPENDING-WEB-05〜07、PENDING-C1-SCHEMA（`geometry`と旧`geometry_snapshot`の統合）、PENDING-LEDGER-SNAPSHOT、API契約のVERIFYは解消していない。§7の残り（KMLの生成・保存・再送、06の保存構造、取消・重複あり調整・リスト自動整理）、§8、§9全体、§11は未移植であり、その既存詳細を99.2全体との監査済み仕様と扱わない。
