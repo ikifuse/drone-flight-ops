@@ -1,6 +1,6 @@
 # 34d. DIPS正常受付後と通報内容の通常画面
 
-最終更新: 2026-09-18\
+最終更新: 2026-09-19\
 由来: 99.2 §3と、§7の正常受付・共有リスト掲載・重複なし通常導線の部分。\
 主要責務: 正式掲載の契機、正常受付後の選択、「DIPS通報内容」画面。API基盤・payload・全FSM・重複調整・取消詳細は対象外。
 
@@ -75,6 +75,6 @@ flowchart TD
 
 **PENDING-S5-ACCEPTED-UI**: 正常応答後・内容画面の未記載の表示、戻る操作、権限／offline差の具体化。**VERIFY-S5-RESPONSE-EVIDENCE**: 原本が記録する2026-09-17のガイドライン版と正常応答条件。正式API仕様・認証・credentialはStep 4のVERIFY-S4-API-CONTRACTを維持し、今回のUIで確定しない。
 
-API payloadは[25c](../dips-flight-plan/25c_api-payload-mapping.md)、固定出口は[33a](../dips-infrastructure/33a_fixed-egress-and-api-connection.md)。重複あり時の具体調整、取消不能・予定時刻経過・事故／急病・通信不能時の取消・作業リスト自動整理、KML生成／保存／再送は後続へ残し、本書にFSMや通信処理を追加しない。
+API payloadは[25c](../dips-flight-plan/25c_api-payload-mapping.md)、固定出口は[33a](../dips-infrastructure/33a_fixed-egress-and-api-connection.md)。重複あり時の具体調整、取消不能・予定時刻経過・事故／急病・通信不能時の取消・作業リスト自動整理、KML生成／保存／再送は後続へ残し、本書にFSMや通信処理を追加しない。取消・作業リスト整理の意味は後続のStep 7bで[24b §3](../dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md#3-計画が作業対象でなくなる意味取消整理)へ配置した（正確な条件と重複あり調整は未確定）。
 
 Step 6の点検以降の通常運航は[35b](../operation-recording/35b_normal-operation-and-final-save.md)へ接続する。本書の正常受付・共有掲載の因果を変更せず、後続操作の詳細をここへ複製しない。

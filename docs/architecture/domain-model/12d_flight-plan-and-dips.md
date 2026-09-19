@@ -162,7 +162,7 @@ Step 2の人物役割の正本は[31c](../identity-and-access/31c_operational-ac
    - 新提出（Revision 2）の `supersedes_id` に旧提出IDを記録。
 4. **計画取消（Cancellation）**:
    - 運航中止等で計画を取り消す場合、操縦者がDIPS側で取消手続きを実施した上で、アプリ側で「取消」を打刻。
-   - `cancelled_at`（取消日時）および `cancel_reason`（強風、体調不良、機体不調等）を記録し、ステータスを `CANCELLED` に更新。過去スナップショット自体は削除せず長期にわたり保持します。
+   - `cancelled_at`（取消日時）および `cancel_reason`（強風、体調不良、機体不調等）を記録し、ステータスを `CANCELLED` に更新。過去スナップショット自体は削除せず長期にわたり保持します。取消後や完了後に計画が共有飛行リストから整理される意味と、それが提出履歴の削除ではないことは[24b §3](../dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md#3-計画が作業対象でなくなる意味取消整理)。
 
 ## 8. 関連サービスの所在
 

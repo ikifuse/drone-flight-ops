@@ -1,10 +1,11 @@
 # ADR-0022: Driveの七責任領域と人間向け記録媒体を分離する
 
 - **作成日**: 2026-09-18
+- **追補日**: 2026-09-19（06の人が見る作業台帳と内部の履歴・証跡の分離）
 - **ステータス**: Proposed（未承認）
 - **関係性**: Partially Supersedes ADR-0007 §2.8の物理シート複製全面禁止を04／05の限定範囲で置換。内部正規化・機材共用等は維持し、Accepted本文は保持。
-- **決定者**: オーナーの現在99.2 §6・§10とStep 6指示を基に記録。
-- **関連要件・詳細正本**: [36](../architecture/maintenance-storage/36_aircraft-maintenance-records.md)／[37](../architecture/drive-structure/37_environment-storage-responsibilities.md)、A4は[35c](../architecture/operation-recording/35c_a4-operation-record.md)
+- **決定者**: オーナーの現在99.2 §6・§10とStep 6指示、追補は99.2 §7の06関連（Step 7b）を基に記録。
+- **関連要件・詳細正本**: [36](../architecture/maintenance-storage/36_aircraft-maintenance-records.md)／[37](../architecture/drive-structure/37_environment-storage-responsibilities.md)、A4は[35c](../architecture/operation-recording/35c_a4-operation-record.md)、06は[24b](../architecture/dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)
 
 ## 1. 背景と課題（Context）
 
@@ -16,9 +17,13 @@
 - 全記録へ物理タブ禁止を適用する、または全履歴をタブ複製へ戻す。
 - 七責任領域、通常内部履歴の正規化、人間向け04／05媒体を区別する。
 
+追補で比較したのは、06の作業台帳を提出・通知・Geometry Snapshot等の技術用の複数タブへ分割して利用者に見せる案と、人が見る作業台帳を1シートで成立させ、内部の履歴・証跡を別責任として保持する案である。
+
 ## 3. 決定内容（Decision）
 
 現在99.2の三つ目をCURRENT-ACCEPTEDとして37へ記録する。05の1機体1フォルダー1Spreadsheetと原本コピーは36が詳細正本。Actorは既存32cに維持。04の媒体は独立した35cの判断によるもので、整備例外を一般化したものではない。
+
+追補のCURRENT-ACCEPTEDは、06の人が見る作業台帳を1シートで成立させ、技術用の複数タブを利用者向けに復活させないこと、内部の履歴・証跡を別責任とすること（作業台帳は履歴のタブ複製ではなく、DIPS履歴へ物理タブ複製の例外を広げない）。詳細正本は24bで、04／05の媒体判断を06へ一般化したものではなく、99.2 §7の独立した判断による。
 
 ## 4. 採用理由と他案の却下理由（Rationale）
 
@@ -30,8 +35,8 @@
 
 ## 6. デメリット・トレードオフ（Cons / Trade-offs）
 
-物理配置・索引・所有／アクセス・長期分割・復旧の契約はPENDING。媒体が複数でも同じ記録を独立再入力・二重加算させない設計が必要である。通常BAT・DIPS履歴へ例外を広げない。
+物理配置・索引・所有／アクセス・長期分割・復旧の契約はPENDING。06の履歴・証跡の物理保存と作業台帳の物理保持・共有反映も未確定で、作業台帳を1シートに保てる件数・列の限界は実運用で確認する。媒体が複数でも同じ記録を独立再入力・二重加算させない設計が必要である。通常BAT・DIPS履歴へ例外を広げない。
 
 ## 7. 将来この決定を見直す条件（Re-evaluation Triggers）
 
-長期利用、複数ユーザー／組織での配置・権限・保守に支障が出る場合。十観点の確認は37に従い、実Driveの変更は別の明示指示で行う。本ADRは実装開始・Drive変更の許可ではない。
+長期利用、複数ユーザー／組織での配置・権限・保守に支障が出る場合。06の作業台帳が1シートで成立しない実態が確認された場合。十観点の確認は37に従い、実Driveの変更は別の明示指示で行う。本ADRは実装開始・Drive変更の許可ではない。

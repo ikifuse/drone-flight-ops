@@ -195,3 +195,13 @@ CURRENT-PROPOSALの機体交代時の新Flight接続を最終schemaとしない�
 | PENDING-S7A-NON-DIPS-SCOPE | [25e §6](architecture/dips-flight-plan/25e_common-source-and-submission-boundaries.md#6-未確定確認待ちと再検討条件)：「DIPS対象外／対象」の定義と、任意に通報した場合の扱い |
 
 共通の源、不変`submission_snapshot`、Manual／API経路の責任境界、DIPS対象外との境界の意味はCURRENT-ACCEPTED（詳細は[25e](architecture/dips-flight-plan/25e_common-source-and-submission-boundaries.md)、判断の要約は[ADR-0023](decisions/ADR-0023-common-source-and-derived-submission-paths.md) Proposed）。既存のPENDING-WEB-05〜07、PENDING-C1-SCHEMA（`geometry`と旧`geometry_snapshot`の統合）、PENDING-LEDGER-SNAPSHOT、API契約のVERIFYは解消していない。§7の残り（KMLの生成・保存・再送、06の保存構造、取消・重複あり調整・リスト自動整理）、§8、§9全体、§11は未移植であり、その既存詳細を99.2全体との監査済み仕様と扱わない。
+
+## Step 7bの未確定・検証先
+
+Step 7a節が挙げる未移植のうち、06の保存構造と、取消・重複あり調整・リスト整理は本節で扱った。詳細理由を本書へ複製せず、各正本へ進む。
+
+| ID | 詳細正本 |
+|---|---|
+| PENDING-S7B-FLIGHT-KEY / PENDING-S7B-CLEANUP-CONDITION / PENDING-S7B-DUPLICATE-ADJUST | [24b §5](architecture/dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md#5-未確定確認待ちと再検討条件)：06の結合キー、作業対象でなくなる正確な時点・条件、重複あり調整 |
+
+06の記録責任、人が見る作業台帳と内部の履歴・証跡の分離、取消・整理の意味はCURRENT-ACCEPTED（[24b](architecture/dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)、追補は[ADR-0022](decisions/ADR-0022-drive-responsibilities-and-human-records.md) Proposed）。既存のPENDING-S5-LIST-DETAIL、VERIFY-S5-LIST-EVIDENCE、PENDING-LEDGER-SNAPSHOT、PENDING-S6-DRIVE-PLACEMENTは解消していない。

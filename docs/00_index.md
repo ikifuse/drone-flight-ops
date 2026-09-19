@@ -12,7 +12,7 @@
 - Phase A/A.5、B1〜B2最終監査完了、Phase B設計凍結。
 - ADR-0001〜0007 Accepted。2026-09-15のdocs再編指示に基づく部分置換はADR-0008/0009。
 - **C0基盤・PWA Shell構築完了、C1設計準備完了。C1以降は未着手、C0受入確認・オーナーGO待ち。**
-- **99.2再移植はStep 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）まで**。Step 1（§0・§1）・Step 2（§2）を保持し、人物領域は[identity-and-access](architecture/identity-and-access/README.md)、機材の取得・共用・履歴は[asset-management](architecture/asset-management/README.md)を詳細正本とする。[移植記録](migration/README.md)から確認範囲へ進む。Step 3の機材領域も保持する。Step 4は[dips-infrastructure](architecture/dips-infrastructure/README.md)と[16](architecture/16_security.md)へ配置。Step 5の画面・因果は[presentation](architecture/presentation/README.md)へ配置。Step 6は[operation-recording](architecture/operation-recording/README.md)／[maintenance-storage](architecture/maintenance-storage/README.md)／[drive-structure](architecture/drive-structure/README.md)へ§5・§6残り・§10を配置。Step 7aは[dips-flight-plan](architecture/dips-flight-plan/README.md)の[25e](architecture/dips-flight-plan/25e_common-source-and-submission-boundaries.md)へ共通の源・Manual／API・DIPS対象外の因果を、[26](architecture/26_dips-web-ui-verification.md)へ実画面の証拠系列を配置（判断は[ADR-0023](decisions/ADR-0023-common-source-and-derived-submission-paths.md) Proposed）。§7の残り・§8・§9全体・§11は未移植で、既存詳細を99.2全体との監査済み仕様と扱わない。依存実装は[23の開始ゲート](architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)に従う。
+- **99.2再移植はStep 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）とStep 7b（§7の06の記録責任・作業台帳・取消／リスト整理の境界）まで**。Step 1（§0・§1）・Step 2（§2）を保持し、人物領域は[identity-and-access](architecture/identity-and-access/README.md)、機材の取得・共用・履歴は[asset-management](architecture/asset-management/README.md)を詳細正本とする。[移植記録](migration/README.md)から確認範囲へ進む。Step 3の機材領域も保持する。Step 4は[dips-infrastructure](architecture/dips-infrastructure/README.md)と[16](architecture/16_security.md)へ配置。Step 5の画面・因果は[presentation](architecture/presentation/README.md)へ配置。Step 6は[operation-recording](architecture/operation-recording/README.md)／[maintenance-storage](architecture/maintenance-storage/README.md)／[drive-structure](architecture/drive-structure/README.md)へ§5・§6残り・§10を配置。Step 7aは[dips-flight-plan](architecture/dips-flight-plan/README.md)の[25e](architecture/dips-flight-plan/25e_common-source-and-submission-boundaries.md)へ共通の源・Manual／API・DIPS対象外の因果を、[26](architecture/26_dips-web-ui-verification.md)へ実画面の証拠系列を配置（判断は[ADR-0023](decisions/ADR-0023-common-source-and-derived-submission-paths.md) Proposed）。Step 7bは[dips-submission](architecture/dips-submission/README.md)の[24b](architecture/dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)へ06の記録責任・作業台帳・取消／整理の意味を配置（追補は[ADR-0022](decisions/ADR-0022-drive-responsibilities-and-human-records.md) Proposed）。KML・§8・§9全体・§11は未移植で、既存詳細を99.2全体との監査済み仕様と扱わない。依存実装は[23の開始ゲート](architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)に従う。
 - **Step 6追補（2026-09-19）**: A4の機体個体別保存・日付次空き連番の補正は[35c](architecture/operation-recording/35c_a4-operation-record.md)、重要判断は[ADR-0021（Proposed）](decisions/ADR-0021-a4-record-layout-and-sheet-boundary.md)、確認範囲は[追補監査](migration/99-2-step-6-causal-audit.md#7-step-6追補機体個体別保存と日付連番)。次Stepへの移行ではない。
 - 状態は **確定**（承認済み基準）、**検討中**（判断待ち）、**調査**（観測・根拠・未検証）、**将来**（後続Phase）、**履歴**（当時の判断）、**移行案内**（詳細の移転入口）を区別します。文書の確定はアプリ実装・外部仕様の最新性の検証完了を意味しません。
 
@@ -33,7 +33,7 @@
 | [構造・分割・保守規約](guidelines/01_structure-and-maintenance-rules.md) | 9原則・Responsibility Check・レビュー手順 | 確定 / docs・source・変更管理 |
 | [法令・運用規約](guidelines/02_legal-and-operations-rules.md) | 法令8区分・正式記録全体評価・柔軟運用 | 確定 / 法令・帳票・現場 |
 | [設計証拠・因果規約](guidelines/03_design-evidence-and-causality.md) | 因果保持・7状態・実物証拠・質問と技術判断の境界 | CURRENT-ACCEPTED / 設計方法 |
-| [移植記録README](migration/README.md) | 99.2再移植の対象・根拠・移管先・検査 | 監査記録 / Step 1〜7a |
+| [移植記録README](migration/README.md) | 99.2再移植の対象・根拠・移管先・検査 | 監査記録 / Step 1〜7b |
 | [architecture README](architecture/README.md) | 設計領域・概念正本・比較/監査履歴への入口 | 確定 / 全アーキテクチャ |
 | [decisions README](decisions/README.md) | ADR運用・承認状態・部分置換範囲・決定履歴 | 確定 / 重要意思決定 |
 
@@ -58,7 +58,7 @@ docs/
     ├── maintenance-storage/    # 機体別整備媒体と原本コピー
     ├── drive-structure/        # 運用環境01〜07と旧配置からの因果
     ├── state-machines/         # 運航・通報・離陸評価
-    ├── dips-submission/        # Manual業務 / Sheets Ledger
+    ├── dips-submission/        # Manual業務 / Sheets Ledger / 06の記録責任・作業台帳
     ├── dips-flight-plan/       # カタログ / Manual UI / API / 入力評価 / 共通の源の因果（§7限定）
     ├── output/                 # 出力境界 / KML / Drive / My Maps / 機体ログ
     └── 単一責務設計・比較履歴・監査記録（architecture READMEから参照）

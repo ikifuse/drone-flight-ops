@@ -1,6 +1,6 @@
 # 24a. 正規化Sheets台帳とDIPS提出台帳
 
-最終更新: 2026-09-18\
+最終更新: 2026-09-19\
 状態: Phase C0完了・Phase C1未着手（docs再編）
 
 主要責務: Sheets論理台帳群、DIPS台帳の列・完全性・同期利用・実績逆引き。Entity、FSM、同期キュー、Data Authorityの詳細を再定義しない。
@@ -39,7 +39,7 @@ Step 3の機体・BAT取得履歴と共用の意味は[asset-management](../asse
 
 ### 1.5. 共有作業リストとの責任分離
 
-Step 5の[34c](../presentation/34c_shared-flight-worklist.md)は、これから扱う通報済み計画を共有する軽量な作業リストと画面の正本。本書の提出試行・Snapshot・履歴保持と同じ保存物だと確定しない。画面→06側の責任接続は[34b](../presentation/34b_home-and-navigation.md)、正式掲載契機は[34d](../presentation/34d_dips-accepted-and-plan-content.md)。本書の履歴列をそのままカード必須項目へ増やさず、物理シート・保存関係の詳細は後続へ残す。
+Step 5の[34c](../presentation/34c_shared-flight-worklist.md)は、これから扱う通報済み計画を共有する軽量な作業リストと画面の正本。本書の提出試行・Snapshot・履歴保持と同じ保存物だと確定しない。画面→06側の責任接続は[34b](../presentation/34b_home-and-navigation.md)、正式掲載契機は[34d](../presentation/34d_dips-accepted-and-plan-content.md)。本書の履歴列をそのままカード必須項目へ増やさず、物理シート・保存関係の詳細は後続へ残す。06が持つ記録の責任、人が見る作業台帳（1シート）と本書の履歴・証跡の分離、計画が作業対象でなくなる意味は[24b](24b_dips-plan-records-and-worklist-lifecycle.md)が詳細正本。
 
 ## 2. Googleスプレッドシート「DIPS飛行計画台帳」仕様
 

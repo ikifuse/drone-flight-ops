@@ -1,6 +1,6 @@
 # 34c. 共有飛行リストと通報済み計画の選択
 
-最終更新: 2026-09-18\
+最終更新: 2026-09-19\
 由来: 99.2 §3、§7の共有リスト・カード・通常導線に直接必要な部分。\
 主要責務: これから扱う計画の共有作業リスト、カード、絞り込みの方向、対象選択。掲載契機と受付後画面は[34d](34d_dips-accepted-and-plan-content.md)。
 
@@ -55,5 +55,5 @@
 
 - **PENDING-S5-LIST-DETAIL**: UI候補のフィルタ・初期値・件数表示、具体的な作業リストの物理保持・cache・共有反映。既存24aの履歴列をそのままリストschemaにしたり、別Spreadsheetの新設を決めたりしない。
 - **PENDING-S5-MANUAL-LIST**: API正常受付の条件と、番号なしの目視照合も認める既存Manual確認からリストへ接続する詳細との照合。今回のAPI通常系からManualへ計画ID必須を機械適用しない。[24](../dips-submission/24_manual-submission.md)と[25b](../dips-flight-plan/25b_manual-web-mapping.md)の第一級Manualを維持し、別の完成フローを推測しない。
-- **後続範囲**: 重複調整、日時等の変更・再通報、取消、予定日時経過・中止・完了時のリスト／cache整理。原本の正確な自動整理時点・条件は未確定だが、作業リストを履歴DBとしない意味は到達済み。本Stepではこれらの詳細移植を行わない。
+- **後続範囲**: 重複調整、日時等の変更・再通報、取消、予定日時経過・中止・完了時のリスト／cache整理。原本の正確な自動整理時点・条件は未確定だが、作業リストを履歴DBとしない意味は到達済み。本Stepではこれらの詳細移植を行わない。後続のStep 7bで、取消・整理の意味と06の記録責任・作業台帳との関係を[24b](../dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)へ配置した。正確な時点・条件と重複あり調整は未確定のまま。
 - **VERIFY-S5-LIST-EVIDENCE**: 原本が挙げる実Driveの1枚作業台帳、旧画面資料と表示5系統との対応。今回は再操作していない。通信成否不明の因果は[33b](../dips-infrastructure/33b_api-availability-and-retry-boundaries.md)を参照し、本書へ複写しない。

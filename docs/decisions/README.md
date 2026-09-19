@@ -96,7 +96,7 @@
 | [ADR-0019](ADR-0019-home-entry-and-shared-plan-handoff.md) | ホーム4入口と共有計画の引継ぎ | **提案中（Proposed）** | 未承認（記録2026-09-18） | 0005の独立した手続き／現場状態を入口・通常画面に具体化。詳細は34a〜34d |
 | [ADR-0020](ADR-0020-flexible-flight-and-finalization.md) | 柔軟な1飛行と最終確定 | **提案中（Proposed）** | 未承認（記録2026-09-18） | 意味とschemaを分ける。詳細は35a／35b／35d |
 | [ADR-0021](ADR-0021-a4-record-layout-and-sheet-boundary.md) | 最新A4実物・固定明細・物理シート | **提案中（Proposed）** | 未承認（記録2026-09-18） | 0007 §2.9の限定置換記録。2026-09-19に機体別保存・次空き連番・特殊競合の非採用を追補。詳細は35c |
-| [ADR-0022](ADR-0022-drive-responsibilities-and-human-records.md) | 七責任領域と人間向け04／05媒体 | **提案中（Proposed）** | 未承認（記録2026-09-18） | 0007 §2.8の全面禁止の限定置換記録。詳細は36／37 |
+| [ADR-0022](ADR-0022-drive-responsibilities-and-human-records.md) | 七責任領域と人間向け04／05媒体 | **提案中（Proposed）** | 未承認（記録2026-09-18） | 0007 §2.8の全面禁止の限定置換記録。2026-09-19に06の作業台帳と履歴・証跡の分離を追補。詳細は36／37／24b |
 | [ADR-0023](ADR-0023-common-source-and-derived-submission-paths.md) | 共通の源（計画・Geometry・不変Snapshot）と派生する通報経路・出力 | **提案中（Proposed）** | 未承認（記録2026-09-19） | 0004／0006／0009のClarifies。飛行範囲を用途別に作らない判断とDIPS対象外との境界を記録。詳細は25e |
 
 ADR-0010〜0014は比較用main `6344d7a`にProposedとして存在する。本ブランチはその作成前の`ea73d08`から再移植しており、旧Step成果をコピーしないため収録しない。番号を再利用せずStep 1で0015、Step 2で0016、Step 3で0017、Step 4で0018、Step 5で0019、Step 6で0020〜0022、Step 7aで0023を新設した。mainの0010〜0014をAcceptedへ変更していない。

@@ -22,7 +22,7 @@
 | 03 バッテリー | BAT個体・取得・共用と履歴 | [32b](../asset-management/32b_battery-sharing-and-acquisition-history.md)。機体別の見せ方は所有固定を意味しない |
 | 04 運航記録 | 機体個体別の運航記録Spreadsheetに正式実飛行・日常点検のA4を保存 | 個体別保存・日付連番の詳細因果は[35c §3](../operation-recording/35c_a4-operation-record.md#3-その後の運用判断による現在ベースライン)。テストと正式記録を区別 |
 | 05 点検整備記録 | 機体別の詳細点検整備 | [36](../maintenance-storage/36_aircraft-maintenance-records.md)。通常日常点検と分離 |
-| 06 DIPS関連 | 運用環境の飛行計画と通報台帳 | [24a](../dips-submission/24a_submission-and-sheets-ledger.md)。個人専用の手続き履歴に閉じない。§7残りの再移植を本書で代行しない |
+| 06 DIPS関連 | 運用環境の飛行計画と通報台帳。人が見る作業台帳と内部の履歴・証跡を分ける | [24b](../dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)（記録責任・作業台帳・取消／整理の意味）と[24a](../dips-submission/24a_submission-and-sheets-ledger.md)（提出台帳schema）。個人専用の手続き履歴に閉じない |
 | 07 出力 PDF／KML | 必要時の派生出力 | [27](../output/27_output-boundaries.md)。04／06等の正式記録を代替しない |
 
 これは責任と発見性の現在ベースラインである。個別ファイル数、全表・列・索引、ACL・所有権移管の手順を一括確定する表ではない。環境別の保存先を選んでから現場操作へ入る画面の因果は[34a](../presentation/34a_setup-and-environment-entry.md)と[34b](../presentation/34b_home-and-navigation.md)にあり、本書へ複製しない。
