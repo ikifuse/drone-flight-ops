@@ -1,6 +1,6 @@
 # アーキテクチャ設計目次
 
-最終更新: 2026-09-19\
+最終更新: 2026-09-20\
 状態: Phase B設計凍結 / C0 Shell構築完了・C1設計準備完了 / C1未着手（C0受入確認・オーナーGO待ち）
 
 ## 1. 本目次の役割と読み順
@@ -15,7 +15,7 @@
 |---|---|
 | [domain-model README](domain-model/README.md) | ER・領域別Entity・共通ライフサイクル/ID/監査。C1型・schema実装の入口 |
 | [identity-and-access README](identity-and-access/README.md) | 人物・アカウント・環境、三層権限、運航担当、所属終了の詳細因果と未確定 |
-| [asset-management README](asset-management/README.md) | 機材取得・BAT共用・累計の意味・取得確認と点検整備Actorの因果 |
+| [asset-management README](asset-management/README.md) | 機材取得・BAT共用・累計の意味・取得確認と点検整備Actorの因果、BAT管理の適用範囲・保存構造・現場入力（2026-09-20） |
 | [dips-infrastructure README](dips-infrastructure/README.md) | DIPS API固定出口・限定バックエンド、Manual独立・結果不明時retryの因果 |
 | [presentation README](presentation/README.md) | 10項目規約、初回・ホーム4入口・共有飛行リスト・正常受付後・飛行履歴・出力の因果と画面仕様 |
 | [operation-recording README](operation-recording/README.md) | 柔軟な1飛行・通常画面・A4最新実物と生成・最終保存の因果 |
@@ -97,7 +97,10 @@
 | KMLの位置づけ・単位・生成契機・未同期の保持と最後の送信時の再送・内容の確定境界 | [27e](output/27e_kml-generation-timing-and-content.md) | 形式は27a、保存は27b、キューは14、最後の送信は35d。判断の要約はADR-0024 |
 | 派生PDF（A4運航記録PDF・地図付きPDF）の役割分離・必要な時だけ生成する方針・地図付きPDFの配置の方向 | [27f](output/27f_derived-pdf-roles-and-map-pdf.md) | A4の実物・生成単位は35c、生成技術・発行記録は18。判断の要約はADR-0025 |
 | 飛行履歴・出力の画面（検索・選択・出力への導線） | [34e](presentation/34e_history-and-output.md) | 入口は34b、出力の内容・生成契機は27e／27f、A4は35c |
-| BAT台帳の表示・状態の軸・多数運用の見せ方（設計案・オーナー確認待ち） | [32d](asset-management/32d_battery-ledger-and-status-design.md) | 共用・履歴の責任は32b、属性・enumのPENDINGは12b、BAT交換の画面は35b §7 |
+| BAT管理を使う範囲（機体単位の任意）・飛行記録の区切りとの分離・新品／中古の起点 | [32e](asset-management/32e_battery-management-scope-and-flight-separation.md) | 個体の意味は32b、A4は35c、飛行の意味は35a、点検整備は32c／36。判断はADR-0029 |
+| BATの保存構造（共用機体系ごとの1Spreadsheet・1物理BAT＝1シート・総合台帳なし） | [32f](asset-management/32f_battery-storage-structure.md) | Drive全体は37、内部schemaは12b／12e、最終保存は35d。判断はADR-0028 |
+| BAT使用開始・交換時の現場入力（4項目）と自動記録 | [32g](asset-management/32g_battery-field-input.md) | 画面は35b §7、保存は32f、適用範囲は32e。判断はADR-0029 |
+| BATの表示（一覧・詳細・交換時の選択）と状態の見せ方（設計案・オーナー確認待ち） | [32d](asset-management/32d_battery-ledger-and-status-design.md) | 属性・enumのPENDINGは12b、BAT交換の画面は35b §7 |
 | 画面の並びと画面間の行き先の俯瞰、設計の到達範囲、未設計領域 | [34f](presentation/34f_screen-map-and-design-coverage.md) | 各画面の中身と遷移の正本は各画面仕様（34a〜34e・35b）。食い違えば各画面仕様が優先 |
 | KML Drive Storage | [27b](output/27b_google-drive-storage.md) | 14はキュー共通契約、KML生成とは別 |
 | My Maps | [27c](output/27c_google-mymaps-workflow.md) | 実アカウントの表示検証はPENDING |

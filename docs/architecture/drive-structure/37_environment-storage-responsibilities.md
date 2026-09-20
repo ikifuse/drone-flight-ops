@@ -1,6 +1,6 @@
 # 37. 運用環境のDrive責任構造と人間向け記録
 
-最終更新: 2026-09-19\
+最終更新: 2026-09-20\
 由来: 99.2 §10、2026-09-19のオーナーによる04の機体別保存追補。Drive全体の配置責任と変遷の正本。各記録の詳細schema・KML階層を集約しない。
 
 ## 1. 一冊中心・技術分類から責任領域へ
@@ -19,7 +19,7 @@
 |---|---|---|
 | 01 人員 | 人物・所属・役割・資格等の管理 | [31a〜31d](../identity-and-access/README.md)。論理概念ごとに別Spreadsheetを作る決定ではない |
 | 02 機体 | 機体と取得・管理情報 | [32a](../asset-management/32a_aircraft-acquisition-and-cumulative-time.md)。累計・履歴の具体列は未確定 |
-| 03 バッテリー | BAT個体・取得・共用と履歴 | [32b](../asset-management/32b_battery-sharing-and-acquisition-history.md)。機体別の見せ方は所有固定を意味しない |
+| 03 バッテリー | BAT個体・取得・共用と履歴。BATを共用できる機体系ごとに1Spreadsheet、物理BAT1本につき1シート（現在の確認用構成） | 保存構造は[32f](../asset-management/32f_battery-storage-structure.md)、意味は[32b](../asset-management/32b_battery-sharing-and-acquisition-history.md)、適用範囲（機体単位の任意）は[32e](../asset-management/32e_battery-management-scope-and-flight-separation.md)。機体別の分割・見せ方は所有固定を意味せず、機体別のSpreadsheetは退避済み |
 | 04 運航記録 | 機体個体別の運航記録Spreadsheetに正式実飛行・日常点検のA4を保存 | 個体別保存・日付連番の詳細因果は[35c §3](../operation-recording/35c_a4-operation-record.md#3-その後の運用判断による現在ベースライン)。テストと正式記録を区別 |
 | 05 点検整備記録 | 機体別の詳細点検整備 | [36](../maintenance-storage/36_aircraft-maintenance-records.md)。通常日常点検と分離 |
 | 06 DIPS関連 | 運用環境の飛行計画と通報台帳。人が見る作業台帳と内部の履歴・証跡を分ける | [24b](../dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)（記録責任・作業台帳・取消／整理の意味）と[24a](../dips-submission/24a_submission-and-sheets-ledger.md)（提出台帳schema）。個人専用の手続き履歴に閉じない |
@@ -35,7 +35,7 @@
 
 **さらに詰めた点**: 内部の行追加・正規化と、人間が直接読む記録媒体は同一ではない。§10は、04の固定A4日付・連番タブと、05の機体別原本コピーを明示している。一律禁止を維持すると、手作業で整えた読みやすさや機体の履歴を追う理由を失う。
 
-**CURRENT-ACCEPTED**: 通常の内部履歴は行追加・正規化を基本とする。人間向け04の物理A4タブは35c、05の機体別Spreadsheet・記録タブは36の責任とする。両者を「実装しない表示ビューの案」と読んだり、点検整備だけが唯一の例外としたりしない。これは§5／§10の後続判断であり、A4実物1枚だけから一般化した結論ではない。旧No.1／No.2の左右構成を新A4へ戻さず、旧BAT_1〜BAT_7も復活させない。
+**CURRENT-ACCEPTED**: 通常の内部履歴は行追加・正規化を基本とする。人間向け04の物理A4タブは35c、05の機体別Spreadsheet・記録タブは36の責任とする。両者を「実装しない表示ビューの案」と読んだり、点検整備だけが唯一の例外としたりしない。これは§5／§10の後続判断であり、A4実物1枚だけから一般化した結論ではない。旧No.1／No.2の左右構成を新A4へ戻さず、旧BAT_1〜BAT_7の固定所有・7本の上限・機体別の配置も復活させない。BATの人間向け媒体は32fの責任とし、共用機体系ごとの1Spreadsheet・1物理BAT＝1シートを現在案とする（判断は[ADR-0028](../../decisions/ADR-0028-battery-storage-by-shareable-aircraft-family.md)。人が1本のBATの履歴を直接追う媒体で、内部履歴は行追加・正規化のまま）。
 
 二つの保存表現の存在を、同じ仕様・判断に二つの設計正本を持つ理由にしない。確定台帳・手修正尊重は[11](../11_data-authority.md)、運航全体の確定と重複防止の未決契約は[35d](../operation-recording/35d_operation-finalization-and-write-boundary.md)。媒体ごとの独立した値の再入力や別運航としての再送を当然の前提にしない。
 

@@ -1,6 +1,6 @@
 # 23. Phase C 実装ロードマップとマイルストーン（23_implementation-roadmap.md）
 
-最終更新: 2026-09-19
+最終更新: 2026-09-20
 プロジェクト: `drone-flight-ops`
 フェーズ: Phase B設計凍結（ADR-0001〜0007承認済、追加部分置換ADR-0008/0009）/ C0構築完了・C1設計準備完了・C1未着手
 
@@ -73,6 +73,8 @@ Step 7dでは[27f](output/27f_derived-pdf-roles-and-map-pdf.md)へ、A4運航記
 
 Step 7eでは[38a](sync-and-cache/38a_shared-source-and-device-cache.md)・[38b](sync-and-cache/38b_confirmation-and-sync-timing-separation.md)へ、共有データの正本と端末cache・正本確認の時点・計画確定／逐次保存／最終送信の時点分離を、[37 §6](drive-structure/37_environment-storage-responsibilities.md#6-保存の所有と費用の境界)へ保存の所有と費用の境界を移した。C4の同期・再送とC9のオフライン強化・実機検証は、cacheの具体実装・retry・競合の解決方針・background・UI（PENDING-S7E-CACHE-DETAIL）、iPhone／Androidの実機差（VERIFY-S7E-DEVICE-DIFF）、中央のSyncQueue・監査（PENDING-S7E-SYNCQUEUE-AUDIT）が未確定であり、着手条件を満たしたとは扱わない。§9の「競合解決」の未確定を、A4の採番の排他制御を戻す根拠にしない。
 
+2026-09-20のBAT管理設計の更新（[32e](asset-management/32e_battery-management-scope-and-flight-separation.md)〜[32g](asset-management/32g_battery-field-input.md)、ADR-0028・0029）では、BAT管理を機体単位の任意にし、保存構造を共用機体系ごとの1Spreadsheet・1物理BAT＝1シートとした。C3・C4のBAT関連の実装は、シートの上部・履歴の列・ファイル名・状態確認・同時書き込み・規模（PENDING-D-BAT-*、VERIFY-D-BAT-*）が未確定であり、着手条件を満たしたとは扱わない。
+
 Step 8では、§11の現状差分8項目・旧案の残存・回収12項目の所在・原本の全行の使用状況を[Step 8監査](../migration/99-2-step-8-diff-audit.md)で確かめた。§0〜§11の再移植と差分監査は完了したが、これは設計文書の移管・照合の完了であり、上記の各PENDING／VERIFYの解決でも、C0受入確認・オーナーGO（PENDING-C0-ACCEPTANCE）の代替でもない。C1以降は、開始ゲートと該当型のPENDING照合を通すまで着手しない。
 
 以下のC0〜C9は実装配分を保持し、C7のStep 4接続先指定も維持する。Step 6の通常運航・A4は[35a〜35d](operation-recording/README.md)、整備媒体は[36](maintenance-storage/README.md)、Drive責任は[37](drive-structure/README.md)。§11の差分監査はStep 8で実施した（[監査記録](../migration/99-2-step-8-diff-audit.md)）。対象領域のゲートを通過する前に、列挙された型やシート方針をそのまま実装開始の許可として使わない。
@@ -111,7 +113,7 @@ Step 8では、§11の現状差分8項目・旧案の残存・回収12項目の�
 
 ### Phase C3: バッテリー共用台帳 & 機体累計管理
 - **目的**: バッテリー型式・個体の共用管理と機体累計自動加算の確立。
-- **実装範囲**: 複数機体間でのバッテリー共用選択、非飛行イベント（充電・保管・点検）記録（`BatteryUsage`）、累積サイクル計算、機体累計時間自動合算、手動補正追従。
+- **実装範囲**: 複数機体間でのバッテリー共用選択、非飛行イベント（充電・保管・点検）記録（`BatteryUsage`）、累積サイクル計算、機体累計時間自動合算、手動補正追従。BAT管理は機体単位の任意（[32e](asset-management/32e_battery-management-scope-and-flight-separation.md)）で、保存は共用機体系ごとの1Spreadsheet・1物理BAT＝1シート・総合台帳なし（[32f](asset-management/32f_battery-storage-structure.md)）、現場入力は4項目（[32g](asset-management/32g_battery-field-input.md)）に従う。非飛行イベントの記録は4項目に含まれず、要否はPENDING-D-BAT-STATES（[32d](asset-management/32d_battery-ledger-and-status-design.md)）。
 - **完了条件**: フライト完了ごとに各機体およびバッテリーの累積時間・回数が正確に加算・表示されること。
 
 ### Phase C4: Googleスプレッドシート外部同期 & 論理台帳新設

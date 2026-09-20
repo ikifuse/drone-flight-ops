@@ -1,6 +1,6 @@
 # 12b. 機種・機体・バッテリーと互換関係
 
-最終更新: 2026-09-18\
+最終更新: 2026-09-20\
 状態: Phase C0完了・Phase C1未着手（docs再編）
 
 主要責務: 機材の型式と個体、N:M互換、バッテリーの非飛行ライフサイクル。
@@ -95,6 +95,6 @@
 
 ## 8. 業務上の状態と保存enumの対応（PENDING-C1-SCHEMA）
 
-統合要件が求める保管・点検・劣化・紛失の管理と、本書の既存 `Battery.status` / 非飛行イベントの対応は未確定である。これらの業務状態を省略せず、ライフサイクル、使用中/放電等の運用状態、健全性を1つのenumに統合すべきか別軸にすべきかをC1 schema確定前に整理する。既存enumを完成済みと扱わず、推測で新しい保存値を追加しない。業務状態を複数の軸に分ける設計案と表示は[32d](../asset-management/32d_battery-ledger-and-status-design.md)（NEW-PROPOSAL、オーナー確認待ち）。
+統合要件が求める保管・点検・劣化・紛失の管理と、本書の既存 `Battery.status` / 非飛行イベントの対応は未確定である。これらの業務状態を省略せず、ライフサイクル、使用中/放電等の運用状態、健全性を1つのenumに統合すべきか別軸にすべきかをC1 schema確定前に整理する。既存enumを完成済みと扱わず、推測で新しい保存値を追加しない。表示の案は[32d](../asset-management/32d_battery-ledger-and-status-design.md)（NEW-PROPOSAL、オーナー確認待ち）。状態を三つの軸に分ける初版の案は取り下げた。BAT管理を機体単位の任意にしたこと（[32e](../asset-management/32e_battery-management-scope-and-flight-separation.md)）と保存構造・入力の方針（[32f](../asset-management/32f_battery-storage-structure.md)・[32g](../asset-management/32g_battery-field-input.md)）に伴い、機体ごとのBAT管理の有無を保持する場所（Aircraft属性か環境の設定か）、BAT管理がOFFの機体のFlightでの`battery_id`の扱い、管理ラベルと`display_name`・個体番号と`serial_number`の対応、入手元、最新サイクル数と`cumulative_cycle_count`の意味の対応も、schema固定前に整理する（推測で属性・保存値を追加しない）。
 
 Step 6の柔軟な1飛行・内部明細の意味は[35a](../operation-recording/35a_flexible-flight-and-details.md)。本書の飛行由来使用履歴の参照を、1Flight1BATという最終schemaの決定に使わない。32bの物理履歴配置PENDINGは維持する。

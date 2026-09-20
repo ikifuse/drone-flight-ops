@@ -1,6 +1,6 @@
 # 22. 現行システムからのデータ移行・並行運用・ロールバック設計（22_migration-plan.md）
 
-最終更新: 2026-09-15
+最終更新: 2026-09-20
 プロジェクト: `drone-flight-ops`
 フェーズ: Phase B2（詳細アーキテクチャ・実装前設計）
 
@@ -62,7 +62,7 @@
 
 ## 5. 旧台帳の読み取りと移行先の正本
 
-上記BAT_01〜BAT_07は既存資産の読み取り元を示す歴史的配置であり、その存在だけで新アプリの最終物理構造とはしない。機種/型式/個体のUUID、N:M互換の属性は [12b](domain-model/12b_aircraft-and-battery.md)、人員統合は [12a](domain-model/12a_organization-and-personnel.md)、基準の行追加/更新型の論理台帳案は [24a](dips-submission/24a_submission-and-sheets-ledger.md) を参照する。BATの飛行明細と非飛行イベントの最終的な表・行配置の未確定は[32b](asset-management/32b_battery-sharing-and-acquisition-history.md)に従う。旧配置の無条件再現を避ける意図を維持し、最終保存形式を本書で先取りしない。全量DB復旧方式が未決でも安全に検証できる並行記録手順と、未同期データ喪失の限界を区別して切替判定する。
+上記BAT_01〜BAT_07は既存資産の読み取り元を示す歴史的配置であり、その存在だけで新アプリの最終物理構造とはしない。新アプリのBAT保存の現在案（共用機体系ごとの1Spreadsheet・1物理BAT＝1シート）は[32f](asset-management/32f_battery-storage-structure.md)。機種/型式/個体のUUID、N:M互換の属性は [12b](domain-model/12b_aircraft-and-battery.md)、人員統合は [12a](domain-model/12a_organization-and-personnel.md)、基準の行追加/更新型の論理台帳案は [24a](dips-submission/24a_submission-and-sheets-ledger.md) を参照する。BATの飛行明細と非飛行イベントの最終的な表・行配置の未確定は[32b](asset-management/32b_battery-sharing-and-acquisition-history.md)に従う。旧配置の無条件再現を避ける意図を維持し、最終保存形式を本書で先取りしない。全量DB復旧方式が未決でも安全に検証できる並行記録手順と、未同期データ喪失の限界を区別して切替判定する。
 
 累計行の移行では、その値が表す期間・起算の意味も[32a](asset-management/32a_aircraft-acquisition-and-cumulative-time.md)へ照合する。取得前の正確な履歴が不明なのに最新値を生涯総時間とみなしたり、中古機を一律ゼロへ初期化したりしない。取得時BAT観測との区別も32bに従い、未確定の保存列・インポート処理は本Stepで新設しない。
 

@@ -1,6 +1,6 @@
 # ドキュメント総合目次
 
-最終更新: 2026-09-19\
+最終更新: 2026-09-20\
 プロジェクト: `drone-flight-ops`
 
 ## 1. 役割・読み順・現在状態
@@ -14,6 +14,7 @@
 - **C0基盤・PWA Shell構築完了、C1設計準備完了。C1以降は未着手、C0受入確認・オーナーGO待ち。**
 - **99.2再移植はStep 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）・Step 7b（§7の06の記録責任・作業台帳・取消／リスト整理の境界）・Step 7c（KMLの位置づけ・単位・生成契機・内容・再送）・Step 7d（PDFの役割分離・生成契機、飛行履歴・出力の画面）・Step 7e（§9の正本・端末cache・時点分離・費用の境界）・Step 8（§11の差分監査）まで**。Step 1（§0・§1）・Step 2（§2）を保持し、人物領域は[identity-and-access](architecture/identity-and-access/README.md)、機材の取得・共用・履歴は[asset-management](architecture/asset-management/README.md)を詳細正本とする。[移植記録](migration/README.md)から確認範囲へ進む。Step 3の機材領域も保持する。Step 4は[dips-infrastructure](architecture/dips-infrastructure/README.md)と[16](architecture/16_security.md)へ配置。Step 5の画面・因果は[presentation](architecture/presentation/README.md)へ配置。Step 6は[operation-recording](architecture/operation-recording/README.md)／[maintenance-storage](architecture/maintenance-storage/README.md)／[drive-structure](architecture/drive-structure/README.md)へ§5・§6残り・§10を配置。Step 7aは[dips-flight-plan](architecture/dips-flight-plan/README.md)の[25e](architecture/dips-flight-plan/25e_common-source-and-submission-boundaries.md)へ共通の源・Manual／API・DIPS対象外の因果を、[26](architecture/26_dips-web-ui-verification.md)へ実画面の証拠系列を配置（判断は[ADR-0023](decisions/ADR-0023-common-source-and-derived-submission-paths.md) Proposed）。Step 7bは[dips-submission](architecture/dips-submission/README.md)の[24b](architecture/dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)へ06の記録責任・作業台帳・取消／整理の意味を配置（追補は[ADR-0022](decisions/ADR-0022-drive-responsibilities-and-human-records.md) Proposed）。Step 7cは[output](architecture/output/README.md)の[27e](architecture/output/27e_kml-generation-timing-and-content.md)へKMLの生成契機・内容・単位・再送を配置（判断は[ADR-0024](decisions/ADR-0024-kml-generated-at-plan-submission-from-report-content.md) Proposed）。Step 7dは[output](architecture/output/README.md)の[27f](architecture/output/27f_derived-pdf-roles-and-map-pdf.md)へPDFの役割・生成契機を、[presentation](architecture/presentation/README.md)の[34e](architecture/presentation/34e_history-and-output.md)へ飛行履歴・出力の画面を配置（判断は[ADR-0025](decisions/ADR-0025-derived-pdf-roles-and-on-demand-generation.md) Proposed）。Step 7eは[sync-and-cache](architecture/sync-and-cache/README.md)の38a・38bへ共有正本と端末cache・時点分離を、[37 §6](architecture/drive-structure/37_environment-storage-responsibilities.md#6-保存の所有と費用の境界)へ保存の所有と費用の境界を配置（判断は[ADR-0026](decisions/ADR-0026-shared-source-confirmation-and-timing-separation.md)・[ADR-0027](decisions/ADR-0027-storage-ownership-and-cost-boundary.md) Proposed）。§11の差分監査は[Step 8](migration/99-2-step-8-diff-audit.md)で実施した（語句検索と回収12項目・現状差分8項目の対照。実機・実Drive・旧資料の再確認ではない）。残る未確定は各正本のPENDING／VERIFYで、解決済みとは扱わない。依存実装は[23の開始ゲート](architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)に従う。
 - **Git本線と実装凍結（2026-09-19）**: `main`を99.2再移植の本線（`claude/99-2-continuation`のStep 8完了時点）へ整理し、整理前の旧mainはバックアップに保全した（[記録](migration/99-2-git-mainline-cutover.md)）。オーナーが明示的に「実装開始」と指示するまで実装は凍結し、設計検討を継続する。
+- **BAT管理設計の更新（2026-09-20）**: オーナーの方針に基づき、BAT管理は機体単位の任意、保存は共用機体系ごとの1Spreadsheet・1物理BAT＝1シート・総合台帳なし、現場入力は4項目とした。[32e](architecture/asset-management/32e_battery-management-scope-and-flight-separation.md)・[32f](architecture/asset-management/32f_battery-storage-structure.md)・[32g](architecture/asset-management/32g_battery-field-input.md)へ配置し、判断は[ADR-0028](decisions/ADR-0028-battery-storage-by-shareable-aircraft-family.md)・[ADR-0029](decisions/ADR-0029-battery-management-optional-per-aircraft.md)（Proposed）。シートの中身・命名・状態確認等は未確定（[04](04_open-questions.md#bat管理設計の未確定検証先2026-09-20)）。
 - **Step 6追補（2026-09-19）**: A4の機体個体別保存・日付次空き連番の補正は[35c](architecture/operation-recording/35c_a4-operation-record.md)、重要判断は[ADR-0021（Proposed）](decisions/ADR-0021-a4-record-layout-and-sheet-boundary.md)、確認範囲は[追補監査](migration/99-2-step-6-causal-audit.md#7-step-6追補機体個体別保存と日付連番)。次Stepへの移行ではない。
 - 状態は **確定**（承認済み基準）、**検討中**（判断待ち）、**調査**（観測・根拠・未検証）、**将来**（後続Phase）、**履歴**（当時の判断）、**移行案内**（詳細の移転入口）を区別します。文書の確定はアプリ実装・外部仕様の最新性の検証完了を意味しません。
 
@@ -47,12 +48,12 @@ docs/
 ├── migration/                  # 移管対応・証拠・検査の記録（仕様を複製しない）
 ├── decisions/
 │   ├── README.md               # ADR-0000はこの中の運用決定（独立ファイルなし）
-│   └── ADR-0001〜0009 / 0015〜0027 # 既存決定と再移植のProposed記録（0010〜0014はmainに保全）
+│   └── ADR-0001〜0009 / 0015〜0029 # 既存決定と再移植のProposed記録（0010〜0014はmainに保全）
 └── architecture/
     ├── README.md               # 設計領域と概念の正本表
     ├── domain-model/           # C1のEntity / schema参照
     ├── identity-and-access/    # 人物・環境・権限・現場担当・離任（§2）
-    ├── asset-management/       # 機材取得・共用・累計・取得確認Actor（§4と§6限定）
+    ├── asset-management/       # 機材取得・共用・累計・取得確認Actor（§4と§6限定）、BAT管理の適用範囲・保存構造・現場入力（2026-09-20）
     ├── dips-infrastructure/    # 固定IP経路・API基盤・通信安全（§7限定）
     ├── presentation/           # 10項目規約・初回・ホーム・共有リスト・正常受付後・飛行履歴・出力
     ├── operation-recording/    # 柔軟な1飛行・通常操作・A4実物・最終保存

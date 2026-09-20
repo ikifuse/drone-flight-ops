@@ -1,6 +1,6 @@
 # 未確認事項と将来の設計判断論点
 
-最終更新: 2026-09-19
+最終更新: 2026-09-20
 プロジェクト: `drone-flight-ops`
 
 
@@ -254,9 +254,22 @@ Step 7a節が挙げる未移植のうち、§9の正本・端末cache・正本�
 | ID | 領域 |
 |---|---|
 | PENDING-D-SETTINGS-SCREENS | 各種設定・管理の画面体系（人員・機体・BAT・場所・プリセット・環境） |
-| PENDING-D-BAT-LEDGER | 多数の機体・BATの共有運用、BAT台帳の表示、状態と履歴。設計案は[32d](architecture/asset-management/32d_battery-ledger-and-status-design.md)（PENDING-D-BAT-STATES／-SET-VIEW／-CROSS-ENVがオーナー確認事項） |
+| PENDING-D-BAT-LEDGER | 多数の機体・BATの共有運用、BATの表示と状態、履歴。方針は[32e](architecture/asset-management/32e_battery-management-scope-and-flight-separation.md)〜[32g](architecture/asset-management/32g_battery-field-input.md)（オーナー方針）、表示の案は[32d](architecture/asset-management/32d_battery-ledger-and-status-design.md)。未確定は下記「BAT管理設計の未確定・検証先」 |
 | PENDING-D-HUMAN-OUTPUT | KMLの内容を人が閲覧・印刷するための復元と構成（地図付きPDF・印刷物） |
 | PENDING-D-NEW-FLIGHT-SCREENS | 新規飛行の入力から通報内容の確認までの共通の画面の流れ、飛行範囲の作成画面 |
 | PENDING-D-STATUS-DISPLAY | オフライン・未同期・エラー・保存・確定・取消・戻るの共通の見せ方と操作 |
 
 進める順序の案は34f §5（NEW-PROPOSAL）。既存のPENDINGを解決したものではない。
+
+## BAT管理設計の未確定・検証先（2026-09-20）
+
+オーナーの2026-09-20の指示に基づくBAT管理設計（[32e](architecture/asset-management/32e_battery-management-scope-and-flight-separation.md)・[32f](architecture/asset-management/32f_battery-storage-structure.md)・[32g](architecture/asset-management/32g_battery-field-input.md)、[ADR-0028](decisions/ADR-0028-battery-storage-by-shareable-aircraft-family.md)・[ADR-0029](decisions/ADR-0029-battery-management-optional-per-aircraft.md)）の未確定を、所在だけ示す。定義は各正本に置き、本書では複製しない。既存のPENDING-S3-BATTERY-HISTORY・PENDING-C1-SCHEMAは解消していない。
+
+| ID | 詳細正本 |
+|---|---|
+| PENDING-D-BAT-SWITCH / -A4-COLUMN / -INTRO-INSPECTION | [32e §6](architecture/asset-management/32e_battery-management-scope-and-flight-separation.md#6-未確定と再検討条件)：ON／OFFの設定と切替、A4のBAT欄の表記、中古機導入時の点検 |
+| PENDING-D-BAT-FILE-NAMING / -SHEET-TOP / -HISTORY-COLUMNS / -FAMILY-BOUNDARY / -AUTHORITY-MAP / -CONCURRENT-WRITE / -OUTPUT、VERIFY-D-BAT-SCALE / -DRIVE-STATE | [32f §4・§7](architecture/asset-management/32f_battery-storage-structure.md#7-未確定確認待ちと十観点の確認)：ファイル名・シート名、シートの上部・履歴の列、機体系の境界、正本の関係、同時書き込み、出力単位、規模、Driveの現在状態（オーナー報告のみ） |
+| PENDING-D-BAT-CHECK-UI / -LABEL-RULE / -CYCLE-DISPLAY / -LEGACY-CHECKS | [32g §4・§6](architecture/asset-management/32g_battery-field-input.md#6-未確定と再検討条件)：状態確認の選択肢とUI、管理ラベルの規則、サイクル数の見せ方、旧要件の残量・最小確認の扱い |
+| PENDING-D-BAT-STATES / -SET-VIEW / -CROSS-ENV | [32d §4・§9](architecture/asset-management/32d_battery-ledger-and-status-design.md#9-未確定オーナー確認事項)：現在状態の値と導き方、機体セット表示の要否、環境をまたぐBAT |
+
+BAT管理を機体単位の任意にすること、保存を共用機体系ごとの1Spreadsheet・1物理BAT＝1シート・総合台帳なしとすること、現場入力を4項目に絞ることは、現在の設計ベースライン（CURRENT-ACCEPTED。最終確定ではなく変更可能）。シートの上部・履歴の列・状態確認の選択肢・ファイル名は`CURRENT-PROPOSAL`／`PENDING`。

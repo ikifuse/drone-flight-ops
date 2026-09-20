@@ -1,6 +1,6 @@
 # 35d. 運航の最終確定と一括保存の責任
 
-最終更新: 2026-09-19\
+最終更新: 2026-09-20\
 由来: 99.2 §5の途中下書き・飛行後点検後の最終保存、2026-09-19のA4保存追補。§9の同期・cacheと時点分離は[38a](../sync-and-cache/38a_shared-source-and-device-cache.md)・[38b](../sync-and-cache/38b_confirmation-and-sync-timing-separation.md)。
 
 ## 1. 旧一括保存が守っていたもの
@@ -20,11 +20,11 @@
 | 同じ最終確定から接続する責任 | 唯一の詳細正本・未決境界 |
 |---|---|
 | A4の運航・日常点検記録 | [35c](35c_a4-operation-record.md)。途中入力と正式04記録を区別し、対象機体個体のSpreadsheetへ接続する |
-| 飛行に伴うBAT個体履歴・使用回数／累計時間等 | [32b](../asset-management/32b_battery-sharing-and-acquisition-history.md)。飛行明細と非飛行イベントを二重に計上しない |
+| 飛行に伴うBAT個体履歴・使用回数／累計時間等 | [32b](../asset-management/32b_battery-sharing-and-acquisition-history.md)。飛行明細と非飛行イベントを二重に計上しない。BATシートの履歴行との関係はPENDING-D-BAT-AUTHORITY-MAP（[32f](../asset-management/32f_battery-storage-structure.md)） |
 | 使用機体の累計更新 | [32a](../asset-management/32a_aircraft-acquisition-and-cumulative-time.md)。管理開始後と取得以前不明の意味を保持 |
 | 使用機体の飛行後点検・異常等 | 日常点検の意味は35b／12e、人物は31c。05の詳細整備台帳とは分ける |
 
-旧BAT_1〜BAT_7や旧機体原本の物理配置を復活させない。02／03／04／05のどの表へどの行を置くかは32a〜32c等の未確定に従う。「同じ最終確定から派生する」という必要要件は、Google側の複数ファイル書込みが単一transactionで成功する保証ではない。
+旧BAT_1〜BAT_7の固定所有・上限や、旧機体原本の物理配置を復活させない。02／03／04／05のどの表へどの行を置くかは32a〜32c・32f等の未確定に従う（BATの保存構造の現在案は[32f](../asset-management/32f_battery-storage-structure.md)）。「同じ最終確定から派生する」という必要要件は、Google側の複数ファイル書込みが単一transactionで成功する保証ではない。
 
 ## 3. 保存に到達できない場合と重複防止
 

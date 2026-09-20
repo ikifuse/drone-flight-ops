@@ -1,6 +1,6 @@
 # 12e. 運航・飛行・点検・整備と帳票発行記録
 
-最終更新: 2026-09-18\
+最終更新: 2026-09-20\
 状態: Phase C0完了・Phase C1未着手（docs再編）
 
 主要責務: 現場で発生する運航実績と点検・整備のEntity定義。FSMと帳票レイアウトを再定義しない。
@@ -37,7 +37,7 @@ Step 6の意味・変遷の正本は[35a](../operation-recording/35a_flexible-fl
   - `start_battery_pct` / `end_battery_pct`: 離陸時・着陸時残量（%）
   - `flight_nature`: 業務・訓練の別
   - `pilot_notes`: 飛行所感・特記不具合
-- **二重計上を避ける意味は維持**: 飛行によるBAT使用実績は個々の明細から導出する。旧単一Flight属性だけで複数BATを含む柔軟な1飛行の集計が完成したとはしない。物理的な履歴配置は32b、最終保存の更新責任は[35d](../operation-recording/35d_operation-finalization-and-write-boundary.md)。
+- **二重計上を避ける意味は維持**: 飛行によるBAT使用実績は個々の明細から導出する。旧単一Flight属性だけで複数BATを含む柔軟な1飛行の集計が完成したとはしない。BAT管理がOFFの機体のFlightにはBAT個体がない場合がある（[32e §3](../asset-management/32e_battery-management-scope-and-flight-separation.md#3-bat管理と飛行記録の区切りを分ける因果)）。物理的な履歴配置は32b、最終保存の更新責任は[35d](../operation-recording/35d_operation-finalization-and-write-boundary.md)。
 
 中古取得時の短時間状態確認を正式運航時間へ算入せず点検整備記録へ残す個別判断は[32c §1](../asset-management/32c_acquisition-check-and-maintenance-actors.md#1-取得時の短時間動作確認をどう残すか)を参照する。取得確認の個別判断を維持し、短時間／屋内／整備目的というだけで一般的に除外しない。
 

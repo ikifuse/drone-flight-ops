@@ -1,6 +1,6 @@
 # 35b. 通常運航の画面と現場記録
 
-最終更新: 2026-09-18\
+最終更新: 2026-09-20\
 由来: 99.2 §5。画面仕様の記録は[30](../presentation/30_screen-specification-standard.md)の10項目を用いる。最終保存の対象と重複防止の因果は[35d](35d_operation-finalization-and-write-boundary.md)。
 
 ## 1. 旧現場フローを継承する理由と境界
@@ -92,14 +92,14 @@
 |---|---|---|
 | 1 | 目的 | 実際に使う次のBATを選び、同じ集約条件の運用を続ける |
 | 2 | 入口・入れる条件 | 着陸後のBAT交換選択 |
-| 3 | 表示情報 | 対象機体と利用可能なBAT個体。互換・共用は12b／32b |
-| 4 | 初期値・自動入力 | 機体と運航文脈を保持。旧BAT_1〜BAT_7の固定所有・上限を復活させない |
-| 5 | 主操作・副操作 | 次のBATを選択・確認 |
+| 3 | 表示情報 | BAT管理がONの機体で、対象機体と互換のBAT個体を管理ラベルで表示。互換・共用は12b／32b。OFFの機体ではBATの選択・入力を出さない（[32e](../asset-management/32e_battery-management-scope-and-flight-separation.md)） |
+| 4 | 初期値・自動入力 | 機体と運航文脈を保持。使用日時・機体・飛行時間等は自動記録（[32g](../asset-management/32g_battery-field-input.md)）。旧BAT_1〜BAT_7の固定所有・上限を復活させない |
+| 5 | 主操作・副操作 | 次のBATを管理ラベルで選択し、サイクル数（任意）・状態確認（必須）・備考（任意）を入力（[32g](../asset-management/32g_battery-field-input.md)） |
 | 6 | 操作後の遷移 | 必要な準備を経て離陸待機へ |
 | 7 | 戻る・中止・削除 | 交換中止・戻るUIは未確定。交換だけで飛行明細の実績を増やさない |
 | 8 | 保存・更新時点 | 次に使う個体と交換の事実を端末保護。使用履歴の保存配分は32bのPENDING |
 | 9 | 権限・online/offline差 | 31bを参照。必要情報が端末にある範囲でoffline継続。未知の互換を推定しない |
-| 10 | 未確定 | 個体選択UI、明細・交換記録の具体schema |
+| 10 | 未確定 | 個体選択UI（案は[32d §5.3](../asset-management/32d_battery-ledger-and-status-design.md#53-bat交換のときの選択35b-7の個体選択uiの案)）、状態確認の選択肢・UI（PENDING-D-BAT-CHECK-UI）、明細・交換記録の具体schema |
 
 ## 8. 機体交代の10項目
 
