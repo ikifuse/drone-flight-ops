@@ -8,7 +8,7 @@
 
 ## 1. 本書の位置づけ
 
-現場でBATを扱うたびに人へ求める入力を、必要最小限に絞った理由と内容を保持する。BAT管理がOFFの機体（32e）では、この入力を求めない。BATの取得時の確認は[32b §3](32b_battery-sharing-and-acquisition-history.md#3-中古batの取得時確認とその後の履歴)、画面の10項目は35b §7が正本で、本書は複写しない。
+現場でBATを扱うたびに人へ求める入力を、必要最小限に絞った理由と内容を保持する。BAT管理がOFFの機体（32e）では、この入力を求めない。選択の候補は、対象機体に使用が許可されたBATだけ（[32h §8](32h_registered-aircraft-and-battery-group-relations.md#8-飛行時のbat選択候補案)）。BATの取得時の確認は[32b §3](32b_battery-sharing-and-acquisition-history.md#3-中古batの取得時確認とその後の履歴)、画面の10項目は35b §7が正本で、本書は複写しない。
 
 ## 2. 入力を4項目に絞った因果
 

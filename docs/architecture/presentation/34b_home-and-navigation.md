@@ -1,6 +1,6 @@
 # 34b. ホーム4入口と画面から保存責任への接続
 
-最終更新: 2026-09-19\
+最終更新: 2026-09-20\
 由来: 99.2 §3。ホームの入口・名称・到達先・保存責任への接続を扱う。\
 規約: [30の10項目](30_screen-specification-standard.md)。初回と環境選択は[34a](34a_setup-and-environment-entry.md)。
 
@@ -19,9 +19,11 @@
 | 新規飛行 | 新しい飛行計画を作る。飛行計画入力→Geometry作成／選択→通報内容確認→DIPS送信／応答。正常応答後は[34d](34d_dips-accepted-and-plan-content.md) |
 | 飛行リスト | DIPS正常受付済みでこれから実飛行または中止等を扱う計画を[34c](34c_shared-flight-worklist.md)で選ぶ。対象カード→DIPS通報内容→飛行前点検 |
 | 飛行履歴・出力 | 完了済みの過去Flightを検索・選択して正式記録を確認し、必要なPDF／KML等へ進む。作業リストとは別の目的。画面の10項目は[34e](34e_history-and-output.md) |
-| 各種設定・管理 | 人員・機体・BAT・環境その他のマスター／設定を扱う。内部分類は未確定 |
+| 各種設定・管理 | 人員・機体・BAT・環境その他のマスター／設定を扱う。内部分類は未確定。機体管理の入口の流れは[34g §3](34g_settings-aircraft-management-and-context-display.md#3-各種設定管理から機体管理へ案)（CURRENT-PROPOSAL） |
 
 **表示を増やさない境界**: ホームに「未完了○件」「保留○件」「通報済み○件」等を必須表示せず、状態・件数の確認は飛行リスト内で行う。ダッシュボードの一般論を理由に追加しない。現ブランチの確認範囲では必須pending widgetの既存詳細正本は見つからず、架空の旧仕様を作らない。
+
+**環境の選択・表示は入口を増減しない（2026-09-20の確認）**: 個人・会社・スクール・臨時業務等のOperationalEnvironmentは、ホームの入口ではなく、環境の選択・表示（[31a §4](../identity-and-access/31a_person-account-and-environment.md#4-会社利用と環境切替へ詰めた内容)、[34a §5](34a_setup-and-environment-entry.md#5-通常起動と環境選択の10項目)）で扱う。上記の3入口の時期は、DIPS通報と実飛行が同時とは限らない運用の整理を経て4入口になったHISTORICALであり、現在は4入口がCURRENT-ACCEPTEDである。この4入口は変更せず、ホームを「個人／会社／スクール等」の3ボタンへ戻すこともしない（オーナーが、過去の3入口の記憶と現在の4入口の関係を既存Docsで照合して確認した）。機体・BATの登録や関係の設定は、4入口の1つである［各種設定・管理］から行う案である（[34g](34g_settings-aircraft-management-and-context-display.md)）。
 
 ## 2. ホーム画面の10項目
 
@@ -56,7 +58,7 @@
 
 基準[13_overview](../state-machines/13_overview.md)はDIPS手続きと現場運航の独立、[13c](../state-machines/13c_takeoff-readiness.md)は離陸評価を定める。本書はDIPS正常受付を経る通常画面を具体化するもので、未通報時の現場記録や計画なし運航の既存境界を一律に禁止しない。それらの詳細導線を今回推測で追加せず、正常受付を「飛行可能」の保証にもしない。
 
-**PENDING-S5-HOME-DETAIL**: 各種設定・管理の分類、画面配置・各入口の権限／offline表現。飛行履歴・出力の詳細画面はStep 7dで[34e](34e_history-and-output.md)へ移した（検索条件・出力の詳細は34eのPENDING）。初回・環境復帰の未決は34a、共有と受付後の未決は34c／34dへ分ける。
+**PENDING-S5-HOME-DETAIL**: 各種設定・管理の分類、画面配置・各入口の権限／offline表現。機体管理の入口の流れは[34g §3](34g_settings-aircraft-management-and-context-display.md#3-各種設定管理から機体管理へ案)（案）で、それ以外の分類は未確定。飛行履歴・出力の詳細画面はStep 7dで[34e](34e_history-and-output.md)へ移した（検索条件・出力の詳細は34eのPENDING）。初回・環境復帰の未決は34a、共有と受付後の未決は34c／34dへ分ける。
 
 **VERIFY-S5-SETUP-EVIDENCE**（34a）: 旧99.1 §3、98.2、実Drive現在地資料の「画面遷移」等は未再確認。今回の現在案は99.2を直接読んで移管したもので、旧mainの画面仕様やモックを再利用していない。重要判断の記録は[ADR-0019](../../decisions/ADR-0019-home-entry-and-shared-plan-handoff.md)。
 

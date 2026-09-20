@@ -1,7 +1,7 @@
 # 機材の取得・共用・管理履歴
 
 最終更新: 2026-09-20\
-対象: 99.2再移植Step 3（§4、および取得時確認・点検整備Actorに直接必要な§6の部分）と、2026-09-20のBAT管理設計の更新（32d〜32g）
+対象: 99.2再移植Step 3（§4、および取得時確認・点検整備Actorに直接必要な§6の部分）と、2026-09-20のBAT管理設計の更新（32d〜32g）と、運用環境・登録機体・BAT共用グループの関係（32h）
 
 本領域は機材管理の意味・因果・条件の詳細正本である。型式・個体・互換の属性定義は[12b](../domain-model/12b_aircraft-and-battery.md)、運航・整備Entityは[12e](../domain-model/12e_operation-inspection-maintenance.md)に残し、ここで物理schemaを追加しない。
 
@@ -14,6 +14,7 @@
 | [32e BAT管理の適用範囲と飛行記録の区切りとの分離](32e_battery-management-scope-and-flight-separation.md) | BAT管理は機体単位の任意、OFFでも基本運用は完結、BAT管理と飛行記録の区切りの分離、新品・中古の起点、中古機導入時の点検との関係（2026-09-20のオーナー方針） | 個体の意味は32b、A4は35c、飛行の意味は35a、点検整備は32c／36。判断はADR-0029 |
 | [32f BATの保存構造](32f_battery-storage-structure.md) | 共用機体系ごとに1Spreadsheet・1物理BAT＝1シート・総合台帳なし、機体別分割を退けた因果、1BATシートの構造案、Driveの現在状態の確認範囲 | Drive全体は37、内部schemaは12b／12e、最終保存は35d。判断はADR-0028 |
 | [32g BAT使用開始・交換時の現場入力](32g_battery-field-input.md) | 入力を管理ラベル・サイクル数・状態確認・備考の4項目に絞った因果、自動記録する値、状態確認の候補 | 画面は35b §7、保存は32f、適用範囲は32e。判断はADR-0029 |
+| [32h 運用環境・登録機体・BAT共用グループの関係](32h_registered-aircraft-and-battery-group-relations.md) | 運用環境に属する機体・BAT、02の登録済み実機、実機とBAT共用グループの関係（使用許可）、新しい機体を追加する流れ、紐付けのない機体でのBAT選択制限（2026-09-20のオーナー検討。現在案） | 環境は31a、権限は31b、BATの意味は32b、保存は32f、画面は34g。ADRは追加せず（32h §10） |
 
 [architecture正本表](../README.md#3-主要概念の正本) → 本README → 対象文書の順に読む。[ADR-0017](../../decisions/ADR-0017-asset-acquisition-history-and-cumulative-scope.md)は判断の要約と見直し条件、[Step 3監査](../../migration/99-2-step-3-causal-audit.md)は移管対応・証拠・検査の索引であり、設計理由をそこだけに置かない。
 

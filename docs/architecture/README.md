@@ -15,9 +15,9 @@
 |---|---|
 | [domain-model README](domain-model/README.md) | ER・領域別Entity・共通ライフサイクル/ID/監査。C1型・schema実装の入口 |
 | [identity-and-access README](identity-and-access/README.md) | 人物・アカウント・環境、三層権限、運航担当、所属終了の詳細因果と未確定 |
-| [asset-management README](asset-management/README.md) | 機材取得・BAT共用・累計の意味・取得確認と点検整備Actorの因果、BAT管理の適用範囲・保存構造・現場入力（2026-09-20） |
+| [asset-management README](asset-management/README.md) | 機材取得・BAT共用・累計の意味・取得確認と点検整備Actorの因果、BAT管理の適用範囲・保存構造・現場入力（2026-09-20）、登録機体とBAT共用グループの関係 |
 | [dips-infrastructure README](dips-infrastructure/README.md) | DIPS API固定出口・限定バックエンド、Manual独立・結果不明時retryの因果 |
-| [presentation README](presentation/README.md) | 10項目規約、初回・ホーム4入口・共有飛行リスト・正常受付後・飛行履歴・出力の因果と画面仕様 |
+| [presentation README](presentation/README.md) | 10項目規約、初回・ホーム4入口・共有飛行リスト・正常受付後・飛行履歴・出力の因果と画面仕様、機体管理の入口と対象機体の表示責任 |
 | [operation-recording README](operation-recording/README.md) | 柔軟な1飛行・通常画面・A4最新実物と生成・最終保存の因果 |
 | [maintenance-storage README](maintenance-storage/README.md) | 日常点検から分離した機体別整備媒体・原本コピー |
 | [drive-structure README](drive-structure/README.md) | 旧配置から01〜07、内部正規化と人間向け媒体、物理配置PENDING、保存の所有と費用の境界（37 §6） |
@@ -101,7 +101,9 @@
 | BATの保存構造（共用機体系ごとの1Spreadsheet・1物理BAT＝1シート・総合台帳なし） | [32f](asset-management/32f_battery-storage-structure.md) | Drive全体は37、内部schemaは12b／12e、最終保存は35d。判断はADR-0028 |
 | BAT使用開始・交換時の現場入力（4項目）と自動記録 | [32g](asset-management/32g_battery-field-input.md) | 画面は35b §7、保存は32f、適用範囲は32e。判断はADR-0029 |
 | BATの表示（一覧・詳細・交換時の選択）と状態の見せ方（設計案・オーナー確認待ち） | [32d](asset-management/32d_battery-ledger-and-status-design.md) | 属性・enumのPENDINGは12b、BAT交換の画面は35b §7 |
+| 運用環境に属する機体・BAT、02の登録済み実機と、BAT共用グループとの使用関係（使用許可） | [32h](asset-management/32h_registered-aircraft-and-battery-group-relations.md) | 環境は31a、権限は31b、BATの意味は32b、保存は32f、機体の取得・累計は32a、画面は34g |
 | 画面の並びと画面間の行き先の俯瞰、設計の到達範囲、未設計領域 | [34f](presentation/34f_screen-map-and-design-coverage.md) | 各画面の中身と遷移の正本は各画面仕様（34a〜34e・35b）。食い違えば各画面仕様が優先 |
+| ［各種設定・管理］の機体管理の流れ、現在の運用環境の表示と対象機体の表示の責任 | [34g](presentation/34g_settings-aircraft-management-and-context-display.md) | 環境の表示条件は31a §4／34a §5、対象機体を扱う各画面は35b、関係の意味は32h |
 | KML Drive Storage | [27b](output/27b_google-drive-storage.md) | 14はキュー共通契約、KML生成とは別 |
 | My Maps | [27c](output/27c_google-mymaps-workflow.md) | 実アカウントの表示検証はPENDING |
 | Aircraft flight-log import | [27d](output/27d_aircraft-flight-log-import.md) | 将来入力境界、Flight実績の自動確定ではない |

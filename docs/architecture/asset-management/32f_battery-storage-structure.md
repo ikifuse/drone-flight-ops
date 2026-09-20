@@ -32,7 +32,7 @@ BATの履歴・現在状態・累計値を、Driveのどこに・どの単位で
 | 全く別のBATを使う別の機体系 | 機体系ごとのSpreadsheetを`03_バッテリー管理`直下へ並べる（例: バッテリー管理_機体A系、機体B系、機体C系） | CURRENT-PROPOSAL |
 | ファイル名・シート名の規則 | 未確定（PENDING-D-BAT-FILE-NAMING） | PENDING |
 
-BAT管理がOFFの機体（32e）は、この保存の対象にならない。
+BAT管理がOFFの機体（32e）は、この保存の対象にならない。「BAT共用グループ」は、この機体系ごとの保存単位を、実機との関係で呼ぶ呼称である（内部名称・schema名は未確定。[32h §1](32h_registered-aircraft-and-battery-group-relations.md#1-位置づけ)）。
 
 ## 4. 1つのBATシートの構造（CURRENT-PROPOSAL）
 
@@ -46,7 +46,8 @@ BAT管理がOFFの機体（32e）は、この保存の対象にならない。
 | 個体番号 | 人が登録する | `serial_number` |
 | 新品／中古 | 人が登録する | `condition_at_start` |
 | 入手元 | 人が登録する | 対応する属性なし（PENDING-C1-SCHEMA） |
-| 互換機種 | 互換の設定から | `BatteryCompatibility` |
+| 互換機種 | 互換の設定から（機種レベル。使用許可機体との関係は[32h §5](32h_registered-aircraft-and-battery-group-relations.md#5-互換機種と使用許可機体案未確定)） | `BatteryCompatibility` |
+| 使用許可機体（案） | 02の登録機体とBAT共用グループの関係から自動で反映する。人が各BATシートへ入力しない（32h §4） | 対応する属性なし（PENDING-C1-SCHEMA） |
 | 最新サイクル数 | 人が確認した時だけ | `cumulative_cycle_count`との意味の対応は未確定 |
 | 当方管理開始後の累計飛行時間 | 自動集計 | `cumulative_flight_minutes`（管理開始後） |
 | 使用回数 | 自動集計 | 対応する属性なし |
@@ -58,12 +59,12 @@ BAT管理がOFFの機体（32e）は、この保存の対象にならない。
 
 **自動記録の方針（CURRENT-ACCEPTED）**: 使用日時、使用した機体、飛行時間、当方管理開始後の累計飛行時間、使用回数、最終使用日など、アプリ自身が知ることができる値は、原則として人に再入力させず、自動で記録・集計する。使用回数からサイクル数を推定して加算しない。
 
-- **PENDING-D-BAT-SHEET-TOP**: 上部項目の最終構成。
+- **PENDING-D-BAT-SHEET-TOP**: 上部項目の最終構成。互換機種を残すか、使用許可機体の最終の表示形式は32hのPENDING-D-AC-PERMITTED-DISPLAY。
 - **PENDING-D-BAT-HISTORY-COLUMNS**: 履歴の列の最終構成。
 
 ## 5. 正本を1か所にする整理と、既存の記述との関係
 
-**正本**: 同じ物理BATの履歴・現在状態・累計値の保存正本は、そのBATのシート1か所とする。機体別・機体系別にコピーを作らない。端末のcacheは複製であり（[38a](../sync-and-cache/38a_shared-source-and-device-cache.md)）、手修正は尊重する（[11](../11_data-authority.md)）。総合台帳がないため、BATの一覧は各シートから導く表示にする（[32d](32d_battery-ledger-and-status-design.md)）。
+**正本**: 同じ物理BATの履歴・現在状態・累計値の保存正本は、そのBATのシート1か所とする。機体別・機体系別にコピーを作らない。実機とBAT共用グループの関係（使用許可）は別の情報で、正本は02側に置く案であり、上部の「使用許可機体」はその反映表示である（[32h §4](32h_registered-aircraft-and-battery-group-relations.md#4-実機とbat共用グループの関係案)）。端末のcacheは複製であり（[38a](../sync-and-cache/38a_shared-source-and-device-cache.md)）、手修正は尊重する（[11](../11_data-authority.md)）。総合台帳がないため、BATの一覧は各シートから導く表示にする（[32d](32d_battery-ledger-and-status-design.md)）。
 
 **既存の「復活させない」との関係**: 旧BAT_1〜BAT_7の固定所有・7本の上限・機体別の配置を復活させないという既存の記述（[37 §3](../drive-structure/37_environment-storage-responsibilities.md#3-内部正規化と物理シートを混同しない)、[35b §7](../operation-recording/35b_normal-operation-and-final-save.md#7-bat交換の10項目)、[35d](../operation-recording/35d_operation-finalization-and-write-boundary.md)）は維持する。1物理BAT＝1シートは、機体系ごとに共有し、上限なくシートを追加する点で、機体別の固定配置とは異なる。人が1本のBATの履歴を直接追うための媒体であり、内部の履歴は、行追加・正規化を基本とする既存の方針のままである。ADR-0007 §2.8の全面的な物理タブ禁止を、04・05の人間向け媒体（ADR-0021・0022）に続いてBATの人間向け媒体にも限定して置換する判断は、[ADR-0028](../../decisions/ADR-0028-battery-storage-by-shareable-aircraft-family.md)に記録する。
 

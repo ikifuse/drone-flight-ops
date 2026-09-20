@@ -253,7 +253,7 @@ Step 7a節が挙げる未移植のうち、§9の正本・端末cache・正本�
 
 | ID | 領域 |
 |---|---|
-| PENDING-D-SETTINGS-SCREENS | 各種設定・管理の画面体系（人員・機体・BAT・場所・プリセット・環境） |
+| PENDING-D-SETTINGS-SCREENS | 各種設定・管理の画面体系（人員・機体・BAT・場所・プリセット・環境）。機体管理の入口の流れは[34g](architecture/presentation/34g_settings-aircraft-management-and-context-display.md)（案）、他の分類は未設計 |
 | PENDING-D-BAT-LEDGER | 多数の機体・BATの共有運用、BATの表示と状態、履歴。方針は[32e](architecture/asset-management/32e_battery-management-scope-and-flight-separation.md)〜[32g](architecture/asset-management/32g_battery-field-input.md)（オーナー方針）、表示の案は[32d](architecture/asset-management/32d_battery-ledger-and-status-design.md)。未確定は下記「BAT管理設計の未確定・検証先」 |
 | PENDING-D-HUMAN-OUTPUT | KMLの内容を人が閲覧・印刷するための復元と構成（地図付きPDF・印刷物） |
 | PENDING-D-NEW-FLIGHT-SCREENS | 新規飛行の入力から通報内容の確認までの共通の画面の流れ、飛行範囲の作成画面 |
@@ -273,3 +273,14 @@ Step 7a節が挙げる未移植のうち、§9の正本・端末cache・正本�
 | PENDING-D-BAT-STATES / -SET-VIEW / -CROSS-ENV | [32d §4・§9](architecture/asset-management/32d_battery-ledger-and-status-design.md#9-未確定オーナー確認事項)：現在状態の値と導き方、機体セット表示の要否、環境をまたぐBAT |
 
 BAT管理を機体単位の任意にすること、保存を共用機体系ごとの1Spreadsheet・1物理BAT＝1シート・総合台帳なしとすること、現場入力を4項目に絞ることは、現在の設計ベースライン（CURRENT-ACCEPTED。最終確定ではなく変更可能）。シートの上部・履歴の列・状態確認の選択肢・ファイル名は`CURRENT-PROPOSAL`／`PENDING`。
+
+## 運用環境・登録機体・BAT共用グループの未確定・検証先（2026-09-20）
+
+オーナーの2026-09-20の検討内容（[32h](architecture/asset-management/32h_registered-aircraft-and-battery-group-relations.md)・[34g](architecture/presentation/34g_settings-aircraft-management-and-context-display.md)）の未確定を、所在だけ示す。定義は各正本に置き、本書では複製しない。既存のPENDING-S2-ENVIRONMENT-UI・PENDING-D-BAT-SWITCH・PENDING-S2-ACCESS-DETAIL・PENDING-S6-DRIVE-PLACEMENT・PENDING-C1-SCHEMAは解消していない。
+
+| ID | 詳細正本 |
+|---|---|
+| PENDING-D-AC-REGISTRY-STORAGE / -GROUP-NAMING / -PERMITTED-DISPLAY / -UNLINKED-EXCEPTION / -PERMISSION | [32h](architecture/asset-management/32h_registered-aircraft-and-battery-group-relations.md)：02機体管理の物理構成と全項目、BAT共用グループの名称・schema名とSpreadsheetの対応、互換機種と使用許可機体の表示、未紐付けでBATを使えない場合の例外（誤登録・解除・緊急時）、機体管理の権限 |
+| PENDING-D-AC-CONTEXT-DISPLAY / -SCREENS | [34g](architecture/presentation/34g_settings-aircraft-management-and-context-display.md)：対象機体の表示位置・固定表示（ホームの現在機体の常時表示を含む）、機体追加・変更・BAT共用グループ設定の画面レイアウト |
+
+現在の運用環境に機体・BATが属すること、環境の表示・切替、ホーム4入口、現在の環境と対象機体が別の情報であること、BAT管理が機体単位の任意であることは、既存の設計ベースラインへの接続（CURRENT-ACCEPTED）。02での登録機体の管理、実機とBAT共用グループの関係、使用許可機体の表示、機体を追加する流れ、紐付けのない機体でのBAT選択制限、各種設定・管理を機体管理の入口とする流れ、対象機体の表示は`CURRENT-PROPOSAL`。

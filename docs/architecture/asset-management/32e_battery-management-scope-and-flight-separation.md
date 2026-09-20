@@ -53,7 +53,7 @@ BAT管理は新品に限らない。中古でも、過去の履歴が不明な�
 
 ## 6. 未確定と再検討条件
 
-- **PENDING-D-BAT-SWITCH**: ON／OFFを設定する場所と既定値、途中でON／OFFを切り替えた場合の扱い（OFFの間のBAT履歴は遡って作らない）。
+- **PENDING-D-BAT-SWITCH**: ON／OFFを、機体の登録時または機体設定から設定する方向は現在案（[32h §7](32h_registered-aircraft-and-battery-group-relations.md#7-bat管理のonoffとの関係)）。どの画面で切り替えるか、既定値、途中でON／OFFを切り替えた場合の既存履歴の扱い（OFFの間のBAT履歴は遡って作らない）は未確定。
 - **PENDING-D-BAT-A4-COLUMN**: A4のBAT欄に、BAT管理がOFFの機体と、1飛行で複数のBATを使った場合をどう表記するか（35cのPENDING-S6-A4-DETAILに接続）。
 - **PENDING-D-BAT-INTRO-INSPECTION**: §5の導入時点の点検の記録先・要否・既存の取得確認（32c）との関係。
 - 既存のまま維持: PENDING-C1-SCHEMA、PENDING-S3-BATTERY-HISTORY、PENDING-S6-OPERATION-SCHEMA。

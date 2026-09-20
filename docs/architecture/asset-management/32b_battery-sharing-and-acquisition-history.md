@@ -18,7 +18,7 @@
 
 **検討・却下理由**: セット別に見せることと、物理的にどちらかだけが所有することは別である。表示用の所属を固定所有のFKへ読み替える案は採らない。旧モックのタブをそのまま正式schemaとする案も採らない。表示エラーを修正できたとしても、個体の共用・履歴・保存との関係が確認されなければ設計完了にならない。
 
-**現在の位置づけ**: 独立個体・互換・個体履歴はCURRENT-ACCEPTED。03の機体個体別Spreadsheetによる機体セット別の保存・表示は途中案で、2026-09-20に、共用BATの履歴・現在状態・累計値が複数箇所に分かれるため現行の検討場所から退避した（HISTORICAL。現在の保存構造は[32f](32f_battery-storage-structure.md)、BAT管理の適用範囲は[32e](32e_battery-management-scope-and-flight-separation.md)）。表示としてのセット別の要否は[32d](32d_battery-ledger-and-status-design.md)のPENDING-D-BAT-SET-VIEW。旧アプリを再現した比較用タブはHISTORICAL / EVIDENCE/EXAMPLE。2機・7本、4本と3本の組合せや特定機種・ラベルは一般仕様ではない。将来N機・M本でも、同じBATを別個体へ複製せず共用履歴を追う必要がある。
+**現在の位置づけ**: 独立個体・互換・個体履歴はCURRENT-ACCEPTED。03の機体個体別Spreadsheetによる機体セット別の保存・表示は途中案で、2026-09-20に、共用BATの履歴・現在状態・累計値が複数箇所に分かれるため現行の検討場所から退避した（HISTORICAL。現在の保存構造は[32f](32f_battery-storage-structure.md)、BAT管理の適用範囲は[32e](32e_battery-management-scope-and-flight-separation.md)）。表示としてのセット別の要否は[32d](32d_battery-ledger-and-status-design.md)のPENDING-D-BAT-SET-VIEW。旧アプリを再現した比較用タブはHISTORICAL / EVIDENCE/EXAMPLE。2機・7本、4本と3本の組合せや特定機種・ラベルは一般仕様ではない。将来N機・M本でも、同じBATを別個体へ複製せず共用履歴を追う必要がある。環境ごとの登録機体とBAT共用グループの関係（どの実機がどのBATを使えるか）は[32h](32h_registered-aircraft-and-battery-group-relations.md)。
 
 ## 3. 中古BATの取得時確認とその後の履歴
 

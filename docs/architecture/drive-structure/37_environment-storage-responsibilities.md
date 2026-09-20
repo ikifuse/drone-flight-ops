@@ -18,8 +18,8 @@
 | 領域（責任の表記。製品フォルダー名の固定ではない） | 責任 | 詳細正本・境界 |
 |---|---|---|
 | 01 人員 | 人物・所属・役割・資格等の管理 | [31a〜31d](../identity-and-access/README.md)。論理概念ごとに別Spreadsheetを作る決定ではない |
-| 02 機体 | 機体と取得・管理情報 | [32a](../asset-management/32a_aircraft-acquisition-and-cumulative-time.md)。累計・履歴の具体列は未確定 |
-| 03 バッテリー | BAT個体・取得・共用と履歴。BATを共用できる機体系ごとに1Spreadsheet、物理BAT1本につき1シート（現在の確認用構成） | 保存構造は[32f](../asset-management/32f_battery-storage-structure.md)、意味は[32b](../asset-management/32b_battery-sharing-and-acquisition-history.md)、適用範囲（機体単位の任意）は[32e](../asset-management/32e_battery-management-scope-and-flight-separation.md)。機体別の分割・見せ方は所有固定を意味せず、機体別のSpreadsheetは退避済み |
+| 02 機体 | 機体と取得・管理情報。その環境で使う登録済み実機（登録記号を持つ1機単位）と、BAT共用グループとの使用関係を持たせる案 | [32a](../asset-management/32a_aircraft-acquisition-and-cumulative-time.md)（取得・累計）、[32h](../asset-management/32h_registered-aircraft-and-battery-group-relations.md)（登録機体とBATとの関係。CURRENT-PROPOSAL）。物理構成（PENDING-D-AC-REGISTRY-STORAGE）と累計・履歴の具体列は未確定 |
+| 03 バッテリー | BAT個体・取得・共用と履歴。BATを共用できる機体系ごとに1Spreadsheet、物理BAT1本につき1シート（現在の確認用構成） | 保存構造は[32f](../asset-management/32f_battery-storage-structure.md)、意味は[32b](../asset-management/32b_battery-sharing-and-acquisition-history.md)、適用範囲（機体単位の任意）は[32e](../asset-management/32e_battery-management-scope-and-flight-separation.md)。機体別の分割・見せ方は所有固定を意味せず、機体別のSpreadsheetは退避済み。各BATシートの「使用許可機体」は、02の登録機体との関係（[32h](../asset-management/32h_registered-aircraft-and-battery-group-relations.md)）からの反映表示（案） |
 | 04 運航記録 | 機体個体別の運航記録Spreadsheetに正式実飛行・日常点検のA4を保存 | 個体別保存・日付連番の詳細因果は[35c §3](../operation-recording/35c_a4-operation-record.md#3-その後の運用判断による現在ベースライン)。テストと正式記録を区別 |
 | 05 点検整備記録 | 機体別の詳細点検整備 | [36](../maintenance-storage/36_aircraft-maintenance-records.md)。通常日常点検と分離 |
 | 06 DIPS関連 | 運用環境の飛行計画と通報台帳。人が見る作業台帳と内部の履歴・証跡を分ける | [24b](../dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)（記録責任・作業台帳・取消／整理の意味）と[24a](../dips-submission/24a_submission-and-sheets-ledger.md)（提出台帳schema）。個人専用の手続き履歴に閉じない |

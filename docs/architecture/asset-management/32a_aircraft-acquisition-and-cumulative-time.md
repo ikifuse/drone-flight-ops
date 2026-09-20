@@ -1,8 +1,8 @@
 # 32a. 機体取得前の履歴と管理開始後の累計
 
-最終更新: 2026-09-18\
+最終更新: 2026-09-20\
 状態: CURRENT-ACCEPTEDを中心に、証拠・過去案・未確定を節内で区別\
-由来: 99.2 §4、取得時確認との接続のみ§6。属性の正本は[12b](../domain-model/12b_aircraft-and-battery.md)。
+由来: 99.2 §4、取得時確認との接続のみ§6。属性の正本は[12b](../domain-model/12b_aircraft-and-battery.md)。環境ごとの登録機体（登録記号を持つ実機）とBAT共用グループの関係は[32h](32h_registered-aircraft-and-battery-group-relations.md)。
 
 ## 1. 型式と実機を分けた経緯
 

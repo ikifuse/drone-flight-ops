@@ -1,6 +1,6 @@
 # 34a. 初回セットアップと運用環境への入口
 
-最終更新: 2026-09-18\
+最終更新: 2026-09-20\
 由来: 99.2 §3。初回・再起動・環境選択の画面責任を扱う。状態は節内で区別する。\
 規約: [30の10項目](30_screen-specification-standard.md)、人物・環境・権限の正本は[31a](../identity-and-access/31a_person-account-and-environment.md)／[31b](../identity-and-access/31b_roles-and-access-control.md)。
 
@@ -51,7 +51,7 @@
 
 ## 5. 通常起動と環境選択の10項目
 
-複数環境／単一環境の意味と表示省略条件は[31a §4](../identity-and-access/31a_person-account-and-environment.md#4-会社利用と環境切替へ詰めた内容)が正本。§3の「前回使用した環境を次回起動時の初期環境とする方向」は**CURRENT-PROPOSAL**として保持し、保存場所や失効時処理を補わない。
+複数環境／単一環境の意味と表示省略条件は[31a §4](../identity-and-access/31a_person-account-and-environment.md#4-会社利用と環境切替へ詰めた内容)が正本。§3の「前回使用した環境を次回起動時の初期環境とする方向」は**CURRENT-PROPOSAL**として保持し、保存場所や失効時処理を補わない。現在の運用環境の表示と、飛行で扱う対象機体の表示は別の責任（[34g §2](34g_settings-aircraft-management-and-context-display.md#2-現在の運用環境の表示と対象機体の表示)）。
 
 | 番号 | 記録項目 | 現在の内容・未確定 |
 |---|---|---|

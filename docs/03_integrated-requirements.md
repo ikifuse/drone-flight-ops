@@ -55,7 +55,7 @@ Step 5の利用開始・画面入口は[34a 初回セットアップ](architectu
 
 ## 2. バッテリー管理要件（コア強みの発展）
 
-バッテリー管理は、自作アプリ最大の強みとして最優先で維持・強化します。ただし全利用者・全機体へ強制しません。BAT管理を使うかどうかは機体単位で選べ、OFFの機体でも飛行記録・点検記録等の基本運用は完結します（[32e](architecture/asset-management/32e_battery-management-scope-and-flight-separation.md)）。以下の要件は、BAT管理がONの機体に適用します。保存構造は[32f](architecture/asset-management/32f_battery-storage-structure.md)、BAT使用開始・交換時の現場入力は[32g](architecture/asset-management/32g_battery-field-input.md)（4項目）に従います。
+バッテリー管理は、自作アプリ最大の強みとして最優先で維持・強化します。ただし全利用者・全機体へ強制しません。BAT管理を使うかどうかは機体単位で選べ、OFFの機体でも飛行記録・点検記録等の基本運用は完結します（[32e](architecture/asset-management/32e_battery-management-scope-and-flight-separation.md)）。以下の要件は、BAT管理がONの機体に適用します。保存構造は[32f](architecture/asset-management/32f_battery-storage-structure.md)、BAT使用開始・交換時の現場入力は[32g](architecture/asset-management/32g_battery-field-input.md)（4項目）に従います。機体ごとのON／OFFと使用するBAT共用グループの設定は、［各種設定・管理］の機体管理から行う案です（[32h](architecture/asset-management/32h_registered-aircraft-and-battery-group-relations.md)・[34g](architecture/presentation/34g_settings-aircraft-management-and-context-display.md)）。
 
 機体セット別表示・共用・中古BAT取得時観測と取得後履歴の因果は[32b](architecture/asset-management/32b_battery-sharing-and-acquisition-history.md)に一本化する。実例の2機・7本を固定せず、既存の型式／個体／互換の正規化を維持する。
 
