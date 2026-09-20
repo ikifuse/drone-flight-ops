@@ -24,7 +24,8 @@
 
 | 文書 / 入口 | 役割・読む場面 | 状態 / 関連領域 |
 |---|---|---|
-| [AGENTS](../AGENTS.md) | AI案内・読み順・法令8区分・禁止事項・構造レビュー | 確定 / 全体 |
+| [AGENTS](../AGENTS.md) | AI案内・読み順・プロジェクト全体の禁止事項と、規約の所在（規約本文はguidelines／ADRが正本） | 確定 / 全体 |
+| [CLAUDE.md](../CLAUDE.md)・[設計Docs更新Skill](../.claude/skills/design-docs-update/SKILL.md) | Claude Codeが毎回自動で読む入口（AGENTSを取り込む）と、設計Docs更新の実行手順（読む正本・確認項目・反映の順序。規約本文は持たない） | 確定 / 設計Docs更新 |
 | [root README](../README.md) | GitHubでの初期案内と現在の停止位置 | 確定 / 全体 |
 | [アプリ概要](../01_アプリ概要.md) | 背景・現場一気通貫フロー・申し送り | 確定 / 全体 |
 | [00_goal](00_goal.md) | 最終ゴール・運用思想・機能必要性の判断 | 確定 / 現場フロー・UI |

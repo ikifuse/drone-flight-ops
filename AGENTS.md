@@ -1,6 +1,6 @@
 # AGENTS.md — AIエージェント向け案内・開発規約
 
-最終更新: 2026-09-19
+最終更新: 2026-09-20
 対象リポジトリ: `ikifuse/drone-flight-ops`
 
 ---
@@ -28,7 +28,7 @@
 - **現在**: **Phase C0（基盤・PWA Shell 構築完了・Phase C1設計準備完了）**
 - **Phase C1以降**: 未着手（Phase C0受入確認・オーナーGO待ち）
 - **実装凍結・設計検討フェーズ（継続）**: オーナーが明示的に「実装開始」と指示するまで、C1を含む実装コード（`src`・`public`・Dexie・IndexedDB・Domain型等）の作成・変更に入らない。C1は次に自動的に始める工程ではない。99.2再移植の完了は設計全体の完了ではなく、コードを書かなくても決められる設計論点（画面の遷移と表示、KMLの人向け復元と地図付きPDF、多数の機体・BATの管理と台帳表示、帳票・検索・履歴・印刷・復元等）を設計段階で詰め続ける。実装してから決める方向へ逃がさず、必要なら画面モック・帳票見本・データ例・利用シナリオを使う。
-- **99.2再移植の停止位置**: `redo/99-2-causal-migration`ではStep 1（§0・§1）、Step 2（§2）、Step 3（§4と取得確認・点検整備Actorに直接必要な§6の部分）、Step 4（§7のDIPS API基盤・固定IP・通信境界のみ）、Step 5（§3と§7の正常受付後・共有リストに必要な限定部分）、Step 6（§5・§6残り・§10）まで。その`01eeac3`から分岐した`claude/99-2-continuation`でStep 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）、Step 7b（§7の06の記録責任・作業台帳・取消／リスト整理の境界）、Step 7c（KMLの位置づけ・単位・生成契機・内容・再送）、Step 7d（PDFの役割分離・生成契機、飛行履歴・出力の画面）、Step 7e（§9の正本・端末cache・時点分離・費用の境界）、Step 8（§11の差分監査）まで進めた。人物領域は[identity-and-access](docs/architecture/identity-and-access/README.md)、機材取得・共用の因果は[asset-management](docs/architecture/asset-management/README.md)。[移植記録](docs/migration/README.md)と[23の実装開始ゲート](docs/architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)を確認し、Step 4の正本は[dips-infrastructure](docs/architecture/dips-infrastructure/README.md)と[16](docs/architecture/16_security.md)。Step 5の画面・因果の正本は[presentation](docs/architecture/presentation/README.md)。Step 6の正本は[operation-recording](docs/architecture/operation-recording/README.md)／[maintenance-storage](docs/architecture/maintenance-storage/README.md)／[drive-structure](docs/architecture/drive-structure/README.md)。Step 7aの正本は[dips-flight-plan](docs/architecture/dips-flight-plan/README.md)の[25e](docs/architecture/dips-flight-plan/25e_common-source-and-submission-boundaries.md)と実画面の証拠記録[26](docs/architecture/26_dips-web-ui-verification.md)。Step 7bの正本は[24b](docs/architecture/dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)、Step 7cの正本は[27e](docs/architecture/output/27e_kml-generation-timing-and-content.md)、Step 7dの正本は[27f](docs/architecture/output/27f_derived-pdf-roles-and-map-pdf.md)と[34e](docs/architecture/presentation/34e_history-and-output.md)、Step 7eの正本は[sync-and-cache](docs/architecture/sync-and-cache/README.md)の38a・38bと[37 §6](docs/architecture/drive-structure/37_environment-storage-responsibilities.md#6-保存の所有と費用の境界)。§11の差分監査は[Step 8](docs/migration/99-2-step-8-diff-audit.md)で実施し、§0〜§11の再移植と差分監査は完了した。残る未確定は各正本のPENDING／VERIFYに保持しており、解決済み・実装開始の許可とは扱わない。次の指示なく実装（C1）へ進まない。Git本線は2026-09-19に整理し、`main`は`claude/99-2-continuation`のStep 8完了時点の内容を本線とした（[記録](docs/migration/99-2-git-mainline-cutover.md)）。整理前の旧main（`6344d7a`）はバックアップ`archive/main-before-99-2-redo-20260919`とタグ`backup/main-6344d7a-20260919`に保全しており、その旧移植成果は比較証拠であり再移植元ではない。
+- **99.2再移植**: §0〜§11の再移植と差分監査（Step 1〜8）は完了した。`main`が本線（2026-09-19に整理）で、整理前の旧main（`6344d7a`）はバックアップ`archive/main-before-99-2-redo-20260919`とタグ`backup/main-6344d7a-20260919`に保全した比較証拠であり、再移植元ではない（[整理の記録](docs/migration/99-2-git-mainline-cutover.md)）。各Stepの範囲・正本・確認範囲は[移植記録](docs/migration/README.md)、現在の状態と領域別の入口は[総合目次](docs/00_index.md)、概念ごとの正本は[architecture README](docs/architecture/README.md#3-主要概念の正本)を参照する。残る未確定は各正本のPENDING／VERIFYに保持しており、解決済み・実装開始の許可とは扱わない。次の指示なく実装（C1）へ進まない。依存実装は[23の実装開始ゲート](docs/architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)に従う。
 
 ---
 
@@ -50,6 +50,8 @@
 6. 必要な場合は対応するテスト・受入検証
 ```
 
+設計Docs（`docs/`配下の設計書・ADR・INDEX・README・open-questions）を追加・更新・整理する作業は、[設計Docs更新Skill](.claude/skills/design-docs-update/SKILL.md)の手順（読む正本・確認項目・反映の順序）に従います。Claude Codeは[CLAUDE.md](CLAUDE.md)経由で自動的に使います。他のAIも同じ手順を参照してください。
+
 ---
 
 ## 4. 正本資料と基準アプリの位置づけ
@@ -65,24 +67,11 @@
 
 ---
 
-## 5. 法令・国交省資料の最重要原則（8区分の徹底）
+## 5. 法令・国交省資料の最重要原則
 
 国土交通省の航空法・施行規則・通達・取扱要領・ガイドライン・DIPS仕様等に従いますが、**「原則だけを読んで、そのまま全部をアプリの強制入力にする」という設計は禁止**します。
 
-法令確認を行う場合は、必ず以下の8区分を明確に区別してください。
-
-1. **法令上必須**（義務づけられており省略不可）
-2. **国交省ガイドライン上の推奨**（望ましいが柔軟性が認められる）
-3. **特定条件が発生した場合のみ必要**（事故時、特定飛行時、立入管理措置時など）
-4. **電子記録・独自様式で充足可能**（国の標準様式と同一でなくとも要件を満たすもの）
-5. **別紙・原本・他帳票で充足可能**（アプリ画面外の台帳やマニュアルで満たすもの）
-6. **手動補記で充足可能**（日常帳票に手書きや後日追記で対応可能なもの）
-7. **アプリ独自の安全・管理機能**（バッテリー個体管理、現場チェックなど）
-8. **未確認事項**（推測で断定してはならない事項）
-
-> [!IMPORTANT]
-> 評価単位は、アプリ単独画面ではなく「アプリ・飛行日誌・点検記録・バッテリー記録・機体記録・別紙・手動補記・帳票出力を含む正式記録全体」です。
-> 既に基準アプリで検討・採用された柔軟な運用を、一般論だけを理由に勝手に「未解決」「違反のおそれ」へ戻してはなりません。
+法令・行政資料を根拠にするときは、[法令・運用規約](docs/guidelines/02_legal-and-operations-rules.md)の8区分（§2）で分類し、アプリ単独画面ではなく、飛行日誌・点検記録・バッテリー記録・機体記録・別紙・手動補記・帳票出力を含む「正式記録全体」（§3）で評価します。基準アプリで検討・採用された柔軟な運用を、一般論だけを理由に「未解決」「違反のおそれ」へ戻してはなりません（§4）。未確認事項は推測で断定せず、確認待ち（VERIFY）として扱います。
 
 ---
 
@@ -99,33 +88,15 @@
 - API secret、token、認証情報、個人情報（実名・連絡先等）を絶対にGitHubへcommitしないこと。
 - ブラウザ側・クライアント側へ秘密情報を漏洩させない構造を徹底すること。
 
-### 6.4 構造設計の9原則（分割と保守の基準）
-コードや設計書は、行数だけでなく以下の9つの観点に基づき分割・管理します。
-1. **堅牢性**: 1機能の障害が他へ波及しない（DIPS障害時でも日誌は動く）。
-2. **セキュリティ**: 認証・secret・個人情報を一般機能から分離。
-3. **追加実装性**: 新機体・新帳票の追加で既存コードを広範囲に修正しない。
-4. **役割分担性・責務分離**: 1モジュール1主要責務。UI、API、業務ロジック、保存を混在させない。
-5. **保守性**: 小さな変更で読む範囲が狭く、影響範囲を追いやすい。
-6. **テスト容易性**: 外部依存（DIPS、地図）をmock化でき、単体テスト可能。
-7. **変更影響の最小化**: 外部仕様変更を内部全体へ波及させない。
-8. **可読性・発見性**: 目次から目的の処理へ即座に辿れる。
-9. **分割しすぎない**: ファイル数増加による複雑化を避け、意味のある単位で分割する。
+### 6.4 設計・保守・因果・ADRの規約の所在
+規約の本文は次の正本にあり、本書へ複製しません。設計Docsを更新する作業では、毎回これらを適用します（実行手順は[設計Docs更新Skill](.claude/skills/design-docs-update/SKILL.md)）。
 
-### 6.5 「大きくなってから分割」の禁止（兆候が出た時点で再編成）
-以下の兆候が見られた場合、作業を続行する前に構造見直しを行います。
-- 1ファイルが複数の明確な責務を持ち始めた
-- 同じファイルを異なる機能追加で何度も触る
-- AIがファイル全体を理解しないと小変更できない
-- 外部API処理と業務ロジック、または認証処理が混ざり始めた
-- 目次だけでは目的の情報へ辿り着けなくなった
-
-### 6.6 ADR（Architecture Decision Record）の記録
-将来アーキテクチャや重要技術を決定した際は、必ず `docs/decisions/` 配下にADRを記録し、決定理由・却下した代替案・トレードオフを残します。
-
-### 6.7 定期的な構造レビュー
-各Phase開始前・完了時、大きな機能追加前後、docs大規模追記後には、リポジトリ構造・docs・重複・責務境界の点検（構造レビュー）を必ず実施します。
-
-### 6.8 docs変更時のResponsibility Check
-仕様を追加する前に、[構造・保守規約のResponsibility Check](docs/guidelines/01_structure-and-maintenance-rules.md#6-docs変更時のresponsibility-check)を実施してください。既存主責務、ライフサイクル、外部依存、セキュリティ境界、Phase、独立変更可能性のうち2つ以上で明確な分離が必要なら、新文書またはサブ文書へ分けます。正本は[architecture READMEの概念対応表](docs/architecture/README.md#3-主要概念の正本)で特定し、他文書は要約とリンクに留めます。旧12/13/24/25/27は移行案内であり、詳細を追記する場所ではありません。
-
-99.2からの移植では[因果・状態・実物証拠の規約](docs/guidelines/03_design-evidence-and-causality.md)に従い、最新結論だけへの短縮、根拠・却下理由・例外の脱落を防ぎます。CURRENT-ACCEPTEDとADR Acceptedを同一視しません。
+| 判断する内容 | 正本 |
+|---|---|
+| 構造・分割の9原則、再編成の兆候、構造レビューの時期とチェックリスト | [構造・保守規約](docs/guidelines/01_structure-and-maintenance-rules.md) §2〜§4 |
+| docs変更時のResponsibility Check、正本の一元化、INDEX／README更新、最終確認 | 同 §6 |
+| 因果の保持、7状態ラベル、実物証拠、質問と技術判断の境界。CURRENT-ACCEPTEDとADR Acceptedは同一視しない | [設計証拠・因果規約](docs/guidelines/03_design-evidence-and-causality.md) |
+| 重要な技術・設計判断のADR記録、承認済みADRの置換の規則 | [ADR一覧・運用ルール](docs/decisions/README.md) |
+| 概念ごとの正本（変更前に正本を特定する） | [architecture README §3](docs/architecture/README.md#3-主要概念の正本) |
+| 旧番号の12／13／24／25／27は移行案内であり、詳細の追記先にしない | [architecture README §5](docs/architecture/README.md#5-旧番号からの移行案内) |
+| 未確定事項 | [未確認事項と論点](docs/04_open-questions.md) |

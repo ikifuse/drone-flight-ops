@@ -15,6 +15,7 @@ iPhone / Android向け 総合ドローン運航管理アプリ（C0 Shell構築�
 ## ドキュメント一覧
 
 - [AGENTS.md](AGENTS.md) - **AI向け開発憲法・案内（AIは最初にここを読む）**
+- [CLAUDE.md](CLAUDE.md) - Claude Codeが自動で読む入口（AGENTS.mdを取り込む）。設計Docs更新の手順は[Skill](.claude/skills/design-docs-update/SKILL.md)
 - [docs/00_index.md](docs/00_index.md) - **ドキュメント総合目次（領域別の入口）**
 - [01_アプリ概要.md](01_アプリ概要.md) - プロジェクト全体概要・申し送り
 - [docs/00_goal.md](docs/00_goal.md) - 最終ゴール、iPhone/Android現場一気通貫フロー、設計原則
