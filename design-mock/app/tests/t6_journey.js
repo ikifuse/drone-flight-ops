@@ -5,10 +5,10 @@ suite('初回利用者の通し',H=>{
   H.hash('');
   T('1 最初の画面: アカウントを作る／ログイン',()=>route()==='boot'&&txt().includes('アカウントを作る'));
   T('2 アカウントを作る→Google公式の画面→個人で使う→許可→準備ができました',()=>{
-    act('ob-start-new');act('ob-google');act('gauth-pick','[data-id=new]');act('us-personal');act('consent-ok');
+    act('ob-start-new');act('ob-google');act('gauth-done');act('us-personal');act('consent-ok');
     return route()==='created'&&E().name==='個人'&&txt().includes('個人で使う準備ができました');
   });
-  T('3 はじめの設定は何も登録せずホームへ（「個人で使用中」）',()=>{act('ob-to-init');act('ob-init-done');return route()==='home'&&E().aircraft.length===0&&txt().includes('まだ何も登録されていません')&&q('.hd2').innerText.includes('個人で使用中')});
+  T('3 DIPSのログイン情報は［あとで設定する］。はじめの設定も何も登録せずホームへ（「個人で使用中」）',()=>{act('ob-after-created');if(route()!=='dips-init')return route();act('dips-skip');act('ob-init-done');return route()==='home'&&E().aircraft.length===0&&!A().dips.registered&&txt().includes('まだ何も登録されていません')&&q('.hd2').innerText.includes('個人で使用中')});
   T('4 飛行リスト・履歴・設定が、空でも開ける',()=>{const ok=[];for(const s of ['list','hist','set']){act('go','[data-s='+s+']');ok.push(route()===s);H.APP().back()}return ok.every(Boolean)&&route()==='home'});
   T('5 新規飛行: 何も登録せずに開始→使うもの',()=>{act('nf-new');act('start-new');return route()==='nf'&&S().cur==='use'});
   T('6 その場で機体を登録して戻る',()=>{act('nf-reg','[data-t=aircraft]');set('[data-bind="@d.mark"]','JU-JOURNEY-01');set('[data-bind="@d.name"]','通し機');act('reg-save');return route()==='nf'&&S().aircraft.length===1});
@@ -21,7 +21,11 @@ suite('初回利用者の通し',H=>{
     return S().cur==='master'&&!!E().insurance&&!!E().contact&&S().ins.mode==='auto';
   });
   T('11 内容確認→通報の直前（足りない項目なし）',()=>{act('nf-next');const okR=S().cur==='review';act('nf-next');return okR&&S().cur==='final'&&!txt().includes('足りない項目が')});
-  T('12 アプリからDIPSへ送信→正常受付・重複なし→飛行リストに載る',()=>{act('nf-send-go');act('nf-result','[data-k=clean]');return route()==='nf-accepted'&&txt().includes('通報完了・重複なし')&&E().plans.length===1});
+  T('12 通報の直前でDIPSのログイン情報が未登録→その場で登録→元の飛行計画へ戻る→送信→正常受付・重複なし→飛行リストに載る',()=>{
+    act('nf-send-go');if(!q('.phone .sheet')||!q('.phone .sheet').innerText.includes('DIPSのログイン情報がまだ登録されていません'))return 'no prompt';
+    act('dips-now');set('[data-bind="#dform.id"]','1234567890','input');set('[data-bind="#dform.pw"]','dummy-pass-xyz','input');act('dips-save');
+    if(route()!=='nf'||S().cur!=='final'||!A().dips.registered)return 'back '+route();
+    act('nf-send-go');if(route()!=='nf-send')return 'send '+route();act('nf-result','[data-k=clean]');return route()==='nf-accepted'&&txt().includes('通報完了・重複なし')&&E().plans.length===1});
   T('13 後で飛行する→飛行リストのカード→通報内容',()=>{act('nf-later');act('go','[data-s=list]');const c=qa('[data-act=plan-open]').length;act('plan-open');return c===1&&route()==='plan'&&qa('.rev').length>=23});
   T('14 飛行前点検へ（新しく登録した機体。BAT管理OFF）',()=>{act('plan-to-op');return route()==='op-pre'&&txt().includes('JU-JOURNEY-01')});
   T('15 点検→離陸待機→離陸→着陸→終了→飛行後点検→保存',()=>{
@@ -36,7 +40,7 @@ suite('初回利用者の通し',H=>{
   });
   T('17 飛行リストは空に戻る（終わった計画はリストから外れる）',()=>{H.APP().root('home');act('go','[data-s=list]');return txt().includes('通報済みの計画はまだありません')});
   T('18 設定に、途中で登録したものが並んでいる',()=>{
-    H.APP().root('home');act('go','[data-s=set]');act('go','[data-s=set-aircraft]');const a=txt().includes('通し機');H.APP().back();
+    H.APP().root('home');act('go','[data-s=set]');const dp=qa('.li').find(x=>x.textContent.includes('DIPSのログイン情報')).textContent.includes('登録済み');act('go','[data-s=set-aircraft]');const a=txt().includes('通し機')&&dp;H.APP().back();
     act('go','[data-s=set-members]');const p=txt().includes('操縦者');H.APP().back();act('go','[data-s=set-docs]');const d=txt().includes('通し保険')&&txt().includes('通し連絡先');return a&&p&&d;
   });
   T('19 2回目: 履歴から複製して新規飛行',()=>{H.APP().root('home');act('nf-new');act('start-past');return S().cur==='use'&&S().aircraft.length===1&&S().geom.done&&S().auto.aircraft.includes('前回')});

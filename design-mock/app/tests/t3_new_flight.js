@@ -1,7 +1,7 @@
 'use strict';
 /* 新規飛行: 何も登録がない状態から、その場で登録して進む。送信の結果・DIPS Webでの通報・通報しない飛行 */
 suite('新規飛行',H=>{
-  const {T,act,txt,all,route,set,q,qa,A,E,S}=H;
+  const {T,act,txt,all,route,set,q,qa,A,E,S,memo}=H;
   const page=()=>S()&&S().cur;
   const next=()=>act('nf-next');
   H.hash('scn=empty');
@@ -64,7 +64,24 @@ suite('新規飛行',H=>{
     return a.includes('アプリからDIPSへ送信する')&&b.includes('DIPS Webで通報する')&&!/\bManual\b/.test(a+b)&&!/\bOptional\b/.test(a+b);
   });
   /* ---- 送信の結果 ---- */
-  T('API送信→DIPSの返事の画面（確認用の選択）',()=>{act('nf-send-go');return route()==='nf-send'&&txt().includes('DIPSへ送信しています')&&q('.mockbox').textContent.includes('DIPSが返す結果')});
+  T('DIPSのログイン情報が未登録: ［アプリからDIPSへ送信する］→「まだ登録されていません」。入力した飛行計画は残っている',()=>{
+    if(A().dips.registered)return 'already registered';
+    const name=S().planName;act('nf-send-go');const sh=q('.phone .sheet');
+    return route()==='nf'&&!!sh&&sh.innerText.includes('DIPSのログイン情報がまだ登録されていません')&&sh.innerText.includes('入力した飛行計画は、そのまま残っています')&&sh.innerText.includes('今設定する')&&sh.innerText.includes('あとで行う')&&S().planName===name;
+  });
+  T('［あとで行う］→ 通報の直前へ戻る。飛行計画はそのまま残る（行き止まりにしない）',()=>{
+    const n=S().aircraft.length;act('dips-later');return route()==='nf'&&page()==='final'&&!q('.phone .sheet')&&S().aircraft.length===n&&!!q('[data-act=nf-manual-go]');
+  });
+  T('［今設定する］→ その場で登録 → 元の飛行計画（通報の直前）へ戻る。登録後は送信へ進める',()=>{
+    act('nf-send-go');act('dips-now');
+    if(route()!=='set-dipscred'||!txt().includes('「新規飛行」の途中です')||!q('.phone [data-act=dips-save]').textContent.includes('登録して戻る'))return 'form '+route();
+    set('[data-bind="#dform.id"]','1234567890','input');set('[data-bind="#dform.pw"]','dummy-pass-xyz','input');act('dips-save');
+    if(route()!=='nf'||page()!=='final'||!A().dips.registered||S().aircraft.length!==1)return 'back '+route()+' '+page();
+    act('nf-send-go');return route()==='nf-send';
+  });
+  T('API送信→DIPSの返事の画面。結果の選択は右側にあり、左側は送信中の表示だけ',()=>{
+    return route()==='nf-send'&&txt().includes('DIPSへ送信しています')&&qa('.phone [data-act=nf-result]').length===0&&qa('#memo [data-act=nf-result]').length===4&&memo().includes('DIPSが返す結果');
+  });
   T('正常受付・重複なし→通報完了。飛行リストに載る。KMLはGoogle Driveに保存',()=>{
     const n=E().plans.length;act('nf-result','[data-k=clean]');const pl=E().plans[0];
     return route()==='nf-accepted'&&txt().includes('通報完了・重複なし')&&E().plans.length===n+1&&pl.dips==='clean'&&pl.kml==='saved'&&txt().includes('「出力」フォルダーに保存しました')&&!!q('[data-act=nf-later]')&&!!q('[data-act=nf-to-op]');
@@ -117,11 +134,11 @@ suite('新規飛行',H=>{
     act('pick-ac','[data-id=a1]');act('pick-pm','[data-id=m2]');next();act('tog-met','[data-v=夜間飛行]');
     return blocked&&txt().includes('許可書を確認してください');
   });
-  T('確認用の並び替え: 順序・まとめる・省く',()=>{
-    act('flow');const b=qa('.sheet [data-act=mv]').length;act('mv','[data-i="0"][data-d="1"]');const first=S().flow[0].id;act('sk','[data-i="4"]');act('close');
-    const ps=window.pages().map(p=>p.key);const ok=b>0&&first==='content'&&!ps.includes('master');act('flow');act('flow-reset');act('close');return ok;
+  T('並び替え（設計確認用。右側から開く）: 順序・まとめる・省く',()=>{
+    act('flow');const b=qa('.mockov [data-act=mv]').length;const inPhone=!!q('.phone .mockov');act('mv','[data-i="0"][data-d="1"]');const first=S().flow[0].id;act('sk','[data-i="4"]');act('mclose');
+    const ps=window.pages().map(p=>p.key);const ok=b>0&&!inPhone&&first==='content'&&!ps.includes('master');act('flow');act('flow-reset');act('mclose');return ok;
   });
-  T('カレンダー（複数日）／サンプルで全部埋める',()=>{
+  T('カレンダー（複数日）／仮データで全部埋める（右側の操作）',()=>{
     window.nfGo('time');act('cal');act('cal-day','[data-d]:not([disabled])');const ok=S().multi.length===1;act('close');
     H.APP().root('home');act('nf-new');act('fill');return ok&&page()==='review'&&txt().includes('大きな不足はありません');
   });

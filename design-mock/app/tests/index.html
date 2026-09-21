@@ -20,6 +20,11 @@
  #summary.ok{color:#187a44}#summary.ng{color:#b3261e}
  #log li{margin:2px 0}#log li.ng{color:#b3261e;font-weight:700}
  #stage{height:760px;overflow:hidden;border-top:2px solid #d3dae6;background:#e9edf4;position:relative}
+ /* 検査では、右側の設計確認欄を常に表示する（画面幅に関わらず、右側の操作を押せるように） */
+ .memo{display:block !important;max-height:none !important;overflow:visible !important}
+ #stage #root{flex-direction:row;align-items:flex-start;height:760px}
+ #stage .phone{height:760px;flex:0 0 430px}
+ #stage .mockbar{display:none}
 </style>
 </head>
 <body>

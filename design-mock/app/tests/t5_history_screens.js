@@ -54,6 +54,7 @@ suite('全画面の表示',H=>{
       try{window.gotoScreen(id)}catch(e){bad.push(id+' 例外 '+e.message);continue}
       n++;H.scan(label+' '+id);
       const b=q('#body');const base=id.split(':')[0];const r=route();
+      if(q('.phone .mockbox,.phone .mockctl,.phone .mockbtn,.phone .mocktag,.phone .mockbar,.phone .mockov'))bad.push(id+' 確認用の部品が左側にある');
       if(!b||b.innerText.trim().length<5)bad.push(id+' 本文なし');
       else if(base==='nf'?r!=='nf':r!==base)bad.push(id+' 移動先='+r);
       if(!q('.hd .ttl')||!q('.hd .ttl').innerText.trim())bad.push(id+' 題名なし');
@@ -70,7 +71,7 @@ suite('全画面の表示',H=>{
   T('全画面（Google Driveが閲覧のみ）',()=>{A().gAccess='view';const r=openAll('閲覧のみ');A().gAccess='edit';return r});
   T('全画面（アプリからDIPSへ送信できない）',()=>{A().apiOk=false;const r=openAll('送信不可');A().apiOk=true;return r});
   T('使う場所の選択（どこで使いますか？）を開く',()=>{window.gotoScreen('where');return route()==='where'&&H.qa('[data-act=env-pick]').length===2});
-  T('全画面: 設計確認メモに、設計書上の位置づけが出る（右側の欄）',()=>{
+  T('全画面: 右側の設計確認メモに、設計書上の位置づけが出る',()=>{
     H.hash('scn=company');const none=[];
     for(const g of map()){for(const s of g[1]){const id=s[0];if(id==='where'||id.indexOf('nf:')===0)continue;window.gotoScreen(id);const m=q('#memo');if(!m||!m.innerText.includes('設計Docs上'))none.push(id)}}
     return none.length===0?true:none.join(',');
@@ -94,7 +95,7 @@ suite('全画面の表示',H=>{
   T('参加の確認（共有の状態3種）と、ログインできない場合の画面',()=>{
     H.hash('');window.gotoScreen('join2');for(const v of ['edit','view','none']){A().gAccess=v;H.APP().render();H.scan('参加 '+v)}A().gAccess='edit';
     window.gotoScreen('acct-none');H.scan('acct-none');window.gotoScreen('acct-exists');H.scan('acct-exists');
-    window.gotoScreen('consent');H.APP().ACTS['consent-no']();H.scan('許可しない');
+    window.gotoScreen('consent');A().ui.consentOk=false;H.APP().ACTS['consent-ok']();H.scan('許可しない');A().ui.consentOk=true;
     return true;
   });
 });

@@ -3,7 +3,8 @@
    設計確認モックの自動検査の土台（本番のアプリの検査ではありません）
    - モックと同じページの中で、実際にボタンを押して確かめる
    - 合格 = true / undefined / 文字列以外の真の値。文字列（失敗の理由）・false・0・null・例外は不合格
-   - 操作のたびに、左側の利用者画面の文字を検査する（設計確認メモ・確認用の操作は対象外）
+   - 操作のたびに、左側の利用者画面（.phone）を検査する。文字に禁止語がないこと、確認用の部品（設計確認メモ・状態切替・注記）が左側に入っていないことを確かめる
+   - 右側の設計確認メモ・アプリの枠の外の帯・設計確認用のシートは、文字の検査の対象外
    =================================================================== */
 (function(){
   const R=[],ERR=[],VIOL=[];let SCANS=0;
@@ -18,24 +19,27 @@
     /（\s*0[1-7]\s*）/,/(?<![A-Za-z0-9-])0[1-7]\s*(?:人員|機体|バッテリー|運航記録|点検整備記録|DIPS関連|出力)/,
     /運用環境/,/環境(?!調査)/,
     /Network Error/,/Sync Error/,/Unsupported State/,/Data Corruption/,
-    /モック/,/仮/,/（案|案）/,/サンプル判定/,/未確定|未設計/,/設計/,/ダミー/,/確認用/,
+    /モック/,/仮/,/（案|案）/,/サンプル/,/テスト用/,/example\.invalid/,/見本/,/未確定|未設計/,/未決/,/設計/,/ダミー/,/確認用/,
     /人物/,/紐付/,/アプリ管理者/,/\bManual\b/,/\bOptional\b/,
     /同期/,/反映/,/保護/,/台帳/,/作業リスト/,/DIPS対象外/
   ];
+  /* 左側（アプリの枠）に入れてはいけない、確認用の部品 */
+  const LEFT_MOCK='.mockonly,.mockctl,.mockbox,.mockbtn,.mocktag,.mockpanel,.mockbar,.mockov,.memo,.memohead,[data-act=map],[data-act=memo],[data-act=mclose]';
   function leftText(){
     let t='';const ph=document.querySelector('.phone');
     if(ph){
       const c=ph.cloneNode(true);
-      c.querySelectorAll('.mockonly,.mockctl,.mockbox,.mockbtn').forEach(e=>e.remove());
       t+=c.textContent+' ';
       c.querySelectorAll('input,textarea').forEach(e=>{t+=(e.getAttribute('placeholder')||'')+' '+(e.getAttribute('value')||'')+' '});
       c.querySelectorAll('[title]').forEach(e=>{t+=e.getAttribute('title')+' '});
     }
-    document.querySelectorAll('.toast').forEach(e=>{t+=e.textContent+' '});
+    document.querySelectorAll('.toast:not(.mock)').forEach(e=>{t+=e.textContent+' '});
     return t;
   }
   function scan(ctx){
     SCANS++;const t=leftText();
+    const ph0=document.querySelector('.phone');
+    if(ph0){const bad=ph0.querySelector(LEFT_MOCK);if(bad)VIOL.push({ctx,term:'確認用の部品が左側にある',around:(bad.className||bad.tagName)+' '+(bad.getAttribute('data-act')||'')+' '+bad.textContent.slice(0,30)})}
     for(const re of BAN){const m=re.exec(t);if(m)VIOL.push({ctx,term:m[0],around:t.slice(Math.max(0,m.index-24),m.index+m[0].length+24).replace(/\s+/g,' ')})}
   }
 
@@ -51,7 +55,11 @@
     set:(sel,v,ev)=>{const e=q(sel);if(!e)throw new Error('no '+sel);e.value=v;e.dispatchEvent(new Event(ev||'change',{bubbles:true}));scan('入力 '+sel)},
     hash:h=>{location.hash=h;window.APP.init();scan('起動 '+h)},
     /* 画面の文字を確認するために、いま表示中の左側の文字を返す */
-    left:leftText
+    left:leftText,
+    /* 左側（アプリの枠の中）の要素だけを操作する。完全な初回利用者が、左側だけを見て進めるかを確かめるため */
+    actL:(n,attr)=>{const e=q('.phone [data-act="'+n+'"]'+(attr||''));if(!e)throw new Error('左側に無い操作: '+n+(attr||''));e.click();scan('左側の操作 '+n+(attr||''))},
+    setL:(sel,v,ev)=>{const e=q('.phone '+sel);if(!e)throw new Error('左側に無い入力欄: '+sel);e.value=v;e.dispatchEvent(new Event(ev||'input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));scan('左側の入力 '+sel)},
+    memo:()=>{const m=q('#memo');return m?m.innerText:''}
   };
   window.H=H;
 

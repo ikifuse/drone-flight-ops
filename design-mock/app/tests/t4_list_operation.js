@@ -1,7 +1,7 @@
 'use strict';
 /* 飛行リスト・DIPS通報内容・通常運航（点検→離陸→着陸→BAT交換／機体交代→飛行後点検→保存） */
 suite('飛行リスト・通常運航',H=>{
-  const {T,act,txt,route,set,q,qa,A,E}=H;
+  const {T,act,txt,route,set,q,qa,A,E,memo}=H;
   const OP=()=>A().op;
   H.hash('scn=empty');
   T('飛行リスト（空）: 案内と新規飛行への導線',()=>{act('go','[data-s=list]');return route()==='list'&&txt().includes('通報済みの計画はまだありません')&&!!q('[data-act=nf-new]')});
@@ -17,7 +17,7 @@ suite('飛行リスト・通常運航',H=>{
   /* ---- 通常運航（会社: 機体c1はBAT管理ON、c2はOFF） ---- */
   H.hash('scn=company');
   T('通報内容→飛行前点検。対象機体を機種と登録記号で表示',()=>{act('go','[data-s=list]');act('plan-open','[data-id="'+E().plans.find(p=>p.dips==='clean').id+'"]');act('plan-to-op');return route()==='op-pre'&&txt().includes('対象機体')&&txt().includes('JU-SAMPLE-K01')});
-  T('点検が済むまで、離陸待機へ進めない',()=>q('[data-act=op-pre-done]').disabled);
+  T('点検が済むまで、離陸待機へ進めない。「全部確認済みにする」は右側にあり、左側にはない',()=>q('[data-act=op-pre-done]').disabled&&!q('.phone [data-act=op-pre-all]')&&!!q('#memo [data-act=op-pre-all]'));
   T('点検項目を1つずつ確認→全部済むと進める',()=>{for(let i=0;i<8;i++){qa('[data-act=op-pre-tog]')[i].click()}return !q('[data-act=op-pre-done]').disabled});
   T('離陸待機: 離陸前の確認（通報・許可・点検・空域・気象）',()=>{act('op-pre-done');return route()==='op-standby'&&txt().includes('離陸前の確認')&&txt().includes('通報済み・重複なし')&&txt().includes('アプリは判断しません')});
   T('BAT管理ONの機体は、BATを選ぶまで離陸できない',()=>{const dis=q('[data-act=op-takeoff]').disabled;return dis&&qa('[data-act=op-bat-pick]').length===3});

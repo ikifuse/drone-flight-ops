@@ -3,18 +3,19 @@
 suite('設定・登録',H=>{
   const {T,act,txt,all,route,set,q,qa,A,E}=H;
   H.hash('scn=empty');
-  T('初回の設定: 何も必須にせず、その場で機体を登録して戻れる',()=>{
+  T('はじめの設定: 何も必須にせず、その場で機体を登録して戻れる',()=>{
     H.APP().go('init');if(route()!=='init')return 'route '+route();
     if(q('[data-act=ob-init-done]').disabled)return 'blocked';
-    act('init-pilot');if(A().init.isPilot!==true)return 'pilot';
-    act('reg-open','[data-t=aircraft]');if(route()!=='reg-aircraft')return 'route '+route();
+    act('init-open','[data-t=aircraft]');if(route()!=='reg-aircraft')return 'route '+route();
     if(!txt().includes('途中です'))return 'no banner';
     set('[data-bind="@d.mark"]','JU-TEST-001');set('[data-bind="@d.name"]','テスト機1');act('reg-save');
     return route()==='init'&&E().aircraft.length===1&&txt().includes('登録済み 1');
   });
-  T('初回の設定: キャンセルでは登録されない。完了でホームへ（操縦者にもなる）',()=>{
-    act('reg-open','[data-t=permit]');act('reg-cancel');if(route()!=='init'||E().permits.length!==0)return 'cancel';
-    act('ob-init-done');return route()==='home'&&qa('.tile').length===4&&E().people[0].roles.includes('操縦者');
+  T('はじめの設定: キャンセルでは登録されない。自分の情報で操縦者にもなれる。完了でホームへ',()=>{
+    act('init-open','[data-t=permit]');act('reg-cancel');if(route()!=='init'||E().permits.length!==0)return 'cancel';
+    act('init-open','[data-t=me]');set('[data-bind="%name"]','設定テスト氏名','input');act('init-pilot');act('init-me-save');
+    if(route()!=='init'||!E().people[0].roles.includes('操縦者'))return 'me';
+    act('ob-init-done');return route()==='home'&&qa('.tile').length===4;
   });
   T('設定メニュー→機体管理（登録済みが並ぶ）',()=>{act('go','[data-s=set]');if(route()!=='set'||!txt().includes('機体管理')||!txt().includes('BAT管理'))return 'menu';act('go','[data-s=set-aircraft]');return route()==='set-aircraft'&&txt().includes('テスト機1')});
   T('機体を追加（BAT管理ON→新しいBATグループ）',()=>{
@@ -63,15 +64,29 @@ suite('設定・登録',H=>{
     for(const id of ['set-env','set-dips','set-maint','set-sync']){act('go','[data-s='+id+']');if(route()!==id)return 'route '+id;H.APP().back()}
     return true;
   });
-  T('保存状態: オフラインにするとヘッダーに表示される（確認用の切替）',()=>{act('go','[data-s=set-sync]');act('online','[data-v="0"]');const ok=q('.hd2').innerText.includes('オフライン');act('online','[data-v="1"]');return ok});
-  T('DIPSへの通報方法: 送信できる／できないで案内が変わる',()=>{
+  T('DIPSのログイン情報: 設定・管理から登録できる（未登録の表示→登録済みの表示）',()=>{
+    H.APP().root('home');act('go','[data-s=set]');
+    const before=txt().includes('DIPSのログイン情報')&&qa('.li').find(x=>x.textContent.includes('DIPSのログイン情報')).textContent.includes('未登録');
+    act('dips-open');if(route()!=='set-dipscred'||txt().includes('途中です'))return 'route '+route();
+    set('[data-bind="#dform.id"]','1234567890','input');set('[data-bind="#dform.pw"]','dummy-pass-xyz','input');act('dips-save');
+    if(route()!=='set'||!A().dips.registered)return 'saved '+route();
+    return before&&qa('.li').find(x=>x.textContent.includes('DIPSのログイン情報')).textContent.includes('登録済み');
+  });
+  T('DIPSのログイン情報: 変更できる（IDは入っている・パスワードは変更するときだけ入力）。キャンセルで変わらない',()=>{
+    act('dips-open');const id=q('.phone [data-bind="#dform.id"]'),pw=q('.phone [data-bind="#dform.pw"]');
+    if(id.value!=='1234567890'||pw.value!==''||pw.getAttribute('placeholder')!=='変更するときだけ入力'||!txt().includes('登録済みです'))return 'form';
+    set('[data-bind="#dform.id"]','9999999999','input');act('dips-cancel');if(route()!=='set'||A().dips.id!=='1234567890')return 'cancel';
+    act('dips-open');set('[data-bind="#dform.id"]','9999999999','input');act('dips-save');return route()==='set'&&A().dips.id==='9999999999';
+  });
+  T('保存状態: オフラインにするとヘッダーに表示される（右側の切替）',()=>{act('go','[data-s=set-sync]');act('online','[data-v="0"]');const ok=q('.hd2').innerText.includes('オフライン');act('online','[data-v="1"]');return ok});
+  T('DIPSへの通報方法: 送信できる／できないで案内が変わる（右側の切替）',()=>{
     H.APP().root('home');act('go','[data-s=set]');act('go','[data-s=set-dips]');const a=txt().includes('いま、アプリからDIPSへ送信できます');act('api','[data-v="0"]');const b=txt().includes('いまは、アプリからDIPSへ送信できません')&&txt().includes('DIPS Webで通報する');act('api','[data-v="1"]');return a&&b;
   });
   T('切り替えのシート（使う場所が1つ）',()=>{H.APP().root('home');act('env');return !!q('.sheet')&&q('.sheet').innerText.includes('どこで使いますか？')});
-  T('画面一覧（確認用）から設定の画面へ移動できる',()=>{act('close');act('map');const many=qa('[data-act=mk-goto]').length>30;act('mk-goto','[data-s=set-aircraft]');return many&&route()==='set-aircraft'});
+  T('画面一覧（設計確認用）から設定の画面へ移動できる',()=>{act('close');act('map');const many=qa('[data-act=mk-goto]').length>30;act('mk-goto','[data-s=set-aircraft]');return many&&route()==='set-aircraft'});
   /* サンプルの投入とBATの一覧 */
   H.hash('scn=empty');
-  T('空の状態にサンプルを入れる（二重には入れない）',()=>{
+  T('空の状態に仮データを入れる（右側の操作。二重には入れない）',()=>{
     if(E().aircraft.length)return 'not empty';act('mk-sample');const ok=E().aircraft.length===3&&E().plans.length===1&&E().flights.length===3&&E().bats.length===7;act('mk-sample');return ok&&E().aircraft.length===3;
   });
   T('BAT一覧: 絞り込み（状態確認に異常あり）／BAT管理OFFだけなら案内',()=>{
