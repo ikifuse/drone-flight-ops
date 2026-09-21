@@ -5,7 +5,7 @@ suite('はじめて使う（左側だけで進める）',H=>{
   const {T,act,actL,setL,txt,route,q,qa,A,E,all,memo}=H;
   const start=()=>H.hash('');
   const toast=()=>qa('.toast:not(.mock)').map(t=>t.textContent).join(' ');
-  const dummyId='1234567890',dummyPw='dummy-pass-xyz';
+  const dummyId='1234567890',dummyPw='Abc-123-xyz';
 
   /* ---- 完全な初回利用者: 左側の操作だけで、ホームまで ---- */
   start();
@@ -43,7 +43,7 @@ suite('はじめて使う（左側だけで進める）',H=>{
     actL('ob-after-created');
     const id=q('.phone [data-bind="#dform.id"]'),pw=q('.phone [data-bind="#dform.pw"]');
     return route()==='dips-init'&&q('.ttl').innerText.includes('DIPSのログイン情報')&&txt().includes('DIPSにログインするための情報を登録します')&&txt().includes('DIPSログインID')&&txt().includes('DIPSパスワード')
-      &&id.value===''&&id.getAttribute('placeholder')==='例：1234567890'&&pw.type==='password'&&pw.value===''&&pw.getAttribute('placeholder')==='••••••••••'
+      &&id.value===''&&id.getAttribute('placeholder')==='例：1234567890'&&pw.type==='password'&&pw.value===''&&pw.getAttribute('placeholder')==='パスワードを入力'
       &&!!q('.phone [data-act=dips-skip]')&&!!q('.phone [data-act=dips-save]')&&q('.phone [data-act=dips-skip]').textContent.includes('あとで設定する')&&q('.phone [data-act=dips-save]').textContent.includes('登録する');
   });
   T('パスワードは［表示］／［非表示］で切り替えられる',()=>{
@@ -95,7 +95,7 @@ suite('はじめて使う（左側だけで進める）',H=>{
     actL('ob-start-new');actL('ob-google');actL('gauth-done');actL('us-personal');actL('consent-ok');actL('ob-after-created');actL('dips-skip');
     const dis=q('.phone [data-act=ob-init-done]').disabled&&txt().includes('必須の項目が、まだ登録されていません');
     const badge=qa('.phone .li').find(x=>x.textContent.includes('機体')).textContent.includes('必須');
-    actL('init-open','[data-t=aircraft]');setL('[data-bind="@d.mark"]','JU-TEST-001');actL('reg-save');
+    actL('init-open','[data-t=aircraft]');setL('[data-bind="@d.mark"]','JU000000000011');actL('reg-save');
     return dis&&badge&&route()==='init'&&!q('.phone [data-act=ob-init-done]').disabled&&!txt().includes('必須の項目が、まだ');
   });
   T('DIPSを必須にすると、DIPSの画面に［あとで設定する］が出ない',()=>{

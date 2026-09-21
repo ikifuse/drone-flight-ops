@@ -19,7 +19,7 @@
     /（\s*0[1-7]\s*）/,/(?<![A-Za-z0-9-])0[1-7]\s*(?:人員|機体|バッテリー|運航記録|点検整備記録|DIPS関連|出力)/,
     /運用環境/,/環境(?!調査)/,
     /Network Error/,/Sync Error/,/Unsupported State/,/Data Corruption/,
-    /モック/,/仮/,/（案|案）/,/サンプル/,/テスト用/,/example\.invalid/,/見本/,/未確定|未設計/,/未決/,/設計/,/ダミー/,/確認用/,
+    /モック/,/仮/,/案/,/サンプル/,/sample|test|dummy/i,/テスト用/,/example\.invalid/,/見本/,/未確定|未設計/,/未決/,/設計/,/ダミー/,/確認用/,
     /人物/,/紐付/,/アプリ管理者/,/\bManual\b/,/\bOptional\b/,
     /同期/,/反映/,/保護/,/台帳/,/作業リスト/,/DIPS対象外/
   ];
@@ -28,10 +28,17 @@
   function leftText(){
     let t='';const ph=document.querySelector('.phone');
     if(ph){
+      // textContentに加え、属性ではなく現在のDOMプロパティを検査する。
       const c=ph.cloneNode(true);
+      c.querySelectorAll('input,textarea,select').forEach(e=>e.remove());
       t+=c.textContent+' ';
-      c.querySelectorAll('input,textarea').forEach(e=>{t+=(e.getAttribute('placeholder')||'')+' '+(e.getAttribute('value')||'')+' '});
-      c.querySelectorAll('[title]').forEach(e=>{t+=e.getAttribute('title')+' '});
+      ph.querySelectorAll('input,textarea,select').forEach(e=>{
+        if(e.type==='hidden'||!e.getClientRects().length)return;
+        if(e.tagName==='SELECT')t+=Array.from(e.selectedOptions).map(o=>o.textContent).join(' ')+' ';
+        else t+=e.value+' ';
+      });
+      ph.querySelectorAll('[title]').forEach(e=>{t+=e.title+' '});
+      // placeholderは入力例。登録済みの値とは区別し、禁止語検査から除外する。
     }
     document.querySelectorAll('.toast:not(.mock)').forEach(e=>{t+=e.textContent+' '});
     return t;
@@ -45,7 +52,7 @@
 
   const q=s=>document.querySelector(s),qa=s=>Array.from(document.querySelectorAll(s));
   const H={
-    T:null,q,qa,$:q,$$:qa,scan,leftText,VIOL,ERR,
+    T:null,q,qa,$:q,$$:qa,scan,leftText,VIOL,ERR, banned:t=>BAN.some(re=>re.test(t)),
     APP:()=>window.APP,A:()=>window.APP.state(),S:()=>window.APP.nf(),
     E:()=>{const A=window.APP.state();return A.envs.find(e=>e.id===A.cur)},
     act:(n,attr)=>{const e=q('[data-act="'+n+'"]'+(attr||''));if(!e)throw new Error('no act '+n+(attr||''));e.click();scan('操作 '+n+(attr||''))},

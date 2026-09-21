@@ -92,13 +92,13 @@ function seedPersonal(env){
   const P1=env.meId;
   env.people.push(newPerson('操縦者B',['操縦者'],{id:'p2',dips:true,lic:'二等無人航空機操縦士',link:['a1']}),newPerson('補助者C',['補助者'],{id:'p3'}));
   env.aircraft.push(
-   {id:'a1',name:'1号機',model:'EVO Lite+',mark:'JU-SAMPLE-A01',cert:'第二種機体認証',expiry:addDays(TODAY,900),dips:true,dead:false,batOn:true,group:'g1'},
-   {id:'a2',name:'2号機',model:'EVO Lite',mark:'JU-SAMPLE-B02',cert:'なし',expiry:addDays(TODAY,20),dips:true,dead:false,batOn:true,group:'g1'},
-   {id:'a3',name:'3号機（抹消済み）',model:'Q3',mark:'JU-SAMPLE-C03',cert:'なし',expiry:addDays(TODAY,-30),dips:true,dead:true,batOn:false,group:null});
+   {id:'a1',name:'1号機',model:'EVO Lite+',mark:'JU000000000001',cert:'第二種機体認証',expiry:addDays(TODAY,900),dips:true,dead:false,batOn:true,group:'g1'},
+   {id:'a2',name:'2号機',model:'EVO Lite',mark:'JU000000000002',cert:'なし',expiry:addDays(TODAY,20),dips:true,dead:false,batOn:true,group:'g1'},
+   {id:'a3',name:'3号機（抹消済み）',model:'Q3',mark:'JU000000000003',cert:'なし',expiry:addDays(TODAY,-30),dips:true,dead:true,batOn:false,group:null});
   env.permits.push(
-   {id:'m1',no:'国空航第SAMPLE-001号',label:'包括許可',issued:addDays(TODAY,-200),from:addDays(TODAY,-200),to:addDays(TODAY,165),cat:'II',cover:['DID','夜間','目視外'],aircraft:['a1','a2']},
-   {id:'m2',no:'国空航第SAMPLE-002号',label:'個別承認',issued:addDays(TODAY,-60),from:addDays(TODAY,-60),to:addDays(TODAY,300),cat:'II',cover:['30m未満'],aircraft:['a1']},
-   {id:'m0',no:'国空航第SAMPLE-000号',label:'旧包括許可',issued:addDays(TODAY,-500),from:addDays(TODAY,-500),to:addDays(TODAY,-10),cat:'II',cover:['DID'],aircraft:['a1']});
+   {id:'m1',no:'国空航第000001号',label:'包括許可',issued:addDays(TODAY,-200),from:addDays(TODAY,-200),to:addDays(TODAY,165),cat:'II',cover:['DID','夜間','目視外'],aircraft:['a1','a2']},
+   {id:'m2',no:'国空航第000002号',label:'個別承認',issued:addDays(TODAY,-60),from:addDays(TODAY,-60),to:addDays(TODAY,300),cat:'II',cover:['30m未満'],aircraft:['a1']},
+   {id:'m0',no:'国空航第000000号',label:'旧包括許可',issued:addDays(TODAY,-500),from:addDays(TODAY,-500),to:addDays(TODAY,-10),cat:'II',cover:['DID'],aircraft:['a1']});
   env.insurance={company:'○○損害保険',product:'賠償責任保険',pUnl:'yes',pAmt:'',oUnl:'no',oAmt:'10000000',ability:''};
   env.contact={name:'担当者A',country:'日本/Japan',pref:'○○県',addr:'○○市1-2-3',cc:'日本/Japan(81)',phone:'09000000000',email:'name@example.com'};
   env.presets.push(
@@ -125,9 +125,9 @@ function seedCompany(env){
    newPerson('会社操縦者2',['操縦者'],{id:'q2',dips:false,lic:'未発行',link:['c1']}),
    newPerson('会社補助者3',['補助者'],{id:'q3'}));
   env.aircraft.push(
-   {id:'c1',name:'会社機1',model:'Q3',mark:'JU-SAMPLE-K01',cert:'第二種機体認証',expiry:addDays(TODAY,700),dips:true,dead:false,batOn:true,group:'g2'},
-   {id:'c2',name:'会社機2',model:'X2',mark:'JU-SAMPLE-K02',cert:'なし',expiry:addDays(TODAY,25),dips:true,dead:false,batOn:false,group:null});
-  env.permits.push({id:'n1',no:'国空航第SAMPLE-101号',label:'会社の包括許可',issued:addDays(TODAY,-100),from:addDays(TODAY,-100),to:addDays(TODAY,265),cat:'II',cover:['DID','夜間','目視外','30m未満'],aircraft:['c1','c2']});
+   {id:'c1',name:'会社機1',model:'Q3',mark:'JU000000000004',cert:'第二種機体認証',expiry:addDays(TODAY,700),dips:true,dead:false,batOn:true,group:'g2'},
+   {id:'c2',name:'会社機2',model:'X2',mark:'JU000000000005',cert:'なし',expiry:addDays(TODAY,25),dips:true,dead:false,batOn:false,group:null});
+  env.permits.push({id:'n1',no:'国空航第000101号',label:'会社の包括許可',issued:addDays(TODAY,-100),from:addDays(TODAY,-100),to:addDays(TODAY,265),cat:'II',cover:['DID','夜間','目視外','30m未満'],aircraft:['c1','c2']});
   env.insurance={company:'○○損害保険',product:'包括賠償責任保険',pUnl:'yes',pAmt:'',oUnl:'yes',oAmt:'',ability:''};
   env.contact={name:'会社担当者',country:'日本/Japan',pref:'○○府',addr:'○○区7-8-9',cc:'日本/Japan(81)',phone:'0600000001',email:'contact@example.com'};
   env.presets.push({id:'pr3',name:'工場屋根の点検',geo:GEO.park,alt:25,from:'本社',to:'工場',biz:['インフラ点検・保守'],dur:[1,30]});

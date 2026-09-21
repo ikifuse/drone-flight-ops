@@ -405,7 +405,7 @@ def('nf-accepted',{t:()=>({clean:'通報完了・重複なし',dup:'通報済み
   ask:['正常受付の画面に、どこまで情報を出すか','［後で飛行する］のあと、ホームへ戻すだけでよいか'],
   body:()=>{
     const r=A.nfResult||{kind:'clean'};const pl=planLink();
-    const sum=pl?'<div class="sec"><h3>登録された計画</h3><table class="kv"><tr><td>計画名称</td><td>'+esc(pl.name)+'</td></tr><tr><td>日時</td><td>'+esc(fmtDT(pl.start))+'</td></tr><tr><td>機体</td><td>'+pl.ac.map(id=>esc(acLabel(id))).join('<br>')+'</td></tr><tr><td>操縦者</td><td>'+pl.pl.map(id=>esc(plName(id))).join('、')+'</td></tr>'+(r.kind!=='manual'?'<tr><td>DIPS計画ID</td><td class="mono">SAMPLE-'+pl.id.replace(/\D/g,'')+'</td></tr>':'')+'</table></div>':'';
+    const sum=pl?'<div class="sec"><h3>登録された計画</h3><table class="kv"><tr><td>計画名称</td><td>'+esc(pl.name)+'</td></tr><tr><td>日時</td><td>'+esc(fmtDT(pl.start))+'</td></tr><tr><td>機体</td><td>'+pl.ac.map(id=>esc(acLabel(id))).join('<br>')+'</td></tr><tr><td>操縦者</td><td>'+pl.pl.map(id=>esc(plName(id))).join('、')+'</td></tr>'+(r.kind!=='manual'?'<tr><td>DIPS計画ID</td><td class="mono">000000-'+pl.id.replace(/\D/g,'')+'</td></tr>':'')+'</table></div>':'';
     const kml=pl?'<div class="sec"><h3>KML（My Maps用）</h3><p class="lead" style="margin:0">'+(pl.kml==='saved'?'通報したときに作成し、Google Driveの「出力」フォルダーに<b>保存しました</b>。飛行のあとに作り直す必要はありません。':'作成しましたが、通信できず、<b>まだGoogle Driveに保存されていません</b>。この端末には保存されています。通信が戻ったら、自動で保存します。')+'</p></div>':'';
     if(r.kind==='clean'||r.kind==='manual')return '<div class="msg ok big">'+(r.kind==='manual'?'✓ 通報確認済み':'✓ 通報完了・重複なし')+'</div>'+sum+kml
       +'<div class="msg info">通報完了は、飛行できることの保証ではありません（離陸前の確認は別に行います）。この計画は、共有の飛行リストに載りました。'+(r.kind==='manual'?'':'')+'</div>';

@@ -8,7 +8,7 @@ suite('設定・登録',H=>{
     if(q('[data-act=ob-init-done]').disabled)return 'blocked';
     act('init-open','[data-t=aircraft]');if(route()!=='reg-aircraft')return 'route '+route();
     if(!txt().includes('途中です'))return 'no banner';
-    set('[data-bind="@d.mark"]','JU-TEST-001');set('[data-bind="@d.name"]','テスト機1');act('reg-save');
+    set('[data-bind="@d.mark"]','JU000000000011');set('[data-bind="@d.name"]','テスト機1');act('reg-save');
     return route()==='init'&&E().aircraft.length===1&&txt().includes('登録済み 1');
   });
   T('はじめの設定: キャンセルでは登録されない。自分の情報で操縦者にもなれる。完了でホームへ',()=>{
@@ -20,10 +20,10 @@ suite('設定・登録',H=>{
   T('設定メニュー→機体管理（登録済みが並ぶ）',()=>{act('go','[data-s=set]');if(route()!=='set'||!txt().includes('機体管理')||!txt().includes('BAT管理'))return 'menu';act('go','[data-s=set-aircraft]');return route()==='set-aircraft'&&txt().includes('テスト機1')});
   T('機体を追加（BAT管理ON→新しいBATグループ）',()=>{
     act('reg-open','[data-t=aircraft]:not([data-id])');if(route()!=='reg-aircraft')return 'route';
-    set('[data-bind="@d.mark"]','JU-TEST-002');set('[data-bind="@d.name"]','テスト機2');
+    set('[data-bind="@d.mark"]','JU000000000012');set('[data-bind="@d.name"]','テスト機2');
     act('reg-set','[data-k=batOn][data-v=true]');if(!txt().includes('BATグループ'))return 'no group select';
     set('[data-bind="@d.newGroup"]','テストBATグループ');act('reg-save');
-    const a=E().aircraft.find(x=>x.mark==='JU-TEST-002');
+    const a=E().aircraft.find(x=>x.mark==='JU000000000012');
     return route()==='set-aircraft'&&!!a&&a.batOn&&E().batGroups.length===1&&E().batGroups[0].name==='テストBATグループ'&&a.group===E().batGroups[0].id;
   });
   T('BAT管理: BATを登録（中古・サイクル数）',()=>{
@@ -47,7 +47,7 @@ suite('設定・登録',H=>{
   });
   T('許可・保険・連絡先を登録',()=>{
     H.APP().root('home');act('go','[data-s=set]');act('go','[data-s=set-docs]');
-    act('reg-open','[data-t=permit]:not([data-id])');set('[data-bind="@d.no"]','国空航第TEST号');act('reg-tog','[data-k=cover][data-v=DID]');act('reg-save');
+    act('reg-open','[data-t=permit]:not([data-id])');set('[data-bind="@d.no"]','国空航第000011号');act('reg-tog','[data-k=cover][data-v=DID]');act('reg-save');
     act('reg-open','[data-t=insurance]');set('[data-bind="@d.company"]','テスト保険');act('reg-save');
     act('reg-open','[data-t=contact]');set('[data-bind="@d.phone"]','09011112222');act('reg-save');
     return route()==='set-docs'&&E().permits.length===1&&E().permits[0].cover.includes('DID')&&E().insurance.company==='テスト保険'&&E().contact.phone==='09011112222';
@@ -68,7 +68,7 @@ suite('設定・登録',H=>{
     H.APP().root('home');act('go','[data-s=set]');
     const before=txt().includes('DIPSのログイン情報')&&qa('.li').find(x=>x.textContent.includes('DIPSのログイン情報')).textContent.includes('未登録');
     act('dips-open');if(route()!=='set-dipscred'||txt().includes('途中です'))return 'route '+route();
-    set('[data-bind="#dform.id"]','1234567890','input');set('[data-bind="#dform.pw"]','dummy-pass-xyz','input');act('dips-save');
+    set('[data-bind="#dform.id"]','1234567890','input');set('[data-bind="#dform.pw"]','Abc-123-xyz','input');act('dips-save');
     if(route()!=='set'||!A().dips.registered)return 'saved '+route();
     return before&&qa('.li').find(x=>x.textContent.includes('DIPSのログイン情報')).textContent.includes('登録済み');
   });
@@ -94,5 +94,23 @@ suite('設定・登録',H=>{
     const one=qa('tr[data-act=bat-open]').length===1&&txt().includes('膨らみあり');
     E().aircraft.forEach(a=>{a.batOn=false});H.APP().render();
     return one&&txt().includes('BAT管理をONにした機体がありません');
+  });
+});
+
+suite('表示値検査とパスワードの回帰',H=>{
+  const {T}=H;
+  T('英字の大小文字・混在、設計専用語を検出する',()=>['sample','SAMPLE','SaMpLe','test','TEST','dummy','DUMMY','仮','未決','未確定','設計','案'].every(H.banned));
+  T('属性でなく入力の現在値・textarea・選択中の表示値を検査し、placeholderは許可する',()=>{
+    H.hash('scn=personal');const host=document.createElement('div');document.querySelector('.phone').append(host);
+    host.innerHTML='<input placeholder="例：sample@example.com"><textarea></textarea><select><option>通常</option><option>SAMPLE</option></select>';
+    const input=host.querySelector('input'),area=host.querySelector('textarea'),select=host.querySelector('select');
+    const clean=!H.banned(H.leftText());input.value='DUMMY';const a=H.banned(H.leftText());input.value='';area.value='TEST';const b=H.banned(H.leftText());area.value='';select.selectedIndex=1;const c=H.banned(H.leftText());host.remove();return clean&&a&&b&&c;
+  });
+  T('未登録は空欄と自然なplaceholder、入力後だけ伏字・表示切替',()=>{
+    H.hash('scn=empty');H.APP().gotoScreen('set-dipscred');const sel='.phone [data-bind="#dform.pw"]';
+    let pw=H.q(sel);if(pw.value!==''||pw.placeholder!=='パスワードを入力'||pw.type!=='password')return '初期表示';
+    H.set(sel,'Abc-123-xyz','input');if(H.q(sel).type!=='password')return '伏字';
+    H.act('dips-show');if(H.q(sel).value!=='Abc-123-xyz'||H.q(sel).type!=='text')return '表示';
+    H.act('dips-show');return H.q(sel).type==='password';
   });
 });

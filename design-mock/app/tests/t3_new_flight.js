@@ -75,7 +75,7 @@ suite('新規飛行',H=>{
   T('［今設定する］→ その場で登録 → 元の飛行計画（通報の直前）へ戻る。登録後は送信へ進める',()=>{
     act('nf-send-go');act('dips-now');
     if(route()!=='set-dipscred'||!txt().includes('「新規飛行」の途中です')||!q('.phone [data-act=dips-save]').textContent.includes('登録して戻る'))return 'form '+route();
-    set('[data-bind="#dform.id"]','1234567890','input');set('[data-bind="#dform.pw"]','dummy-pass-xyz','input');act('dips-save');
+    set('[data-bind="#dform.id"]','1234567890','input');set('[data-bind="#dform.pw"]','Abc-123-xyz','input');act('dips-save');
     if(route()!=='nf'||page()!=='final'||!A().dips.registered||S().aircraft.length!==1)return 'back '+route()+' '+page();
     act('nf-send-go');return route()==='nf-send';
   });

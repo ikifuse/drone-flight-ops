@@ -130,7 +130,7 @@ function dipsForm(){
   const d=A.ui.dform||(A.ui.dform={id:A.dips.id||'',pw:''});const show=!!A.ui.pwShow;const reg=A.dips.registered;
   return (A.dipsRet?'<div class="msg info"><b>「'+esc(A.dipsRet.label)+'」の途中です。</b>登録が終わると、元の画面に戻ります。</div>':'')
    +'<div class="fld"><label>DIPSログインID</label><input class="in" data-bind="#dform.id" autocomplete="off" inputmode="numeric" value="'+esc(d.id)+'" placeholder="例：1234567890"></div>'
-   +'<div class="fld"><label>DIPSパスワード</label><div class="pwrow"><input class="in" data-bind="#dform.pw" autocomplete="new-password" type="'+(show?'text':'password')+'" value="'+esc(d.pw)+'" placeholder="'+(reg?'変更するときだけ入力':'••••••••••')+'"><button class="btn sm" data-act="dips-show">'+(show?'非表示':'表示')+'</button></div></div>'
+   +'<div class="fld"><label>DIPSパスワード</label><div class="pwrow"><input class="in" data-bind="#dform.pw" autocomplete="new-password" type="'+(show?'text':'password')+'" value="'+esc(d.pw)+'" placeholder="'+(reg?'変更するときだけ入力':'パスワードを入力')+'"><button class="btn sm" data-act="dips-show">'+(show?'非表示':'表示')+'</button></div></div>'
    +(reg?'<p class="note">登録済みです。</p>':'');
 }
 const DIPS_MEMO={

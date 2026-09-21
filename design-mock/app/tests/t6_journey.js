@@ -23,7 +23,7 @@ suite('初回利用者の通し',H=>{
   T('11 内容確認→通報の直前（足りない項目なし）',()=>{act('nf-next');const okR=S().cur==='review';act('nf-next');return okR&&S().cur==='final'&&!txt().includes('足りない項目が')});
   T('12 通報の直前でDIPSのログイン情報が未登録→その場で登録→元の飛行計画へ戻る→送信→正常受付・重複なし→飛行リストに載る',()=>{
     act('nf-send-go');if(!q('.phone .sheet')||!q('.phone .sheet').innerText.includes('DIPSのログイン情報がまだ登録されていません'))return 'no prompt';
-    act('dips-now');set('[data-bind="#dform.id"]','1234567890','input');set('[data-bind="#dform.pw"]','dummy-pass-xyz','input');act('dips-save');
+    act('dips-now');set('[data-bind="#dform.id"]','1234567890','input');set('[data-bind="#dform.pw"]','Abc-123-xyz','input');act('dips-save');
     if(route()!=='nf'||S().cur!=='final'||!A().dips.registered)return 'back '+route();
     act('nf-send-go');if(route()!=='nf-send')return 'send '+route();act('nf-result','[data-k=clean]');return route()==='nf-accepted'&&txt().includes('通報完了・重複なし')&&E().plans.length===1});
   T('13 後で飛行する→飛行リストのカード→通報内容',()=>{act('nf-later');act('go','[data-s=list]');const c=qa('[data-act=plan-open]').length;act('plan-open');return c===1&&route()==='plan'&&qa('.rev').length>=23});
