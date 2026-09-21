@@ -99,7 +99,8 @@ function init(){
   }
   if(scn==='normal'){ACTS['ob-normal']();return}
   if(q.sample&&ENV())seedSample(ENV());
-  if(q.go){gotoScreen(decodeURIComponent(q.go));return}
+  if(q.go){gotoScreen(decodeURIComponent(q.go));if(q.sheet==='map'){A.modal={fn:mapHtml};render()}return}
+  if(q.sheet==='map'&&ENV())A.modal={fn:mapHtml};
   render(false);
 }
 window.APP={state:()=>A,nf:()=>S,setNF:v=>{S=v},go:nav,root,back,render,ACTS,SCR,init,seedSample,gotoScreen,mk:{blankNF,emptyEnv,samplePersonalEnv,sampleCompanyEnv,newPerson}};
