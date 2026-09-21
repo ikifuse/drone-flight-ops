@@ -8,7 +8,7 @@ const flightOf=id=>{const E=ENV();return E&&E.flights.find(f=>f.id===id)};
 const fPlace=f=>(f.legs[0]&&f.legs[0].place)||f.snap.to||f.snap.from||'—';
 const fMin=f=>f.legs.reduce((s,l)=>s+l.min,0);
 const fPurpose=f=>[].concat(f.snap.biz,f.snap.non).filter(Boolean);
-const KML_TXT={saved:'保存済み（07）',pending:'未同期（端末に保持。Driveへ未保存）',none:'なし'};
+const KML_TXT={saved:'保存済み',pending:'まだGoogle Driveに保存されていません',none:'なし'};
 function histList(){
   const E=ENV(),u=A.ui;let L=E.flights.slice().sort((a,b)=>b.date-a.date);
   if(u.hq)L=L.filter(f=>(f.label+' '+fPlace(f)).indexOf(u.hq)>=0);
@@ -20,9 +20,9 @@ function histList(){
 }
 function histCards(){
   const E=ENV();const L=histList();
-  if(!E.flights.length)return '<div class="empty"><b>完了した飛行はまだありません</b><br>飛行を終えて［最終送信・保存］すると、ここに出ます。<br><button class="btn sm" style="margin-top:8px" data-act="nf-new">新規飛行へ</button></div>';
+  if(!E.flights.length)return '<div class="empty"><b>完了した飛行はまだありません</b><br>飛行を終えて［保存する］と、ここに出ます。<br><button class="btn sm" style="margin-top:8px" data-act="nf-new">新規飛行へ</button></div>';
   if(!L.length)return '<div class="empty">この条件に合う飛行はありません</div>';
-  return L.map(f=>'<button class="card" style="width:100%;margin-bottom:8px" data-act="hist-open" data-id="'+f.id+'"><b>'+esc(f.label)+'</b><span>'+slash(f.date)+' ／ 📍 '+esc(fPlace(f))+'</span><span>✈ '+f.ac.map(id=>esc(acName(id))).join('・')+' ／ 👤 '+f.pl.map(id=>esc(plName(id))).join('・')+'</span><span>飛行 '+f.legs.length+'回・'+fMin(f)+'分 ／ '+esc(fPurpose(f).join('・')||'—')+'</span><span class="chips">'+(f.synced?'':'<i class="chip warn">未同期</i>')+(f.outs.a4?'<i class="chip ok">A4 PDF作成済み</i>':'')+(f.outs.map?'<i class="chip ok">地図付きPDF作成済み</i>':'')+(f.snap.noDips?'<i class="chip">通報なし</i>':'')+'</span></button>').join('');
+  return L.map(f=>'<button class="card" style="width:100%;margin-bottom:8px" data-act="hist-open" data-id="'+f.id+'"><b>'+esc(f.label)+'</b><span>'+slash(f.date)+' ／ 📍 '+esc(fPlace(f))+'</span><span>✈ '+f.ac.map(id=>esc(acName(id))).join('・')+' ／ 👤 '+f.pl.map(id=>esc(plName(id))).join('・')+'</span><span>飛行 '+f.legs.length+'回・'+fMin(f)+'分 ／ '+esc(fPurpose(f).join('・')||'—')+'</span><span class="chips">'+(f.synced?'':'<i class="chip warn">未保存</i>')+(f.outs.a4?'<i class="chip ok">A4 PDF作成済み</i>':'')+(f.outs.map?'<i class="chip ok">地図付きPDF作成済み</i>':'')+(f.snap.noDips?'<i class="chip">通報なし</i>':'')+'</span></button>').join('');
 }
 def('hist',{t:'飛行履歴・出力',st:'完了した過去の飛行を探す',
   goal:'完了済みの過去の飛行を、人が読める条件で探して選び、その飛行の正式記録に基づく出力へ進む。',
@@ -36,7 +36,7 @@ def('hist',{t:'飛行履歴・出力',st:'完了した過去の飛行を探す',
      +'<div class="row"><select class="in" data-bind="#hDays" data-rerender="1">'+opt('','期間: すべて',u.hDays)+opt('30','過去30日',u.hDays)+opt('90','過去90日',u.hDays)+'</select><select class="in" data-bind="#hAc" data-rerender="1">'+opt('','機体: すべて',u.hAc)+E.aircraft.map(a=>opt(a.id,a.name,u.hAc)).join('')+'</select></div>'
      +'<div class="row"><select class="in" data-bind="#hPl" data-rerender="1">'+opt('','操縦者: すべて',u.hPl)+E.people.filter(p=>p.pilot).map(p=>opt(p.id,p.name,u.hPl)).join('')+'</select><select class="in" data-bind="#hPu" data-rerender="1">'+opt('','目的: すべて',u.hPu)+purposes.map(x=>opt(x,x,u.hPu)).join('')+'</select></div></div>'
      +'<div id="hres">'+histCards()+'</div>'
-     +'<p class="note">'+(A.online?'':'オフライン: 端末に取得済みの飛行だけを表示しています。')+'内部のIDは表示しません。日付・機体・場所・目的・操縦者で探します。</p>';
+     +'<p class="note">'+(A.online?'':'オフラインです。この端末に取得済みの飛行だけを表示しています。')+'日付・機体・場所・目的・操縦者で探せます。</p>';
   }
 });
 
@@ -48,15 +48,15 @@ def('hist-detail',{t:()=>{const f=flightOf(A.ui.hSel);return f?f.label:'飛行�
   body:()=>{
     const f=flightOf(A.ui.hSel);if(!f)return '<div class="empty">飛行が見つかりません</div>';
     const s=f.snap;const nd=!!s.noDips;const sel=A.ui.outSel;
-    return '<div class="sec"><h3>この飛行</h3><table class="kv"><tr><td>日付</td><td>'+slash(f.date)+'</td></tr><tr><td>場所</td><td>'+esc(fPlace(f))+'</td></tr><tr><td>目的</td><td>'+esc(fPurpose(f).join('・')||'—')+'</td></tr><tr><td>機体</td><td>'+f.ac.map(id=>esc(acLabel(id))).join('<br>')+'</td></tr><tr><td>操縦者</td><td>'+f.pl.map(id=>esc(plName(id))).join('、')+'</td></tr><tr><td>飛行</td><td>'+f.legs.length+'回・合計'+fMin(f)+'分</td></tr><tr><td>保存</td><td>'+(f.synced?'反映済み':'<i class="chip warn">未同期</i> 端末に保護中')+'</td></tr></table></div>'
+    return '<div class="sec"><h3>この飛行</h3><table class="kv"><tr><td>日付</td><td>'+slash(f.date)+'</td></tr><tr><td>場所</td><td>'+esc(fPlace(f))+'</td></tr><tr><td>目的</td><td>'+esc(fPurpose(f).join('・')||'—')+'</td></tr><tr><td>機体</td><td>'+f.ac.map(id=>esc(acLabel(id))).join('<br>')+'</td></tr><tr><td>操縦者</td><td>'+f.pl.map(id=>esc(plName(id))).join('、')+'</td></tr><tr><td>飛行</td><td>'+f.legs.length+'回・合計'+fMin(f)+'分</td></tr><tr><td>保存</td><td>'+(f.synced?'Google Driveに保存済み':'<i class="chip warn">未保存</i> この端末には保存されています')+'</td></tr></table></div>'
      +'<div class="sec"><h3>飛行の記録</h3><table class="kv grid"><tr><th>#</th><th>機体</th><th>BAT</th><th>離陸→着陸</th><th>時間</th></tr>'+f.legs.map((l,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(l.ac?acName(l.ac):acName(f.ac[0]))+'</td><td>'+esc(l.bat)+'</td><td>'+esc(l.off)+'→'+esc(l.on)+'</td><td>'+l.min+'分</td></tr>').join('')+'</table>'+(f.notes?'<p class="note">記事・不具合・処置: '+esc(f.notes)+'</p>':'')
      +(nd?'':'<div class="row"><button class="btn sm" data-act="hist-dips">通報した内容を見る</button></div>')+'</div>'
      +'<div class="sec"><h3>出力 <small>必要なものだけ作ります</small></h3>'
      +tgl('out-tog','data-k="a4"','A4運航記録PDF',sel.a4,false,f.outs.a4?'<i class="chip ok">作成済み</i>':'')
      +tgl('out-tog','data-k="map"','地図付きPDF（通報内容＋地図）',sel.map&&!nd,nd,f.outs.map?'<i class="chip ok">作成済み</i>':'')
      +'<div class="row"><button class="btn sm" data-act="out-both">両方選ぶ</button><button class="btn primary sm" data-act="out-make"'+((sel.a4||(sel.map&&!nd))?'':' disabled')+'>選んだPDFを作る</button></div>'
-     +'<p class="note">PDFは、飛行が終わったときに自動では作りません。印刷・提出・保存が必要なときだけ作ります（不要なファイルが増えないように）。A4の運航記録は、最後の送信で04に自動で完成しており、Google Sheetsの標準の印刷・PDF化もできます（27f §3）。'+(nd?' 通報しない飛行は、通報内容がないため地図付きPDFは作りません（仮）。':'')+'</p></div>'
-     +'<div class="sec"><h3>KML（My Maps用）</h3><table class="kv"><tr><td>状態</td><td>'+(nd?'<i class="chip">この飛行にはありません</i>':f.kml==='saved'?'<i class="chip ok">'+KML_TXT.saved+'</i>':'<i class="chip warn">'+KML_TXT.pending+'</i>')+'</td></tr></table><p class="note">KMLは、通報したときに作成し、07へ保存済みです。飛行のあとに作り直しません。</p><div class="row"><button class="btn sm" data-act="out-kml-open">KMLについて見る</button></div></div>';
+     +'<p class="note">PDFは、飛行が終わったときに自動では作りません。印刷・提出・保存が必要なときだけ作ります（不要なファイルが増えないように）。A4の飛行記録は、最後の保存で自動的に出来上がっており、Google Sheetsの標準の印刷・PDF化もできます。'+(nd?' 通報しない飛行は、通報内容がないため地図付きPDFは作りません。':'')+'</p></div>'
+     +'<div class="sec"><h3>KML（My Maps用）</h3><table class="kv"><tr><td>状態</td><td>'+(nd?'<i class="chip">この飛行にはありません</i>':f.kml==='saved'?'<i class="chip ok">'+KML_TXT.saved+'</i>':'<i class="chip warn">'+KML_TXT.pending+'</i>')+'</td></tr></table><p class="note">KMLは、通報したときに作成し、Google Driveに保存しています。飛行のあとに作り直しません。</p><div class="row"><button class="btn sm" data-act="out-kml-open">KMLについて見る</button></div></div>';
   }
 });
 
@@ -82,10 +82,10 @@ def('out-pdf',{t:'出力：PDF',st:()=>{const f=flightOf(A.ui.hSel);return f?f.l
   ask:['出力後にまず何を見せるか（プレビュー／保存先／共有）','補助者への渡し方（個別共有）の入口をここに置くか'],
   body:()=>{
     const f=flightOf(A.ui.hSel);const m=A.ui.outMade||{a4:true,map:false,saved:A.online};
-    return (m.saved?'<div class="msg ok big">✓ PDFを作成しました</div><div class="msg ok">Google Driveの07（出力）に保存しました。</div>':'<div class="msg warn big">端末で作成しました</div><div class="msg warn">通信できないため、Driveの07への保存は<b>未保存</b>です。通信できるときに保存します。地図のタイルが取得できない場合は、座標・半径を印字して作成します（18 §6）。</div>')
+    return (m.saved?'<div class="msg ok big">✓ PDFを作成しました</div><div class="msg ok">Google Driveの「出力」フォルダーに保存しました。</div>':'<div class="msg warn big">端末で作成しました</div><div class="msg warn">通信できないため、<b>まだGoogle Driveに保存されていません</b>。通信が戻ったら保存します。地図が取得できない場合は、座標と半径を文字で入れて作成します。</div>')
      +(m.a4?'<div class="sec"><h3>A4運航記録PDF <small>見本</small></h3>'+a4Preview(f)+'</div>':'')
      +(m.map?'<div class="sec"><h3>地図付きPDF <small>見本</small></h3>'+mapPdfPreview(f)+'<p class="note">地図を左上に、DIPSの通報項目を右側と下側に置く配置の見本です。最終のレイアウトは、1飛行のテストで確定します。</p></div>':'')
-     +'<div class="sec"><h3>次にできること</h3><div class="actbar"><button class="btn" data-act="stub" data-t="端末に保存・印刷" data-m="端末への保存・印刷（モック）。実際は、ブラウザーの保存・印刷の操作へ渡します。">端末に保存・印刷</button><button class="btn" data-act="stub" data-t="個別に共有" data-m="この1飛行のPDFを、補助者などへ個別に共有します（モック）。補助者には元の台帳全体の権限は与えません（31b §4）。">個別に共有</button></div></div>';
+     +'<div class="sec"><h3>次にできること</h3><div class="actbar"><button class="btn" data-act="stub" data-t="端末に保存・印刷" data-m="この端末への保存・印刷は、ブラウザーの保存・印刷の画面で行います。">端末に保存・印刷</button><button class="btn" data-act="stub" data-t="個別に共有" data-m="この1飛行のPDFだけを、補助者などに共有します。補助者に、記録全体を見せる必要はありません。">個別に共有</button></div></div>';
   },
   foot:()=>'<button class="btn" data-act="back">飛行の詳細へ戻る</button><button class="btn primary" data-act="root" data-s="home">ホームへ</button>'
 });
@@ -96,10 +96,10 @@ def('out-kml',{t:'出力：KML',st:()=>{const f=flightOf(A.ui.hSel);return f?f.l
   ask:['KMLの取得の導線（この画面か、地図付きPDFか）','未同期のKMLを、履歴からも保存し直せるようにするか'],
   body:()=>{
     const f=flightOf(A.ui.hSel);const nd=!!f.snap.noDips;
-    if(nd)return '<div class="empty"><b>この飛行にはKMLがありません</b><br>通報しない飛行や、計画なしの運航に、KMLを作るかどうかは、まだ決めていません（PENDING-S7C-KML-UNIT-MAPPING）。</div>';
-    return '<div class="filebox"><span class="fi">🗺</span><span><b>この飛行のKML</b><br><small class="note">（ファイル名の規則は未確定）</small></span></div>'
-     +(f.kml==='saved'?'<div class="msg ok">通報したときに作成し、Google Driveの07（出力）に<b>保存済み</b>です。作り直しは不要です。</div>':'<div class="msg warn">通信できず、Driveへ<b>未保存</b>です。端末に保持しています。通信できるときに、同じ内容として保存します。<br><button class="btn sm" style="margin-top:6px" data-act="out-kml-save"'+(A.online?'':' disabled')+'>今すぐDriveへ保存</button>'+(A.online?'':' <span class="note">（オフライン）</span>')+'</div>')
-     +'<div class="sec"><h3>My Mapsで見る（手順）</h3><ol style="margin:0;padding-left:1.3em;font-size:13px"><li>Google Driveの07から、この飛行のKMLを開く（または取得する）</li><li>Google My Mapsで、新しい地図に「インポート」する</li><li>ほかの飛行のKMLも同じ地図に重ねて見られる</li></ol><p class="note">KMLは、飛行の記録の正本ではなく、地図で見るための派生物です。飛行前後の点検やBATの実績は入っていません（27e §5）。</p></div>'
+    if(nd)return '<div class="empty"><b>この飛行にはKMLがありません</b><br>通報しない飛行では、KMLは作られません。</div>';
+    return '<div class="filebox"><span class="fi">🗺</span><span><b>この飛行のKML</b></span></div>'
+     +(f.kml==='saved'?'<div class="msg ok">通報したときに作成し、Google Driveの「出力」フォルダーに<b>保存しました</b>。作り直しは不要です。</div>':'<div class="msg warn">通信できず、<b>まだGoogle Driveに保存されていません</b>。この端末には保存されています。通信が戻ったら、自動で保存します。<br><button class="btn sm" style="margin-top:6px" data-act="out-kml-save"'+(A.online?'':' disabled')+'>もう一度保存する</button>'+(A.online?'':' <span class="note">（オフライン）</span>')+'</div>')
+     +'<div class="sec"><h3>My Mapsで見る（手順）</h3><ol style="margin:0;padding-left:1.3em;font-size:13px"><li>Google Driveの「出力」フォルダーから、この飛行のKMLを開く（または取得する）</li><li>Google My Mapsで、新しい地図に「インポート」する</li><li>ほかの飛行のKMLも同じ地図に重ねて見られる</li></ol><p class="note">KMLは、飛行の記録そのものではなく、地図で見るためのファイルです。飛行前後の点検やBATの実績は入っていません。</p></div>'
      +'<div class="sec"><h3>人が読む形で見るには</h3><p class="lead" style="margin:0 0 8px">KMLの中身の文字列は、そのままでは読みにくいため、見せません。地図と通報内容を1枚にまとめた「地図付きPDF」で見られます。</p><button class="btn" data-act="out-map-from-kml">地図付きPDFを作る</button></div>';
   },
   foot:()=>'<button class="btn" data-act="back">飛行の詳細へ戻る</button>'
@@ -109,7 +109,7 @@ Object.assign(ACTS,{
   'hist-q':t=>{A.ui.hq=t.value;const r=$('#hres');if(r)r.innerHTML=histCards()},
   'hist-open':t=>{A.ui.hSel=t.dataset.id;A.ui.outSel={a4:true,map:false};nav('hist-detail')},
   'hist-dips':()=>{const f=flightOf(A.ui.hSel);openSheet(()=>'<h3>通報した内容</h3>'+DIPS_ITEMS.map(x=>'<div class="rev"><div class="k">'+esc(x.name)+'</div><div class="v">'+valueOf(x.n,f.snap)+'</div></div>').join('')+'<div class="row"><button class="btn" data-act="close">閉じる</button></div>')},
-  'out-tog':t=>{const k=t.dataset.k;const f=flightOf(A.ui.hSel);if(k==='map'&&f.snap.noDips){toast('通報しない飛行は、地図付きPDFを作りません（仮）');return}A.ui.outSel[k]=!A.ui.outSel[k];render()},
+  'out-tog':t=>{const k=t.dataset.k;const f=flightOf(A.ui.hSel);if(k==='map'&&f.snap.noDips){toast('通報しない飛行は、地図付きPDFを作りません');return}A.ui.outSel[k]=!A.ui.outSel[k];render()},
   'out-both':()=>{const f=flightOf(A.ui.hSel);A.ui.outSel={a4:true,map:!f.snap.noDips};render()},
   'out-make':()=>{
     const f=flightOf(A.ui.hSel);const sel=A.ui.outSel;const m={a4:!!sel.a4,map:!!sel.map&&!f.snap.noDips,saved:A.online&&A.gAccess==='edit'};
@@ -117,6 +117,6 @@ Object.assign(ACTS,{
     if(m.a4)f.outs.a4=true;if(m.map)f.outs.map=true;A.ui.outMade=m;nav('out-pdf');
   },
   'out-kml-open':()=>nav('out-kml'),
-  'out-kml-save':()=>{if(!canWrite())return;const f=flightOf(A.ui.hSel);f.kml='saved';render();toast('KMLをDriveへ保存しました（モック）')},
+  'out-kml-save':()=>{if(!canWrite())return;const f=flightOf(A.ui.hSel);f.kml='saved';render();toast('KMLをGoogle Driveに保存しました')},
   'out-map-from-kml':()=>{const f=flightOf(A.ui.hSel);f.outs.map=true;A.ui.outMade={a4:false,map:true,saved:A.online&&A.gAccess==='edit'};rep('out-pdf')}
 });

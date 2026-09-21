@@ -17,7 +17,7 @@ const hm=d=>pad(d.getHours())+':'+pad(d.getMinutes());
 const daysTo=d=>Math.round((d-TODAY)/86400000);
 const clone=o=>JSON.parse(JSON.stringify(o));
 let UID=100;const uid=p=>p+(++UID);
-const tmpChip='<i class="chip tmp">仮</i>';
+const tmpChip='';   /* 未確定の注記は設計メモへ。利用者画面には出さない */
 
 /* ---------- アプリ全体の状態 ---------- */
 let A=null;
@@ -43,11 +43,11 @@ function freshApp(keep){
 /* ---------- 遷移 ---------- */
 function enter(id){const d=SCR[id];if(d&&d.enter)d.enter()}
 function nav(id){
-  if(!SCR[id]){openStub('作業途中','この画面は、このモックの次のコミットで追加します。');return}
+  if(!SCR[id]){openStub('準備中です','この画面は、まだ用意できていません。');return}
   A.stack.push(A.route);A.route=id;A.modal=null;enter(id);render(false);
 }
 function rep(id){
-  if(!SCR[id]){openStub('作業途中','この画面は、このモックの次のコミットで追加します。');return}
+  if(!SCR[id]){openStub('準備中です','この画面は、まだ用意できていません。');return}
   A.route=id;A.modal=null;enter(id);render(false);
 }
 function root(id){A.stack=[];A.route=id;A.modal=null;enter(id);render(false)}
@@ -63,16 +63,16 @@ function shell(){
   const title=val(d.t),st=val(d.st)||'';
   const canBack=d.back!==false&&(A.stack.length>0||!!d.backAct);
   const chips=[];
-  if(E&&d.env!==false)chips.push('<button class="chip" data-act="env">🏢 '+esc(E.name)+' ▾</button>');
+  if(E&&d.env!==false)chips.push('<button class="chip" data-act="env">'+esc(envLabel(E))+'で使用中 ▾</button>');
   if(!A.online)chips.push('<i class="chip warn">オフライン</i>');
-  if(A.gAccess==='view'&&E)chips.push('<i class="chip warn">Google側は閲覧のみ</i>');
+  if(A.gAccess==='view'&&E)chips.push('<i class="chip warn">Google Driveは閲覧のみ</i>');
   if(d.chips)chips.push(d.chips());
   const body=d.body();
   const foot=d.foot?d.foot():'';
   return '<div class="phone">'
    +'<header class="hd"><div class="hd1">'+(canBack?'<button class="ib" data-act="'+(d.backAct||'back')+'">←</button>':'')
    +'<div class="ttl">'+esc(title)+(st?'<small>'+esc(st)+'</small>':'')+'</div>'
-   +(d.hbtn?d.hbtn():'')+'<button class="ib" data-act="map">画面</button><button class="ib" data-act="memo">メモ</button></div>'
+   +(d.hbtn?d.hbtn():'')+'<button class="ib mockbtn" data-act="map">確認用：画面一覧</button><button class="ib mockbtn" data-act="memo">確認用：設計メモ</button></div>'
    +(chips.length?'<div class="hd2">'+chips.join('')+'</div>':'')+(d.prog?d.prog():'')+'</header>'
    +'<main class="body" id="body">'+body+'</main>'
    +(foot?'<footer class="ft">'+foot+'</footer>':'')
@@ -92,9 +92,9 @@ function render(keep){
 function toast(m){const d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
 
 /* ---------- シート（モーダル） ---------- */
-function openSheet(fn){A.modal={fn};render()}
+function openSheet(fn,cls){A.modal={fn,cls:cls||''};render()}
 function openStub(title,msg){openSheet(()=>'<h3>'+esc(title)+'</h3><p>'+esc(msg)+'</p><div class="row"><button class="btn" data-act="close">閉じる</button></div>')}
-function modalHtml(){const m=A.modal;if(!m)return '';return '<div class="ov" data-act="ov"><div class="sheet" data-stop="1">'+m.fn()+'</div></div>'}
+function modalHtml(){const m=A.modal;if(!m)return '';return '<div class="ov'+(m.cls?' '+m.cls:'')+'" data-act="ov"><div class="sheet" data-stop="1">'+m.fn()+'</div></div>'}
 
 /* ---------- メモ欄（画面ごとの設計メモ） ---------- */
 const STATE_LABEL={
@@ -104,9 +104,10 @@ const STATE_LABEL={
   tmp:'仮（設計の個別仕様なし。たたき台）',
   none:'未設計（PENDING）'
 };
+const MEMO_HEAD='<div class="memohead"><b>設計確認メモ</b><br><small>この欄は、実際のアプリには表示されません。設計の出典・未確定事項・相談したい点を書いています。左のスマホ画面が、アプリの見え方です。</small></div>';
 function memoHtml(){
   const d=SCR[A.route];if(!d)return '';
-  let h='<h4>いまの画面: '+esc(val(d.t))+'</h4>';
+  let h=MEMO_HEAD+'<h4>いまの画面: '+esc(val(d.t))+'</h4>';
   if(d.memo)h+=d.memo();
   else{
     if(d.goal)h+='<p style="margin:0;font-size:13px">'+esc(d.goal)+'</p>';
@@ -146,7 +147,7 @@ document.addEventListener('click',e=>{
   if(t.tagName==='INPUT'&&t.type==='checkbox')return;
   const fn=ACTS[t.dataset.act];
   if(fn)fn(t,e);
-  else{console.warn('未実装の操作: '+t.dataset.act);openStub('作業途中','この操作は、このモックの次のコミットで追加します。')}
+  else{console.warn('未実装の操作: '+t.dataset.act);openStub('準備中です','この操作は、まだ用意できていません。')}
 });
 document.addEventListener('change',e=>{
   if(!A)return;const t=e.target;
@@ -166,6 +167,6 @@ Object.assign(ACTS,{
   'back':()=>back(),
   'go':t=>nav(t.dataset.s),
   'root':t=>root(t.dataset.s),
-  'stub':t=>openStub(t.dataset.t||'お知らせ',t.dataset.m||'この画面は設計未着手です'),
-  'memo':()=>openSheet(()=>'<div class="memo" style="display:block;padding:0;border:0">'+memoHtml()+'</div><div class="row"><button class="btn" data-act="close">閉じる</button></div>')
+  'stub':t=>openStub(t.dataset.t||'お知らせ',t.dataset.m||'この画面は準備中です'),
+  'memo':()=>openSheet(()=>'<div class="memo" style="display:block;padding:0;border:0">'+memoHtml()+'</div><div class="row"><button class="btn" data-act="close">閉じる</button></div>','mockonly')
 });

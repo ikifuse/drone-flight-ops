@@ -149,3 +149,11 @@ textarea.in{width:100%;min-height:56px}
 .step .n{width:22px;height:22px;border-radius:50%;background:var(--okbg);color:var(--ok);display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:0 0 auto}
 .filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
 .rtag{display:inline-block;font-size:11px;border-radius:6px;padding:0 6px;background:#eef1f6;color:var(--sub);margin-right:4px}
+/* ---- 確認用の部品（本番のアプリにはありません。左のスマホ画面の中でも、これらは「確認用」と分かるようにします） ---- */
+.mockbtn{border-style:dashed;border-color:#c9a53a;background:#fffbe6;color:#6a5200;font-size:12px}
+.mockctl{border-style:dashed !important;border-color:#c9a53a !important;background:#fffbe6 !important;color:#6a5200 !important}
+.mockbox{border:2px dashed #d6b74a;background:#fffbe8;border-radius:12px;padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.5}
+.mocktag{display:inline-block;font-size:11px;background:#f0d878;color:#5a4600;border-radius:6px;padding:0 6px;margin-bottom:4px;font-weight:700}
+.memohead{background:#fff8dc;border:1px dashed #d6b74a;border-radius:10px;padding:8px 10px;margin-bottom:10px;font-size:13px}
+.memohead small{color:#6a5200}
+.ov.mockonly .sheet{border-top:6px dashed #d6b74a}

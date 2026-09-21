@@ -17,7 +17,7 @@ function mapBase(){
 }
 function mapLayers(o){
   const g=o.geom;let s='';
-  if(o.layer)s+='<polygon points="30,30 210,20 230,150 40,160" fill="rgba(255,120,150,.28)" stroke="rgba(230,70,110,.6)" stroke-width="1.5"/><text x="40" y="48" font-size="10" fill="#c4234f">DID（サンプル）</text>';
+  if(o.layer)s+='<polygon points="30,30 210,20 230,150 40,160" fill="rgba(255,120,150,.28)" stroke="rgba(230,70,110,.6)" stroke-width="1.5"/><text x="40" y="48" font-size="10" fill="#c4234f">人口集中地区（DID）</text>';
   const col='#e07b00';
   if(g.kind==='polygon'&&g.pts.length){
     const p=g.pts.map(q=>q.join(',')).join(' ');
@@ -51,7 +51,7 @@ function geomSummary(o){
 function geomHint(o){
   const g=o.geom;
   if(!g.kind)return '① 上の図形（多角形／円／線＋幅）を選びます。② 地図をタップして点を置きます。';
-  if(g.done)return '作図できました。「編集」で点をドラッグして直せます（仮の操作）。';
+  if(g.done)return '作図できました。「編集」で点をドラッグして直せます。';
   if(g.kind==='polygon')return '地図をタップして頂点を置きます（3点以上で「完了」）。'+g.pts.length+'点';
   if(g.kind==='line')return '地図をタップして経路の点を置きます（2点以上で「完了」）。半径を選べます。'+g.pts.length+'点';
   return g.pts.length?'次に円の外周をタップします（半径が決まります）。':'円の中心をタップします。';
@@ -62,12 +62,12 @@ function mapEditor(o){
   const tools=[['polygon','▱ 多角形'],['circle','○ 円'],['line','⌇ 線＋幅']].map(([k,l])=>'<button class="tool'+(g.kind===k?' on':'')+'" data-act="tool" data-k="'+k+'">'+l+'</button>').join('')
    +(g.kind==='line'?'<label class="note">半径 <select class="in" data-bind="'+bp+'geom.width" data-num="1" data-rerender="1">'+RADII.map(r=>'<option value="'+r+'"'+(g.width===r?' selected':'')+'>'+r+'m</option>').join('')+'</select></label>':'');
   const can=(g.kind==='polygon'&&g.pts.length>=3||g.kind==='line'&&g.pts.length>=2)&&!g.done;
-  return '<div class="row"><input class="in" id="searchbox" data-keepfocus="1" data-bind="'+bp+'search" data-oninput="map-search" placeholder="場所を検索（サンプル）" value="'+esc(o.search||'')+'"></div><div id="sr">'+searchResults(o)+'</div>'
+  return '<div class="row"><input class="in" id="searchbox" data-keepfocus="1" data-bind="'+bp+'search" data-oninput="map-search" placeholder="場所を検索" value="'+esc(o.search||'')+'"></div><div id="sr">'+searchResults(o)+'</div>'
    +'<div class="tab">'+tools+'</div>'
-   +'<div class="mapwrap">'+mapSvg(o)+'<div class="maptop"><button class="'+(o.layer?'on':'')+'" data-act="layer">規制空域 '+(o.layer?'表示中':'非表示')+'</button><button data-act="stub" data-t="背景切替" data-m="背景地図の切替（仮のボタン）。今回のモックでは動きません。">背景</button></div></div>'
+   +'<div class="mapwrap">'+mapSvg(o)+'<div class="maptop"><button class="'+(o.layer?'on':'')+'" data-act="layer">規制空域 '+(o.layer?'表示中':'非表示')+'</button><button data-act="stub" data-t="背景の切り替え" data-m="背景地図の切り替えは、準備中です。">背景</button></div></div>'
    +'<div class="mapbar"><button class="btn sm" data-act="geom-done"'+(can?'':' disabled')+'>完了</button><button class="btn sm" data-act="geom-undo"'+((g.pts.length&&!g.done)||(g.kind==='circle'&&g.done)?'':' disabled')+'>1点戻す</button><button class="btn sm" data-act="geom-clear"'+(g.kind?'':' disabled')+'>やり直す</button><button class="btn sm" data-act="geom-edit"'+(g.done?'':' disabled')+'>'+(g.editing?'編集を終える':'編集')+'</button><button class="btn sm" data-act="geom-del"'+(g.done?'':' disabled')+'>削除</button></div>'
    +'<p class="note">'+geomHint(o)+'</p><div class="msg info">'+esc(geomSummary(o))+'</div>'
-   +'<p class="note">'+tmpChip+' 作図の操作はこのモックの仮のものです。DIPS iPhone実機の作図操作は未確認のため、DIPSの操作の再現ではありません。範囲は「今回の実際の飛行経路」に合わせて絞る想定です。地図は架空で、実際の地図ライブラリは未選定です。</p>';
+   +'<p class="note">地図をタップして点を置きます。範囲は、今回実際に飛ぶ経路に合わせて、必要なところだけに絞ってください。</p>';
 }
 function searchResults(o){
   const q=o.search||'';if(!q)return '';
@@ -107,5 +107,5 @@ Object.assign(ACTS,{
   'del-ok':()=>{MO().geom=newGeom();A.modal=null;render()},
   'layer':()=>{const o=MO();o.layer=!o.layer;render()},
   'map-search':t=>{const o=MO();o.search=t.value;const r=$('#sr');if(r)r.innerHTML=searchResults(o)},
-  'pick-place':t=>{const o=MO();o.to=t.dataset.v;o.search='';toast('目的地に入れました（地図の移動は仮）');render()}
+  'pick-place':t=>{const o=MO();o.to=t.dataset.v;o.search='';toast('目的地に入れました');render()}
 });

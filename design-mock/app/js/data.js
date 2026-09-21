@@ -16,9 +16,9 @@ const RADII=[10,20,50,100];
 const M_PER_PX=5; /* 架空地図: 1px = 5m */
 const MODELS=['EVO Lite+','EVO Lite','EVO Lite 6K Enterprise','サンプルQ3','サンプルX2','その他（手入力）'];
 const CERTS=['なし','第二種機体認証','第一種機体認証'];
-const KINDS=[['personal','個人','自分ひとりで使う運用環境'],['company','会社','会社の運用環境。複数人で使う'],['school','スクール','スクールの運用環境'],['temp','臨時業務','一時的な業務・案件の運用環境']];
-const KIND_NAME=k=>(KINDS.find(x=>x[0]===k)||[0,'環境'])[1];
-const ROLES=['操縦者','補助者','点検者','アプリ管理者','閲覧'];
+const KINDS=[['personal','個人','自分ひとりで使います'],['company','会社・団体','会社やスクールなどで、複数人で使います'],['school','スクール','スクールで使います'],['temp','臨時業務','一時的な業務・案件で使います']];
+const KIND_NAME=k=>(KINDS.find(x=>x[0]===k)||[0,'—'])[1];
+const ROLES=['操縦者','補助者','点検者','管理者','閲覧'];
 const LICS=['未発行','二等無人航空機操縦士','一等無人航空機操縦士'];
 const COVERS=['DID','夜間','目視外','30m未満','催し上空','危険物','物件投下'];
 const BAT_CHECKS=['異常なし','膨らみあり','異常な発熱あり','その他の異常'];
@@ -61,7 +61,7 @@ function snapOf(env,o){
   return s;
 }
 
-/* ---------- 運用環境 ---------- */
+/* ---------- 使う場所（個人・会社・団体。内部名は運用環境） ---------- */
 function emptyEnv(name,kind){
   return {id:uid('env'),name,kind,meId:null,people:[],aircraft:[],permits:[],insurance:null,contact:null,presets:[],batGroups:[],bats:[],plans:[],flights:[]};
 }
@@ -103,7 +103,7 @@ function seedPersonal(env){
   env.presets.push(
    {id:'pr1',name:'河川敷Aの現場',geo:GEO.river,alt:30,from:'事務所（サンプル）',to:'河川敷A（サンプル）',biz:['空撮'],dur:[0,30]},
    {id:'pr2',name:'公園Bの定期点検',geo:GEO.park,alt:20,from:'事務所（サンプル）',to:'公園B（サンプル）',biz:['インフラ点検・保守'],dur:[1,0]});
-  env.batGroups.push({id:'g1',name:'EVO Lite系グループ（仮）',models:['EVO Lite','EVO Lite+']});
+  env.batGroups.push({id:'g1',name:'EVO Lite系のBATグループ',models:['EVO Lite','EVO Lite+']});
   env.bats=mkBats('g1','型式X',1,[['異常なし',41,'今日',760,45,0,'a1'],['異常なし',38,'先週',665,40,0,'a1'],['異常なし',null,null,560,33,1,'a2'],['異常なし',12,'今月',230,14,3,'a2'],['膨らみあり',60,'先月',1110,70,7,'a1'],['異常なし',null,null,370,22,1,'a2'],['異常なし',5,'先月',100,6,14,'a1']]);
   const v=(o)=>snapOf(env,o);
   env.plans.push({id:uid('pl'),name:'河川敷Aの空撮（明日）',snap:v({name:'河川敷Aの空撮（明日）',ac:['a1'],pl:[P1],pm:'m1',biz:['空撮'],air:[AIR[3]],met:[MET[6]],geo:GEO.river,from:'事務所（サンプル）',to:'河川敷A（サンプル）',dur:[0,30],alt:30,startAt:at(1,10,0)}),
@@ -120,7 +120,7 @@ function seedCompany(env){
   const P1=env.meId||'q1';
   if(!env.meId)env.people.push(newPerson('会社操縦者1',['操縦者'],{id:'q1',dips:true,lic:'二等無人航空機操縦士',link:['c1','c2']}));
   env.people.push(
-   newPerson('会社事務担当（サンプル）',['アプリ管理者'],{id:'q0',account:'office.admin@example.invalid'}),
+   newPerson('会社事務担当（サンプル）',['管理者'],{id:'q0',account:'office.admin@example.invalid'}),
    newPerson('会社操縦者2',['操縦者'],{id:'q2',dips:false,lic:'未発行',link:['c1']}),
    newPerson('会社補助者3',['補助者'],{id:'q3'}));
   env.aircraft.push(
@@ -130,7 +130,7 @@ function seedCompany(env){
   env.insurance={company:'会社契約損保（サンプル）',product:'会社包括賠償（サンプル）',pUnl:'yes',pAmt:'',oUnl:'yes',oAmt:'',ability:''};
   env.contact={name:'会社担当者（サンプル）',country:'日本/Japan',pref:'サンプル府',addr:'サンプル区サンプル7-8-9',cc:'日本/Japan(81)',phone:'0600000001',email:'office@example.invalid'};
   env.presets.push({id:'pr3',name:'工場屋根の点検',geo:GEO.park,alt:25,from:'本社（サンプル）',to:'工場（サンプル）',biz:['インフラ点検・保守'],dur:[1,30]});
-  env.batGroups.push({id:'g2',name:'サンプルQ3系グループ（仮）',models:['サンプルQ3']});
+  env.batGroups.push({id:'g2',name:'サンプルQ3のBATグループ',models:['サンプルQ3']});
   env.bats=mkBats('g2','型式Y',1,[['異常なし',20,'今週',300,25,0,'c1'],['異常なし',null,null,210,17,2,'c1'],['異常なし',8,'先月',90,9,9,'c1']]);
   const v=o=>snapOf(env,o);
   const P=(name,d,h,ac,pl,rep,dips,o)=>({id:uid('pl'),name,snap:v(Object.assign({name,ac,pl,pm:'n1',biz:['インフラ点検・保守'],air:[AIR[3]],met:[MET[6]],geo:GEO.park,from:'本社（サンプル）',dur:[1,0],alt:25,startAt:at(d,h,0)},o)),start:at(d,h,0),place:o.to,ac,pl,rep,dips,kml:'saved'});
@@ -142,21 +142,38 @@ function seedCompany(env){
     snap:v({name:'工場屋根の点検',ac:['c1'],pl:[P1],pm:'n1',biz:['インフラ点検・保守'],air:[AIR[2]],met:[MET[6]],geo:GEO.park,from:'本社（サンプル）',to:'サンプル工場',dur:[1,30],alt:25,startAt:at(-20,9,30)})});
 }
 function seedSample(env){
-  if(env.plans.length||env.aircraft.length){toast('この環境にはすでに登録があります（サンプルは追加しません）');return false}
+  if(env.plans.length||env.aircraft.length){toast('すでに登録があるため、サンプルは追加しません');return false}
   if(env.kind==='personal'||env.kind==='temp')seedPersonal(env);else seedCompany(env);
   return true;
 }
-function samplePersonalEnv(){
-  const env=emptyEnv('個人運用環境（サンプル）','personal');
-  const me=newPerson('サンプル 太郎',['アプリ管理者','操縦者'],{id:'p1',account:'sample.user@example.invalid',phone:'09000000000'});
+function samplePersonalEnv(acc){
+  acc=acc||ACCOUNTS[1];
+  const env=emptyEnv('個人','personal');
+  const me=newPerson(acc.name,['管理者','操縦者'],{id:'p1',account:acc.email,phone:'09000000000'});
   env.people.push(me);env.meId='p1';seedPersonal(env);return env;
 }
-function sampleCompanyEnv(name,kind,meId){
-  const env=emptyEnv(name||'会社運用環境（サンプル）',kind||'company');
-  seedCompany(env);if(meId)env.meId=meId;return env;
+function sampleCompanyEnv(name,kind,meId,acc){
+  const env=emptyEnv(name||'サンプル株式会社',kind||'company');
+  seedCompany(env);
+  if(meId){env.meId=meId;const p=env.people.find(x=>x.id===meId);if(p&&acc)p.account=acc.email}
+  return env;
 }
-/* 「既存の運用環境に参加」で見つかる環境（Drive上で共有されているもの。モックでは固定の候補） */
+/* 表示用の名称: 個人は「個人」、会社・団体は実際の名称 */
+const envLabel=E=>E.kind==='personal'?'個人':E.name;
+/* ログインの確認用アカウント（Google公式の画面で選ぶ。実際はGoogleが決める）。state はこのモックの確認用の説明 */
+const ACCOUNTS=[
+  {id:'new',email:'sample.new@example.invalid',name:'サンプル 花子',state:'まだこのアプリの登録がないアカウント'},
+  {id:'one',email:'sample.user@example.invalid',name:'サンプル 太郎',state:'登録済みで、個人だけで使っているアカウント'},
+  {id:'many',email:'sample.multi@example.invalid',name:'サンプル 太郎',state:'登録済みで、個人と会社の両方で使っているアカウント'}
+];
+/* ログインしたアカウントが使える場所（個人・会社・団体）を返す */
+function accountEnvs(acc){
+  if(acc.id==='one')return [samplePersonalEnv(acc)];
+  if(acc.id==='many')return [samplePersonalEnv(acc),sampleCompanyEnv('サンプル株式会社','company','q1',acc)];
+  return [];
+}
+/* 招待を受けている会社・団体（Google Driveで共有されているもの。確認用の固定の候補） */
 const JOINABLE=[
-  {id:'j1',name:'会社運用環境（サンプル）',kind:'company',admin:'会社事務担当（サンプル）',members:4},
-  {id:'j2',name:'スクール運用環境（サンプル）',kind:'school',admin:'スクール管理者（サンプル）',members:4}
+  {id:'j1',name:'サンプル株式会社',kind:'company',admin:'会社事務担当（サンプル）',members:4},
+  {id:'j2',name:'サンプルスクール',kind:'school',admin:'スクール管理者（サンプル）',members:4}
 ];
