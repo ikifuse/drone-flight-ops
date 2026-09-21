@@ -72,7 +72,7 @@ function shell(){
   return '<div class="phone">'
    +'<header class="hd"><div class="hd1">'+(canBack?'<button class="ib" data-act="'+(d.backAct||'back')+'">←</button>':'')
    +'<div class="ttl">'+esc(title)+(st?'<small>'+esc(st)+'</small>':'')+'</div>'
-   +'<button class="ib" data-act="map">画面</button><button class="ib" data-act="memo">メモ</button></div>'
+   +(d.hbtn?d.hbtn():'')+'<button class="ib" data-act="map">画面</button><button class="ib" data-act="memo">メモ</button></div>'
    +(chips.length?'<div class="hd2">'+chips.join('')+'</div>':'')+(d.prog?d.prog():'')+'</header>'
    +'<main class="body" id="body">'+body+'</main>'
    +(foot?'<footer class="ft">'+foot+'</footer>':'')
