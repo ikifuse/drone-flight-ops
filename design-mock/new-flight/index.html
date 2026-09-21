@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>新規飛行 設計確認用モック（低忠実度・送信も保存もしません）</title>
+<!--
+  設計確認用モック（本番実装ではありません）
+  - 目的: 「新規飛行」から「DIPSへ通報する直前」までを、オーナーが実際に触って画面の順序・分割・配置を判断するための、たたき台。
+  - このファイルは単独で動作します（外部通信・保存・DIPS/Google Drive接続・本番コードへの依存は一切ありません）。
+  - データはすべてダミーです。新しいデータ構造・業務ルールの確定ではありません。
+  - 正式Docs・既存アプリ本体（src / public）とは無関係に置いています。
+-->
+<style>
+:root{--bg:#e9edf4;--panel:#f6f8fc;--card:#fff;--ink:#1c2433;--sub:#5a6577;--line:#d3dae6;--acc:#1f5fbf;--accbg:#e7f0ff;--ok:#187a44;--okbg:#e3f5ea;--warn:#a55f00;--warnbg:#fff0d2;--ng:#b3261e;--ngbg:#fde8e6;--tmp:#7a5f00;--tmpbg:#fff5c2;--w:430px}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:15px/1.5 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;color:var(--ink);background:var(--bg)}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+#root{height:100%;display:flex;justify-content:center;align-items:flex-start;gap:16px}
+.phone{position:relative;display:flex;flex-direction:column;width:100%;max-width:var(--w);height:100vh;height:100dvh;background:var(--panel);overflow:hidden}
+.memo{display:none}
+@media (min-width:900px){
+  #root{padding:12px}
+  .phone{height:calc(100vh - 24px);height:calc(100dvh - 24px);border:1px solid #9aa6bb;border-radius:26px;box-shadow:0 10px 32px rgba(20,30,50,.18)}
+  .memo{display:block;flex:0 0 470px;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+}
+.hd{background:#fff;border-bottom:1px solid var(--line);padding:8px 10px 6px;flex:0 0 auto}
+.hd1{display:flex;align-items:center;gap:6px}
+.ttl{flex:1;min-width:0;font-weight:700}
+.ttl small{display:block;font-weight:400;color:var(--sub);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib{border:1px solid var(--line);background:#fff;border-radius:10px;padding:6px 10px;font-size:13px;white-space:nowrap}
+.hd2{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.chip{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;border:1px solid var(--line);background:#fff;color:var(--sub);font-style:normal;line-height:1.6}
+.chip.ok,.chip.auto{background:var(--okbg);color:var(--ok);border-color:#b9e3c9}
+.chip.warn{background:var(--warnbg);color:var(--warn);border-color:#f0d29a}
+.chip.ng{background:var(--ngbg);color:var(--ng);border-color:#f0b9b4}
+.chip.tmp{background:var(--tmpbg);color:var(--tmp);border-color:#eadb85}
+button.chip{cursor:pointer}
+.prog{display:flex;gap:3px;margin-top:6px}
+.prog i{flex:1;height:5px;border-radius:3px;background:#d7deea}
+.prog i.done{background:#8fb1e6}.prog i.cur{background:var(--acc)}
+.body{flex:1;overflow:auto;padding:12px 12px 20px;-webkit-overflow-scrolling:touch}
+.ft{flex:0 0 auto;display:flex;gap:8px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line)}
+.btn{flex:1;border-radius:12px;border:1px solid var(--line);background:#fff;padding:12px 10px;font-weight:700}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{flex:0 0 auto;padding:7px 12px;font-weight:600;font-size:13px}
+h2{font-size:20px;margin:6px 0 4px}
+h3{font-size:15px;margin:0 0 8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+h3 small{font-weight:400;color:var(--sub);font-size:12px}
+.sec{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+.lead{color:var(--sub);font-size:13px;margin:0 0 10px}
+.note{font-size:12px;color:var(--sub);margin:6px 0 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.card{display:flex;flex-direction:column;gap:2px;text-align:left;background:#fff;border:2px solid var(--line);border-radius:12px;padding:10px 12px;min-height:64px}
+.card.sel{border-color:var(--acc);background:var(--accbg)}
+.card.dead{opacity:.5}
+.card span{font-size:13px;color:var(--sub)}
+.card .chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.mono{font-family:ui-monospace,Menlo,monospace}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{display:flex;flex-direction:column;gap:2px;text-align:left;background:#fff;border:2px solid var(--line);border-radius:16px;padding:16px 14px;min-height:96px;font-weight:700;font-size:16px}
+.tile small{font-weight:400;color:var(--sub);font-size:12px}
+.tile.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+.tile.primary small{color:#dbe8ff}
+.tile.wide{grid-column:1/-1}
+.tgl{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#fff;border:2px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:6px;min-height:48px}
+.tgl.sel{border-color:var(--acc);background:var(--accbg)}
+.tgl.dim{opacity:.4}
+.box{width:20px;height:20px;border:2px solid #9aa6bb;border-radius:5px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;font-size:14px;line-height:1;background:#fff}
+.tgl.sel .box{background:var(--acc);border-color:var(--acc);color:#fff}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{border:2px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:14px}
+.pill.sel{border-color:var(--acc);background:var(--accbg);font-weight:700}
+.grp{font-size:13px;font-weight:700;color:var(--sub);margin:10px 0 6px}
+.row{display:flex;gap:8px;align-items:center;margin:6px 0;flex-wrap:wrap}
+.row>label{min-width:5.5em;font-size:13px;color:var(--sub)}
+.in{flex:1;min-width:0;border:1px solid #b9c3d4;border-radius:10px;padding:9px 10px;background:#fff}
+.in:disabled{background:#eef1f6;color:#6a7486}
+select.in{flex:0 0 auto}
+textarea.in{width:100%;min-height:56px}
+.tab{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.tool{border:2px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font-weight:600}
+.tool.on{border-color:var(--acc);background:var(--accbg)}
+.mapwrap{position:relative;border:1px solid #9aa6bb;border-radius:10px;overflow:hidden;background:#e8efe3;touch-action:manipulation}
+.mapwrap svg{display:block;width:100%;height:auto}
+.maptop{position:absolute;top:6px;left:6px;display:flex;gap:6px}
+.maptop button{border:1px solid #9aa6bb;background:rgba(255,255,255,.92);border-radius:8px;padding:5px 9px;font-size:12px}
+.maptop button.on{background:#ffe1e8;border-color:#e5486f}
+.mapbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.kv{width:100%;border-collapse:collapse;font-size:13px}
+.kv td{border-top:1px solid var(--line);padding:6px 4px;vertical-align:top}
+.kv td:first-child{width:38%;color:var(--sub)}
+.msg{border-radius:10px;padding:8px 10px;font-size:13px;margin:6px 0}
+.msg.warn{background:var(--warnbg);color:#7a4a00}
+.msg.ng{background:var(--ngbg);color:#8a1c16}
+.msg.ok{background:var(--okbg);color:#125c33}
+.msg.info{background:var(--accbg);color:#173f7c}
+.rev{border-top:1px solid var(--line);padding:8px 0;display:flex;gap:8px;align-items:flex-start}
+.rev:first-child{border-top:0}
+.rev .k{flex:0 0 34%;font-size:13px;color:var(--sub)}
+.rev .v{flex:1;min-width:0;font-size:14px;word-break:break-word}
+.rev .e{flex:0 0 auto}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:6px 12px;font-size:13px}
+.seg button.on{background:var(--acc);color:#fff}
+.ov{position:absolute;inset:0;background:rgba(20,30,50,.45);display:flex;align-items:flex-end;z-index:50}
+.sheet{background:#fff;width:100%;max-height:90%;overflow:auto;border-radius:18px 18px 0 0;padding:14px}
+.sheet h3{font-size:17px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1c2433;color:#fff;padding:8px 14px;border-radius:10px;z-index:99;max-width:90vw;font-size:13px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal b{font-size:12px;color:var(--sub)}
+.cal button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 0}
+.cal button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.cal button:disabled{opacity:.35}
+.memo h4{margin:14px 0 4px;font-size:14px}
+.memo h4:first-child{margin-top:0}
+.memo ul{margin:0;padding-left:1.2em;font-size:13px}
+.memo table{border-collapse:collapse;width:100%;font-size:12px}
+.memo td,.memo th{border:1px solid var(--line);padding:3px 5px;vertical-align:top;text-align:left}
+.memo tr.cur td{background:var(--accbg)}
+.tag{font-size:11px;background:#eef1f6;border-radius:6px;padding:0 5px;margin-right:3px;white-space:nowrap}
+.fl{display:flex;align-items:center;gap:6px;padding:8px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.fl:first-child{border-top:0}
+.fl b{flex:1;min-width:8em}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+'use strict';
+/* ===================================================================
+   新規飛行 設計確認用モック（低忠実度）
+   - 送信・保存・外部接続なし。ダミーデータのみ。
+   - DIPS22項目との対応は SCREENS[*].dips に持つ（画面上の番号表示はメモ欄のみ）
+   =================================================================== */
+
+/* ---------- ユーティリティ ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const TODAY=(()=>{const d=new Date();d.setHours(0,0,0,0);return d})();
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const slash=d=>d.getFullYear()+'/'+pad(d.getMonth()+1)+'/'+pad(d.getDate());
+const daysTo=d=>Math.round((d-TODAY)/86400000);
+const M_PER_PX=5; /* 架空地図: 1px = 5m */
+
+/* ---------- DIPS公式 新規飛行計画22項目（PC/iPhoneで同じ順序。実地調査・実画面の観測） ---------- */
+const DIPS_ITEMS=[[1,'飛行計画名称'],[2,'飛行許可番号'],[3,'参照飛行経路保存名称'],[4,'機体情報'],[5,'操縦者情報'],[6,'飛行目的'],[7,'飛行空域'],[8,'飛行方法'],[9,'保険に関する情報'],[10,'立入管理措置'],[11,'係留飛行'],[12,'補助者人数'],[13,'出発地'],[14,'目的地'],[15,'最大飛行時間'],[16,'所要時間'],[17,'開始日時'],[18,'終了日時'],[19,'定期・複数日指定'],[20,'飛行速度'],[21,'飛行高度'],[22,'連絡先']].map(([n,name])=>({n,name}));
+const DNAME=n=>DIPS_ITEMS.find(x=>x.n===n).name;
+
+/* DIPS Webに表示される選択肢（PC/iPhoneの観測どおりの表記） */
+const BIZ=['空撮','報道取材','警備','農林水産業','測量','環境調査','設備メンテナンス','インフラ点検・保守','資材管理','輸送・宅配','自然観測','事故・災害対応','その他'];
+const NON=['趣味','研究開発','その他'];
+const AIR=['空港等周辺','地表・水面から150m以上の高さの空域','人・家屋の密集地域の上空','上記空域の飛行は行わない'];
+const MET=['夜間飛行','目視外飛行','人・家屋等から30m未満','催し場所上空','危険物輸送','物件投下','上記方法の飛行は行わない'];
+const TSU=['立入管理区画の設定','立入管理区画の設定(レベル3飛行)','立入管理区画の設定(レベル3.5飛行関連)','立入禁止区画の設定'];
+const RADII=[10,20,50,100]; /* DIPSの「線」の半径候補（観測） */
+
+/* ---------- 画面定義: DIPS項目の対応・目的・仮置き・相談したい点（メモ欄に表示） ---------- */
+const SCREENS={
+ home:{t:'ホーム',dips:[],
+  goal:'アプリのホーム（4入口）。今回は「新規飛行」だけ動きます。',
+  reuse:[],
+  tmp:['4入口は既存設計のまま。他の3入口は今回のモック対象外'],
+  ask:['ホームから直接「計画入力」に入るか、次の「始め方」を挟むか']},
+ start:{t:'始め方',dips:[],
+  goal:'新しく作る／過去の飛行を複製／現場プリセットから、のどこから始めるかを選ぶ。',
+  reuse:['過去の飛行（複製）','現場プリセット'],
+  tmp:['3つの入口のうち何を置くかは仮','「通報しない飛行（DIPS対象外）」の入口は既存設計の分岐を見せるための仮置き'],
+  ask:['この画面は必要か（なくして「新しく作る」から始めてよいか）','複製したとき、どこまで自動で埋めるか（日時は毎回入れ直す想定）']},
+ use:{t:'使うもの',sub:'機体・操縦者・許可',dips:[2,4,5],
+  goal:'この飛行で使う機体・操縦者・許可承認を、登録済みから選ぶ。',
+  reuse:['運用環境の登録実機','人員（操縦者）','許可承認の登録'],
+  tmp:['カードに出す情報（期限・DIPS登録済みなど）は仮','許可と機体・空域・方法の照合ヒントは、サンプル判定（実際の判定ルールではない）'],
+  ask:['3つを1画面にまとめてよいか、分けたいか','操縦者と連絡先（後の画面）を近づけたいか']},
+ content:{t:'飛行の内容',sub:'目的・空域・方法・安全措置',dips:[6,7,8,10,11,12],
+  goal:'飛行目的・空域・方法と、立入管理措置・係留・補助者人数を選ぶ。',
+  reuse:['前回／プリセットの選択内容'],
+  tmp:['選択肢の表記はDIPS Web（PC/iPhone観測）に合わせた','立入管理措置・係留・補助者人数をここに置くのは仮'],
+  ask:['安全措置（立入管理・係留・補助者）をここに置くか、別画面にするか','「行わない」を選んだときの見せ方']},
+ area:{t:'飛行範囲',sub:'地図・出発地・目的地',dips:[3,13,14],map:true,
+  goal:'地図で飛行範囲（多角形・円・線＋幅）を作り、出発地と目的地を入れる。',
+  reuse:['現場プリセット（範囲を呼び出す）'],
+  tmp:['作図の操作（点をタップ→「完了」・1点戻す・編集）は、このモックの仮の操作。DIPS iPhone実機の作図操作は未確認なので、DIPSの再現ではない','地図は架空。実際の地図ライブラリは未選定','検索・規制空域の表示は位置を見せるだけの仮'],
+  ask:['地図を独立した画面にするか、他とまとめるか','出発地・目的地の置き場所','DIPS保存済み経路（参照）の扱い']},
+ time:{t:'日時・高度',sub:'日時・所要時間・速度・高度',dips:[15,16,17,18,19,20,21],
+  goal:'開始日時・所要時間を入れ、終了日時は自動計算で確認。速度・高度を入れる。',
+  reuse:['プリセット／前回の高度・所要時間'],
+  tmp:['終了日時は自動計算（DIPSと同じ考え方）','最大飛行時間は意味がDIPS側で未確認のため位置も仮','複数日はカレンダーで日を選ぶ仮の作り'],
+  ask:['最大飛行時間をここに置くか、詳細に畳むか','複数日指定の入口']},
+ master:{t:'登録済み情報の確認',sub:'保険・連絡先',dips:[9,22],
+  goal:'保険と連絡先を、登録済みの内容で自動入力して確認する（変更したいときだけ開く）。',
+  reuse:['保険の登録','連絡先（自アカウント）'],
+  tmp:['毎回変わらない情報を1画面にまとめる案。DIPSの順序（保険は途中、連絡先は最後）からは動かしている'],
+  ask:['この画面は必要か（確認画面に統合してよいか）','保険・連絡先をどこまで自動にするか']},
+ review:{t:'内容確認',dips:[1],
+  goal:'入力した内容を確認し、計画名称を確認・修正する。足りない項目を見つける。',
+  reuse:['計画名称の自動生成（仮ルール）'],
+  tmp:['「画面ごと」と「DIPS項目順」の2通りの見せ方を切り替えられる','未入力・要確認の判定は仮'],
+  ask:['確認画面に何を並べるか','問題の見せ方・直し方']},
+ final:{t:'通報の直前',dips:[],
+  goal:'DIPSへ通報する直前。通報の方法（APIで送信／DIPS Webへ転記）を選ぶところまで。',
+  reuse:[],
+  tmp:['この画面から先は今回のモック対象外（送信も保存もしない）','APIが使えるかどうかで見え方が変わる（右のメモ欄で切替）'],
+  ask:['通報方法の選択をここで行うか、もっと前にするか','「下書きとして保存」の置き場所']}
+};
+const SCREEN_ORDER=['home','start','use','content','area','time','master','review','final'];
+function coverage(){
+  const cnt={};DIPS_ITEMS.forEach(x=>cnt[x.n]=0);
+  Object.values(SCREENS).forEach(s=>s.dips.forEach(n=>{cnt[n]=(cnt[n]||0)+1}));
+  return {missing:DIPS_ITEMS.filter(x=>cnt[x.n]===0).map(x=>x.n),dup:DIPS_ITEMS.filter(x=>cnt[x.n]>1).map(x=>x.n),ok:DIPS_ITEMS.filter(x=>cnt[x.n]===1).length};
+}
+const AUTOKEY={2:'permit',4:'aircraft',5:'pilots',6:'purpose',7:'air',8:'met',13:'from',14:'to',16:'dur',21:'alt',20:'speed',9:'ins',22:'contact'};
+
+/* ---------- ダミーデータ（運用環境ごと）。新しいデータ構造の確定ではありません ---------- */
+const GEO={
+ river:{kind:'polygon',pts:[[80,90],[240,80],[265,165],[105,185]],r:0,width:10},
+ park:{kind:'circle',pts:[[180,130]],r:60,width:10},
+ line:{kind:'line',pts:[[60,200],[150,120],[300,150]],r:0,width:20}
+};
+const ENVS={
+ personal:{name:'個人運用環境（サンプル）',
+  aircraft:[
+   {id:'a1',name:'デモ機A',model:'EVO Lite+',mark:'JU-SAMPLE-A01',expiry:addDays(TODAY,900),dips:true},
+   {id:'a2',name:'デモ機B',model:'EVO Lite 6K Enterprise',mark:'JU-SAMPLE-B02',expiry:addDays(TODAY,20),dips:true},
+   {id:'a3',name:'デモ機C（抹消済み）',model:'サンプルQ3',mark:'JU-SAMPLE-C03',expiry:addDays(TODAY,-30),dips:true,dead:true}],
+  pilots:[
+   {id:'p1',name:'サンプル操縦者A',role:'アプリ管理者・操縦者',pilot:true,dips:true,link:['a1','a2','a3']},
+   {id:'p2',name:'サンプル操縦者B',role:'操縦者',pilot:true,dips:true,link:['a1']},
+   {id:'p3',name:'サンプル補助者C',role:'補助者',pilot:false,dips:false,link:[]}],
+  permits:[
+   {id:'m1',no:'国空航第SAMPLE-001号',label:'包括許可（サンプル）',issued:addDays(TODAY,-200),from:addDays(TODAY,-200),to:addDays(TODAY,165),cat:'II（サンプル値）',cover:['DID','夜間','目視外'],aircraft:['a1','a2']},
+   {id:'m2',no:'国空航第SAMPLE-002号',label:'個別承認（サンプル）',issued:addDays(TODAY,-60),from:addDays(TODAY,-60),to:addDays(TODAY,300),cat:'II（サンプル値）',cover:['30m未満'],aircraft:['a1']},
+   {id:'m0',no:'国空航第SAMPLE-000号',label:'旧包括許可（サンプル）',issued:addDays(TODAY,-500),from:addDays(TODAY,-500),to:addDays(TODAY,-10),cat:'II（サンプル値）',cover:['DID'],aircraft:['a1']}],
+  insurance:{company:'サンプル損害保険',product:'サンプル賠償責任保険',pUnl:'yes',pAmt:'',oUnl:'no',oAmt:'10000000',ability:''},
+  contact:{name:'サンプル 太郎',country:'日本/Japan',pref:'サンプル県',addr:'サンプル市サンプル1-2-3',cc:'日本/Japan(81)',phone:'09000000000',email:'sample@example.invalid'},
+  presets:[
+   {id:'pr1',name:'河川敷Aの現場',geo:GEO.river,alt:30,from:'事務所（サンプル）',to:'河川敷A（サンプル）',biz:['空撮'],dur:[0,30]},
+   {id:'pr2',name:'公園Bの定期点検',geo:GEO.park,alt:20,from:'事務所（サンプル）',to:'公園B（サンプル）',biz:['インフラ点検・保守'],dur:[1,0]}],
+  past:[
+   {id:'h1',label:'河川敷Aの空撮',daysAgo:14,ac:['a1'],pl:['p1'],pm:'m1',biz:['空撮'],non:[],air:[AIR[3]],met:[MET[6]],geo:GEO.river,from:'事務所（サンプル）',to:'河川敷A（サンプル）',dur:[0,30],alt:30},
+   {id:'h2',label:'公園Bの点検（夜間なし）',daysAgo:30,ac:['a2'],pl:['p1'],pm:'m1',biz:['インフラ点検・保守'],non:[],air:[AIR[2]],met:[MET[1]],geo:GEO.park,from:'事務所（サンプル）',to:'公園B（サンプル）',dur:[1,0],alt:20},
+   {id:'h3',label:'練習飛行',daysAgo:45,ac:['a1'],pl:['p2'],pm:'none',biz:[],non:['趣味'],air:[AIR[3]],met:[MET[6]],geo:GEO.line,from:'自宅（サンプル）',to:'広場（サンプル）',dur:[0,15],alt:10}]},
+ company:{name:'会社運用環境（サンプル）',
+  aircraft:[
+   {id:'c1',name:'会社機1',model:'サンプルQ3',mark:'JU-SAMPLE-K01',expiry:addDays(TODAY,700),dips:true},
+   {id:'c2',name:'会社機2',model:'サンプルX2',mark:'JU-SAMPLE-K02',expiry:addDays(TODAY,25),dips:true}],
+  pilots:[
+   {id:'q1',name:'会社操縦者1',role:'操縦者',pilot:true,dips:true,link:['c1','c2']},
+   {id:'q2',name:'会社操縦者2',role:'操縦者',pilot:true,dips:false,link:['c1']},
+   {id:'q3',name:'会社補助者3',role:'補助者',pilot:false,dips:false,link:[]}],
+  permits:[
+   {id:'n1',no:'国空航第SAMPLE-101号',label:'会社の包括許可（サンプル）',issued:addDays(TODAY,-100),from:addDays(TODAY,-100),to:addDays(TODAY,265),cat:'II（サンプル値）',cover:['DID','夜間','目視外','30m未満'],aircraft:['c1','c2']}],
+  insurance:{company:'会社契約損保（サンプル）',product:'会社包括賠償（サンプル）',pUnl:'yes',pAmt:'',oUnl:'yes',oAmt:'',ability:''},
+  contact:{name:'会社担当者（サンプル）',country:'日本/Japan',pref:'サンプル府',addr:'サンプル区サンプル7-8-9',cc:'日本/Japan(81)',phone:'0600000001',email:'office@example.invalid'},
+  presets:[{id:'pr3',name:'工場屋根の点検',geo:GEO.park,alt:25,from:'本社（サンプル）',to:'工場（サンプル）',biz:['インフラ点検・保守'],dur:[1,30]}],
+  past:[{id:'h4',label:'工場屋根の点検',daysAgo:20,ac:['c1'],pl:['q1'],pm:'n1',biz:['インフラ点検・保守'],non:[],air:[AIR[2]],met:[MET[6]],geo:GEO.park,from:'本社（サンプル）',to:'工場（サンプル）',dur:[1,30],alt:25}]}
+};
+const FAKE_PLACES=['サンプル駅前','サンプル公園','サンプル川の河川敷','サンプル工場'];
+
+/* ---------- 状態 ---------- */
+let S=null;
+function nowStart(){const d=new Date(Date.now()+10*60000);d.setMinutes(Math.ceil(d.getMinutes()/5)*5,0,0);return d}
+function freshState(envId,keep){
+  const st=nowStart();const E=ENVS[envId];
+  const n=new Date();
+  const name='FlightPlan-'+n.getFullYear()+pad(n.getMonth()+1)+pad(n.getDate())+pad(n.getHours())+pad(n.getMinutes());
+  const base={
+    env:envId,cur:'home',
+    flow:['use','content','area','time','master'].map(id=>({id,skip:false,merge:false})),
+    start:null,planName:name,
+    aircraft:[],pilots:[],permit:null,
+    biz:[],non:[],otherBiz:'',otherNon:'',air:[],met:[],
+    tsu:[true,false,false,false],tether:'no',assist:0,
+    geom:{kind:null,pts:[],r:0,width:10,done:false,editing:false},
+    layer:false,search:'',savedRoute:'',from:'',to:'',
+    startDate:ymd(st),startH:st.getHours(),startM:st.getMinutes(),
+    durH:0,durM:30,maxH:0,maxM:0,multi:[],speed:10,alt:30,
+    ins:{mode:'auto',company:E.insurance.company,product:E.insurance.product,pUnl:E.insurance.pUnl,pAmt:E.insurance.pAmt,oUnl:E.insurance.oUnl,oAmt:E.insurance.oAmt,ability:E.insurance.ability},
+    contact:{src:'self',pilotId:'',name:E.contact.name,country:E.contact.country,pref:E.contact.pref,addr:E.contact.addr,cc:E.contact.cc,phone:E.contact.phone,email:E.contact.email,other:''},
+    auto:{},reviewView:'screen',modal:null,cal:{y:st.getFullYear(),m:st.getMonth()},apiOk:true,width:'phone'
+  };
+  if(keep){base.apiOk=keep.apiOk;base.width=keep.width}
+  return base;
+}
+const ENV=()=>ENVS[S.env];
+const acName=id=>{const a=ENV().aircraft.find(x=>x.id===id);return a?a.name:id};
+const plName=id=>{const p=ENV().pilots.find(x=>x.id===id);return p?p.name:id};
+
+/* ---------- 画面の並び（順序入れ替え・統合・省略を試せる） ---------- */
+function pages(){
+  const vis=S.flow.filter(f=>!f.skip);const mids=[];let i=0;
+  while(i<vis.length){
+    const ids=[vis[i].id];
+    while(vis[i].merge&&i+1<vis.length){i++;ids.push(vis[i].id)}
+    i++;mids.push({key:ids[0],ids});
+  }
+  return [{key:'home',ids:['home']},{key:'start',ids:['start']},...mids,{key:'review',ids:['review']},{key:'final',ids:['final']}];
+}
+const curPage=()=>{const ps=pages();return ps.find(p=>p.key===S.cur)||ps.find(p=>p.ids.includes(S.cur))||ps[0]};
+const pageTitle=p=>p.ids.map(id=>SCREENS[id].t).join('＋');
+function go(key,noScroll){
+  const ps=pages();const p=ps.find(x=>x.key===key)||ps.find(x=>x.ids.includes(key));
+  S.cur=p?p.key:'home';S.modal=null;render(!!noScroll);
+  const b=$('#body');if(b&&!noScroll)b.scrollTop=0;
+}
+function step(d){const ps=pages();const i=ps.findIndex(p=>p.key===curPage().key);const j=Math.min(ps.length-1,Math.max(0,i+d));go(ps[j].key)}
+
+/* ---------- 補助ロジック ---------- */
+function needTags(){const t=[];if(S.air.includes(AIR[2]))t.push('DID');if(S.met.includes(MET[0]))t.push('夜間');if(S.met.includes(MET[1]))t.push('目視外');if(S.met.includes(MET[2]))t.push('30m未満');return t}
+function permitHints(){
+  const E=ENV();const out=[];const m=E.permits.find(x=>x.id===S.permit);const need=needTags();
+  if(S.permit&&S.permit!=='none'&&m){
+    const unc=S.aircraft.filter(a=>!m.aircraft.includes(a));
+    if(unc.length)out.push('この許可は選んだ機体（'+unc.map(acName).join('、')+'）を対象にしていません（サンプル判定）');
+    const miss=need.filter(t=>!m.cover.includes(t));
+    if(miss.length)out.push('この許可は「'+miss.join('・')+'」を含みません（サンプル判定）');
+  }
+  if(S.permit==='none'&&need.length)out.push('「'+need.join('・')+'」を選んでいますが、許可・承認が「なし」です（サンプル判定）');
+  return out;
+}
+function startDT(){return new Date(S.startDate+'T'+pad(S.startH)+':'+pad(S.startM)+':00')}
+function endDT(){return new Date(startDT().getTime()+(S.durH*60+S.durM)*60000)}
+function fmtDT(d,ref){const s=slash(d)+' '+pad(d.getHours())+':'+pad(d.getMinutes());return ref&&ymd(d)!==ymd(ref)?s+'（翌日以降）':s}
+function geomSummary(){
+  const g=S.geom;if(!g.kind)return '未作成';
+  if(g.kind==='circle'){if(!g.pts.length)return '円: 中心を置いてください';if(!g.r)return '円: 中心のみ（外周をタップ）';return '円: 半径 約'+Math.round(g.r*M_PER_PX/10)*10+'m'}
+  if(g.kind==='polygon'){const n=g.pts.length;if(!g.done)return '多角形: '+n+'点（作図中）';let a=0;for(let i=0;i<n;i++){const p=g.pts[i],q=g.pts[(i+1)%n];a+=p[0]*q[1]-q[0]*p[1]}a=Math.abs(a)/2*M_PER_PX*M_PER_PX;return '多角形: '+n+'点・面積 約'+(a/10000).toFixed(1)+'ha'}
+  const n=g.pts.length;if(!g.done)return '線＋幅: '+n+'点（作図中）';let L=0;for(let i=1;i<n;i++)L+=Math.hypot(g.pts[i][0]-g.pts[i-1][0],g.pts[i][1]-g.pts[i-1][1]);return '線＋幅: '+n+'点・長さ 約'+Math.round(L*M_PER_PX)+'m・半径'+g.width+'m';
+}
+function issues(){
+  const E=ENV();const L=[];
+  const add=(lv,text,scr)=>L.push({lv,text,scr});
+  if(!S.aircraft.length)add('ng','機体が選ばれていません','use');
+  S.aircraft.forEach(id=>{const a=E.aircraft.find(x=>x.id===id);if(a&&a.dead)add('ng',a.name+'は抹消・期限切れです','use');else if(a&&daysTo(a.expiry)<=30)add('warn',a.name+'の登録期限が近いです（'+daysTo(a.expiry)+'日）','use')});
+  if(!S.pilots.length)add('ng','操縦者が選ばれていません','use');
+  if(S.permit===null)add('warn','許可・承認が未選択です（不要なら「なし」を選ぶ）','use');
+  permitHints().forEach(h=>add('warn',h,'use'));
+  if(!S.biz.length&&!S.non.length)add('ng','飛行目的が選ばれていません','content');
+  if((S.biz.includes('その他')&&!S.otherBiz.trim())||(S.non.includes('その他')&&!S.otherNon.trim()))add('warn','目的「その他」の内容が空です','content');
+  if(!S.air.length)add('ng','飛行空域が未選択です（該当しない場合は「上記空域の飛行は行わない」）','content');
+  if(!S.met.length)add('ng','飛行方法が未選択です（該当しない場合は「上記方法の飛行は行わない」）','content');
+  if(!S.geom.done)add('ng','飛行範囲が完成していません','area');
+  if(!S.from.trim())add('warn','出発地が空です（必須かどうかは仮）','area');
+  if(!S.to.trim())add('warn','目的地が空です（必須かどうかは仮）','area');
+  if(S.durH*60+S.durM<=0)add('ng','所要時間が0です','time');
+  if(startDT()<new Date())add('warn','開始日時が過去です','time');
+  if(!(S.speed>0))add('ng','飛行速度が正しくありません','time');
+  if(!(S.alt>0))add('ng','飛行高度が正しくありません','time');
+  if(S.ins.mode==='none'&&!S.ins.ability)add('warn','保険に加入していない場合、賠償能力の選択が必要です（仮）','master');
+  if(S.contact.src==='pilot'&&!S.contact.pilotId)add('warn','連絡先の操縦者が選ばれていません','master');
+  return L;
+}
+function insSummary(){
+  const i=S.ins;if(i.mode==='none')return '保険に加入していない（賠償能力: '+(i.ability==='yes'?'はい':i.ability==='no'?'いいえ':'未選択')+'）';
+  const amt=(u,a)=>u==='yes'?'無制限':(a?Number(a).toLocaleString()+'円':'未入力');
+  return (i.company||'—')+' / '+(i.product||'—')+' / 対人 '+amt(i.pUnl,i.pAmt)+' / 対物 '+amt(i.oUnl,i.oAmt);
+}
+function contactSummary(){const c=S.contact;const srcs={self:'自アカウントの情報',application:'申請書記載の情報',pilot:'操縦者（'+(c.pilotId?plName(c.pilotId):'未選択')+'）'};return srcs[c.src]+' / '+c.name+' / '+c.phone+' / '+c.email}
+function valueOf(n){
+  switch(n){
+   case 1:return esc(S.planName);
+   case 2:{const m=ENV().permits.find(x=>x.id===S.permit);return S.permit==='none'?'許可・承認なし':m?esc(m.no):'<i class="chip warn">未選択</i>'}
+   case 3:return S.savedRoute?esc(S.savedRoute):'なし';
+   case 4:return S.aircraft.length?S.aircraft.map(id=>{const a=ENV().aircraft.find(x=>x.id===id);return esc(a.name)+'（'+esc(a.mark)+'）'}).join('<br>'):'<i class="chip ng">未選択</i>';
+   case 5:return S.pilots.length?S.pilots.map(id=>esc(plName(id))).join('、'):'<i class="chip ng">未選択</i>';
+   case 6:{const b=S.biz.map(x=>x==='その他'?'その他（'+esc(S.otherBiz)+'）':esc(x));const o=S.non.map(x=>x==='その他'?'その他（'+esc(S.otherNon)+'）':esc(x));return (b.length?'業務: '+b.join('、'):'')+(b.length&&o.length?'<br>':'')+(o.length?'業務以外: '+o.join('、'):'')||'<i class="chip ng">未選択</i>'}
+   case 7:return S.air.length?S.air.map(esc).join('<br>'):'<i class="chip ng">未選択</i>';
+   case 8:return S.met.length?S.met.map(esc).join('<br>'):'<i class="chip ng">未選択</i>';
+   case 9:return esc(insSummary());
+   case 10:return S.tsu.map((v,i)=>v?esc(TSU[i]):null).filter(Boolean).join('<br>')||'なし';
+   case 11:return S.tether==='yes'?'はい':'いいえ';
+   case 12:return S.assist+'人';
+   case 13:return S.from?esc(S.from):'<i class="chip warn">空</i>';
+   case 14:return S.to?esc(S.to):'<i class="chip warn">空</i>';
+   case 15:return S.maxH+'時間'+pad(S.maxM)+'分';
+   case 16:return S.durH+'時間'+pad(S.durM)+'分';
+   case 17:return fmtDT(startDT());
+   case 18:return fmtDT(endDT(),startDT())+' <i class="chip auto">自動計算</i>';
+   case 19:return S.multi.length?S.multi.length+'日（'+S.multi.slice().sort().map(d=>d.slice(5).replace('-','/')).join('、')+'）':'単日';
+   case 20:return S.speed+' km/h（'+(S.speed/1.852).toFixed(1)+' kt）';
+   case 21:return S.alt+' m';
+   case 22:return esc(contactSummary());
+  }
+  return '';
+}
+
+/* ---------- 複製・プリセット・サンプル入力 ---------- */
+function applyGeo(g){S.geom={kind:g.kind,pts:g.pts.map(p=>p.slice()),r:g.r,width:g.width||10,done:true,editing:false}}
+function applyPreset(p){
+  applyGeo(p.geo);S.alt=p.alt;S.from=p.from;S.to=p.to;S.biz=p.biz.slice();S.non=[];S.durH=p.dur[0];S.durM=p.dur[1];
+  S.auto.area='現場プリセット';S.auto.alt='現場プリセット';S.auto.from='現場プリセット';S.auto.to='現場プリセット';S.auto.purpose='現場プリセット';S.auto.dur='現場プリセット';
+  S.start={mode:'preset',label:p.name};
+}
+function applyPast(h){
+  S.aircraft=h.ac.slice();S.pilots=h.pl.slice();S.permit=h.pm;S.biz=h.biz.slice();S.non=h.non.slice();S.air=h.air.slice();S.met=h.met.slice();
+  applyGeo(h.geo);S.from=h.from;S.to=h.to;S.durH=h.dur[0];S.durM=h.dur[1];S.alt=h.alt;
+  ['aircraft','pilots','permit','purpose','air','met','area','from','to','dur','alt'].forEach(k=>S.auto[k]='前回（'+h.label+'）から');
+  S.start={mode:'past',label:h.label};
+}
+function fillSample(){
+  const E=ENV();const p=E.presets[0];
+  S.aircraft=[E.aircraft[0].id];S.pilots=[E.pilots[0].id];S.permit=E.permits[0].id;
+  applyPreset(p);S.air=[AIR[3]];S.met=[MET[6]];
+  S.auto.aircraft='サンプル';S.auto.pilots='サンプル';S.auto.permit='サンプル';S.auto.air='サンプル';S.auto.met='サンプル';
+  S.start={mode:'sample',label:'サンプル入力'};
+}
+
+/* ---------- 部品 ---------- */
+const autoChip=k=>S.auto[k]?'<i class="chip auto">自動入力: '+esc(S.auto[k])+'</i>':'';
+const tmpChip='<i class="chip tmp">仮</i>';
+function sel(name,opts,cur,extra){return '<select class="in" data-bind="'+name+'" data-num="1" '+(extra||'')+'>'+opts.map(o=>'<option value="'+o[0]+'"'+(String(o[0])===String(cur)?' selected':'')+'>'+esc(o[1])+'</option>').join('')+'</select>'}
+const hourOpts=Array.from({length:24},(_,i)=>[i,i+'時']);
+const minOpts=Array.from({length:12},(_,i)=>[i*5,pad(i*5)+'分']);
+const durHOpts=Array.from({length:13},(_,i)=>[i,i+'時間']);
+function tgl(act,attrs,label,on,dim,extra){return '<button class="tgl'+(on?' sel':'')+(dim?' dim':'')+'" data-act="'+act+'" '+attrs+'><span class="box">'+(on?'✓':'')+'</span><span>'+esc(label)+'</span>'+(extra||'')+'</button>'}
+function pill(act,attrs,label,on){return '<button class="pill'+(on?' sel':'')+'" data-act="'+act+'" '+attrs+'>'+esc(label)+'</button>'}
+
+/* ===== 画面: ホーム ===== */
+function vHome(){
+  return '<h2>ホーム</h2><p class="lead">設計確認用モックです。送信・保存はしません。データはすべてダミーです。</p>'
+  +'<div class="tiles">'
+  +'<button class="tile primary" data-act="new">✈ 新規飛行<small>飛行計画を作って通報する</small></button>'
+  +'<button class="tile" data-act="stub" data-t="飛行リスト" data-m="今回のモック対象外です（新規飛行のみ動きます）">📋 飛行リスト<small>通報済みの計画から選ぶ</small></button>'
+  +'<button class="tile" data-act="stub" data-t="飛行履歴・出力" data-m="今回のモック対象外です">🗂 飛行履歴・出力<small>過去の飛行・KML・PDF</small></button>'
+  +'<button class="tile" data-act="stub" data-t="各種設定・管理" data-m="今回のモック対象外です（機体・人員・保険・連絡先などの登録はここに置く想定）">⚙ 各種設定・管理<small>機体・人員・環境など</small></button>'
+  +'</div>'
+  +'<div class="sec" style="margin-top:12px"><h3>今の運用環境</h3><p class="lead" style="margin:0">'+esc(ENV().name)+'</p><p class="note">機体・操縦者・許可承認・保険・連絡先は、この環境の登録済みから選びます。環境を切り替えると選べる内容が変わります（上の環境ボタン）。</p></div>';
+}
+
+/* ===== 画面: 始め方 ===== */
+function vStart(){
+  const E=ENV();
+  return '<h2>新規飛行</h2><p class="lead">どこから始めますか？ 選んだ内容は次の画面から「自動入力」として入ります。</p>'
+  +'<div class="sec"><h3>新しく作る</h3><button class="tgl" data-act="start-new"><span class="box"></span><span><b>まっさらから作る</b><br><small class="note">既定値だけが入ります</small></span></button></div>'
+  +'<div class="sec"><h3>過去の飛行を複製 '+tmpChip+'</h3><p class="lead">日時以外を引き継ぎます。日時は次の画面で入れ直します。</p>'+E.past.map(h=>'<button class="tgl" data-act="start-past" data-id="'+h.id+'"><span class="box"></span><span><b>'+esc(h.label)+'</b><br><small class="note">'+slash(addDays(TODAY,-h.daysAgo))+' ／ '+h.ac.map(acName).join('・')+'</small></span></button>').join('')+'</div>'
+  +'<div class="sec"><h3>現場プリセットから '+tmpChip+'</h3><p class="lead">よく行く現場の範囲・高度・出発地/目的地などを呼び出します。</p>'+E.presets.map(p=>'<button class="tgl" data-act="start-preset" data-id="'+p.id+'"><span class="box"></span><span><b>'+esc(p.name)+'</b><br><small class="note">高度 '+p.alt+'m ／ '+esc(p.to)+'</small></span></button>').join('')+'</div>'
+  +'<p class="note"><button class="chip" data-act="stub" data-t="通報しない飛行（DIPS対象外）" data-m="DIPS通報が不要な飛行を、通報せずに運航記録だけ残す入口です。今回のモック対象外です（既存設計にある分岐を見せるための仮置き）。">通報しない飛行（DIPS対象外）を記録する</button> '+tmpChip+'</p>';
+}
+
+/* ===== 画面: 使うもの（機体・操縦者・許可） ===== */
+function vUse(){
+  const E=ENV();
+  const soon=a=>!a.dead&&daysTo(a.expiry)<=30;
+  const ac=E.aircraft.map(a=>{const on=S.aircraft.includes(a.id);
+    return '<button class="card'+(on?' sel':'')+(a.dead?' dead':'')+'" data-act="pick-ac" data-id="'+a.id+'"><b>'+(on?'✓ ':'')+esc(a.name)+'</b><span>'+esc(a.model)+'</span><span class="mono">'+esc(a.mark)+'</span><span class="chips">'+(a.dips?'<i class="chip ok">DIPS登録済み</i>':'')+(soon(a)?'<i class="chip warn">登録期限まで'+daysTo(a.expiry)+'日</i>':'')+(a.dead?'<i class="chip ng">抹消・期限切れ</i>':'')+'</span></button>'}).join('');
+  const pl=E.pilots.map(p=>{const on=S.pilots.includes(p.id);const linked=!S.aircraft.length||S.aircraft.every(a=>p.link.includes(a));
+    return '<button class="card'+(on?' sel':'')+(!p.pilot?' dead':'')+'" data-act="pick-pl" data-id="'+p.id+'"><b>'+(on?'✓ ':'')+esc(p.name)+'</b><span>'+esc(p.role)+'</span><span class="chips">'+(p.pilot?(p.dips?'<i class="chip ok">DIPS登録操縦者</i>':'<i class="chip warn">DIPS未登録</i>'):'<i class="chip">操縦者ではない</i>')+(p.pilot&&!linked?'<i class="chip warn">選んだ機体に紐付かない</i>':'')+'</span></button>'}).join('');
+  const pm=E.permits.map(m=>{const exp=daysTo(m.to)<0;const on=S.permit===m.id;
+    return '<button class="card'+(on?' sel':'')+(exp?' dead':'')+'" data-act="pick-pm" data-id="'+m.id+'"><b>'+(on?'✓ ':'')+esc(m.label)+'</b><span class="mono">'+esc(m.no)+'</span><span>有効: '+slash(m.from)+'〜'+slash(m.to)+'</span><span class="chips">'+m.cover.map(c=>'<i class="chip">'+esc(c)+'</i>').join('')+(exp?'<i class="chip ng">期限切れ</i>':'')+'</span></button>'}).join('')
+    +'<button class="card'+(S.permit==='none'?' sel':'')+'" data-act="pick-pm" data-id="none"><b>'+(S.permit==='none'?'✓ ':'')+'許可・承認なし</b><span>許可番号を入れない</span></button>';
+  const cur=E.permits.find(x=>x.id===S.permit);
+  const detail=cur?'<table class="kv"><tr><td>飛行許可番号</td><td class="mono">'+esc(cur.no)+'</td></tr><tr><td>許可書発行日</td><td>'+slash(cur.issued)+'</td></tr><tr><td>許可等の期間</td><td>'+slash(cur.from)+' 〜 '+slash(cur.to)+'</td></tr><tr><td>カテゴリー</td><td>'+esc(cur.cat)+'</td></tr></table><p class="note">DIPSの入力欄（番号・発行日・期間・カテゴリー）に当たる内容を、登録済みの許可から自動で表示します。</p>':'';
+  const hints=permitHints().map(h=>'<div class="msg warn">'+esc(h)+'</div>').join('');
+  return '<div class="sec"><h3>機体 <small>複数選べます</small> '+autoChip('aircraft')+'</h3><div class="cards">'+ac+'</div></div>'
+   +'<div class="sec"><h3>操縦者 <small>複数選べます</small> '+autoChip('pilots')+'</h3><div class="cards">'+pl+'</div><p class="note">DIPS側の登録操縦者と照合する想定（人物とDIPSの対応は未確定）'+tmpChip+'</p></div>'
+   +'<div class="sec"><h3>許可・承認 '+autoChip('permit')+'</h3><div class="cards">'+pm+'</div>'+detail+hints+'</div>';
+}
+
+/* ===== 画面: 飛行の内容（目的・空域・方法・安全措置） ===== */
+function vContent(){
+  const bizP=BIZ.map(v=>pill('tog-purpose','data-g="biz" data-v="'+esc(v)+'"',v,S.biz.includes(v))).join('');
+  const nonP=NON.map(v=>pill('tog-purpose','data-g="non" data-v="'+esc(v)+'"',v,S.non.includes(v))).join('');
+  const other=(g,key,label)=>(g.includes('その他')?'<div class="row"><label>その他の内容</label><input class="in" data-bind="'+key+'" placeholder="'+label+'" value="'+esc(S[key])+'"></div>':'');
+  const airNone=S.air.includes(AIR[3]);const metNone=S.met.includes(MET[6]);
+  const airR=AIR.map((v,i)=>tgl('tog-air','data-v="'+esc(v)+'"',v,S.air.includes(v),airNone&&i<3,i===0?'<i class="chip">ⓘ</i>':'')).join('');
+  const metR=MET.map((v,i)=>tgl('tog-met','data-v="'+esc(v)+'"',v,S.met.includes(v),metNone&&i<6)).join('');
+  const tsuR=TSU.map((v,i)=>tgl('tog-tsu','data-i="'+i+'"',v,S.tsu[i])).join('');
+  const hints=permitHints().map(h=>'<div class="msg warn">'+esc(h)+'</div>').join('');
+  return '<div class="sec"><h3>飛行目的 <small>複数選べます</small> '+autoChip('purpose')+'</h3><div class="grp">業務</div><div class="pills">'+bizP+'</div>'+other(S.biz,'otherBiz','内容')+'<div class="grp">業務以外</div><div class="pills">'+nonP+'</div>'+other(S.non,'otherNon','内容')+'</div>'
+   +'<div class="sec"><h3>飛行空域 '+autoChip('air')+'</h3>'+airR+'<p class="note">「上記空域の飛行は行わない」を選ぶと、他の項目は外れます（DIPS Webと同じ考え方）。</p></div>'
+   +'<div class="sec"><h3>飛行方法 '+autoChip('met')+'</h3>'+metR+'<p class="note">「上記方法の飛行は行わない」を選ぶと、他の項目は外れます。</p>'+hints+'</div>'
+   +'<div class="sec"><h3>安全措置・体制 '+tmpChip+'</h3><div class="grp">立入管理措置（複数選べます）</div>'+tsuR
+   +'<div class="grp">係留飛行を行いますか</div><div class="pills">'+pill('tether','data-v="yes"','はい',S.tether==='yes')+pill('tether','data-v="no"','いいえ',S.tether==='no')+'</div>'
+   +'<div class="grp">補助者人数</div><div class="row"><button class="btn sm" data-act="assist" data-d="-1">−</button><b style="min-width:2.5em;text-align:center">'+S.assist+'人</b><button class="btn sm" data-act="assist" data-d="1">＋</button></div><p class="note">補助者の人物選択は運航記録側の想定（仮）。ここでは人数だけ。</p></div>';
+}
+
+/* ===== 画面: 飛行範囲（地図） ===== */
+function mapBase(){
+  return '<rect width="360" height="260" fill="#e8efe3"/>'
+  +'<path d="M-10 70C80 90 140 40 230 120S340 180 380 170L380 215C330 225 250 170 200 165S60 130 -10 120Z" fill="#cfe4f3"/>'
+  +'<g stroke="#fff" stroke-width="6" fill="none"><path d="M0 200H360M60 0V260M250 0V260M0 40H360"/></g>'
+  +'<g fill="#d8d8d0"><rect x="70" y="205" width="40" height="30"/><rect x="120" y="210" width="50" height="25"/><rect x="262" y="50" width="45" height="40"/><rect x="262" y="205" width="60" height="35"/><rect x="8" y="50" width="40" height="35"/></g>'
+  +'<text x="10" y="253" font-size="10" fill="#5b6b5b">サンプルの地図（架空）</text><text x="196" y="106" font-size="10" fill="#4b7ea3">サンプル川</text><text x="268" y="46" font-size="10" fill="#555">サンプル公園</text>'
+  +'<line x1="292" y1="240" x2="312" y2="240" stroke="#333" stroke-width="2"/><text x="292" y="236" font-size="9" fill="#333">100m</text>';
+}
+function mapLayers(){
+  const g=S.geom;let s='';
+  if(S.layer)s+='<polygon points="30,30 210,20 230,150 40,160" fill="rgba(255,120,150,.28)" stroke="rgba(230,70,110,.6)" stroke-width="1.5"/><text x="40" y="48" font-size="10" fill="#c4234f">DID（サンプル）</text>';
+  const col='#e07b00';
+  if(g.kind==='polygon'&&g.pts.length){
+    const p=g.pts.map(q=>q.join(',')).join(' ');
+    if(g.done)s+='<polygon points="'+p+'" fill="rgba(255,150,0,.32)" stroke="'+col+'" stroke-width="2"/>';
+    else s+='<polyline points="'+p+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-dasharray="5 3"/>';
+  }
+  if(g.kind==='line'&&g.pts.length){
+    const p=g.pts.map(q=>q.join(',')).join(' ');const w=Math.max(2,2*g.width/M_PER_PX);
+    if(g.pts.length>1)s+='<polyline points="'+p+'" fill="none" stroke="rgba(255,150,0,.35)" stroke-width="'+w+'" stroke-linejoin="round" stroke-linecap="round"/>';
+    s+='<polyline points="'+p+'" fill="none" stroke="'+col+'" stroke-width="2"'+(g.done?'':' stroke-dasharray="5 3"')+'/>';
+  }
+  if(g.kind==='circle'&&g.pts.length){
+    const c=g.pts[0];if(g.r)s+='<circle cx="'+c[0]+'" cy="'+c[1]+'" r="'+g.r+'" fill="rgba(255,150,0,.32)" stroke="'+col+'" stroke-width="2"/>';
+    s+='<circle cx="'+c[0]+'" cy="'+c[1]+'" r="3" fill="'+col+'"/>';
+  }
+  g.pts.forEach((q,i)=>{if(g.kind!=='circle')s+='<circle cx="'+q[0]+'" cy="'+q[1]+'" r="3.5" fill="#fff" stroke="'+col+'" stroke-width="2"/>'});
+  if(g.editing&&g.done){
+    if(g.kind==='circle'){const c=g.pts[0];s+='<circle data-h="0" cx="'+c[0]+'" cy="'+c[1]+'" r="8" fill="#fff" stroke="#1f5fbf" stroke-width="3"/><circle data-h="r" cx="'+(c[0]+g.r)+'" cy="'+c[1]+'" r="8" fill="#1f5fbf" stroke="#fff" stroke-width="2"/>'}
+    else g.pts.forEach((q,i)=>{s+='<circle data-h="'+i+'" cx="'+q[0]+'" cy="'+q[1]+'" r="8" fill="#fff" stroke="#1f5fbf" stroke-width="3"/>'});
+  }
+  return s;
+}
+function mapSvg(cls){return '<svg id="'+(cls?'mapmini':'map')+'" viewBox="0 0 360 260" xmlns="http://www.w3.org/2000/svg">'+mapBase()+'<g id="'+(cls?'mapgm':'mapg')+'">'+mapLayers()+'</g></svg>'}
+function geomHint(){
+  const g=S.geom;
+  if(!g.kind)return '① 上の図形（多角形／円／線＋幅）を選びます。② 地図をタップして点を置きます。';
+  if(g.done)return '作図できました。「編集」で点をドラッグして直せます（仮の操作）。';
+  if(g.kind==='polygon')return '地図をタップして頂点を置きます（3点以上で「完了」）。'+g.pts.length+'点';
+  if(g.kind==='line')return '地図をタップして経路の点を置きます（2点以上で「完了」）。半径を選べます。'+g.pts.length+'点';
+  return g.pts.length?'次に円の外周をタップします（半径が決まります）。':'円の中心をタップします。';
+}
+function vArea(){
+  const E=ENV();const g=S.geom;
+  const tools=[['polygon','▱ 多角形'],['circle','○ 円'],['line','⌇ 線＋幅']].map(([k,l])=>'<button class="tool'+(g.kind===k?' on':'')+'" data-act="tool" data-k="'+k+'">'+l+'</button>').join('')
+   +(g.kind==='line'?'<label class="note">半径 <select class="in" data-bind="geom.width" data-num="1" data-rerender="1">'+RADII.map(r=>'<option value="'+r+'"'+(g.width===r?' selected':'')+'>'+r+'m</option>').join('')+'</select></label>':'');
+  const can=(g.kind==='polygon'&&g.pts.length>=3||g.kind==='line'&&g.pts.length>=2)&&!g.done;
+  const results=S.search?FAKE_PLACES.filter(p=>p.indexOf(S.search)>=0||S.search.length<1).map(p=>'<button class="tgl" data-act="pick-place" data-v="'+esc(p)+'"><span>'+esc(p)+'</span></button>').join(''):'';
+  return '<div class="sec"><h3>飛行範囲 '+autoChip('area')+'</h3>'
+   +'<div class="row"><input class="in" id="searchbox" data-bind="search" data-search="1" placeholder="場所を検索（サンプル）" value="'+esc(S.search)+'"></div><div id="sr">'+(results||'')+'</div>'
+   +'<div class="tab">'+tools+'</div>'
+   +'<div class="mapwrap">'+mapSvg()+'<div class="maptop"><button class="'+(S.layer?'on':'')+'" data-act="layer">規制空域 '+(S.layer?'表示中':'非表示')+'</button><button data-act="stub" data-t="背景切替" data-m="背景地図の切替（仮のボタン）。今回のモックでは動きません。">背景</button></div></div>'
+   +'<div class="mapbar"><button class="btn sm" data-act="geom-done"'+(can?'':' disabled')+'>完了</button><button class="btn sm" data-act="geom-undo"'+((g.pts.length&&!g.done)||(g.kind==='circle'&&g.done)?'':' disabled')+'>1点戻す</button><button class="btn sm" data-act="geom-clear"'+(g.kind?'':' disabled')+'>やり直す</button><button class="btn sm" data-act="geom-edit"'+(g.done?'':' disabled')+'>'+(g.editing?'編集を終える':'編集')+'</button><button class="btn sm" data-act="geom-del"'+(g.done?'':' disabled')+'>削除</button></div>'
+   +'<p class="note">'+geomHint()+'</p><div class="msg info">'+esc(geomSummary())+'</div>'
+   +'<p class="note">'+tmpChip+' 作図の操作はこのモックの仮のものです。DIPS iPhone実機の作図操作は未確認のため、DIPSの操作の再現ではありません。範囲は「今回の実際の飛行経路」に合わせて絞る想定です。</p>'
+   +'<div class="grp">現場プリセットから呼び出す</div><div class="pills">'+E.presets.map(p=>pill('use-preset','data-id="'+p.id+'"',p.name,false)).join('')+'</div></div>'
+   +'<div class="sec"><h3>場所 <small>出発地・目的地</small></h3><div class="row"><label>出発地</label><input class="in" data-bind="from" value="'+esc(S.from)+'" placeholder="例: 事務所"> '+autoChip('from')+'</div><div class="row"><label>目的地</label><input class="in" data-bind="to" value="'+esc(S.to)+'" placeholder="例: 現場名"> '+autoChip('to')+'</div></div>'
+   +'<div class="sec"><h3>DIPSの保存済み経路 <small>参照・任意</small> '+tmpChip+'</h3><div class="row"><select class="in" data-bind="savedRoute" style="flex:1"><option value="">なし</option></select></div><p class="note">DIPS側に保存した経路の名前を参照する項目。DIPSに接続したときに候補が出る想定（今回は候補なし）。</p></div>';
+}
+
+/* ===== 画面: 日時・高度 ===== */
+function vTime(){
+  const s=startDT(),e=endDT();
+  return '<div class="sec"><h3>開始日時</h3><div class="row"><input class="in" type="date" data-bind="startDate" data-rerender="1" min="'+ymd(TODAY)+'" value="'+S.startDate+'">'+sel('startH',hourOpts,S.startH,'data-rerender="1"')+sel('startM',minOpts,S.startM,'data-rerender="1"')+'</div><p class="note">分は5分刻み。初期値は「いまから約10分後」。</p>'
+   +'<h3 style="margin-top:10px">所要時間 '+autoChip('dur')+'</h3><div class="row">'+sel('durH',durHOpts,S.durH,'data-rerender="1"')+sel('durM',minOpts,S.durM,'data-rerender="1"')+'</div>'
+   +'<h3 style="margin-top:10px">終了日時 <i class="chip auto">自動計算</i></h3><div class="row"><input class="in" disabled value="'+esc(fmtDT(e,s))+'"></div><p class="note">開始日時＋所要時間で自動計算されます（直接は入力しません）。</p></div>'
+   +'<div class="sec"><h3>定期・複数日指定</h3><div class="row"><button class="btn sm" data-act="cal">カレンダーで日を選ぶ</button><span class="note">'+(S.multi.length?S.multi.length+'日選択中':'単日')+'</span></div><p class="note">'+tmpChip+' 日別の時刻や、選択の確定のしかたはDIPSでも未確認のため仮。</p></div>'
+   +'<div class="sec"><h3>速度・高度</h3><div class="row"><label>飛行速度</label><input class="in" type="number" min="1" step="1" data-bind="speed" data-num="1" data-rerender="1" value="'+S.speed+'"><span>km/h</span><span class="note">'+(S.speed/1.852).toFixed(1)+' kt（自動）</span> '+autoChip('speed')+'</div>'
+   +'<div class="row"><label>飛行高度</label><input class="in" type="number" min="1" step="1" data-bind="alt" data-num="1" data-rerender="1" value="'+S.alt+'"><span>m</span> '+autoChip('alt')+'</div></div>'
+   +'<div class="sec"><h3>最大飛行時間 '+tmpChip+'</h3><div class="row">'+sel('maxH',durHOpts,S.maxH)+sel('maxM',minOpts,S.maxM)+'</div><p class="note">DIPSにある独立した項目（所要時間とは別）。意味と入力元はDIPS側で未確認のため、置き場所も仮です。</p></div>';
+}
+
+/* ===== 画面: 登録済み情報の確認（保険・連絡先） ===== */
+function vMaster(){
+  const E=ENV();const i=S.ins,c=S.contact;
+  const amt=(k,ku,ka,label)=>'<div class="row"><label>'+label+'</label><div class="pills">'+pill('ins-set','data-k="'+ku+'" data-v="yes"','無制限：はい',i[ku]==='yes')+pill('ins-set','data-k="'+ku+'" data-v="no"','無制限：いいえ',i[ku]==='no')+'</div></div><div class="row"><label></label><input class="in" type="number" data-bind="ins.'+ka+'" data-num="1" '+(i[ku]==='yes'?'disabled':'')+' value="'+esc(i[ka])+'" placeholder="金額"><span>円</span></div>';
+  const insForm=i.mode==='custom'?'<div class="row"><label>保険会社名</label><input class="in" data-bind="ins.company" value="'+esc(i.company)+'"></div><div class="row"><label>商品名</label><input class="in" data-bind="ins.product" value="'+esc(i.product)+'"></div>'+amt('p','pUnl','pAmt','対人')+amt('o','oUnl','oAmt','対物'):'';
+  const abil=i.mode==='none'?'<div class="grp">賠償能力（保険に入っていない場合の支払能力に関する項目）</div><div class="pills">'+pill('ins-set','data-k="ability" data-v="yes"','はい',i.ability==='yes')+pill('ins-set','data-k="ability" data-v="no"','いいえ',i.ability==='no')+'</div>':'';
+  const src=[['self','自アカウントの情報'],['application','申請書記載の情報'],['pilot','操縦者']];
+  const pilotSel=c.src==='pilot'?'<div class="row"><label>操縦者</label><select class="in" data-bind="contact.pilotId" data-rerender="1" style="flex:1"><option value="">選択してください</option>'+S.pilots.map(id=>'<option value="'+id+'"'+(c.pilotId===id?' selected':'')+'>'+esc(plName(id))+'</option>').join('')+'</select></div>':'';
+  return '<div class="sec"><h3>保険に関する情報 '+autoChip('ins')+'</h3><div class="msg ok">'+esc(insSummary())+'</div>'
+   +'<div class="pills">'+pill('ins-mode','data-v="auto"','登録済みのまま',i.mode==='auto')+pill('ins-mode','data-v="custom"','この飛行だけ変更',i.mode==='custom')+pill('ins-mode','data-v="none"','保険に加入していない',i.mode==='none')+'</div>'+insForm+abil+'</div>'
+   +'<div class="sec"><h3>連絡先 '+autoChip('contact')+'</h3><div class="pills">'+src.map(([k,l])=>pill('contact-src','data-v="'+k+'"',l,c.src===k)).join('')+'</div>'+pilotSel
+   +'<table class="kv" style="margin-top:8px"><tr><td>氏名</td><td>'+esc(c.name)+'</td></tr><tr><td>国/地域・都道府県</td><td>'+esc(c.country)+' / '+esc(c.pref)+'</td></tr><tr><td>住所</td><td>'+esc(c.addr)+'</td></tr></table><p class="note">氏名・住所は連絡先の情報源から自動（読み取り専用）。</p>'
+   +'<div class="row"><label>電話</label><input class="in" data-bind="contact.cc" value="'+esc(c.cc)+'" style="max-width:9em"><input class="in" data-bind="contact.phone" value="'+esc(c.phone)+'"></div><div class="row"><label>メール</label><input class="in" data-bind="contact.email" value="'+esc(c.email)+'"></div><div class="row"><label>その他情報</label><textarea class="in" data-bind="contact.other">'+esc(c.other)+'</textarea></div></div>'
+   +'<p class="note">'+tmpChip+' 毎回変わらない情報をまとめて確認する画面の案です。右上「全体」から、この画面を省く／確認画面にまとめる、を試せます。</p>';
+}
+
+/* ===== 画面: 内容確認 ===== */
+function vReview(){
+  const L=issues();const ng=L.filter(x=>x.lv==='ng').length,wn=L.filter(x=>x.lv==='warn').length;
+  const banner=L.length?'<div class="msg '+(ng?'ng':'warn')+'"><b>'+(ng?'足りない項目があります: '+ng+'件':'確認したい点があります')+(wn?'（要確認 '+wn+'件）':'')+'</b>'+L.map(x=>'<div>・'+esc(x.text)+' <button class="chip" data-act="jump" data-s="'+x.scr+'">直す</button></div>').join('')+'<div class="note">判定は仮（実際の必須判定は要件エンジン側の想定）。</div></div>':'<div class="msg ok"><b>大きな不足はありません</b>（サンプル判定）</div>';
+  const rowHtml=(n,scr)=>'<div class="rev"><div class="k">'+esc(DNAME(n))+'</div><div class="v">'+valueOf(n)+' '+(AUTOKEY[n]&&S.auto[AUTOKEY[n]]?'<i class="chip auto">自動</i>':'')+'</div><div class="e"><button class="chip" data-act="jump" data-s="'+scr+'">直す</button></div></div>';
+  const owner={};Object.keys(SCREENS).forEach(k=>SCREENS[k].dips.forEach(n=>owner[n]=k));
+  let list='';
+  if(S.reviewView==='dips'){list=DIPS_ITEMS.map(x=>rowHtml(x.n,owner[x.n]==='review'?'review':owner[x.n])).join('')}
+  else{list=['use','content','area','time','master'].filter(k=>SCREENS[k].dips.length).map(k=>'<div class="sec"><h3>'+esc(SCREENS[k].t)+'</h3>'+SCREENS[k].dips.map(n=>rowHtml(n,k)).join('')+(k==='area'?'<div class="rev"><div class="k">飛行範囲（地図）</div><div class="v">'+esc(geomSummary())+'<div class="mapwrap" style="margin-top:6px">'+mapSvg('mini')+'</div></div><div class="e"><button class="chip" data-act="jump" data-s="area">直す</button></div></div>':'')+'</div>').join('')}
+  return banner
+   +'<div class="sec"><h3>計画名称 <small>DIPSでは最初の項目</small> '+tmpChip+'</h3><div class="row"><input class="in" data-bind="planName" value="'+esc(S.planName)+'"></div><p class="note">名称は自動生成（DIPSと同じ形式）。ルールは仮です。ヘッダーの計画名からも直せます。</p></div>'
+   +'<div class="row" style="justify-content:space-between"><b>内容</b><span class="seg"><button class="'+(S.reviewView==='screen'?'on':'')+'" data-act="rv" data-v="screen">画面ごと</button><button class="'+(S.reviewView==='dips'?'on':'')+'" data-act="rv" data-v="dips">DIPS項目順</button></span></div>'
+   +(S.reviewView==='dips'?'<div class="sec">'+list+'<div class="rev"><div class="k">飛行範囲（地図）</div><div class="v">'+esc(geomSummary())+'</div><div class="e"><button class="chip" data-act="jump" data-s="area">直す</button></div></div></div><p class="note">「DIPS項目順」は、DIPS Webへ転記する（Manual）ときの並びを想定しています。</p>':list)
+   +'<div class="sec"><h3>カテゴリー</h3><p class="lead" style="margin:0">DIPSが判定して表示します（登録前は空欄）。アプリ側では入力しません。</p></div>';
+}
+
+/* ===== 画面: 通報の直前 ===== */
+function vFinal(){
+  const L=issues();const ng=L.filter(x=>x.lv==='ng').length;
+  const ok=S.apiOk;
+  return '<div class="msg info"><b>ここが今回のモックの終点です。</b>この先（送信・DIPS Webへの転記・保存）は実装せず、何も送信しません。</div>'
+   +(ng?'<div class="msg ng">足りない項目が'+ng+'件あります。通報の前に直す想定です。 <button class="chip" data-act="jump" data-s="review">確認画面へ</button></div>':'')
+   +'<div class="sec"><h3>通報する内容（要約）</h3><table class="kv"><tr><td>計画名称</td><td>'+esc(S.planName)+'</td></tr><tr><td>日時</td><td>'+esc(valueOf(17))+' 〜 '+valueOf(18)+'</td></tr><tr><td>機体</td><td>'+valueOf(4)+'</td></tr><tr><td>操縦者</td><td>'+valueOf(5)+'</td></tr><tr><td>範囲</td><td>'+esc(geomSummary())+'</td></tr><tr><td>高度</td><td>'+valueOf(21)+'</td></tr></table><p class="note">通報するとDIPSに新しい飛行計画が登録されます。通報完了は飛行できることの保証ではありません（既存設計の考え方）。</p></div>'
+   +'<div class="sec"><h3>通報の方法を選ぶ '+tmpChip+'</h3>'
+   +'<button class="card'+(ok?' sel':' dead')+'" style="width:100%;margin-bottom:8px" data-act="final-api"><b>アプリからDIPSへ送信（API）</b><span>'+(ok?'DIPS接続: 接続済み（仮の表示）':'DIPS API: 利用できません（審査結果待ち・仮）')+'</span><span class="chips"><i class="chip">Optional</i></span></button>'
+   +'<button class="card'+(ok?'':' sel')+'" style="width:100%" data-act="final-manual"><b>DIPS Webへ転記して通報（Manual）</b><span>DIPSの入力順で確認しながら、DIPS Webへ入力する</span><span class="chips"><i class="chip">API不要</i></span></button>'
+   +'<p class="note">APIの利用可否で見え方が変わります（右のメモ欄で切替）。どちらを主に見せるか、ここで選ぶか、はご相談です。</p></div>'
+   +'<div class="row"><button class="btn sm" data-act="stub" data-t="下書きとして保存" data-m="今回のモックでは何も保存しません。保存の置き場所（この画面か、各画面か）はご相談事項です。">下書きとして保存</button><button class="btn sm" data-act="jump" data-s="review">戻って直す</button><button class="btn sm" data-act="reset">最初からやり直す</button></div>';
+}
+
+/* ---------- メモ欄（設計メモ） ---------- */
+function memoHtml(pg){
+  const cv=coverage();
+  const cur=pg.ids;
+  const blocks=cur.map(id=>{const s=SCREENS[id];
+    return '<h4>いまの画面: '+esc(s.t)+(s.sub?'（'+esc(s.sub)+'）':'')+'</h4><p style="margin:0;font-size:13px">'+esc(s.goal)+'</p>'
+    +'<h4>対応するDIPS項目</h4>'+(s.dips.length?'<div>'+s.dips.map(n=>'<span class="tag">#'+n+' '+esc(DNAME(n))+'</span>').join('')+(s.map?'<span class="tag">地図（飛行経路／飛行範囲）</span>':'')+'</div>':'<p class="note" style="margin:0">なし</p>')
+    +(s.reuse.length?'<h4>登録済み情報の再利用</h4><ul>'+s.reuse.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'')
+    +'<h4>仮置き・未確定</h4><ul>'+s.tmp.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>'
+    +'<h4>相談したい点</h4><ul>'+s.ask.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>'}).join('');
+  const table='<table><tr><th>画面</th><th>DIPS項目</th></tr>'+SCREEN_ORDER.filter(k=>SCREENS[k].dips.length).map(k=>'<tr class="'+(cur.includes(k)?'cur':'')+'"><td>'+esc(SCREENS[k].t)+'</td><td>'+SCREENS[k].dips.map(n=>'#'+n+' '+esc(DNAME(n))).join('、')+(SCREENS[k].map?'、地図':'')+'</td></tr>').join('')+'</table>';
+  return blocks
+   +'<h4>DIPS22項目の対応</h4><p class="note" style="margin:0 0 4px">'+(cv.missing.length||cv.dup.length?'漏れ: '+cv.missing.join(',')+' 重複: '+cv.dup.join(','):'22項目すべてが、ちょうど1つの画面に割り当てられています（'+cv.ok+'/22）。')+'</p>'+table
+   +'<h4>DIPSから変えたところ（たたき台）</h4><ul><li>機体・操縦者・許可を最初にまとめた（DIPSでは許可が2番目、機体・操縦者が続く）</li><li>計画名称は最後の確認画面（DIPSは最初）。ヘッダーからも直せる</li><li>参照経路・出発地・目的地は地図の画面へ（DIPSは別の位置）</li><li>保険は連絡先と一緒に「登録済み情報の確認」へ（DIPSは途中）</li><li>選択肢の名称は、DIPS Webの表記のまま</li></ul>'
+   +'<h4>試せること</h4><ul><li>右上「全体」: 画面の順序入れ替え・次の画面と1画面にまとめる・省く</li><li>内容確認: 「画面ごと／DIPS項目順」の切替</li><li>ホームの環境ボタン: 運用環境を切り替える（選べる内容が変わる）</li></ul>'
+   +'<h4>操作</h4><div class="row"><button class="btn sm" data-act="fill">サンプルで全部埋めて確認画面へ</button><button class="btn sm" data-act="reset">最初からやり直す</button></div>'
+   +'<div class="row"><label style="min-width:auto">API</label><span class="seg"><button class="'+(S.apiOk?'on':'')+'" data-act="api" data-v="1">利用できる（仮）</button><button class="'+(!S.apiOk?'on':'')+'" data-act="api" data-v="0">利用できない（仮）</button></span></div>'
+   +'<div class="row"><label style="min-width:auto">画面幅</label><span class="seg"><button class="'+(S.width==='phone'?'on':'')+'" data-act="width" data-v="phone">スマホ</button><button class="'+(S.width==='tab'?'on':'')+'" data-act="width" data-v="tab">タブレット</button><button class="'+(S.width==='pc'?'on':'')+'" data-act="width" data-v="pc">PC</button></span></div>'
+   +'<p class="note">このモックは設計確認用です。送信・保存・DIPS/Google Drive接続はありません。データはすべてダミーで、新しいデータ構造や業務ルールを決めるものではありません。</p>';
+}
+
+/* ---------- シェル ---------- */
+function shell(pg){
+  const ps=pages();const idx=ps.findIndex(p=>p.key===pg.key);const isHome=pg.key==='home';
+  const body=pg.ids.map(id=>({home:vHome,start:vStart,use:vUse,content:vContent,area:vArea,time:vTime,master:vMaster,review:vReview,final:vFinal}[id]())).join('<div style="height:6px"></div>');
+  const prog=ps.slice(2).map((p,i)=>'<i class="'+(i+2<idx?'done':i+2===idx?'cur':'')+'"></i>').join('');
+  const next=ps[idx+1];
+  const memo=memoHtml(pg);
+  return '<div class="phone">'
+   +'<header class="hd"><div class="hd1">'+(isHome?'':'<button class="ib" data-act="back">←</button>')+'<div class="ttl">'+(isHome?'設計確認用モック':'新規飛行')+'<small>'+(isHome?'低忠実度・送信も保存もしません':esc(pageTitle(pg)))+'</small></div>'+(isHome?'':'<button class="ib" data-act="flow">全体</button>')+'<button class="ib memo-btn" data-act="memo">メモ</button></div>'
+   +'<div class="hd2"><button class="chip" data-act="env">🏢 '+esc(ENV().name)+' ▾</button>'+(isHome||pg.key==='start'?'':'<button class="chip" data-act="rename">計画名: '+esc(S.planName)+' ✎</button>')+(S.start&&!isHome&&pg.key!=='start'?'<i class="chip tmp">始め方: '+esc(S.start.label)+'</i>':'')+'</div>'
+   +(isHome||pg.key==='start'?'':'<div class="prog">'+prog+'</div>')+'</header>'
+   +'<main class="body" id="body">'+body+'</main>'
+   +'<footer class="ft">'+(pg.key==='final'?'<button class="btn" data-act="back">戻る</button>':(isHome?'<button class="btn primary" data-act="new">新規飛行をはじめる</button>':'<button class="btn" data-act="back">戻る</button><button class="btn primary" data-act="next">次へ：'+esc(pageTitle(next))+'</button>'))+'</footer>'
+   +modalHtml()+'</div><aside class="memo" id="memo">'+memo+'</aside>';
+}
+
+/* ---------- モーダル ---------- */
+function modalHtml(){
+  const m=S.modal;if(!m)return '';
+  let inner='';
+  if(m.type==='stub')inner='<h3>'+esc(m.title)+'</h3><p>'+esc(m.msg)+'</p><div class="row"><button class="btn" data-act="close">閉じる</button></div>';
+  else if(m.type==='flow')inner=flowHtml();
+  else if(m.type==='memo')inner='<div class="memo" style="display:block;padding:0;border:0">'+memoHtml(curPage())+'</div><div class="row"><button class="btn" data-act="close">閉じる</button></div>';
+  else if(m.type==='env')inner='<h3>運用環境を切り替える</h3><p class="note">切り替えると、入力中の内容は破棄され、ホームに戻ります。</p>'+Object.keys(ENVS).map(k=>'<button class="tgl'+(S.env===k?' sel':'')+'" data-act="set-env" data-id="'+k+'"><span class="box">'+(S.env===k?'✓':'')+'</span><span>'+esc(ENVS[k].name)+'</span></button>').join('')+'<div class="row"><button class="btn" data-act="close">閉じる</button></div>';
+  else if(m.type==='rename')inner='<h3>計画名称</h3><div class="row"><input class="in" id="rn" data-bind="planName" value="'+esc(S.planName)+'"></div><p class="note">DIPSでは最初の項目。自動生成の名称は仮ルールです。</p><div class="row"><button class="btn primary" data-act="close">OK</button></div>';
+  else if(m.type==='cal')inner=calHtml();
+  else if(m.type==='del')inner='<h3>図形を削除しますか</h3><p>作った飛行範囲を削除します。</p><div class="row"><button class="btn" data-act="close">キャンセル</button><button class="btn primary" data-act="del-ok">削除する</button></div>';
+  else if(m.type==='final'){inner='<h3>'+esc(m.title)+'</h3><p>ここから先は今回のモックの対象外です。送信も保存もしていません。</p><ul>'+m.list.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><div class="row"><button class="btn" data-act="close">閉じる</button></div>'}
+  return '<div class="ov" data-act="ov"><div class="sheet" data-stop="1">'+inner+'</div></div>';
+}
+function flowHtml(){
+  const rows=S.flow.map((f,i)=>'<div class="fl"><b>'+esc(SCREENS[f.id].t)+'<br><small class="note">'+esc(SCREENS[f.id].sub||'')+'</small></b><button class="btn sm" data-act="mv" data-i="'+i+'" data-d="-1"'+(i===0?' disabled':'')+'>▲</button><button class="btn sm" data-act="mv" data-i="'+i+'" data-d="1"'+(i===S.flow.length-1?' disabled':'')+'>▼</button><label class="note"><input type="checkbox" data-act="mg" data-i="'+i+'"'+(f.merge?' checked':'')+(i===S.flow.length-1?' disabled':'')+'> 次と1画面に</label><label class="note"><input type="checkbox" data-act="sk" data-i="'+i+'"'+(f.skip?' checked':'')+'> 省く</label></div>').join('');
+  return '<h3>全体の流れ（試してみる）</h3><p class="note">順序の入れ替え・次の画面とのまとめ・省略を試せます。省いた画面の項目は、自動入力や既定値のまま進みます（確認画面には必ず出ます）。</p>'
+   +'<div class="fl"><b>始め方</b><span class="note">固定</span></div>'+rows+'<div class="fl"><b>内容確認 → 通報の直前</b><span class="note">固定</span></div>'
+   +'<div class="row"><button class="btn" data-act="flow-reset">元の並びに戻す</button><button class="btn primary" data-act="close">閉じる</button></div>';
+}
+function calHtml(){
+  const y=S.cal.y,m=S.cal.m;const first=new Date(y,m,1);const last=new Date(y,m+1,0).getDate();
+  let cells='';['日','月','火','水','木','金','土'].forEach(d=>cells+='<b>'+d+'</b>');
+  for(let i=0;i<first.getDay();i++)cells+='<span></span>';
+  for(let d=1;d<=last;d++){const dt=new Date(y,m,d);const k=ymd(dt);const past=dt<TODAY;cells+='<button data-act="cal-day" data-d="'+k+'"'+(past?' disabled':'')+(S.multi.includes(k)?' class="on"':'')+'>'+d+'</button>'}
+  return '<h3>定期・複数日指定 '+tmpChip+'</h3><div class="row" style="justify-content:space-between"><button class="btn sm" data-act="cal-nav" data-d="-1">◀</button><b>'+y+'年'+(m+1)+'月</b><button class="btn sm" data-act="cal-nav" data-d="1">▶</button></div><div class="cal">'+cells+'</div><p class="note">選んだ日: '+(S.multi.length?S.multi.slice().sort().join('、'):'なし')+'</p><div class="row"><button class="btn" data-act="cal-clear">クリア</button><button class="btn primary" data-act="close">OK</button></div>';
+}
+
+/* ---------- 描画 ---------- */
+function applyWidth(){document.documentElement.style.setProperty('--w',{phone:'430px',tab:'768px',pc:'1100px'}[S.width]||'430px')}
+function render(keep){
+  const b=$('#body');const st=b&&keep!==false?b.scrollTop:0;
+  const ae=document.activeElement;const aid=ae&&ae.id;
+  $('#root').innerHTML=shell(curPage());
+  applyWidth();
+  const nb=$('#body');if(nb)nb.scrollTop=keep===false?0:st;
+  if(aid){const e=document.getElementById(aid);if(e&&e.focus&&(aid==='searchbox'||aid==='rn'))e.focus()}
+}
+function toast(m){const d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),2400)}
+function openStub(title,msg){S.modal={type:'stub',title,msg};render()}
+
+/* ---------- 地図の操作 ---------- */
+function svgPoint(svg,e){const r=svg.getBoundingClientRect();return [Math.round((e.clientX-r.left)/r.width*360),Math.round((e.clientY-r.top)/r.height*260)]}
+function mapClick(x,y){
+  const g=S.geom;
+  if(g.editing)return;
+  if(!g.kind){toast('先に図形の種類（多角形／円／線＋幅）を選んでください');return}
+  if(g.done){toast('作図済みです。「やり直す」か「削除」で作り直せます');return}
+  if(g.kind==='circle'){
+    if(!g.pts.length){g.pts=[[x,y]]}
+    else{g.r=Math.max(8,Math.round(Math.hypot(x-g.pts[0][0],y-g.pts[0][1])));g.done=true}
+  }else g.pts.push([x,y]);
+  render();
+}
+let DRAG=null;
+function dragMove(e){
+  if(!DRAG)return;const svg=$('#map');if(!svg)return;const [x,y]=svgPoint(svg,e);const g=S.geom;
+  if(g.kind==='circle'){if(DRAG==='r')g.r=Math.max(8,Math.round(Math.hypot(x-g.pts[0][0],y-g.pts[0][1])));else g.pts[0]=[x,y]}
+  else g.pts[Number(DRAG)]=[x,y];
+  const gm=$('#mapg');if(gm)gm.innerHTML=mapLayers();
+}
+function dragEnd(){if(DRAG){DRAG=null;render()}}
+document.addEventListener('pointermove',dragMove);
+document.addEventListener('pointerup',dragEnd);
+document.addEventListener('pointerdown',e=>{const h=e.target.closest&&e.target.closest('[data-h]');if(h&&S.geom.editing){DRAG=h.dataset.h;e.preventDefault()}});
+
+/* ---------- 操作（data-act） ---------- */
+const ACTS={
+  'new':()=>go('start'),
+  'stub':t=>openStub(t.dataset.t||'お知らせ',t.dataset.m||'今回のモック対象外です'),
+  'close':()=>{S.modal=null;const ps=pages();if(!ps.some(p=>p.key===S.cur))S.cur=ps[2].key;render()},
+  'ov':(t,e)=>{if(e.target===t){ACTS.close()}},
+  'back':()=>step(-1),
+  'next':()=>{if(S.cur==='start'&&!S.start)S.start={mode:'new',label:'新しく作る'};step(1)},
+  'flow':()=>{S.modal={type:'flow'};render()},
+  'memo':()=>{S.modal={type:'memo'};render()},
+  'env':()=>{S.modal={type:'env'};render()},
+  'set-env':t=>{S=freshState(t.dataset.id,S);render(false)},
+  'rename':()=>{S.modal={type:'rename'};render()},
+  'start-new':()=>{S.start={mode:'new',label:'新しく作る'};go(pages()[2].key)},
+  'start-past':t=>{applyPast(ENV().past.find(h=>h.id===t.dataset.id));go(pages()[2].key)},
+  'start-preset':t=>{applyPreset(ENV().presets.find(p=>p.id===t.dataset.id));go(pages()[2].key)},
+  'pick-ac':t=>{const a=ENV().aircraft.find(x=>x.id===t.dataset.id);if(a.dead){toast('抹消・期限切れの機体は選べません（仮）');return}const i=S.aircraft.indexOf(a.id);if(i>=0)S.aircraft.splice(i,1);else S.aircraft.push(a.id);delete S.auto.aircraft;render()},
+  'pick-pl':t=>{const p=ENV().pilots.find(x=>x.id===t.dataset.id);if(!p.pilot){toast('操縦者ではない人は選べません（仮）');return}const i=S.pilots.indexOf(p.id);if(i>=0)S.pilots.splice(i,1);else S.pilots.push(p.id);delete S.auto.pilots;render()},
+  'pick-pm':t=>{const id=t.dataset.id;if(id!=='none'){const m=ENV().permits.find(x=>x.id===id);if(daysTo(m.to)<0){toast('期限切れの許可は選べません（仮）');return}}S.permit=id;delete S.auto.permit;render()},
+  'tog-purpose':t=>{const k=t.dataset.g,v=t.dataset.v;const a=S[k];const i=a.indexOf(v);if(i>=0)a.splice(i,1);else a.push(v);delete S.auto.purpose;render()},
+  'tog-air':t=>{S.air=togExcl(S.air,t.dataset.v,AIR[3]);delete S.auto.air;render()},
+  'tog-met':t=>{S.met=togExcl(S.met,t.dataset.v,MET[6]);delete S.auto.met;render()},
+  'tog-tsu':t=>{const i=Number(t.dataset.i);S.tsu[i]=!S.tsu[i];render()},
+  'tether':t=>{S.tether=t.dataset.v;render()},
+  'assist':t=>{S.assist=Math.max(0,S.assist+Number(t.dataset.d));render()},
+  'tool':t=>{const k=t.dataset.k;if(S.geom.kind!==k){S.geom={kind:k,pts:[],r:0,width:S.geom.width||10,done:false,editing:false}}render()},
+  'geom-done':()=>{const g=S.geom;if((g.kind==='polygon'&&g.pts.length>=3)||(g.kind==='line'&&g.pts.length>=2)){g.done=true;delete S.auto.area;render()}},
+  'geom-undo':()=>{const g=S.geom;if(g.kind==='circle'&&g.done){g.done=false;g.r=0}else g.pts.pop();render()},
+  'geom-clear':()=>{S.geom={kind:S.geom.kind,pts:[],r:0,width:S.geom.width||10,done:false,editing:false};render()},
+  'geom-edit':()=>{S.geom.editing=!S.geom.editing;render()},
+  'geom-del':()=>{S.modal={type:'del'};render()},
+  'del-ok':()=>{S.geom={kind:null,pts:[],r:0,width:10,done:false,editing:false};S.modal=null;render()},
+  'layer':()=>{S.layer=!S.layer;render()},
+  'use-preset':t=>{applyPreset(ENV().presets.find(p=>p.id===t.dataset.id));toast('プリセットから範囲・高度・場所などを入れました');render()},
+  'pick-place':t=>{S.to=t.dataset.v;S.search='';toast('目的地に入れました（地図の移動は仮）');render()},
+  'cal':()=>{S.modal={type:'cal'};render()},
+  'cal-day':t=>{const k=t.dataset.d;const i=S.multi.indexOf(k);if(i>=0)S.multi.splice(i,1);else S.multi.push(k);render()},
+  'cal-nav':t=>{let m=S.cal.m+Number(t.dataset.d),y=S.cal.y;if(m<0){m=11;y--}if(m>11){m=0;y++}S.cal={y,m};render()},
+  'cal-clear':()=>{S.multi=[];render()},
+  'ins-mode':t=>{S.ins.mode=t.dataset.v;render()},
+  'ins-set':t=>{S.ins[t.dataset.k]=t.dataset.v;render()},
+  'contact-src':t=>{const src=t.dataset.v;S.contact.src=src;const E=ENV();
+    if(src==='self'){Object.assign(S.contact,{name:E.contact.name,country:E.contact.country,pref:E.contact.pref,addr:E.contact.addr,phone:E.contact.phone,email:E.contact.email})}
+    else if(src==='application'){Object.assign(S.contact,{name:'サンプル法人（申請書記載）',country:'日本/Japan',pref:'サンプル県',addr:'サンプル市サンプル4-5-6',phone:'0600000000',email:'office@example.invalid'})}
+    else{Object.assign(S.contact,{name:S.contact.pilotId?plName(S.contact.pilotId):'（操縦者を選択）',phone:'09011112222',email:'pilot@example.invalid'})}
+    render()},
+  'jump':t=>go(t.dataset.s),
+  'rv':t=>{S.reviewView=t.dataset.v;render()},
+  'final-api':()=>{if(!S.apiOk){toast('API経路は利用できない設定（仮）です');return}S.modal={type:'final',title:'アプリからDIPSへ送信（API）',list:['送信中の表示','DIPSの応答（正常受付／重複あり／通信失敗など）','正常受付後の画面（飛行前点検へ／後で飛行する）']};render()},
+  'final-manual':()=>{S.modal={type:'final',title:'DIPS Webへ転記して通報（Manual）',list:['DIPS Webを別画面で開く','DIPSの入力順に、コピー／選択／照合しながら転記','通報後の確認（受付番号の入力、または一覧での照合）']};render()},
+  'reset':()=>{S=freshState(S.env,S);render(false)},
+  'fill':()=>{fillSample();go('review')},
+  'api':t=>{S.apiOk=t.dataset.v==='1';render()},
+  'width':t=>{S.width=t.dataset.v;render()},
+  'mv':t=>{const i=Number(t.dataset.i),d=Number(t.dataset.d),j=i+d;if(j<0||j>=S.flow.length)return;const f=S.flow;[f[i],f[j]]=[f[j],f[i]];render()},
+  'mg':t=>{S.flow[Number(t.dataset.i)].merge=t.checked;render()},
+  'sk':t=>{S.flow[Number(t.dataset.i)].skip=t.checked;render()},
+  'flow-reset':()=>{S.flow=['use','content','area','time','master'].map(id=>({id,skip:false,merge:false}));render()}
+};
+function togExcl(arr,val,none){const i=arr.indexOf(val);if(val===none)return i>=0?[]:[none];const a=arr.filter(x=>x!==none);return i>=0?a.filter(x=>x!==val):a.concat(val)}
+
+document.addEventListener('click',e=>{
+  if(e.target.closest&&e.target.closest('#map')){const svg=$('#map');if(svg){const [x,y]=svgPoint(svg,e);mapClick(x,y)}return}
+  const t=e.target.closest&&e.target.closest('[data-act]');if(!t)return;
+  if(t.dataset.stop)return;
+  if(t.tagName==='INPUT'&&t.type==='checkbox')return; /* チェックボックスは change で処理 */
+  const fn=ACTS[t.dataset.act];if(fn)fn(t,e);
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.tagName==='INPUT'&&t.type==='checkbox'&&t.dataset.act){const fn=ACTS[t.dataset.act];if(fn)fn(t,e);return}
+  if(t.dataset&&t.dataset.bind){setBind(t);if(t.dataset.rerender)render()}
+});
+document.addEventListener('input',e=>{
+  const t=e.target;if(!(t.dataset&&t.dataset.bind))return;
+  if(t.dataset.search){S.search=t.value;const r=$('#sr');if(r){r.innerHTML=S.search?FAKE_PLACES.filter(p=>p.indexOf(S.search)>=0).map(p=>'<button class="tgl" data-act="pick-place" data-v="'+esc(p)+'"><span>'+esc(p)+'</span></button>').join(''):''}return}
+  if(!t.dataset.rerender&&t.tagName!=='SELECT')setBind(t);
+});
+function setBind(t){
+  const path=t.dataset.bind.split('.');let o=S;for(let i=0;i<path.length-1;i++)o=o[path[i]];
+  const k=path[path.length-1];let v=t.type==='checkbox'?t.checked:t.value;
+  if(t.dataset.num)v=(v===''?'':Number(v));
+  o[k]=v;
+}
+
+/* ---------- 起動 ---------- */
+function init(){
+  S=freshState('personal');
+  const h=(location.hash||'').replace(/^#/,'');
+  const q=Object.fromEntries(h.split('&').filter(Boolean).map(x=>x.split('=')));
+  if(q.env&&ENVS[q.env])S=freshState(q.env);
+  if(q.width)S.width=q.width;
+  if(q.fill)fillSample();
+  if(q.api==='0')S.apiOk=false;
+  if(q.step)S.cur=q.step;
+  if(q.merge){S.flow.forEach(f=>{if(q.merge.split(',').includes(f.id))f.merge=true})}
+  render(false);
+}
+window.MOCK={state:()=>S,go,render,ACTS,pages,coverage,issues,fillSample,init,SCREENS,DIPS_ITEMS};
+init();
+</script>
+</body>
+</html>
