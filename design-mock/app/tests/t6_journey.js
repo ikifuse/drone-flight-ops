@@ -10,7 +10,7 @@ suite('初回利用者の通し',H=>{
   });
   T('3 DIPSのログイン情報は［あとで設定する］。はじめの設定も何も登録せずホームへ（「個人で使用中」）',()=>{act('ob-after-created');if(route()!=='dips-init')return route();act('dips-skip');act('ob-init-done');return route()==='home'&&E().aircraft.length===0&&!A().dips.registered&&txt().includes('まだ何も登録されていません')&&q('.hd2').innerText.includes('個人で使用中')});
   T('4 飛行リスト・履歴・設定が、空でも開ける',()=>{const ok=[];for(const s of ['list','hist','set']){act('go','[data-s='+s+']');ok.push(route()===s);H.APP().back()}return ok.every(Boolean)&&route()==='home'});
-  T('5 新規飛行: 何も登録せずに開始→使うもの',()=>{act('nf-new');act('start-new');return route()==='nf'&&S().cur==='use'});
+  T('5 新規飛行: 何も登録せずに開始→使うもの',()=>{act('nf-new');act('nf-layout','[data-v=app]');act('start-new');return route()==='nf'&&S().cur==='use'});
   T('6 その場で機体を登録して戻る',()=>{act('nf-reg','[data-t=aircraft]');set('[data-bind="@d.mark"]','JU-JOURNEY-01');set('[data-bind="@d.name"]','通し機');act('reg-save');return route()==='nf'&&S().aircraft.length===1});
   T('7 自分を操縦者にして選ぶ／許可なし',()=>{act('nf-me-pilot');act('pick-pm','[data-id=none]');return S().pilots.length===1&&S().permit==='none'});
   T('8 飛行の内容を選ぶ',()=>{act('nf-next');act('tog-purpose','[data-g=biz][data-v=空撮]');act('tog-air','[data-v="上記空域の飛行は行わない"]');act('tog-met','[data-v="上記方法の飛行は行わない"]');return S().cur==='content'});
@@ -43,7 +43,7 @@ suite('初回利用者の通し',H=>{
     H.APP().root('home');act('go','[data-s=set]');const dp=qa('.li').find(x=>x.textContent.includes('DIPSのログイン情報')).textContent.includes('登録済み');act('go','[data-s=set-aircraft]');const a=txt().includes('通し機')&&dp;H.APP().back();
     act('go','[data-s=set-members]');const p=txt().includes('操縦者');H.APP().back();act('go','[data-s=set-docs]');const d=txt().includes('通し保険')&&txt().includes('通し連絡先');return a&&p&&d;
   });
-  T('19 2回目: 履歴から複製して新規飛行',()=>{H.APP().root('home');act('nf-new');act('start-past');return S().cur==='use'&&S().aircraft.length===1&&S().geom.done&&S().auto.aircraft.includes('前回')});
+  T('19 2回目: 履歴から複製して新規飛行',()=>{H.APP().root('home');act('nf-new');act('nf-layout','[data-v=app]');act('start-past');return S().cur==='use'&&S().aircraft.length===1&&S().geom.done&&S().auto.aircraft.includes('前回')});
   T('20 設定で先に機体を追加（BAT管理ON・新しいBATグループ）',()=>{
     H.APP().root('home');act('go','[data-s=set]');act('go','[data-s=set-aircraft]');act('reg-open','[data-t=aircraft]:not([data-id])');
     set('[data-bind="@d.mark"]','JU-JOURNEY-02');set('[data-bind="@d.name"]','通し機2');act('reg-set','[data-k=batOn][data-v=true]');set('[data-bind="@d.newGroup"]','通しBAT');act('reg-save');

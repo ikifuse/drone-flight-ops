@@ -34,7 +34,7 @@ function nowStart(){const d=new Date(Date.now()+10*60000);d.setMinutes(Math.ceil
 function blankNF(env){
   const st=nowStart();const n=new Date();const i=env&&env.insurance,c=env&&env.contact;
   return {
-    cur:'start',flow:['use','content','area','time','master'].map(id=>({id,skip:false,merge:false})),
+    cur:'start',layout:'dips',flow:['use','content','area','time','master'].map(id=>({id,skip:false,merge:false})),
     start:null,noDips:false,
     planName:'FlightPlan-'+n.getFullYear()+pad(n.getMonth()+1)+pad(n.getDate())+pad(n.getHours())+pad(n.getMinutes()),
     aircraft:[],pilots:[],permit:null,

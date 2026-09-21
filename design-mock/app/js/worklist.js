@@ -41,13 +41,13 @@ def('plan',{t:'DIPS通報内容',st:()=>{const p=planOf(A.ui.planId);return p?p.
      +'<div class="sec"><h3>DIPSに通報した内容</h3>'+DIPS_ITEMS.map(x=>'<div class="rev"><div class="k">'+esc(x.name)+'</div><div class="v">'+valueOf(x.n,s)+'</div></div>').join('')+'<div class="rev"><div class="k">飛行範囲（地図）</div><div class="v">'+esc(geomSummary(s))+'<div class="mapwrap" style="margin-top:6px">'+mapSvg(s,'mini')+'</div></div></div></div>'
      +'<p class="note"><button class="chip" data-act="stub" data-t="日時・場所の変更（別処理）" data-m="通報した内容の変更は、DIPS側の変更や再通報を伴う、別の手続きになります。この手続きは、準備中です。">日時・場所を変えたい場合</button> '+tmpChip+'</p>';
   },
-  foot:()=>'<button class="btn danger" data-act="plan-cancel">飛行中止／削除</button><button class="btn primary" data-act="plan-to-op">飛行前点検へ</button>'
+  foot:()=>'<button class="btn danger" data-act="plan-cancel">飛行中止／削除</button>'+(planOf(A.ui.planId)?.dips==='clean'?'<button class="btn primary" data-act="plan-to-op">飛行前点検へ</button>':'')
 });
 
 Object.assign(ACTS,{
   'pl-filter':t=>{A.ui.plFilter=t.dataset.v;render()},
   'plan-open':t=>{A.ui.planId=t.dataset.id;nav('plan')},
-  'plan-to-op':()=>{const p=planOf(A.ui.planId);if(p&&typeof startOp==='function')startOp(p,null);else openStub('準備中です','飛行前点検以降の画面は、まだ用意できていません。')},
+  'plan-to-op':()=>{const p=planOf(A.ui.planId);if(p&&p.dips==='clean'&&typeof startOp==='function')startOp(p,null);else toast('DIPSで受付と重複の状態を確認してください')},
   'plan-cancel':()=>openSheet(()=>'<h3>この飛行を中止・削除しますか</h3><ul style="padding-left:1.2em;font-size:14px"><li>制度上可能な範囲で、DIPS側の取消を行います（DIPS側の取消は、アプリの外の手続きです）。</li><li>アプリ側では取消を記録し、この計画を<b>飛行リストから外します</b>。</li><li>これまでの通報履歴・受付の証跡は、消えません。</li></ul><p class="note">事故・急病・通信できないなどで、DIPS側の取消ができなかった場合でも、飛行リストからは外せます。</p><div class="row"><button class="btn" data-act="close">やめる</button><button class="btn danger" data-act="plan-cancel-ok">中止する</button></div>'),
   'plan-cancel-ok':()=>{if(!canWrite())return;const E=ENV();E.plans=E.plans.filter(p=>p.id!==A.ui.planId);A.ui.planId=null;A.modal=null;back();toast('計画を中止し、飛行リストから外しました。通報の履歴は残ります')}
 });

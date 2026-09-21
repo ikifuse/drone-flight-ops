@@ -16,7 +16,7 @@
     /\broot\b/i,/正本/,/\bcache\b/i,/SyncQueue/i,/ManualDipsAdapter/i,/\bpayload\b/i,/snapshot/i,/\bFSM\b/,/FlightLeg/,/\bMission\b/,/\bschema\b/i,/\bUUID\b/i,/IndexedDB/i,
     /PENDING/,/VERIFY/,/CURRENT-/,/HISTORICAL/,
     /§/,/\b(?:1[0-9]|2[0-9]|3[0-9])[a-h]\b/,
-    /（\s*0[1-7]\s*）/,/(?<![A-Za-z0-9-])0[1-7]\s*(?:人員|機体|バッテリー|運航記録|点検整備記録|DIPS関連|出力)/,
+    /（\s*0[1-7]\s*）/,/(?<![A-Za-z0-9:-])0[1-7]\s*(?:人員|機体|バッテリー|運航記録|点検整備記録|DIPS関連|出力)/,
     /運用環境/,/環境(?!調査)/,
     /Network Error/,/Sync Error/,/Unsupported State/,/Data Corruption/,
     /モック/,/仮/,/案/,/サンプル/,/sample|test|dummy/i,/テスト用/,/example\.invalid/,/見本/,/未確定|未設計/,/未決/,/設計/,/ダミー/,/確認用/,

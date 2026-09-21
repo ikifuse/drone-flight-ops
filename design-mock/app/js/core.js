@@ -121,9 +121,14 @@ const STATE_LABEL={
 const MEMO_HEAD='<div class="memohead"><b>設計確認メモ</b><br><small>この欄は、実際のアプリには表示されません。設計の根拠、状態の切替、テスト条件、未決の点、相談したい点を置いています。左のスマホ画面が、アプリの見え方です。</small></div>';
 /* 設計確認用の切替の部品（右側・アプリの枠の外だけで使う） */
 const mockSeg=(act,cur,opts)=>'<span class="seg">'+opts.map(o=>'<button class="'+(String(cur)===String(o[0])?'on':'')+'" data-act="'+act+'" data-v="'+o[0]+'">'+o[1]+'</button>').join('')+'</span>';
+function designBasis(){
+  const r=A.route;
+  const basis=r.startsWith('op-')?'B. 旧運航記録アプリが基準（Pixel6a版 v2026.09.05.4・35b）。E. 未決・比較中：詳細配置と復帰UI。':r==='nf'?'A. DIPS iPhone実画面が基準。C. ワンエビ™️のスマホUIを参考。E. 未決・比較中：入力の画面分け。':r.startsWith('nf-')||r==='plan'||r==='list'?'D. 新アプリで必要な接続画面。E. 未決・比較中：受付結果・調整後の再開。':'D. 新アプリで必要な接続画面。C. ワンエビ™️のスマホUIを参考（大きい操作・入力例・次の操作）。E. 未決・比較中：画面の分類・文言。';
+  return '<h4>設計根拠の分類</h4><p>'+basis+'</p>'+(r==='gauth'||r==='consent'?'<p>左側は外部のGoogle画面を表すモック上の中継表示です。本番アプリ自身がアカウント選択UIを描画する設計ではありません。認証後の状態だけを右で切り替えます。</p>':'');
+}
 function memoHtml(){
   const d=SCR[A.route];if(!d)return '';
-  let h=MEMO_HEAD+'<h4>いまの画面: '+esc(val(d.t))+'</h4>';
+  let h=MEMO_HEAD+designBasis()+'<h4>いまの画面: '+esc(val(d.t))+'</h4>';
   if(d.mock)h+='<div class="mockpanel"><h4>この画面の確認用操作</h4>'+d.mock()+'</div>';
   if(d.memo)h+=d.memo();
   else{

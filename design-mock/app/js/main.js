@@ -8,7 +8,7 @@
 const SCREEN_MAP=[
   ['はじめて使う・ログイン',[['boot','はじめに（アカウントを作る／ログイン）'],['acct-new','アカウントを作る'],['acct-login','ログイン'],['gauth','Googleアカウントを選択します（Googleが表示）'],['acct-exists','すでに登録されています'],['acct-none','ログインできませんでした'],['usage','どのように使いますか？'],['create-name','会社・団体の名前'],['consent','Google Driveの許可（Googleが表示）'],['created','準備ができました'],['dips-init','DIPSのログイン情報（はじめに登録）'],['init','はじめの設定'],['init-me','自分の情報'],['join1','招待を受けている会社・団体'],['join2','参加の確認'],['join3','あなたの名前を選んでください'],['where','どこで使いますか？']]],
   ['ホーム',[['home','ホーム（4入口）']]],
-  ['新規飛行',[['nf:start','始め方'],['nf:use','使うもの（機体・操縦者・許可）'],['nf:content','飛行の内容'],['nf:area','飛行範囲（地図）'],['nf:time','日時・高度'],['nf:master','登録済み情報の確認（保険・連絡先）'],['nf:review','内容確認'],['nf:final','通報の直前'],['nf:dipsneed','通報の直前：DIPSのログイン情報が未登録のとき'],['nf-send','DIPSへ送信（アプリから）'],['nf-manual','DIPS Webで通報する（転記）'],['nf-manual-confirm','DIPS Webで通報したあとの確認'],['nf-accepted','通報の結果（正常受付・重複・結果不明・エラー）']]],
+  ['新規飛行',[['nf:start','始め方'],['nf:dips','飛行計画（DIPS基準案）'],['nf:use','使うもの（機体・操縦者・許可）'],['nf:content','飛行の内容'],['nf:area','飛行範囲（地図）'],['nf:time','日時・高度'],['nf:master','登録済み情報の確認（保険・連絡先）'],['nf:review','内容確認'],['nf:final','通報の直前'],['nf:dipsneed','通報の直前：DIPSのログイン情報が未登録のとき'],['nf-send','DIPSへ送信（アプリから）'],['nf-manual','DIPS Webで通報する（転記）'],['nf-manual-confirm','DIPS Webで通報したあとの確認'],['nf-accepted','通報の結果（正常受付・重複・結果不明・エラー）']]],
   ['飛行リスト',[['list','飛行リスト'],['plan','DIPS通報内容']]],
   ['通常運航',[['op-pre','飛行前点検'],['op-standby','離陸待機'],['op-fly','飛行中'],['op-landed','着陸後入力'],['op-bat','BAT交換'],['op-switch','機体交代'],['op-post','飛行後点検'],['op-final','最終送信・保存'],['op-done','保存後']]],
   ['飛行履歴・出力',[['hist','飛行履歴・出力（検索）'],['hist-detail','飛行の詳細'],['out-pdf','出力：PDF'],['out-kml','出力：KML']]],
@@ -33,7 +33,7 @@ function gotoScreen(id){
   if(id==='where'&&A.envs.length<2){ACTS['ob-normal']();return}
   if(typeof prepScreen==='function'&&prepScreen(id)===false){render();return}
   A.stack=id==='home'||PRE_ENV.includes(base)?[]:(id.indexOf('reg-')===0?['set']:['home']);
-  if(id.indexOf(':')>0){const pg=id.split(':')[1];if(pg==='dipsneed'){if(!S){S=blankNF(E);if(!fillSample())return}S.cur='final';A.dips={registered:false,id:''};A.ui.dipsSet=true;A.route='nf';A.modal=null;render(false);openDipsNeed();return}if(!S)S=blankNF(E);S.cur=pg;A.route='nf';A.modal=null;render(false);return}
+  if(id.indexOf(':')>0){const pg=id.split(':')[1];if(pg==='dipsneed'){if(!S){S=blankNF(E);if(!fillSample())return}S.cur='final';A.dips={registered:false,id:''};A.ui.dipsSet=true;A.route='nf';A.modal=null;render(false);openDipsNeed();return}if(!S)S=blankNF(E);if(['use','content','time','master'].includes(pg))S.layout='app';S.cur=pg;A.route='nf';A.modal=null;render(false);return}
   A.route=id;enter(id);render(false);
 }
 

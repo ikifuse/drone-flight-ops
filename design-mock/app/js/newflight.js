@@ -49,6 +49,7 @@ const NFS={
   ask:['通報方法の選択をここで行うか、もっと前にするか','「下書きとして保存」の置き場所']}
 };
 const NF_ORDER=['start','use','content','area','time','master','review','final'];
+NFS.dips={t:'飛行計画',dips:[],goal:'DIPS実画面順で入力する',reuse:[],tmp:[],ask:[]};
 const nfName=k=>NFS[k].t;
 function coverage(){
   const cnt={};DIPS_ITEMS.forEach(x=>cnt[x.n]=0);
@@ -59,6 +60,7 @@ const AUTOKEY={2:'permit',4:'aircraft',5:'pilots',6:'purpose',7:'air',8:'met',13
 
 /* ---------- 画面の並び（順序入れ替え・統合・省略を試せる） ---------- */
 function pages(){
+  if(S.layout!=='app'&&!S.noDips)return ['start','dips','area','review','final'].map(key=>({key,ids:[key]}));
   const vis=S.flow.filter(f=>!f.skip&&!(S.noDips&&(f.id==='time'||f.id==='master')));const mids=[];let i=0;
   while(i<vis.length){
     const ids=[vis[i].id];
@@ -70,6 +72,7 @@ function pages(){
 const curPage=()=>{const ps=pages();return ps.find(p=>p.key===S.cur)||ps.find(p=>p.ids.includes(S.cur))||ps[0]};
 const pageTitle=p=>p.ids.map(nfName).join('＋');
 function nfGo(key,noScroll){
+  if(S.layout!=='app'&&!S.noDips&&['use','content','time','master'].includes(key))key='dips';
   const ps=pages();const p=ps.find(x=>x.key===key)||ps.find(x=>x.ids.includes(key));
   S.cur=p?p.key:'start';A.modal=null;render(!!noScroll);
   const b=$('#body');if(b&&!noScroll)b.scrollTop=0;
@@ -264,7 +267,7 @@ function vTime(){
 }
 
 /* ===== 画面: 登録済み情報の確認（保険・連絡先）— 未登録ならその場で登録 ===== */
-function vMaster(){
+function vMaster(part){
   const E=ENV();const i=S.ins,c=S.contact;
   const amt=(ku,ka,label)=>'<div class="row"><label>'+label+'</label><div class="pills">'+pill('ins-set','data-k="'+ku+'" data-v="yes"','無制限：はい',i[ku]==='yes')+pill('ins-set','data-k="'+ku+'" data-v="no"','無制限：いいえ',i[ku]==='no')+'</div></div><div class="row"><label></label><input class="in" type="number" data-bind="ins.'+ka+'" data-num="1" '+(i[ku]==='yes'?'disabled':'')+' value="'+esc(i[ka])+'" placeholder="金額"><span>円</span></div>';
   const insForm=i.mode==='custom'?'<div class="row"><label>保険会社名</label><input class="in" data-bind="ins.company" value="'+esc(i.company)+'"></div><div class="row"><label>商品名</label><input class="in" data-bind="ins.product" value="'+esc(i.product)+'"></div>'+amt('pUnl','pAmt','対人')+amt('oUnl','oAmt','対物'):'';
@@ -272,16 +275,18 @@ function vMaster(){
   const src=[['self','自アカウントの情報'],['application','申請書記載の情報'],['pilot','操縦者']];
   const pilotSel=c.src==='pilot'?'<div class="row"><label>操縦者</label><select class="in" data-bind="contact.pilotId" data-rerender="1" style="flex:1"><option value="">選択してください</option>'+S.pilots.map(id=>'<option value="'+id+'"'+(c.pilotId===id?' selected':'')+'>'+esc(plName(id))+'</option>').join('')+'</select></div>':'';
   const noC=!E.contact;
-  return '<div class="sec"><h3>保険に関する情報 '+autoChip('ins')+'</h3>'
+  const insurance='<div class="sec"><h3>保険に関する情報 '+autoChip('ins')+'</h3>'
    +(i.mode==='unreg'?'<div class="msg warn"><b>保険が未登録です。</b>ここで登録するか、この飛行だけ入力するか、加入していないを選びます。</div><div class="pills"><button class="pill" data-act="nf-reg" data-t="insurance">保険をここで登録する</button>'+pill('ins-mode','data-v="custom"','この飛行だけ入力',false)+pill('ins-mode','data-v="none"','保険に加入していない',false)+'</div>'
      :'<div class="msg ok">'+esc(insSummary())+'</div><div class="pills">'+(E.insurance?pill('ins-mode','data-v="auto"','登録済みのまま',i.mode==='auto'):'')+pill('ins-mode','data-v="custom"','この飛行だけ変更',i.mode==='custom')+pill('ins-mode','data-v="none"','保険に加入していない',i.mode==='none')+'</div>')+insForm+abil+'</div>'
-   +'<div class="sec"><h3>連絡先 '+autoChip('contact')+'</h3>'+(noC?'<div class="msg warn"><b>連絡先が未登録です。</b>ここに入力してください。「連絡先として登録しておく」で、次回から自動入力になります。</div>':'')
+;
+  const contact='<div class="sec"><h3>連絡先 '+autoChip('contact')+'</h3>'+(noC?'<div class="msg warn"><b>連絡先が未登録です。</b>ここに入力してください。「連絡先として登録しておく」で、次回から自動入力になります。</div>':'')
    +'<div class="pills">'+src.map(([k,l])=>pill('contact-src','data-v="'+k+'"',l,c.src===k)).join('')+'</div>'+pilotSel
    +(noC?'<div class="row"><label>氏名</label><input class="in" data-bind="contact.name" value="'+esc(c.name)+'"></div><div class="row"><label>住所</label><input class="in" data-bind="contact.addr" value="'+esc(c.addr)+'" placeholder="任意"></div>'
         :'<table class="kv" style="margin-top:8px"><tr><td>氏名</td><td>'+esc(c.name)+'</td></tr><tr><td>国/地域・都道府県</td><td>'+esc(c.country)+' / '+esc(c.pref)+'</td></tr><tr><td>住所</td><td>'+esc(c.addr)+'</td></tr></table><p class="note">氏名・住所は連絡先の情報源から自動（読み取り専用）。</p>')
-   +'<div class="row"><label>電話</label><input class="in" data-bind="contact.cc" value="'+esc(c.cc)+'" style="max-width:9em"><input class="in" data-bind="contact.phone" value="'+esc(c.phone)+'"></div><div class="row"><label>メール</label><input class="in" data-bind="contact.email" value="'+esc(c.email)+'"></div><div class="row"><label>その他情報</label><textarea class="in" data-bind="contact.other">'+esc(c.other)+'</textarea></div>'
+   +'<div class="row"><label>電話</label><input class="in" data-bind="contact.cc" value="'+esc(c.cc)+'" style="max-width:9em"><input class="in" data-bind="contact.phone" placeholder="例：090-1234-5678" value="'+esc(c.phone)+'"></div><div class="row"><label>メール</label><input class="in" data-bind="contact.email" placeholder="例：name@example.com" value="'+esc(c.email)+'"></div><div class="row"><label>その他情報</label><textarea class="in" data-bind="contact.other">'+esc(c.other)+'</textarea></div>'
    +(noC?'<div class="row"><button class="btn sm" data-act="nf-save-contact">この内容を連絡先として登録しておく</button></div>':'')+'</div>'
    +'<p class="note">毎回ほとんど変わらない情報です。登録しておくと、次から自動で入ります。</p>';
+  return part==='insurance'?insurance:part==='contact'?contact:insurance+contact;
 }
 
 /* ===== 画面: 内容確認 ===== */
@@ -322,6 +327,7 @@ const VIEW={start:vStart,use:vUse,content:vContent,area:vArea,time:vTime,master:
 
 /* ---------- 新規飛行の画面（メイン） ---------- */
 function nfMemo(){
+  if(S.layout!=='app'&&!S.noDips)return dipsMemo();
   const cv=coverage();const cur=curPage().ids;
   const blocks=cur.map(id=>{const s=NFS[id];
     return '<h4>いまの画面: '+esc(s.t)+(s.sub?'（'+esc(s.sub)+'）':'')+'</h4><p style="margin:0;font-size:13px">'+esc(s.goal)+'</p>'
@@ -337,11 +343,11 @@ function nfMemo(){
 }
 def('nf',{
   t:'新規飛行',st:()=>pageTitle(curPage()),backAct:'nf-back',memo:nfMemo,
-  mock:()=>'<div class="row"><button class="btn sm" data-act="flow">全体の流れを並べ替える・省く</button><button class="btn sm" data-act="fill">仮データで全部埋めて確認画面へ</button><button class="btn sm" data-act="nf-restart">最初からやり直す</button></div>'
+  mock:()=>'<div class="row">'+mockSeg('nf-layout',S.layout||'dips',[['dips','DIPS基準案'],['app','アプリでまとめた案']])+'</div><div class="row"><button class="btn sm" data-act="flow">全体の流れを並べ替える・省く</button><button class="btn sm" data-act="fill">仮データで全部埋めて確認画面へ</button><button class="btn sm" data-act="nf-restart">最初からやり直す</button></div>'
    +'<div class="row"><label>DIPSログイン情報</label>'+mockSeg('dipsstate',A.dips.registered?1:0,[[1,'登録済み'],[0,'未登録']])+'</div><p class="note" style="margin:0">未登録にして、通報の直前で［アプリからDIPSへ送信する］を押すと、その場で登録して元の飛行計画へ戻る流れを確かめられます。</p>',
   chips:()=>S.cur==='start'?'':'<button class="chip" data-act="rename">計画名: '+esc(S.planName)+' ✎</button>'+(S.start?'<i class="chip tmp">始め方: '+esc(S.start.label)+'</i>':'')+(S.noDips?'<i class="chip warn">通報しない飛行</i>':''),
   prog:()=>{if(S.cur==='start')return '';const ps=pages();const idx=ps.findIndex(p=>p.key===curPage().key);return '<div class="prog">'+ps.slice(1).map((p,i)=>'<i class="'+(i+1<idx?'done':i+1===idx?'cur':'')+'"></i>').join('')+'</div>'},
-  body:()=>curPage().ids.map(id=>VIEW[id]()).join('<div style="height:6px"></div>'),
+  body:()=>curPage().ids.map(id=>id==='dips'?vDips():id==='area'&&S.layout!=='app'&&!S.noDips?vDipsMap():VIEW[id]()).join('<div style="height:6px"></div>'),
   foot:()=>{const ps=pages();const idx=ps.findIndex(p=>p.key===curPage().key);const next=ps[idx+1];
     if(!next)return '<button class="btn" data-act="nf-back">戻る</button>';
     return '<button class="btn" data-act="nf-back">戻る</button><button class="btn primary" data-act="nf-next">次へ：'+esc(pageTitle(next))+'</button>'}
@@ -401,7 +407,7 @@ def('nf-accepted',{t:()=>({clean:'通報完了・重複なし',dup:'通報済み
   st:'DIPSからの結果',env:false,back:false,
   goal:'正常受付と重複の有無を確認し、今から点検するか、あとで続けるか選ぶ。結果不明・エラーは、通常の通報済みとして扱わない。',
   doc:'34d §3（正常受付・重複なし画面の10項目）／§2（正常応答時点が共有リストへの掲載契機。［後で飛行する］は掲載済み計画を残してホームへ戻る操作）／33b・24b §4（結果不明・重複ありは通常系と混ぜない）。',state:'spec',
-  tmp:['受付ID等の詳細配置は未確定（34d §3項目3）','重複ありの調整は未設計（PENDING-S7B-DUPLICATE-ADJUST）','KMLの状態行は、27eの生成契機（通報時に作成・保存）を見せるための表示（仮）'],
+  tmp:['受付ID等の詳細配置は未確定（34d §3項目3）','PENDING: 重複・調整後にどう再開するか（PENDING-S7B-DUPLICATE-ADJUST）。状態名・解除方法・調整完了方法はオーナー確認待ち。Manual確認だけで重複なしとは扱わない','KMLの状態行は、27eの生成契機（通報時に作成・保存）を見せるための表示（仮）'],
   ask:['正常受付の画面に、どこまで情報を出すか','［後で飛行する］のあと、ホームへ戻すだけでよいか'],
   body:()=>{
     const r=A.nfResult||{kind:'clean'};const pl=planLink();
@@ -409,14 +415,15 @@ def('nf-accepted',{t:()=>({clean:'通報完了・重複なし',dup:'通報済み
     const kml=pl?'<div class="sec"><h3>KML（My Maps用）</h3><p class="lead" style="margin:0">'+(pl.kml==='saved'?'通報したときに作成し、Google Driveの「出力」フォルダーに<b>保存しました</b>。飛行のあとに作り直す必要はありません。':'作成しましたが、通信できず、<b>まだGoogle Driveに保存されていません</b>。この端末には保存されています。通信が戻ったら、自動で保存します。')+'</p></div>':'';
     if(r.kind==='clean'||r.kind==='manual')return '<div class="msg ok big">'+(r.kind==='manual'?'✓ 通報確認済み':'✓ 通報完了・重複なし')+'</div>'+sum+kml
       +'<div class="msg info">通報完了は、飛行できることの保証ではありません（離陸前の確認は別に行います）。この計画は、共有の飛行リストに載りました。'+(r.kind==='manual'?'':'')+'</div>';
-    if(r.kind==='dup')return '<div class="msg warn big">通報済み・重複あり</div>'+sum+kml+'<div class="msg warn">他の計画と重複しています。飛行リストには「通報済み・重複あり」で載ります。<b>重複の調整は、この画面ではまだできません。</b>DIPS Webで確認してください。</div>';
+    if(r.kind==='dup')return '<div class="msg warn big">通報済み・重複あり</div>'+sum+kml+'<div class="msg warn">ここで運航への移行を止めます。他の計画と重複しています。飛行リストには「通報済み・重複あり」で載ります。<b>重複の調整は、この画面ではまだできません。</b>DIPS Webで確認してください。</div>';
     if(r.kind==='unknown')return '<div class="msg ng big">結果不明</div><div class="msg ng">通信が途切れ、DIPSに登録されたかどうかが分かりません。<b>通常の「通報済み」として扱わず、同じ内容を自動で再送もしません</b>（二重通報を避けるため）。</div>'
       +'<div class="sec"><h3>次にすること</h3><ul style="margin:0;padding-left:1.2em;font-size:13px"><li>DIPS Webの飛行計画一覧で、登録されているか確認する</li><li>登録されていれば、「DIPS Webで確認する」から、確認できたことを記録する</li><li>登録されていなければ、確認したうえで送信し直す</li></ul></div>';
     return '<div class="msg ng big">DIPSに受け付けられませんでした</div><div class="msg ng">内容に問題があります（例: 許可の期間外・必須項目の不足）。内容を直して、もう一度送信してください。</div>';
   },
   foot:()=>{
     const r=A.nfResult||{kind:'clean'};
-    if(r.kind==='clean'||r.kind==='manual')return '<button class="btn" data-act="nf-later">後で飛行する</button><button class="btn primary" data-act="nf-to-op">飛行前点検へ</button>';
+    if(r.kind==='clean')return '<button class="btn" data-act="nf-later">後で飛行する</button><button class="btn primary" data-act="nf-to-op">飛行前点検へ</button>';
+    if(r.kind==='manual')return '<button class="btn" data-act="nf-open-list">飛行リストで確認</button>';
     if(r.kind==='dup')return '<button class="btn" data-act="root" data-s="home">ホームへ</button><button class="btn primary" data-act="nf-open-list">飛行リストで確認</button>';
     if(r.kind==='unknown')return '<button class="btn" data-act="root" data-s="home">ホームへ（あとで確認）</button><button class="btn primary" data-act="nf-manual-go">DIPS Webで確認する</button>';
     return '<button class="btn primary" data-act="nf-fix">内容を直す（確認画面へ）</button>';
@@ -452,7 +459,8 @@ Object.assign(ACTS,{
   'nf-back':()=>{if(S.cur==='start')back();else nfStep(-1)},
   'nf-next':()=>{if(S.cur==='start'&&!S.start)S.start={mode:'new',label:'新しく作る'};nfStep(1)},
   'nf-restart':()=>{A.modal=null;S=blankNF(ENV());S.cur='start';render(false)},
-  'flow':()=>openMock(flowHtml),
+  'nf-layout':t=>{S.layout=t.dataset.v;S.cur='start';render()},
+  'flow':()=>{S.layout='app';openMock(flowHtml)},
   'rename':()=>openSheet(()=>'<h3>計画名称</h3><div class="row"><input class="in" data-bind="planName" value="'+esc(S.planName)+'"></div><p class="note">DIPSでは最初の項目です。自動で付いた名前を、変えられます。</p><div class="row"><button class="btn primary" data-act="close">OK</button></div>'),
   'start-new':()=>{S.start={mode:'new',label:'新しく作る'};nfGo(pages()[1].key)},
   'start-past':t=>{applyPast(ENV().flights.find(h=>h.id===t.dataset.id));nfGo(pages()[1].key)},
@@ -488,8 +496,8 @@ Object.assign(ACTS,{
   'ins-set':t=>{S.ins[t.dataset.k]=t.dataset.v;render()},
   'contact-src':t=>{const src=t.dataset.v;S.contact.src=src;const E=ENV();const c0=E.contact;
     if(src==='self'){if(c0)Object.assign(S.contact,{name:c0.name,country:c0.country,pref:c0.pref,addr:c0.addr,phone:c0.phone,email:c0.email})}
-    else if(src==='application'){Object.assign(S.contact,{name:'○○株式会社（申請書記載）',country:'日本/Japan',pref:'○○県',addr:'○○市4-5-6',phone:'0600000000',email:'contact@example.com'})}
-    else{Object.assign(S.contact,{name:S.contact.pilotId?plName(S.contact.pilotId):'（操縦者を選択）',phone:'09011112222',email:'name@example.com'})}
+    else if(src==='application'){Object.assign(S.contact,{name:'',addr:'',phone:'',email:''})}
+    else{Object.assign(S.contact,{name:S.contact.pilotId?plName(S.contact.pilotId):'（操縦者を選択）',phone:'',email:''})}
     render()},
   'jump':t=>nfGo(t.dataset.s),
   'rv':t=>{S.reviewView=t.dataset.v;render()},
@@ -516,10 +524,11 @@ Object.assign(ACTS,{
   'nf-mconf':t=>{A.ui.mconf=t.dataset.v;render()},
   'nf-mconf-ok':()=>{if(!canWrite())return;const pl=commitPlan('manual');A.nfResult={kind:'manual',planId:pl.id};rep('nf-accepted')},
   'nf-later':()=>{toast('計画は飛行リストに残しました。あとから、本人または権限のある人が続けられます');S=null;A.nfResult=null;root('home')},
-  'nf-open-list':()=>{S=null;root('home');nav('list')},
+  'nf-open-list':()=>{root('home');nav('list')},
   'nf-fix':()=>{A.nfResult=null;back();nfGo('review')},
   'nf-nodips-go':()=>{if(typeof startOp==='function')startOp(null,S);else openStub('準備中です','飛行前点検以降の画面は、まだ用意できていません。')},
   'nf-to-op':()=>{
+    if(!A.nfResult||A.nfResult.kind!=='clean')return;
     const pl=planLink();
     if(typeof startOp==='function')startOp(pl,S);else openStub('準備中です','飛行前点検以降の画面は、まだ用意できていません。');
   },

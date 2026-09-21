@@ -54,10 +54,9 @@ suite('飛行リスト・通常運航',H=>{
     const has=txt().includes('保存されていません')&&txt().includes(E().flights[0].label);act('sync-now');return has&&E().flights.every(f=>f.synced);
   });
   H.hash('scn=company');
-  T('重複ありの計画で離陸: 警告→確認して離陸を記録（拒否しない）',()=>{
-    act('go','[data-s=list]');act('plan-open','[data-id="'+E().plans.find(p=>p.dips==='dup').id+'"]');act('plan-to-op');
-    act('op-pre-all');act('op-pre-done');act('op-bat-pick');act('op-bat-check','[data-v=異常なし]');
-    act('op-takeoff');const sheet=!!q('.sheet')&&q('.sheet').innerText.includes('警告があります');act('op-takeoff-ok');return sheet&&route()==='op-fly';
+  T('重複ありの計画はリストでも通常運航へ進めず、内容を保持する',()=>{
+    act('go','[data-s=list]');const p=E().plans.find(p=>p.dips==='dup');act('plan-open','[data-id="'+p.id+'"]');
+    const hidden=!q('.phone [data-act=plan-to-op]');H.APP().ACTS['plan-to-op']();return hidden&&route()==='plan'&&!A().op&&E().plans.includes(p);
   });
   T('運航をやめる（飛行0回のみ）',()=>{H.hash('scn=company');act('go','[data-s=list]');act('plan-open');act('plan-to-op');act('op-abort');act('op-abort-ok');return route()==='home'&&E().plans.length===3&&A().op===null});
   T('通報しない飛行: 新規飛行→点検→保存（KMLなし）',()=>{
