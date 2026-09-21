@@ -34,6 +34,30 @@ function gotoScreen(id){
   A.route=id;enter(id);render(false);
 }
 
+/* 画面マップから、文脈が要る画面へ飛ぶときの準備（足りない材料を自動で整える） */
+function prepScreen(id){
+  const E=ENV();if(!E)return true;
+  const base=id.split(':')[0];
+  const ensureNF=(page)=>{if(!S){S=blankNF(E);if(!fillSample())return false}S.cur=page||S.cur||'final';return true};
+  if(base.indexOf('reg-')===0){const t=base.slice(4);if(!A.reg||A.reg.type!==t)A.reg={type:t,id:null,ret:null,d:regInit(t,{})};return true}
+  switch(base){
+    case 'plan':if(!E.plans.length){toast('通報済みの計画がありません。サンプルを入れるか、新規飛行で通報してください');return false}if(!planOf(A.ui.planId))A.ui.planId=E.plans[0].id;return true;
+    case 'bat-detail':if(!E.bats.length){toast('BATがありません。サンプルを入れるか、BATを登録してください');return false}if(!batOf(A.ui.batId))A.ui.batId=E.bats[0].id;return true;
+    case 'hist-detail':case 'out-pdf':case 'out-kml':
+      if(!E.flights.length){toast('完了した飛行がありません。サンプルを入れるか、飛行を完了させてください');return false}
+      if(!flightOf(A.ui.hSel))A.ui.hSel=E.flights[0].id;
+      if(base==='out-pdf')A.ui.outMade={a4:true,map:true,saved:A.online};
+      return true;
+    case 'nf-send':case 'nf-manual':case 'nf-manual-confirm':return ensureNF('final');
+    case 'nf-accepted':
+      if(!A.nfResult){if(!ensureNF('final'))return false;const pl=commitPlan('clean');A.nfResult={kind:'clean',planId:pl.id}}
+      return true;
+    default:
+      if(base.indexOf('op-')===0)return opPrep(base);
+      return true;
+  }
+}
+
 /* メモ欄の下部：モックの操作（設計の一部ではありません） */
 function controlsHtml(){
   const seg=(act,cur,opts)=>'<span class="seg">'+opts.map(o=>'<button class="'+(String(cur)===String(o[0])?'on':'')+'" data-act="'+act+'" data-v="'+o[0]+'">'+o[1]+'</button>').join('')+'</span>';

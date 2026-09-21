@@ -9,12 +9,41 @@ const POST_ITEMS=['機体の外観（破損・ひび割れがない）','プロ�
 const opAc=()=>acOf(A.op.ac);
 const opGo=id=>{A.stack=['home'];A.route=id;A.modal=null;render(false)};
 function opTarget(){const a=opAc();const E=ENV();return '<div class="msg info" style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b>対象機体</b> '+esc(a?a.model:'—')+' / <span class="mono">'+esc(a?a.mark:'')+'</span></span><span>操縦者: '+esc(plName(A.op.pilot))+(E.meId!==A.op.pilot?' ／ 記録者: '+esc(plName(E.meId)):'')+'</span></div>'}
-function startOp(plan,s){
+function makeOp(plan,s){
   const E=ENV();const sn=plan?plan.snap:clone(s);
   let ac=plan?plan.ac[0]:s.aircraft[0];if(!acOf(ac)||acOf(ac).dead){const a=E.aircraft.find(x=>!x.dead);ac=a?a.id:ac}
   const pilot=(plan?plan.pl[0]:s.pilots[0])||E.meId;
-  A.op={planId:plan?plan.id:null,name:sn.planName,snap:sn,noDips:!plan,dips:plan?plan.dips:'none',kml:plan?plan.kml:'none',ac,acs:[ac],pilot,checked:{},pre:{},post:{},cur:{bat:null,offAt:null,extra:0},last:null,legs:[],ack:false,notes:''};
-  S=null;A.nfResult=null;opGo('op-pre');
+  return {planId:plan?plan.id:null,name:sn.planName,snap:sn,noDips:!plan,dips:plan?plan.dips:'none',kml:plan?plan.kml:'none',ac,acs:[ac],pilot,checked:{},pre:{},post:{},cur:{bat:null,offAt:null,extra:0},last:null,legs:[],ack:false,notes:''};
+}
+function startOp(plan,s){A.op=makeOp(plan,s);S=null;A.nfResult=null;opGo('op-pre')}
+/* 画面マップから、途中の画面へ直接飛ぶときの準備（サンプルの運航を自動で整える） */
+function opPrep(id){
+  const E=ENV();
+  if(id==='op-done'){
+    if(!A.opDone){const f=E.flights[0];if(!f){toast('完了した飛行がありません。サンプルを入れるか、飛行を完了させてください');return false}A.opDone={fid:f.id,name:f.label,n:f.legs.length,synced:f.synced,kml:f.kml}}
+    return true;
+  }
+  if(!A.op){
+    const pl=E.plans[0];
+    if(pl)A.op=makeOp(pl,null);
+    else{const a=E.aircraft.find(x=>!x.dead);if(!a){toast('機体がありません。サンプルを入れるか、機体を登録してください');return false}
+      const sn=blankNF(E);sn.aircraft=[a.id];sn.pilots=[E.meId];sn.to='（サンプルの場所）';A.op=makeOp(null,sn)}
+  }
+  const op=A.op,a=opAc();
+  if(id!=='op-pre'){op.checked[a.id]=true;op.pre[a.id]={};PRE_ITEMS.forEach((_,i)=>op.pre[a.id][i]=true)}
+  if(id==='op-fly'){
+    if(a.batOn&&!op.cur.bat){const b=E.bats.find(x=>x.group===a.group);if(b)op.cur.bat={id:b.id,cycle:'',check:'異常なし',note:''}}
+    op.cur.offAt=op.cur.offAt||Date.now()-90000;
+  }
+  if(['op-landed','op-bat','op-switch','op-post','op-final'].includes(id)&&!op.legs.length){
+    const b=a.batOn?E.bats.find(x=>x.group===a.group):null;
+    const leg={n:1,ac:a.id,bat:b?b.label:null,batId:b?b.id:null,batInfo:b?{id:b.id,cycle:'',check:'異常なし',note:''}:null,off:'10:00',on:'10:12',min:12,place:op.snap.to||'（サンプルの場所）',note:''};
+    op.legs.push(leg);op.last=leg;
+  }
+  if(id==='op-landed'&&!op.last)op.last=op.legs[op.legs.length-1];
+  if(id==='op-bat'||id==='op-switch')op.cur.bat=null;
+  if(id==='op-post'||id==='op-final')op.acs.forEach(aid=>{op.post[aid]={};POST_ITEMS.forEach((_,i)=>op.post[aid][i]=true)});
+  return true;
 }
 function readiness(){
   const op=A.op,s=op.snap,E=ENV();const R=[];
