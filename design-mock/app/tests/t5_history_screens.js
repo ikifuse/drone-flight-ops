@@ -90,7 +90,7 @@ suite('全画面の表示',H=>{
   T('保存後の画面（オンライン・オフライン）',()=>{
     H.hash('scn=personal');window.gotoScreen('op-final');H.APP().ACTS['op-finalize']();H.scan('保存後 オンライン');const a=route()==='op-done';
     H.hash('scn=personal&online=0');window.gotoScreen('op-final');H.APP().ACTS['op-finalize']();H.scan('保存後 オフライン');
-    return a&&route()==='op-done';
+    return a&&route()==='op-final'&&!!A().op&&H.txt().includes('保存できませんでした');
   });
   T('参加の確認（共有の状態3種）と、ログインできない場合の画面',()=>{
     H.hash('');window.gotoScreen('join2');for(const v of ['edit','view','none']){A().gAccess=v;H.APP().render();H.scan('参加 '+v)}A().gAccess='edit';

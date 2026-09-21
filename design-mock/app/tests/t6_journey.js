@@ -30,7 +30,7 @@ suite('初回利用者の通し',H=>{
   T('14 飛行前点検へ（新しく登録した機体。BAT管理OFF）',()=>{act('plan-to-op');return route()==='op-pre'&&txt().includes('JU-JOURNEY-01')});
   T('15 点検→離陸待機→離陸→着陸→終了→飛行後点検→保存',()=>{
     act('op-pre-all');act('op-pre-done');if(!txt().includes('BAT管理がOFF'))return 'BAT';
-    act('op-takeoff');act('op-ff');act('op-land');act('op-to-post');act('op-post-all');act('op-to-final');act('op-finalize');
+    act('op-takeoff');act('op-ff');act('op-land');act('op-land-confirm');act('op-to-post');act('op-post-all');act('op-to-final');act('op-finalize');
     return route()==='op-done'&&txt().includes('保存しました')&&E().flights.length===1&&E().plans.length===0;
   });
   T('16 履歴に1件→詳細→PDF（A4＋地図付き）→KML',()=>{
@@ -56,10 +56,10 @@ suite('初回利用者の通し',H=>{
     if(!txt().includes('使えるBATが登録されていません'))return 'no empty state';
     act('op-bat-reg');if(route()!=='reg-bat'||!txt().includes('BATの選択'))return 'reg '+route();
     set('[data-bind="@d.label"]','BAT A');act('reg-save');
-    return route()==='op-standby'&&!!A().op.cur.bat&&E().bats.length===1&&E().bats[0].label==='BAT A'&&E().bats[0].group===a2.group;
+    return route()==='op-pre'&&!!A().op.cur.bat&&E().bats.length===1&&E().bats[0].label==='BAT A'&&E().bats[0].group===a2.group;
   });
   T('22 状態確認を選んで離陸→着陸→保存→BATの履歴に載る',()=>{
-    act('op-bat-check','[data-v=異常なし]');act('op-takeoff');act('op-land');act('op-to-post');act('op-post-all');act('op-to-final');act('op-finalize');
+    act('op-bat-check','[data-v=異常なし]');act('op-pre-done');act('op-takeoff');act('op-land');act('op-land-confirm');act('op-to-post');act('op-post-all');act('op-to-final');act('op-finalize');
     const b=E().bats[0];return route()==='op-done'&&b.uses===1&&b.lastDays===0&&E().flights.length===2&&E().flights[0].kml==='none';
   });
   T('23 BAT一覧・詳細に反映されている',()=>{H.APP().root('home');act('go','[data-s=set]');act('go','[data-s=set-bat]');const t1=txt().includes('BAT A');act('bat-open');return t1&&route()==='bat-detail'&&txt().includes('使用履歴')});

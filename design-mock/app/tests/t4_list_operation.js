@@ -18,24 +18,24 @@ suite('飛行リスト・通常運航',H=>{
   H.hash('scn=company');
   T('通報内容→飛行前点検。対象機体を機種と登録記号で表示',()=>{act('go','[data-s=list]');act('plan-open','[data-id="'+E().plans.find(p=>p.dips==='clean').id+'"]');act('plan-to-op');return route()==='op-pre'&&txt().includes('対象機体')&&txt().includes('JU000000000004')});
   T('点検が済むまで、離陸待機へ進めない。「全部確認済みにする」は右側にあり、左側にはない',()=>q('[data-act=op-pre-done]').disabled&&!q('.phone [data-act=op-pre-all]')&&!!q('#memo [data-act=op-pre-all]'));
-  T('点検項目を1つずつ確認→全部済むと進める',()=>{for(let i=0;i<8;i++){qa('[data-act=op-pre-tog]')[i].click()}return !q('[data-act=op-pre-done]').disabled});
-  T('離陸待機: 離陸前の確認（通報・許可・点検・空域・気象）',()=>{act('op-pre-done');return route()==='op-standby'&&txt().includes('離陸前の確認')&&txt().includes('通報済み・重複なし')&&txt().includes('アプリは判断しません')});
-  T('BAT管理ONの機体は、BATを選ぶまで離陸できない',()=>{const dis=q('[data-act=op-takeoff]').disabled;return dis&&qa('[data-act=op-bat-pick]').length===3});
-  T('BATを選ぶ→状態確認が必須→選ぶと離陸できる',()=>{act('op-bat-pick');const d1=q('[data-act=op-takeoff]').disabled;act('op-bat-check','[data-v=異常なし]');return d1&&!q('[data-act=op-takeoff]').disabled});
+  T('11項目を確認しても装着BAT未確認では進めない',()=>{for(let i=0;i<11;i++){qa('[data-act=op-pre-tog]')[i].click()}return qa('[data-act=op-pre-tog]').length===11&&q('[data-act=op-pre-done]').disabled});
+  T('装着BATは点検項目より先に表示される',()=>{const a=q('[data-act=op-bat-pick]'),b=q('[data-act=op-pre-tog]');return !!a&&!!(a.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING)});
+  T('BAT管理ONの機体は、BATを選ぶまで離陸できない',()=>{const dis=q('[data-act=op-pre-done]').disabled;return dis&&qa('[data-act=op-bat-pick]').length===3});
+  T('BATを選ぶ→状態確認が必須→選ぶと離陸できる',()=>{act('op-bat-pick');const d1=q('[data-act=op-pre-done]').disabled;act('op-bat-check','[data-v=異常なし]');act('op-pre-done');q('details').open=true;return d1&&route()==='op-standby'&&txt().includes('離陸前の確認')&&txt().includes('通報済み・重複なし')&&!q('[data-act=op-takeoff]').disabled});
   T('離陸→飛行中（ストップウォッチ・着陸ボタン）',()=>{act('op-takeoff');return route()==='op-fly'&&!!q('#sw')&&!!q('[data-act=op-land]')});
-  T('着陸→着陸後入力（区間の実績・次の作業の4択）',()=>{act('op-ff');act('op-land');return route()==='op-landed'&&OP().legs.length===1&&OP().legs[0].min>=5&&qa('.actbar .btn').length===4});
-  T('続行: 同じBATで再離陸',()=>{act('op-continue');if(route()!=='op-standby'||q('[data-act=op-takeoff]').disabled)return 'BAT lost';act('op-takeoff');act('op-land');return OP().legs.length===2});
+  T('着陸→着陸後入力（区間の実績・次の作業の4択）',()=>{act('op-ff');act('op-land');return route()==='op-landed'&&OP().legs.length===1&&OP().legs[0].min>=5&&!!q('[data-act=op-land-confirm]')&&!q('[data-act=op-continue]')});
+  T('続行: 同じBATで再離陸',()=>{act('op-land-confirm');act('op-continue');if(route()!=='op-standby'||q('[data-act=op-takeoff]').disabled)return 'BAT lost';act('op-takeoff');act('op-land');return OP().legs.length===2});
   T('BAT交換: 対象機体に使えるBATだけ。異常なら確認を促す',()=>{
-    act('op-to-bat');if(route()!=='op-bat')return route();
+    act('op-land-confirm');act('op-to-bat');if(route()!=='op-bat')return route();
     if(qa('[data-act=op-bat-pick]').length!==3)return 'cands';
     act('op-bat-pick','[data-id="'+E().bats[1].id+'"]');act('op-bat-check','[data-v=膨らみあり]');
     if(!txt().includes('このBATを使うかどうかは、よく確認して判断してください'))return 'no warn';
-    act('op-bat-done');return route()==='op-standby'&&OP().cur.bat.id===E().bats[1].id;
+    act('op-simple','[data-i="0"]');act('op-simple','[data-i="1"]');act('op-bat-done');return route()==='op-standby'&&OP().cur.bat.id===E().bats[1].id;
   });
   T('離陸→着陸（3回目・交換後のBAT）',()=>{act('op-takeoff');act('op-land');return OP().legs.length===3&&OP().legs[2].batId===E().bats[1].id});
-  T('機体交代: 未点検の機体は飛行前点検へ',()=>{act('op-to-switch');if(route()!=='op-switch')return route();act('op-switch-pick');return route()==='op-pre'&&OP().ac==='c2'&&q('[data-act=op-pre-done]').disabled});
+  T('機体交代: 未点検の機体は飛行前点検へ',()=>{act('op-land-confirm');act('op-to-switch');if(route()!=='op-switch')return route();act('op-switch-pick');return route()==='op-pre'&&OP().ac==='c2'&&q('[data-act=op-pre-done]').disabled});
   T('交代先: BAT管理OFFならBATの選択は不要',()=>{act('op-pre-all');act('op-pre-done');return route()==='op-standby'&&txt().includes('BAT管理がOFF')&&!q('[data-act=op-takeoff]').disabled});
-  T('離陸→着陸→終了→飛行後点検（使用した2機分）',()=>{act('op-takeoff');act('op-land');act('op-to-post');return route()==='op-post'&&qa('.sec h3').length>=3&&q('[data-act=op-to-final]').disabled});
+  T('離陸→着陸→終了→飛行後点検（使用した2機分）',()=>{act('op-takeoff');act('op-land');act('op-land-confirm');act('op-to-post');return route()==='op-post'&&qa('.sec h3').length>=3&&q('[data-act=op-to-final]').disabled});
   T('飛行後点検→最終送信・保存の確認画面',()=>{act('op-post-all');set('[data-bind="~notes"]','不具合なし');act('op-to-final');return route()==='op-final'&&txt().includes('確定する内容')&&txt().includes('4回')&&!!q('[data-act=op-finalize]')&&q('[data-act=op-finalize]').textContent.includes('保存する')});
   T('保存（オンライン）→Google Driveに保存。履歴に増え、リストから外れ、BATの履歴が更新される',()=>{
     const nf=E().flights.length,np=E().plans.length,b=E().bats[1],u=b.uses;act('op-finalize');
@@ -45,13 +45,12 @@ suite('飛行リスト・通常運航',H=>{
   H.hash('scn=personal&online=0');
   T('オフラインで保存→この端末に保存された。まだGoogle Driveに保存されていない旨',()=>{
     act('go','[data-s=list]');act('plan-open');act('plan-to-op');
-    act('op-pre-all');act('op-pre-done');act('op-bat-pick');act('op-bat-check','[data-v=異常なし]');act('op-takeoff');act('op-land');act('op-to-post');act('op-post-all');act('op-to-final');
+    act('op-bat-pick');act('op-bat-check','[data-v=異常なし]');act('op-pre-all');act('op-pre-done');act('op-takeoff');act('op-land');act('op-land-confirm');act('op-to-post');act('op-post-all');act('op-to-final');
     const warn=txt().includes('オフラインです')&&txt().includes('この端末には保存され');act('op-finalize');
-    return warn&&route()==='op-done'&&txt().includes('この端末に保存しました')&&txt().includes('まだGoogle Driveには保存されていません')&&E().flights[0].synced===false;
+    return warn&&route()==='op-final'&&txt().includes('下書きはこの端末に残っています')&&!!OP()&&E().flights.length===3;
   });
-  T('保存状態の画面に出て、通信が戻ると「もう一度保存する」で保存できる',()=>{
-    A().online=true;H.APP().root('home');act('go','[data-s=set]');act('go','[data-s=set-sync]');
-    const has=txt().includes('保存されていません')&&txt().includes(E().flights[0].label);act('sync-now');return has&&E().flights.every(f=>f.synced);
+  T('通信が戻ると同じ下書きで再度保存でき、重複行を作らない',()=>{
+    const op=OP(),legs=op.legs.length;A().online=true;H.APP().render();act('op-finalize');return route()==='op-done'&&E().flights.length===4&&E().flights[0].legs.length===legs&&E().flights[0].synced;
   });
   H.hash('scn=company');
   T('重複ありの計画はリストでも通常運航へ進めず、内容を保持する',()=>{
@@ -63,7 +62,32 @@ suite('飛行リスト・通常運航',H=>{
     H.hash('scn=personal');act('nf-new');act('start-nodips');
     const s=H.S();s.aircraft=['a2'];s.pilots=['p1'];s.biz=['空撮'];s.air=['上記空域の飛行は行わない'];s.met=['上記方法の飛行は行わない'];s.geom={kind:'circle',pts:[[180,130]],r:60,width:10,done:true,editing:false};s.from='自宅';s.to='広場';
     window.nfGo('final');act('nf-nodips-go');if(route()!=='op-pre')return route();
-    act('op-pre-all');act('op-pre-done');act('op-bat-pick');act('op-bat-check','[data-v=異常なし]');act('op-takeoff');act('op-land');act('op-to-post');act('op-post-all');act('op-to-final');act('op-finalize');
+    act('op-bat-pick');act('op-bat-check','[data-v=異常なし]');act('op-pre-all');act('op-pre-done');act('op-takeoff');act('op-land');act('op-land-confirm');act('op-to-post');act('op-post-all');act('op-to-final');act('op-finalize');
     const f=E().flights[0];return route()==='op-done'&&f.kml==='none'&&f.snap.noDips===true&&txt().includes('通報しない飛行');
   });
+});
+
+suite('旧運航UIの継承と保存失敗',H=>{
+ const {T,act,q,qa,set,A,E}=H;
+ const clickInput=sel=>{q(sel).click();H.scan('実機確認の申告')};
+ H.hash('scn=company');act('go','[data-s=list]');act('plan-open');act('plan-to-op');
+ T('未確認11項目、実機確認前は全て正常が使えない',()=>qa('[data-act=op-pre-tog]').length===11&&Object.keys(A().op.pre.c1).length===0&&q('.phone [data-act=op-normal]').disabled);
+ T('装着BAT・任意サイクル→実機確認→全て正常。異常を外すと待機を止める',()=>{
+   act('op-bat-pick','[data-id="'+E().bats[0].id+'"]');act('op-bat-check','[data-v=異常なし]');clickInput('[data-bind="~preObserved"]');act('op-normal','[data-k=pre]');
+   const ready=!q('[data-act=op-pre-done]').disabled;act('op-pre-tog','[data-i="2"]');set('[data-bind="~preNotes.c1"]','通信状態を再確認');const blocked=q('[data-act=op-pre-done]').disabled;act('op-pre-tog','[data-i="2"]');act('op-pre-done');return ready&&blocked&&A().route==='op-standby'&&A().op.cur.bat.cycle==='';
+ });
+ T('離陸前に機体交代し、点検済みへ戻ると正式点検を繰り返さず簡易確認',()=>{
+   const before=JSON.stringify(A().op.pre.c1);act('op-to-switch');act('op-switch-pick','[data-id=c2]');const uninspected=A().route==='op-pre';act('op-pre-all');act('op-pre-done');act('op-to-switch');act('op-switch-pick','[data-id=c1]');
+   const branch=A().route==='op-standby'&&q('[data-act=op-takeoff]').disabled&&JSON.stringify(A().op.pre.c1)===before;
+   act('op-bat-pick','[data-id="'+E().bats[0].id+'"]');act('op-bat-check','[data-v=異常なし]');act('op-simple','[data-i="0"]');const one=q('[data-act=op-takeoff]').disabled;act('op-simple','[data-i="1"]');return uninspected&&branch&&one&&!q('[data-act=op-takeoff]').disabled;
+ });
+ T('飛行中の利用者ボタンは着陸完了だけ。操作ゼロの案内',()=>{set('[data-bind="~cur.takeoffPlace"]','河川敷');act('op-takeoff');return qa('.phone button').length===1&&q('.phone button').dataset.act==='op-land'&&H.txt().includes('画面操作をせず')});
+ T('着陸後に時間訂正・安全影響・BAT所感を入力し、確定して次操作へ',()=>{act('op-land');set('[data-bind="~last.min"]','7');set('[data-bind="~last.place"]','広場');set('[data-bind="~last.note"]','突風あり');set('[data-bind="~last.batInfo.note"]','残量を確認');const before=!q('[data-act=op-to-post]');act('op-land-confirm');return before&&A().route==='op-next'&&A().op.last.min===7&&A().op.last.takeoffPlace==='河川敷'&&qa('.next-actions button').length===4});
+ T('BAT交換は2項目の簡易確認を両方行うまで待機に戻れない',()=>{act('op-to-bat');act('op-bat-pick','[data-id="'+E().bats[0].id+'"]');act('op-bat-check','[data-v=異常なし]');const zero=q('[data-act=op-bat-done]').disabled;act('op-simple','[data-i="0"]');const one=q('[data-act=op-bat-done]').disabled;act('op-simple','[data-i="1"]');act('op-bat-done');return zero&&one&&A().route==='op-standby'&&A().op.legs.length===1});
+ T('飛行後点検は実際に飛ばした機体だけ。未飛行の交代先を含めない',()=>{act('op-takeoff');act('op-land');act('op-land-confirm');act('op-to-post');return qa('[data-act=op-post-tog]').length===4&&qa('[data-act=op-post-tog][data-a=c2]').length===0&&q('[data-act=op-to-final]').disabled&&q('[data-act=op-normal]').disabled});
+ T('全機体の実機確認後だけ全て正常。異常は特記事項を付けて保持',()=>{clickInput('[data-bind="~postObserved"]');act('op-normal','[data-k=post]');act('op-post-tog','[data-a=c1][data-i="2"]');const blocked=q('[data-act=op-to-final]').disabled;set('[data-bind="~notes"]','1号機の発熱を確認。冷却して保管');act('op-to-final');return blocked&&A().route==='op-final'&&A().op.post.c1[2]===false});
+ T('途中では履歴・BAT履歴に書き込まない。失敗時は全下書きが残る',()=>{
+   const n=E().flights.length,u=E().bats[0].uses,draft=A().op;act('op-save-fail','[data-v="1"]');act('op-finalize');return E().flights.length===n&&E().bats[0].uses===u&&A().op===draft&&draft.legs.length===2&&draft.saveError;
+ });
+ T('再試行は最後の1操作で各飛行行・BAT履歴・点検を保存する',()=>{const n=E().flights.length,u=E().bats[0].uses;act('op-save-fail','[data-v="0"]');act('op-finalize');const f=E().flights[0];H.APP().ACTS['op-finalize']();return E().flights.length===n+1&&E().bats[0].uses===u+2&&f.legs.length===2&&f.legs[0].min===7&&f.legs[0].batInfo.note==='残量を確認'&&f.post.c1[2]===false&&!A().op});
 });

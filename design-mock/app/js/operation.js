@@ -4,8 +4,14 @@
    設計の出典: 35b（10項目）／34f §2／34g §2（対象機体を取り違えない表示）／32d §5.3・32g（BAT交換）／13a・13c（現場の打刻・離陸前評価）／35d（最終保存）
    点検項目の中身・BATの状態確認の選択肢などは、既存の点検・各正本を参照する。ここは流れを確かめるための簡略版。
    =================================================================== */
-const PRE_ITEMS=['機体の外観（破損・ひび割れがない）','プロペラ（取付状態・ネジの緩み・脱落がない）','モーター・アーム（作動・異音がない）','バッテリー（機体への取付・残量）','送信機・スマートフォン（接続・電池残量）','GPS・コンパス・カメラ（表示に異常がない）','リモートID（作動している）','周囲の安全（第三者・障害物・立入管理措置）'];
-const POST_ITEMS=['機体の外観（破損・ひび割れがない）','プロペラ・モーター（異常がない）','バッテリーの取り外し・状態','飛行中の不具合・異常の有無を確認した'];
+const PRE_ITEMS=['機体全般（取付状態・ネジの緩み・登録記号）','プロペラ・フレーム（損傷・亀裂・ゆがみ）','通信系統（機体とプロポの通信状態）','推進系統（モーターの作動・異音）','電源系統（機体電源・警告表示）','自動制御系統（GPS・コンパス等の表示）','バッテリー（装着・残量・温度）','操縦装置（プロポの作動・電池残量）','灯火（作動状態）','カメラ（取付・作動状態）','リモートID（作動状態）'];
+const POST_ITEMS=['機体全般（損傷・異常）','プロペラ・フレーム（損傷・緩み）','発熱（機体・モーター・BAT）','その他（飛行中の不具合・異常）'];
+const flownAcs=()=>[...new Set(A.op.legs.map(l=>l.ac))];
+const preReady=()=>PRE_ITEMS.every((_,i)=>(A.op.pre[A.op.ac]||{})[i]===true)&&batReady();
+const postReady=()=>flownAcs().length>0&&flownAcs().every(id=>POST_ITEMS.every((_,i)=>typeof (A.op.post[id]||{})[i]==='boolean'))&&(flownAcs().every(id=>POST_ITEMS.every((_,i)=>A.op.post[id][i]))||!!A.op.notes.trim());
+const simpleReady=()=>A.op.cur.simple&&A.op.cur.simple.every(Boolean);
+function simpleChecks(){return '<div class="sec"><h3>離陸前の簡易確認</h3>'+['装着・ロック','残量・温度・警告表示'].map((x,i)=>tgl('op-simple','data-i="'+i+'"',x,!!(A.op.cur.simple||[])[i])).join('')+'</div>'}
+function actualCheckButton(kind){const op=A.op;const key=kind==='pre'?'preObserved':'postObserved';return '<label class="tgl"><input type="checkbox" data-bind="~'+key+'" data-rerender="1"'+(op[key]?' checked':'')+'> '+(kind==='pre'?'この機体の11項目を実機で確認しました':'今回飛ばした全機体を実機で確認しました')+'</label><button class="btn" data-act="op-normal" data-k="'+kind+'"'+(op[key]?'':' disabled')+'>全て正常（実機確認済み）</button>'}
 const opAc=()=>acOf(A.op.ac);
 const opGo=id=>{A.stack=['home'];A.route=id;A.modal=null;render(false)};
 function opTarget(){const a=opAc();const E=ENV();return '<div class="msg info" style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b>対象機体</b> '+esc(a?a.model:'—')+' / <span class="mono">'+esc(a?a.mark:'')+'</span></span><span>操縦者: '+esc(plName(A.op.pilot))+(E.meId!==A.op.pilot?' ／ 記録者: '+esc(plName(E.meId)):'')+'</span></div>'}
@@ -13,9 +19,9 @@ function makeOp(plan,s){
   const E=ENV();const sn=plan?plan.snap:clone(s);
   let ac=plan?plan.ac[0]:s.aircraft[0];if(!acOf(ac)||acOf(ac).dead){const a=E.aircraft.find(x=>!x.dead);ac=a?a.id:ac}
   const pilot=(plan?plan.pl[0]:s.pilots[0])||E.meId;
-  return {planId:plan?plan.id:null,name:sn.planName,snap:sn,noDips:!plan,dips:plan?plan.dips:'none',kml:plan?plan.kml:'none',ac,acs:[ac],pilot,checked:{},pre:{},post:{},cur:{bat:null,offAt:null,extra:0},last:null,legs:[],ack:false,notes:''};
+  return {planId:plan?plan.id:null,name:sn.planName,snap:sn,noDips:!plan,dips:plan?plan.dips:'none',kml:plan?plan.kml:'none',ac,acs:[ac],pilot,checked:{},pre:{},post:{},preNotes:{},preObserved:false,postObserved:false,cur:{bat:null,offAt:null,extra:0,simple:[false,false],takeoffPlace:sn.to||sn.from||''},last:null,legs:[],ack:false,notes:''};
 }
-function startOp(plan,s){A.op=makeOp(plan,s);S=null;A.nfResult=null;opGo('op-pre')}
+function startOp(plan,s){if(plan&&plan.dips!=='clean'){toast('DIPSで受付と重複の状態を確認してください');return}A.op=makeOp(plan,s);S=null;A.nfResult=null;opGo('op-pre')}
 /* 画面一覧から、途中の画面へ直接飛ぶときの準備（仮データの運航を自動で整える。設計確認用） */
 function opPrep(id){
   const E=ENV();
@@ -35,14 +41,15 @@ function opPrep(id){
     if(a.batOn&&!op.cur.bat){const b=E.bats.find(x=>x.group===a.group);if(b)op.cur.bat={id:b.id,cycle:'',check:'異常なし',note:''}}
     op.cur.offAt=op.cur.offAt||Date.now()-90000;
   }
-  if(['op-landed','op-bat','op-switch','op-post','op-final'].includes(id)&&!op.legs.length){
+  if(['op-landed','op-next','op-bat','op-switch','op-post','op-final'].includes(id)&&!op.legs.length){
     const b=a.batOn?E.bats.find(x=>x.group===a.group):null;
     const leg={n:1,ac:a.id,bat:b?b.label:null,batId:b?b.id:null,batInfo:b?{id:b.id,cycle:'',check:'異常なし',note:''}:null,off:'10:00',on:'10:12',min:12,place:op.snap.to||'現場',note:''};
     op.legs.push(leg);op.last=leg;
   }
-  if(id==='op-landed'&&!op.last)op.last=op.legs[op.legs.length-1];
+  if((id==='op-landed'||id==='op-next')&&!op.last)op.last=op.legs[op.legs.length-1];
   if(id==='op-bat'||id==='op-switch')op.cur.bat=null;
-  if(id==='op-post'||id==='op-final')op.acs.forEach(aid=>{op.post[aid]={};POST_ITEMS.forEach((_,i)=>op.post[aid][i]=true)});
+  if(id==='op-next'&&op.last)op.last.confirmed=true;
+  if(id==='op-final')flownAcs().forEach(aid=>{op.post[aid]={};POST_ITEMS.forEach((_,i)=>op.post[aid][i]=true)});
   return true;
 }
 function readiness(){
@@ -84,40 +91,42 @@ let SWT=null;
 def('op-pre',{t:'飛行前点検',st:()=>A.op.name,back:false,
   goal:'対象機体・操縦者と、必要な点検結果を確認する。点検が済むまで、離陸待機へは進めない。',
   doc:'35b §3（飛行前点検の10項目）／13c（飛行前日常点検が未実施・不合格なら、離陸待機へ進めない＝アプリの物理的な前提）／34g §2（対象機体を機種と登録記号で明示）／34d（通報内容から［飛行前点検へ］で接続。DIPS対象外も同じ点検以降へ合流できる）。',state:'spec',
-  tmp:['点検項目の中身は仮（既存の点検・13cの正本を参照する）。実物のA4帳票の項目（プロペラ・モーターなど）に合わせている','戻る・中止の具体UIは未確定。「飛行0回の中止」と「実績がある運航の終了」を区別する（35b §3項目7）','入力途中は端末に保護し、この画面だけで正式なDrive記録は作らない（35b §3項目8）'],
+  tmp:['旧アプリの11項目を復元。8項目に簡略化していた履歴を訂正。装着BATを先に確認し、サイクル数は任意。BAT管理OFFは32eに従い個体選択を強制しない','戻る・中止の具体UIは未確定。「飛行0回の中止」と「実績がある運航の終了」を区別する（35b §3項目7）','入力途中は端末に保護し、この画面だけで正式なDrive記録は作らない（35b §3項目8）'],
   ask:['点検の入力のしかた（全部確認済みにする近道が要るか）','別人が点検した場合の入力'],
   mock:()=>'<p class="note" style="margin:0 0 6px">点検項目を1つずつ押す代わりに、全部を確認済みにして、次の画面を確かめます。</p><button class="btn sm" data-act="op-pre-all">全部確認済みにする</button>',
   body:()=>{
-    const op=A.op,a=opAc();const pre=op.pre[a.id]||(op.pre[a.id]={});const done=PRE_ITEMS.every((_,i)=>pre[i]);
-    return opTarget()+'<div class="sec"><h3>点検項目 '+tmpChip+'</h3>'+PRE_ITEMS.map((x,i)=>tgl('op-pre-tog','data-i="'+i+'"',x,!!pre[i])).join('')
-     +'<p class="note">未実施を、正常として自動確定しません。</p></div>'
+    const op=A.op,a=opAc();const pre=op.pre[a.id]||(op.pre[a.id]={});const done=preReady();
+    return opTarget()+batPicker()+'<p>装着・電源投入後、実機を見て11項目を確認してください。</p><div class="sec"><h3>点検項目 '+tmpChip+'</h3>'+PRE_ITEMS.map((x,i)=>tgl('op-pre-tog','data-i="'+i+'"',x,!!pre[i])).join('')
+     +actualCheckButton('pre')+'<div class="fld"><label>異常箇所の特記事項</label><textarea class="in" data-bind="~preNotes.'+a.id+'" placeholder="異常項目はチェックを外し、内容・処置を入力">'+esc(op.preNotes[a.id]||'')+'</textarea></div><p class="note">未確認の項目は正常になりません。異常がある場合は飛行を止め、必要な点検・整備を行ってください。</p></div>'
      +'<div class="msg '+(done?'ok':'warn')+'">'+(done?'点検が済んでいます。':'点検が済むまで、離陸待機へは進めません。')+'</div>'
      +(op.legs.length?'':'<p class="note">'+(op.noDips?'通報しない飛行として始めています。':'DIPS通報内容から、点検へ進みました。')+'</p>');
   },
-  foot:()=>{const a=opAc();const pre=A.op.pre[a.id]||{};const done=PRE_ITEMS.every((_,i)=>pre[i]);return '<button class="btn" data-act="op-abort">運航をやめる</button><button class="btn primary" data-act="op-pre-done"'+(done?'':' disabled')+'>離陸待機へ</button>'}
+  foot:()=>{const a=opAc();const pre=A.op.pre[a.id]||{};const done=preReady();return '<button class="btn" data-act="op-abort">運航をやめる</button><button class="btn primary" data-act="op-pre-done"'+(done?'':' disabled')+'>離陸待機へ</button>'}
 });
 def('op-standby',{t:'離陸待機',st:()=>A.op.name,back:false,
   goal:'次の離陸を記録する準備を整える（BAT管理ONの機体は、使うBATを選ぶ）。',
   doc:'35b §4（離陸待機の10項目：大きな離陸ボタン、対象機体・運航文脈の表示）／13c（離陸前の総合確認：警告は促すが、実際の離陸の記録は拒否しない）／32g・32h §8（BAT選択は対象機体に使用許可されたBATだけ）。',state:'spec',
-  tmp:['最初のBAT選択をこの画面に置くのは仮（35b・32gは交換時の入力を主に書いている）','離陸前の確認の並び・表現は仮。アプリは法令上の離陸可否を保証しない（13c）','ボタン配置・再準備の見せ方は未確定（35b §4項目10）'],
+  tmp:['旧アプリ基準でBATは飛行前点検の先頭で選択。ここは点検済みBAT・離陸場所・対象機体を表示する。確認表は補助として折り畳む','離陸前の確認の並び・表現は仮。アプリは法令上の離陸可否を保証しない（13c）','ボタン配置・再準備の見せ方は未確定（35b §4項目10）'],
   ask:['BATの選択を、離陸待機に含めるか、点検の直後に分けるか','警告があるときの「確認してから離陸」の見せ方'],
   body:()=>{
     const op=A.op;const R=readiness();
-    return opTarget()+'<div class="sec"><h3>離陸前の確認</h3>'+R.map(r=>'<div class="rev"><div class="k">'+esc(r[0])+'</div><div class="v"><i class="chip '+RES[r[1]][0]+'">'+RES[r[1]][1]+'</i> '+esc(r[2])+'</div></div>').join('')
-     +'<p class="note">アプリが操作できることと、法令上飛行できることは別です。通報が済んでいることは、飛行できることの保証ではありません。</p></div>'
-     +batPicker()
-     +(op.legs.length?'<p class="note">ここまでの飛行: '+op.legs.length+'回</p>':'');
+    const b=op.cur.bat?batOf(op.cur.bat.id):null;
+    return opTarget()+'<div class="sec"><h3>点検済みBAT</h3><p>'+esc(b?b.label:'BAT管理がOFF')+'</p><label>離陸場所</label><input class="in" data-bind="~cur.takeoffPlace" value="'+esc(op.cur.takeoffPlace)+'" placeholder="離陸する場所"></div>'
+     +(op.checked[op.ac]&&op.cur.needsSimple?batPicker()+simpleChecks():'')
+     +'<details class="sec"><summary>離陸前の確認</summary>'+R.map(r=>'<p><b>'+esc(r[0])+'</b> '+esc(r[2])+'</p>').join('')+'<p class="note">アプリは飛行可否を判断しません。</p></details>'
+     +'<button class="btn" data-act="op-to-switch">離陸前に機体交代</button>';
+
   },
-  foot:()=>'<button class="btn primary big" style="flex:1" data-act="op-takeoff"'+(batReady()?'':' disabled')+'>離陸</button>'
+  foot:()=>'<button class="btn primary big" style="flex:1" data-act="op-takeoff"'+(batReady()&&(!A.op.cur.needsSimple||simpleReady())?'':' disabled')+'>離陸開始</button>'
 });
-def('op-fly',{t:'飛行中',st:()=>A.op.name,back:false,
+def('op-fly',{t:'飛行中',st:'',back:false,env:false,
   goal:'飛行中の状態を保持し、着陸を記録する。',
   doc:'35b §5（飛行中の10項目）／13a（ストップウォッチ。画面中央に大きな着陸ボタン。イベントは端末に即時保護され、再起動しても直前の状態へ復帰する）。',state:'spec',
   tmp:['実際の現場では実時間で計る。右側の「この画面の確認用操作」で、経過を早送りできる','戻る・中断・異常時の画面復帰は未確定（35b §5項目10）'],
   ask:['飛行中に見せたい情報（対象機体・BAT・経過時間のほかに何が要るか）'],
   mock:()=>'<p class="note" style="margin:0 0 6px">実際の現場では、実時間で計ります。経過を早送りして、着陸後の画面を確かめます。</p><button class="btn sm" data-act="op-ff">＋5分（早送り）</button>',
-  body:()=>{const c=A.op.cur;const b=c.bat?batOf(c.bat.id):null;return opTarget()+'<div class="big-sw" id="sw">'+swText()+'</div><p class="note" style="text-align:center">離陸 '+hm(new Date(c.offAt))+(b?' ／ 使用BAT: '+esc(b.label):'')+'</p><p class="note" style="text-align:center">画面を閉じても、この端末に保存されているので、離陸した状態から続けられます。</p>'},
-  foot:()=>'<button class="btn primary big" style="flex:1" data-act="op-land">着陸</button>',
+  body:()=>{const c=A.op.cur;const b=c.bat?batOf(c.bat.id):null;return opTarget()+'<div class="big-sw" id="sw">'+swText()+'</div><p class="note" style="text-align:center">離陸 '+hm(new Date(c.offAt))+(b?' ／ 使用BAT: '+esc(b.label):'')+'</p><p class="flight-focus">飛行中は画面操作をせず、操縦と周囲確認に集中してください。</p>'},
+  foot:()=>'<button class="btn primary big" style="flex:1" data-act="op-land">着陸完了（プロペラ停止後）</button>',
   after:()=>{clearInterval(SWT);SWT=setInterval(()=>{const e=$('#sw');if(!e||A.route!=='op-fly'){clearInterval(SWT);return}e.textContent=swText()},500)}
 });
 def('op-landed',{t:'着陸後入力',st:()=>A.op.name,back:false,
@@ -127,20 +136,29 @@ def('op-landed',{t:'着陸後入力',st:()=>A.op.name,back:false,
   ask:['次の作業の4択の並べ方・大きさ','安全に影響した事項の入力のしかた'],
   body:()=>{
     const op=A.op,l=op.last;
-    return opTarget()+'<div class="sec"><h3>この区間 <small>'+l.n+'回目の飛行</small></h3><table class="kv"><tr><td>離陸 → 着陸</td><td>'+l.off+' → '+l.on+'</td></tr><tr><td>飛行時間</td><td>'+l.min+'分</td></tr><tr><td>使用BAT</td><td>'+esc(l.bat||'（BAT管理OFF）')+'</td></tr></table>'
-     +'<div class="row"><label>場所</label><input class="in" data-bind="~last.place" value="'+esc(l.place)+'"></div><div class="row"><label>安全に影響した事項</label><input class="in" data-bind="~last.note" value="'+esc(l.note)+'" placeholder="なければ空のまま"></div></div>'
-     +'<div class="sec"><h3>次の作業を選ぶ</h3><div class="actbar"><button class="btn big" style="font-size:16px;padding:16px 6px" data-act="op-continue">続行<br><small>もう一度離陸</small></button><button class="btn big" style="font-size:16px;padding:16px 6px" data-act="op-to-bat">BAT交換</button><button class="btn big" style="font-size:16px;padding:16px 6px" data-act="op-to-switch">機体交代</button><button class="btn big primary" style="font-size:16px;padding:16px 6px" data-act="op-to-post">終了<br><small>飛行後点検へ</small></button></div></div>'
-     +(op.legs.length>1?'<div class="sec"><h3>これまでの飛行</h3>'+legTable(op.legs)+'</div>':'');
-  }
+    return opTarget()+'<div class="sec"><h3>'+l.n+'回目の飛行</h3><p>離陸 '+l.off+' → 着陸 '+l.on+'</p>'
+     +'<div class="fld"><label>着陸場所</label><input class="in" data-bind="~last.place" value="'+esc(l.place)+'"></div>'
+     +'<div class="fld"><label>実飛行時間（分）</label><input class="in" type="number" min="1" data-num="1" data-bind="~last.min" value="'+l.min+'"><p class="note">送信機の実飛行時間を確認し、必要なら訂正してください。</p></div>'
+     +'<div class="fld"><label>安全に影響した事項</label><input class="in" data-bind="~last.note" value="'+esc(l.note)+'" placeholder="なければ空のまま"></div>'
+     +(l.batInfo?'<div class="fld"><label>BAT所感（任意）</label><textarea class="in" data-bind="~last.batInfo.note" placeholder="気付いたことがあれば入力">'+esc(l.batInfo.note||'')+'</textarea></div>':'')+'</div>';
+  },
+  foot:()=>'<button class="btn primary big" data-act="op-land-confirm">着陸内容を確定して次へ</button>'
 });
+def('op-next',{t:'着陸記録完了',st:()=>A.op.name,back:false,
+ goal:'着陸内容を確定後、続行・BAT交換・機体交代・終了を選ぶ。',
+ doc:'旧アプリ35_web_flight.jsの着陸後選択画面／35b §6。',state:'proposal',
+ tmp:['旧アプリの入力と次操作の分離を継承する確認候補。PENDING-S6-OPERATION-UIは維持'],
+ body:()=>opTarget()+'<p>'+A.op.legs.length+'回の飛行を記録しました。</p><div class="next-actions"><button class="btn big" data-act="op-continue">同じ機体・BATで続行</button><button class="btn big" data-act="op-to-bat">BAT交換</button><button class="btn big" data-act="op-to-switch">機体交代</button><button class="btn primary big" data-act="op-to-post">終了・飛行後点検へ</button></div>'
+});
+
 function legTable(legs){return '<table class="kv grid"><tr><th>#</th><th>機体</th><th>BAT</th><th>離陸→着陸</th><th>時間</th></tr>'+legs.map(l=>'<tr><td>'+(l.n||'')+'</td><td>'+esc(acName(l.ac))+'</td><td>'+esc(l.bat||'—')+'</td><td>'+esc(l.off)+'→'+esc(l.on)+'</td><td>'+l.min+'分</td></tr>').join('')+'</table>'}
 def('op-bat',{t:'BAT交換',st:()=>A.op.name,back:false,
   goal:'実際に使う次のBATを選び、同じ運航を続ける。',
   doc:'35b §7（BAT交換の10項目）／32d §5.3（交換時の選択UIの案）／32g（人の入力は管理ラベル・サイクル数（任意）・状態確認（必須）・備考（任意）の4項目）／32h §8（対象機体に使用許可されたBATだけ）。',state:'proposal',
   tmp:['個体選択UIは案（32d §5.3）','状態確認の選択肢・UIは未確定（PENDING-D-BAT-CHECK-UI）','交換中止・戻るUIは未確定'],
   ask:['候補の並び（最終使用が古い順）と、異常のあるBATの扱い（薄く表示するか、選べなくするか）'],
-  body:()=>opTarget()+batPicker()+'<p class="note">対象機体を先に示し、その機体に使用が許可されたBATだけを出しています。BATを交換しただけでは、飛行の明細（A4の行）は増えません。</p>',
-  foot:()=>'<button class="btn" data-act="op-bat-cancel">戻る</button><button class="btn primary" data-act="op-bat-done"'+(batReady()?'':' disabled')+'>離陸待機へ</button>'
+  body:()=>opTarget()+batPicker()+simpleChecks()+'<p class="note">対象機体を先に示し、その機体に使用が許可されたBATだけを出しています。BATを交換しただけでは、飛行の明細（A4の行）は増えません。</p>',
+  foot:()=>'<button class="btn" data-act="op-bat-cancel">戻る</button><button class="btn primary" data-act="op-bat-done"'+(batReady()&&simpleReady()?'':' disabled')+'>離陸待機へ</button>'
 });
 def('op-switch',{t:'機体交代',st:()=>A.op.name,back:false,
   goal:'場所・目的・操縦者・許可等の文脈を引き継いで、別の機体に切り替える。',
@@ -158,27 +176,29 @@ def('op-switch',{t:'機体交代',st:()=>A.op.name,back:false,
 def('op-post',{t:'飛行後点検',st:()=>A.op.name,back:false,
   goal:'使用した機体の飛行後点検と、不具合・処置などを確認して、運航を締める。',
   doc:'35b §9（飛行後点検の10項目）。異常なしを未確認で確定しない。整備台帳の詳細入力フォームをここへ混ぜない（36）。入力を含む下書きは端末に保護し、最終確定の対象へ含める（35d）。',state:'spec',
-  tmp:['使用機体ごとの画面構成は未確定（35b §9項目10）。ここでは機体ごとに並べている','点検項目の中身は仮'],
+  tmp:['使用機体ごとの画面構成は未確定（35b §9項目10）。ここでは機体ごとに並べている','旧アプリの機体全般／プロペラ・フレーム／発熱／その他の4項目を継承。全て正常は全機体の実機確認を明示した後だけ。異常はチェックを外して記事へ記録'],
   ask:['複数機体を使ったときの飛行後点検の見せ方（機体ごとの画面か、1画面か）'],
   mock:()=>'<p class="note" style="margin:0 0 6px">点検項目を1つずつ押す代わりに、全部を確認済みにして、次の画面を確かめます。</p><button class="btn sm" data-act="op-post-all">全部確認済みにする</button>',
   body:()=>{
     const op=A.op;
-    return op.acs.map(id=>{const a=acOf(id);const p=op.post[id]||(op.post[id]={});return '<div class="sec"><h3>'+esc(a.name)+' <small class="mono">'+esc(a.mark)+'</small></h3>'+POST_ITEMS.map((x,i)=>tgl('op-post-tog','data-a="'+id+'" data-i="'+i+'"',x,!!p[i])).join('')+'</div>'}).join('')
-     +'<div class="sec"><h3>記事・不具合・処置</h3><div class="row"><textarea class="in" data-bind="~notes" placeholder="不具合があれば、発生の事情と処置を書く（なければ空のまま）">'+esc(op.notes)+'</textarea></div><p class="note">詳しい点検整備の記録は、［各種設定・管理］の［点検整備記録］で扱います。</p></div>'
+    return flownAcs().map(id=>{const a=acOf(id);const p=op.post[id]||(op.post[id]={});return '<div class="sec"><h3>'+esc(a.name)+' <small class="mono">'+esc(a.mark)+'</small></h3>'+POST_ITEMS.map((x,i)=>tgl('op-post-tog','data-a="'+id+'" data-i="'+i+'"',x,!!p[i])).join('')+'</div>'}).join('')
+     +actualCheckButton('post')+'<div class="sec"><h3>記事・不具合・処置</h3><div class="row"><textarea class="in" data-bind="~notes" data-rerender="1" placeholder="不具合があれば、発生の事情と処置を書く（なければ空のまま）">'+esc(op.notes)+'</textarea></div><p class="note">詳しい点検整備の記録は、［各種設定・管理］の［点検整備記録］で扱います。</p></div>'
 ;
   },
-  foot:()=>{const op=A.op;const ok=op.acs.every(id=>{const p=op.post[id]||{};return POST_ITEMS.every((_,i)=>p[i])});return '<button class="btn primary" data-act="op-to-final"'+(ok?'':' disabled')+'>最終送信・保存へ</button>'}
+  foot:()=>{const op=A.op;const ok=postReady();return '<button class="btn primary" data-act="op-to-final"'+(ok?'':' disabled')+'>最終送信・保存へ</button>'}
 });
 def('op-final',{t:'最終送信・保存',st:()=>A.op.name,back:false,
   goal:'運航全体の確定対象を保存し、未同期と反映済みを区別する。',
   doc:'35b §10（最終送信・保存の10項目）／35d（保存の対象・時点・再送を別運航にしない）／27e §4（未同期のKMLは、最後の送信のときにも再送する）。通信失敗や戻る操作で、完了データを消さない。',state:'spec',
   tmp:['完了・部分失敗の表示、戻り先、再送・確認のUIは未確定（35b §10項目10）','KMLの再送を最終保存の一部とするか、同じ操作で起動する独立した再送とするかは未確定（PENDING-S7C-KML-FINAL-SEND）'],
+  mock:()=>mockSeg('op-save-fail',A.ui.opSaveFail?1:0,[[0,'保存成功'],[1,'通信失敗']]),
   ask:['保存に失敗したときの見せ方','保存後にどこへ戻すか（次の画面）'],
   body:()=>{
     const op=A.op;const kmlPend=op.kml==='pending';
-    return '<div class="sec"><h3>確定する内容</h3><table class="kv"><tr><td>運航</td><td>'+esc(op.name)+'</td></tr><tr><td>機体</td><td>'+op.acs.map(id=>esc(acLabel(id))).join('<br>')+'</td></tr><tr><td>操縦者</td><td>'+esc(plName(op.pilot))+'</td></tr><tr><td>飛行前・飛行後点検</td><td>済み</td></tr><tr><td>飛行</td><td>'+op.legs.length+'回・合計'+op.legs.reduce((s,l)=>s+l.min,0)+'分</td></tr></table>'+legTable(op.legs)+(op.notes.trim()?'<p class="note">記事・不具合・処置: '+esc(op.notes)+'</p>':'')+'</div>'
+    return '<div class="sec"><h3>確定する内容</h3><table class="kv"><tr><td>運航</td><td>'+esc(op.name)+'</td></tr><tr><td>機体</td><td>'+flownAcs().map(id=>esc(acLabel(id))).join('<br>')+'</td></tr><tr><td>操縦者</td><td>'+esc(plName(op.pilot))+'</td></tr><tr><td>飛行前・飛行後点検</td><td>済み</td></tr><tr><td>飛行</td><td>'+op.legs.length+'回・合計'+op.legs.reduce((s,l)=>s+l.min,0)+'分</td></tr></table>'+legTable(op.legs)+(op.notes.trim()?'<p class="note">記事・不具合・処置: '+esc(op.notes)+'</p>':'')+'</div>'
      +(kmlPend?'<div class="msg warn">まだGoogle Driveに保存されていないKMLがあります。'+(A.online?'この操作で、あわせて保存します。':'いまはオフラインのため保存できません。通信が戻ったら、自動で保存します。')+'</div>':'')
-     +(A.online?'<div class="msg info">［保存する］で、飛行記録・BATの使用履歴・機体の飛行時間の合計を、Google Driveに保存します。</div>':'<div class="msg warn"><b>オフラインです。</b>いまはGoogle Driveに保存できませんが、［保存する］は押せます。この端末には保存され、通信が戻ったら自動でGoogle Driveに保存します。それまでは「未保存」と表示します。</div>');
+     +(op.saveError?'<div class="msg ng">保存できませんでした。下書きはこの端末に残っています。通信回復後、もう一度保存してください。</div>':'')
+     +(A.online?'<div class="msg info">［保存する］で、飛行記録・BATの使用履歴・機体の飛行時間の合計を、Google Driveに保存します。</div>':'<div class="msg warn"><b>オフラインです。</b>いまはGoogle Driveに保存できません。この端末には保存されている下書きを残し、通信が戻ったら［保存する］で再度保存できます。</div>');
   },
   foot:()=>'<button class="btn" data-act="op-to-post">戻る</button><button class="btn primary" data-act="op-finalize">保存する</button>'
 });
@@ -197,8 +217,9 @@ def('op-done',{t:'保存しました',st:()=>A.opDone?A.opDone.name:'',back:fals
 
 function finalizeOp(){
   const E=ENV(),op=A.op;
+  if(!A.online||A.ui.opSaveFail){op.saveError=true;render();return}
   const kml=op.noDips?'none':(op.kml==='pending'&&A.online?'saved':(op.kml||'saved'));
-  const fl={id:uid('h'),label:op.name,date:new Date(),ac:op.acs.slice(),pl:[op.pilot],legs:op.legs.map(l=>({bat:l.bat||'—',off:l.off,on:l.on,min:l.min,place:l.place,note:l.note,ac:l.ac})),kml,synced:A.online,outs:{a4:false,map:false},snap:op.snap,notes:op.notes};
+  const fl={id:uid('h'),label:op.name,date:new Date(),ac:flownAcs(),pre:clone(op.pre),post:clone(op.post),preNotes:clone(op.preNotes),pl:[op.pilot],legs:op.legs.map(l=>({bat:l.bat||'—',off:l.off,on:l.on,min:l.min,place:l.place,note:l.note,ac:l.ac,takeoffPlace:l.takeoffPlace,batInfo:clone(l.batInfo)})),kml,synced:A.online,outs:{a4:false,map:false},snap:op.snap,notes:op.notes};
   E.flights.unshift(fl);
   if(op.planId)E.plans=E.plans.filter(p=>p.id!==op.planId);
   op.legs.forEach(l=>{
@@ -214,7 +235,7 @@ function finalizeOp(){
 Object.assign(ACTS,{
   'op-pre-tog':t=>{const p=A.op.pre[A.op.ac];const i=t.dataset.i;p[i]=!p[i];render()},
   'op-pre-all':()=>{const p=A.op.pre[A.op.ac]||(A.op.pre[A.op.ac]={});PRE_ITEMS.forEach((_,i)=>p[i]=true);render()},
-  'op-pre-done':()=>{A.op.checked[A.op.ac]=true;opGo('op-standby')},
+  'op-pre-done':()=>{if(!preReady())return;A.op.checked[A.op.ac]=true;opGo('op-standby')},
   'op-abort':()=>{
     if(A.op.legs.length){toast('飛行の実績があるため、やめることはできません。「終了」から飛行後点検へ進みます');return}
     openSheet(()=>'<h3>運航をやめますか（飛行0回）</h3><p>飛行の実績がないため、記録は作らずに戻ります。通報済みの計画は、飛行リストに残ります。</p><p class="note">飛行の実績がある場合は、やめることはできません。［終了］から飛行後点検へ進みます。</p><div class="row"><button class="btn" data-act="close">やめない</button><button class="btn danger" data-act="op-abort-ok">運航をやめる</button></div>');
@@ -225,6 +246,7 @@ Object.assign(ACTS,{
   'op-bat-check':t=>{A.op.cur.bat.check=t.dataset.v;render()},
   'op-bat-reg':()=>{const a=opAc();openReg('bat',{group:a.group,ret:{label:'BATの選択',apply:id=>{A.op.cur.bat={id,cycle:'',check:null,note:''}}}})},
   'op-takeoff':()=>{
+    if(!A.op.checked[A.op.ac]||!batReady()||(A.op.cur.needsSimple&&!simpleReady()))return;
     const w=readiness().some(r=>r[1]==='warn');
     const go=()=>{A.op.cur.offAt=Date.now();A.op.cur.extra=0;A.modal=null;opGo('op-fly')};
     if(w&&!A.op.ack){A.op._go=go;openSheet(()=>'<h3>警告があります</h3><ul style="padding-left:1.2em;font-size:14px">'+readiness().filter(r=>r[1]==='warn').map(r=>'<li>'+esc(r[0])+': '+esc(r[2])+'</li>').join('')+'</ul><p class="note">アプリは、離陸の事実の記録を拒否しません。法令上、離陸してよいかどうかの判断は、操縦者の責任です。</p><div class="row"><button class="btn" data-act="close">戻る</button><button class="btn primary" data-act="op-takeoff-ok">確認して離陸を記録する</button></div>');return}
@@ -235,21 +257,25 @@ Object.assign(ACTS,{
   'op-land':()=>{
     const op=A.op,c=op.cur;const now=Date.now();const sec=(now-c.offAt)/1000+c.extra*60;const min=Math.max(1,Math.round(sec/60));
     const b=c.bat?batOf(c.bat.id):null;
-    const leg={n:op.legs.length+1,ac:op.ac,bat:b?b.label:null,batId:b?b.id:null,batInfo:c.bat?clone(c.bat):null,off:hm(new Date(c.offAt)),on:hm(new Date(now)),min,place:op.snap.to||op.snap.from||'',note:''};
+    const leg={n:op.legs.length+1,ac:op.ac,bat:b?b.label:null,batId:b?b.id:null,batInfo:c.bat?clone(c.bat):null,off:hm(new Date(c.offAt)),on:hm(new Date(now)),min,place:op.cur.takeoffPlace||op.snap.to||op.snap.from||'',takeoffPlace:op.cur.takeoffPlace,note:'',confirmed:false};
     op.legs.push(leg);op.last=leg;c.offAt=null;clearInterval(SWT);opGo('op-landed');
   },
-  'op-continue':()=>{A.op.cur.offAt=null;A.op.cur.extra=0;opGo('op-standby');toast('同じBATで続行します（必要な準備をしてから、もう一度離陸を記録します）')},
-  'op-to-bat':()=>{A.op.cur.bat=null;opGo('op-bat')},
-  'op-bat-cancel':()=>opGo('op-landed'),
-  'op-bat-done':()=>opGo('op-standby'),
-  'op-to-switch':()=>opGo('op-switch'),
+  'op-land-confirm':()=>{const l=A.op.last;if(!l.place.trim()||!Number.isFinite(l.min)||l.min<1){toast('着陸場所と実飛行時間を確認してください');return}l.confirmed=true;opGo('op-next')},
+  'op-simple':t=>{const c=A.op.cur;c.simple=c.simple||[false,false];c.simple[+t.dataset.i]=!c.simple[+t.dataset.i];render()},
+  'op-normal':t=>{const k=t.dataset.k;if(k==='pre'&&A.op.preObserved)ACTS['op-pre-all']();if(k==='post'&&A.op.postObserved)ACTS['op-post-all']()},
+  'op-save-fail':t=>{A.ui.opSaveFail=t.dataset.v==='1';render()},
+  'op-continue':()=>{if(!A.op.last?.confirmed)return;A.op.cur.offAt=null;A.op.cur.extra=0;opGo('op-standby');toast('同じBATで続行します（必要な準備をしてから、もう一度離陸を記録します）')},
+  'op-to-bat':()=>{if(!A.op.last?.confirmed)return;A.op.cur.bat=null;A.op.cur.simple=[false,false];opGo('op-bat')},
+  'op-bat-cancel':()=>opGo(A.op.switchFrom||'op-next'),
+  'op-bat-done':()=>{if(!batReady()||!simpleReady())return;A.op.cur.needsSimple=false;opGo('op-standby')},
+  'op-to-switch':()=>{if(A.route!=='op-standby'&&!A.op.last?.confirmed)return;A.op.switchFrom=A.route;opGo('op-switch')},
   'op-switch-checked':t=>{A.op.checked[t.dataset.id]=true;render()},
-  'op-switch-pick':t=>{const id=t.dataset.id;const op=A.op;op.ac=id;if(!op.acs.includes(id))op.acs.push(id);op.cur.bat=null;opGo(op.checked[id]?'op-standby':'op-pre');toast(op.checked[id]?'点検済みの機体へ交代しました。離陸待機へ進みます':'未点検の機体です。飛行前点検へ進みます')},
+  'op-switch-pick':t=>{const id=t.dataset.id;const op=A.op;op.ac=id;if(!op.acs.includes(id))op.acs.push(id);op.cur.bat=null;op.cur.simple=[false,false];op.cur.needsSimple=!!op.checked[id];op.preObserved=false;opGo(op.checked[id]?'op-standby':'op-pre');toast(op.checked[id]?'点検済みの機体へ交代しました。離陸待機へ進みます':'未点検の機体です。飛行前点検へ進みます')},
   'op-switch-reg':()=>openReg('aircraft',{ret:{label:'機体交代',apply:()=>{}}}),
-  'op-to-post':()=>opGo('op-post'),
+  'op-to-post':()=>{if(A.route==='op-final'||A.op.last?.confirmed)opGo('op-post')},
   'op-post-tog':t=>{const p=A.op.post[t.dataset.a];const i=t.dataset.i;p[i]=!p[i];render()},
-  'op-post-all':()=>{A.op.acs.forEach(id=>{const p=A.op.post[id]||(A.op.post[id]={});POST_ITEMS.forEach((_,i)=>p[i]=true)});render()},
-  'op-to-final':()=>opGo('op-final'),
-  'op-finalize':()=>{if(!canWrite())return;finalizeOp()},
+  'op-post-all':()=>{flownAcs().forEach(id=>{const p=A.op.post[id]||(A.op.post[id]={});POST_ITEMS.forEach((_,i)=>p[i]=true)});render()},
+  'op-to-final':()=>{if(postReady())opGo('op-final')},
+  'op-finalize':()=>{if(!A.op||!postReady()||!canWrite())return;finalizeOp()},
   'op-open-hist':()=>{A.ui.hSel=A.ui.lastFlight;root('home');nav('hist');if(SCR['hist-detail'])nav('hist-detail')}
 });

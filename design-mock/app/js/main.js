@@ -10,7 +10,7 @@ const SCREEN_MAP=[
   ['ホーム',[['home','ホーム（4入口）']]],
   ['新規飛行',[['nf:start','始め方'],['nf:dips','飛行計画（DIPS基準案）'],['nf:use','使うもの（機体・操縦者・許可）'],['nf:content','飛行の内容'],['nf:area','飛行範囲（地図）'],['nf:time','日時・高度'],['nf:master','登録済み情報の確認（保険・連絡先）'],['nf:review','内容確認'],['nf:final','通報の直前'],['nf:dipsneed','通報の直前：DIPSのログイン情報が未登録のとき'],['nf-send','DIPSへ送信（アプリから）'],['nf-manual','DIPS Webで通報する（転記）'],['nf-manual-confirm','DIPS Webで通報したあとの確認'],['nf-accepted','通報の結果（正常受付・重複・結果不明・エラー）']]],
   ['飛行リスト',[['list','飛行リスト'],['plan','DIPS通報内容']]],
-  ['通常運航',[['op-pre','飛行前点検'],['op-standby','離陸待機'],['op-fly','飛行中'],['op-landed','着陸後入力'],['op-bat','BAT交換'],['op-switch','機体交代'],['op-post','飛行後点検'],['op-final','最終送信・保存'],['op-done','保存後']]],
+  ['通常運航',[['op-pre','飛行前点検'],['op-standby','離陸待機'],['op-fly','飛行中'],['op-landed','着陸後入力'],['op-next','着陸記録完了・次の作業'],['op-bat','BAT交換'],['op-switch','機体交代'],['op-post','飛行後点検'],['op-final','最終送信・保存'],['op-done','保存後']]],
   ['飛行履歴・出力',[['hist','飛行履歴・出力（検索）'],['hist-detail','飛行の詳細'],['out-pdf','出力：PDF'],['out-kml','出力：KML']]],
   ['各種設定・管理',[['set','各種設定・管理（メニュー）'],['set-env','個人・会社・団体の切り替え'],['set-members','人員・役割'],['set-aircraft','機体管理'],['reg-aircraft','機体の登録（追加・変更）'],['set-bat','BAT管理'],['bat-detail','BAT詳細と履歴'],['reg-bat','BATの登録'],['set-docs','許可・承認／保険／連絡先'],['reg-permit','許可・承認の登録'],['reg-insurance','保険の登録'],['reg-contact','連絡先の登録'],['set-presets','現場プリセット'],['reg-preset','現場プリセットの登録'],['reg-person','人員の登録・変更'],['set-dipscred','DIPSのログイン情報'],['set-dips','DIPSへの通報方法'],['set-maint','点検整備記録'],['set-sync','保存状態']]]
 ];

@@ -66,7 +66,7 @@ function shell(){
   const title=val(d.t),st=val(d.st)||'';
   const canBack=d.back!==false&&(A.stack.length>0||!!d.backAct);
   const chips=[];
-  if(E&&d.env!==false)chips.push('<button class="chip" data-act="env">'+esc(envLabel(E))+'で使用中 ▾</button>');
+  if(E&&d.env!==false&&A.route!=='op-fly')chips.push('<button class="chip" data-act="env">'+esc(envLabel(E))+'で使用中 ▾</button>');
   if(!A.online)chips.push('<i class="chip warn">オフライン</i>');
   if(A.gAccess==='view'&&E)chips.push('<i class="chip warn">Google Driveは閲覧のみ</i>');
   if(A.gAccess==='none'&&E)chips.push('<i class="chip warn">Google Driveに保存できません</i>');
