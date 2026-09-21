@@ -5,12 +5,18 @@ html,body{margin:0;height:100%}
 body{font:15px/1.5 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;color:var(--ink);background:var(--bg)}
 button{font:inherit;color:inherit;cursor:pointer}
 input,select,textarea{font:inherit;color:inherit}
-#root{height:100%;display:flex;justify-content:center;align-items:flex-start;gap:16px}
-.phone{position:relative;display:flex;flex-direction:column;width:100%;max-width:var(--w);height:100vh;height:100dvh;background:var(--panel);overflow:hidden}
+#root{height:100%;display:flex;flex-direction:column;align-items:center}
+.phone{position:relative;display:flex;flex-direction:column;flex:1 1 auto;min-height:0;width:100%;max-width:var(--w);background:var(--panel);overflow:hidden}
 .memo{display:none}
+/* 設計確認用の帯: スマホ幅のときだけ、アプリの枠の外（上）に出る。アプリの画面ではない */
+.mockbar{flex:0 0 auto;display:flex;align-items:center;gap:6px;width:100%;padding:5px 8px;background:#fff8dc;border-bottom:1px dashed #d6b74a;font-size:12px;color:#6a5200}
+.mockbar .sp{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mockbar button{border:1px dashed #c9a53a;background:#fffbe6;border-radius:8px;padding:4px 8px;font-size:12px;white-space:nowrap;color:#6a5200}
+.mockbar button.hot{background:#ffe08a;font-weight:700}
 @media (min-width:900px){
-  #root{padding:12px}
-  .phone{height:calc(100vh - 24px);height:calc(100dvh - 24px);border:1px solid #9aa6bb;border-radius:26px;box-shadow:0 10px 32px rgba(20,30,50,.18)}
+  #root{flex-direction:row;justify-content:center;align-items:flex-start;gap:16px;padding:12px}
+  .mockbar{display:none}
+  .phone{flex:0 1 auto;height:calc(100vh - 24px);height:calc(100dvh - 24px);border:1px solid #9aa6bb;border-radius:26px;box-shadow:0 10px 32px rgba(20,30,50,.18)}
   .memo{display:block;flex:0 0 470px;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
 }
 .hd{background:#fff;border-bottom:1px solid var(--line);padding:8px 10px 6px;flex:0 0 auto}
@@ -149,11 +155,25 @@ textarea.in{width:100%;min-height:56px}
 .step .n{width:22px;height:22px;border-radius:50%;background:var(--okbg);color:var(--ok);display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:0 0 auto}
 .filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
 .rtag{display:inline-block;font-size:11px;border-radius:6px;padding:0 6px;background:#eef1f6;color:var(--sub);margin-right:4px}
-/* ---- 確認用の部品（本番のアプリにはありません。左のスマホ画面の中でも、これらは「確認用」と分かるようにします） ---- */
-.mockbtn{border-style:dashed;border-color:#c9a53a;background:#fffbe6;color:#6a5200;font-size:12px}
-.mockctl{border-style:dashed !important;border-color:#c9a53a !important;background:#fffbe6 !important;color:#6a5200 !important}
-.mockbox{border:2px dashed #d6b74a;background:#fffbe8;border-radius:12px;padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.5}
-.mocktag{display:inline-block;font-size:11px;background:#f0d878;color:#5a4600;border-radius:6px;padding:0 6px;margin-bottom:4px;font-weight:700}
+/* ---- 設計確認用の部品（右側・アプリの枠の外。本番のアプリにはありません） ---- */
 .memohead{background:#fff8dc;border:1px dashed #d6b74a;border-radius:10px;padding:8px 10px;margin-bottom:10px;font-size:13px}
 .memohead small{color:#6a5200}
-.ov.mockonly .sheet{border-top:6px dashed #d6b74a}
+.mockpanel{background:#fffbe8;border:1px dashed #d6b74a;border-radius:10px;padding:8px 10px;margin:10px 0}
+.mockpanel h4{margin:0 0 4px !important}
+.memo .row>label{min-width:auto}
+.mockov{position:fixed;inset:0;background:rgba(20,30,50,.5);display:flex;justify-content:center;align-items:flex-start;padding:24px 12px;z-index:200;overflow:auto}
+.msheet{background:#fff;width:100%;max-width:560px;border-radius:14px;padding:14px;border-top:6px dashed #d6b74a}
+.toast.mock{background:#fff8dc;color:#6a5200;border:1px dashed #c9a53a}
+/* ---- 利用者画面の部品（初回導線など） ---- */
+.btn.wide{display:block;width:100%;flex:none}
+.entry h2{margin:14px 0 8px}
+.entry h2:first-child{margin-top:4px}
+.lead2{font-size:15px;margin:4px 0 8px}
+.fld{margin:0 0 12px}
+.fld>label{display:block;font-size:13px;color:var(--sub);margin:0 0 4px}
+.fld>input.in,.fld>textarea.in{display:block;width:100%}
+.pwrow{display:flex;gap:8px;align-items:center}
+.in::placeholder{color:#a4acb9}
+.ph{color:#9aa3b2}
+.gph{border:1px solid #c9ced8;border-radius:12px;padding:26px 16px;background:#fff;text-align:center;color:var(--sub)}
+.gph b{display:block;font-size:20px;color:var(--ink);margin-bottom:6px}

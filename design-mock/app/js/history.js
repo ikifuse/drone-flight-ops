@@ -78,13 +78,13 @@ function mapPdfPreview(f){
 def('out-pdf',{t:'出力：PDF',st:()=>{const f=flightOf(A.ui.hSel);return f?f.label:''},
   goal:'PDFを作った結果と、次にできること（保存・印刷・共有）を確かめる。',
   doc:'27f（A4運航記録PDFと地図付きPDFの役割分離。地図付きPDFは、地図を主な視覚要素とし、その右側または下側などにDIPSの通報項目を置く方向。最終レイアウトは1飛行のテストで確定）／18 §6（オフラインでも端末でPDF生成は成立する条件つき。地図タイルがない場合は座標・半径の印字）。',state:'proposal',
-  tmp:['この画面は、出力後の遷移が未確定（34e 項目6）であることを見せるための仮の作り','A4・地図付きPDFの見本は、レイアウトを確かめるための粗い見本（実際のA4の書式は最新実物に合わせる。地図付きPDFの詳細レイアウトは未確定 PENDING-S7D-MAPPDF-DETAIL）','補助者への共有は、その1飛行のPDFなどを個別に共有する方向（補助者に元台帳の権限は与えない・31b §4）'],
+  tmp:['この画面は、出力後の遷移が未確定（34e 項目6）であることを見せるための仮の作り','A4・地図付きPDFのプレビューは、レイアウトを確かめるための粗い表示（実際のA4の書式は最新実物に合わせる。地図付きPDFの詳細レイアウトは未確定 PENDING-S7D-MAPPDF-DETAIL。最終のレイアウトは、1飛行のテストで確定する）','補助者への共有は、その1飛行のPDFなどを個別に共有する方向（補助者に元台帳の権限は与えない・31b §4）'],
   ask:['出力後にまず何を見せるか（プレビュー／保存先／共有）','補助者への渡し方（個別共有）の入口をここに置くか'],
   body:()=>{
     const f=flightOf(A.ui.hSel);const m=A.ui.outMade||{a4:true,map:false,saved:A.online};
     return (m.saved?'<div class="msg ok big">✓ PDFを作成しました</div><div class="msg ok">Google Driveの「出力」フォルダーに保存しました。</div>':'<div class="msg warn big">端末で作成しました</div><div class="msg warn">通信できないため、<b>まだGoogle Driveに保存されていません</b>。通信が戻ったら保存します。地図が取得できない場合は、座標と半径を文字で入れて作成します。</div>')
-     +(m.a4?'<div class="sec"><h3>A4運航記録PDF <small>見本</small></h3>'+a4Preview(f)+'</div>':'')
-     +(m.map?'<div class="sec"><h3>地図付きPDF <small>見本</small></h3>'+mapPdfPreview(f)+'<p class="note">地図を左上に、DIPSの通報項目を右側と下側に置く配置の見本です。最終のレイアウトは、1飛行のテストで確定します。</p></div>':'')
+     +(m.a4?'<div class="sec"><h3>A4運航記録PDF <small>プレビュー</small></h3>'+a4Preview(f)+'</div>':'')
+     +(m.map?'<div class="sec"><h3>地図付きPDF <small>プレビュー</small></h3>'+mapPdfPreview(f)+'<p class="note">地図を左上に、DIPSの通報項目を右側と下側に置く配置です。</p></div>':'')
      +'<div class="sec"><h3>次にできること</h3><div class="actbar"><button class="btn" data-act="stub" data-t="端末に保存・印刷" data-m="この端末への保存・印刷は、ブラウザーの保存・印刷の画面で行います。">端末に保存・印刷</button><button class="btn" data-act="stub" data-t="個別に共有" data-m="この1飛行のPDFだけを、補助者などに共有します。補助者に、記録全体を見せる必要はありません。">個別に共有</button></div></div>';
   },
   foot:()=>'<button class="btn" data-act="back">飛行の詳細へ戻る</button><button class="btn primary" data-act="root" data-s="home">ホームへ</button>'

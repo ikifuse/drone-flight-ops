@@ -15,7 +15,7 @@ const NFS={
  use:{t:'使うもの',sub:'機体・操縦者・許可',dips:[2,4,5],
   goal:'この飛行で使う機体・操縦者・許可承認を、登録済みから選ぶ。なければその場で登録する。',
   reuse:['運用環境の登録実機','人員（操縦者）','許可承認の登録'],
-  tmp:['カードに出す情報（期限・DIPS登録済みなど）は仮','許可と機体・空域・方法の照合ヒントは、サンプル判定（実際の判定ルールではない）','その場で登録するときの入力項目は最小にしている（仮）'],
+  tmp:['カードに出す情報（期限・DIPS登録済みなど）は仮','許可と機体・空域・方法の照合ヒントは、仮の判定（実際の判定ルールではない）','その場で登録するときの入力項目は最小にしている（仮）'],
   ask:['3つを1画面にまとめてよいか、分けたいか','操縦者と連絡先（後の画面）を近づけたいか']},
  content:{t:'飛行の内容',sub:'目的・空域・方法・安全措置',dips:[6,7,8,10,11,12],
   goal:'飛行目的・空域・方法と、立入管理措置・係留・補助者人数を選ぶ。',
@@ -154,7 +154,7 @@ function valueOf(n,s){
   return '';
 }
 
-/* ---------- 複製・プリセット・サンプル入力 ---------- */
+/* ---------- 複製・プリセット・仮データでの一括入力（設計確認用） ---------- */
 const liveAc=id=>{const a=acOf(id);return !!a&&!a.dead};
 const livePl=id=>{const p=plOf(id);return !!p&&p.active!==false};
 function applyGeo(g){S.geom={kind:g.kind,pts:g.pts.map(p=>p.slice()),r:g.r,width:g.width||10,done:true,editing:false}}
@@ -172,12 +172,12 @@ function applyPast(fl){
 }
 function fillSample(){
   const E=ENV();
-  if(!E.aircraft.length||!E.people.some(p=>p.pilot)||!E.presets.length){if(!seedSample(E)){toast('すでに登録があるため、サンプルは入れられません。手で入力してください');return false}toast('サンプルの登録を入れました')}
+  if(!E.aircraft.length||!E.people.some(p=>p.pilot)||!E.presets.length){if(!seedSample(E)){mtoast('すでに登録があるため、仮データは入れられません。手で入力してください');return false}mtoast('仮データの登録を入れました')}
   const a=E.aircraft.find(x=>!x.dead),p=E.people.find(x=>x.pilot&&x.active!==false);
   S.aircraft=[a.id];S.pilots=[p.id];S.permit=E.permits.length?E.permits[0].id:'none';
   applyPreset(E.presets[0]);S.air=[AIR[3]];S.met=[MET[6]];
-  ['aircraft','pilots','permit','air','met'].forEach(k=>S.auto[k]='サンプル');
-  S.start={mode:'sample',label:'サンプル入力'};return true;
+  ['aircraft','pilots','permit','air','met'].forEach(k=>S.auto[k]='登録済みの情報');
+  S.start={mode:'fill',label:'新しく作る'};return true;
 }
 
 /* ---------- 部品 ---------- */
@@ -332,11 +332,13 @@ function nfMemo(){
   return '<p class="note" style="margin:0">設計Docs上の位置づけ: 新規飛行の流れは、34d・34fの流れ図（新規飛行→計画入力→飛行範囲→通報内容確認→送信）まで。<b>入力〜通報内容の確認の画面の分け方は、Docs上は未整理（PENDING-D-NEW-FLIGHT-SCREENS）</b>で、ここはオーナーが操作して決めるための、たたき台です。不足する登録情報をその場で追加する流れは34a §3（CURRENT-PROPOSAL）。</p>'+blocks
    +'<h4>DIPS22項目の対応</h4><p class="note" style="margin:0 0 4px">'+(cv.missing.length||cv.dup.length?'漏れ: '+cv.missing.join(',')+' 重複: '+cv.dup.join(','):'22項目すべてが、ちょうど1つの画面に割り当てられています（'+cv.ok+'/22）。')+'</p>'+table
    +'<h4>DIPSから変えたところ（たたき台）</h4><ul><li>機体・操縦者・許可を最初にまとめた（DIPSでは許可が2番目、機体・操縦者が続く）</li><li>計画名称は最後の確認画面（DIPSは最初）。ヘッダーからも直せる</li><li>参照経路・出発地・目的地は地図の画面へ（DIPSは別の位置）</li><li>保険は連絡先と一緒に「登録済み情報の確認」へ（DIPSは途中）</li><li>選択肢の名称は、DIPS Webの表記のまま</li></ul>'
-   +'<h4>試せること</h4><ul><li>右上「全体」: 画面の順序入れ替え・次の画面と1画面にまとめる・省く</li><li>内容確認: 「画面ごと／DIPS項目順」の切替</li><li>未登録の機体・操縦者・許可・保険・連絡先を、その場で登録して戻る</li></ul>'
-   +'<div class="row"><button class="btn sm" data-act="fill">サンプルで全部埋めて確認画面へ</button><button class="btn sm" data-act="nf-restart">最初からやり直す</button></div>';
+   +'<h4>試せること</h4><ul><li>画面の順序入れ替え・次の画面と1画面にまとめる・省く（下の［全体の流れを並べ替える・省く］）</li><li>内容確認: 「画面ごと／DIPS項目順」の切替</li><li>未登録の機体・操縦者・許可・保険・連絡先を、その場で登録して戻る</li><li>DIPSのログイン情報が未登録のまま通報の直前で［アプリからDIPSへ送信する］を押し、その場で登録して元の飛行計画へ戻る</li></ul>'
+   +'<h4>未決</h4><ul><li>入力〜通報内容の確認の画面の分け方（PENDING-D-NEW-FLIGHT-SCREENS）。この画面順は、オーナーが操作して決めるためのたたき台</li><li>［DIPS Webで通報する］の側で、DIPSのログイン情報を求めるか（自動ログイン・入力補助に使うか）は未決（PENDING-S5-DIPS-LOGIN-STORAGE）</li></ul>';
 }
 def('nf',{
-  t:'新規飛行',st:()=>pageTitle(curPage()),backAct:'nf-back',memo:nfMemo,hbtn:()=>'<button class="ib mockbtn" data-act="flow">確認用：並び替え</button>',
+  t:'新規飛行',st:()=>pageTitle(curPage()),backAct:'nf-back',memo:nfMemo,
+  mock:()=>'<div class="row"><button class="btn sm" data-act="flow">全体の流れを並べ替える・省く</button><button class="btn sm" data-act="fill">仮データで全部埋めて確認画面へ</button><button class="btn sm" data-act="nf-restart">最初からやり直す</button></div>'
+   +'<div class="row"><label>DIPSログイン情報</label>'+mockSeg('dipsstate',A.dips.registered?1:0,[[1,'登録済み'],[0,'未登録']])+'</div><p class="note" style="margin:0">未登録にして、通報の直前で［アプリからDIPSへ送信する］を押すと、その場で登録して元の飛行計画へ戻る流れを確かめられます。</p>',
   chips:()=>S.cur==='start'?'':'<button class="chip" data-act="rename">計画名: '+esc(S.planName)+' ✎</button>'+(S.start?'<i class="chip tmp">始め方: '+esc(S.start.label)+'</i>':'')+(S.noDips?'<i class="chip warn">通報しない飛行</i>':''),
   prog:()=>{if(S.cur==='start')return '';const ps=pages();const idx=ps.findIndex(p=>p.key===curPage().key);return '<div class="prog">'+ps.slice(1).map((p,i)=>'<i class="'+(i+1<idx?'done':i+1===idx?'cur':'')+'"></i>').join('')+'</div>'},
   body:()=>curPage().ids.map(id=>VIEW[id]()).join('<div style="height:6px"></div>'),
@@ -344,6 +346,11 @@ def('nf',{
     if(!next)return '<button class="btn" data-act="nf-back">戻る</button>';
     return '<button class="btn" data-act="nf-back">戻る</button><button class="btn primary" data-act="nf-next">次へ：'+esc(pageTitle(next))+'</button>'}
 });
+
+/* ---------- 通報の直前で、DIPSのログイン情報が未登録のとき（その場で登録して、元の飛行計画へ戻る） ---------- */
+function openDipsNeed(){
+  openSheet(()=>'<h3>DIPSのログイン情報がまだ登録されていません</h3><p class="note" style="font-size:14px">入力した飛行計画は、そのまま残っています。</p><div class="row"><button class="btn" data-act="dips-later">あとで行う</button><button class="btn primary" data-act="dips-now">今設定する</button></div>');
+}
 
 /* ---------- 通報後の画面（送信・Manual・結果） ---------- */
 const planLink=()=>{const E=ENV();return E.plans.find(p=>p.id===(A.nfResult&&A.nfResult.planId))};
@@ -355,11 +362,11 @@ function commitPlan(dips){
 def('nf-send',{t:'DIPSへ送信',st:'アプリからDIPSへ送信する',env:false,back:false,
   goal:'送信して、DIPSからの応答（正常受付・重複の有無・結果不明・エラー）を待つ。',
   doc:'34d §2（送信開始と正常受付は別。正常応答で計画IDと重複有無を確定した時点が、共有飛行リストへの掲載契機）／33b（通信断で登録成否が不明なときは、通常の通報済みとして扱わず、盲目的に再送しない）。',state:'accepted',
-  tmp:['この画面の見せ方は仮。応答は、モックの操作で選ぶ（実際はDIPSが返す）','応答契約・検証項目は正式API仕様の確認待ち（VERIFY-S5-RESPONSE-EVIDENCE／VERIFY-S4-API-CONTRACT）'],
+  tmp:['この画面の見せ方は仮。DIPSの応答は、右側の「この画面の確認用操作」で選ぶ（実際はDIPSが返す）','応答契約・検証項目は正式API仕様の確認待ち（VERIFY-S5-RESPONSE-EVIDENCE／VERIFY-S4-API-CONTRACT）'],
   ask:['送信中の表示と、応答が来るまでの待ち方','送信後に戻れない（取消できない）ことをどう伝えるか'],
-  body:()=>'<div class="msg info"><span class="spin"></span> DIPSへ送信しています…</div>'
-   +'<div class="mockbox"><div class="mocktag">確認用の操作（本番の画面にはありません）</div><p class="note" style="margin:0 0 6px">実際はDIPSが返す結果です。どの結果のときにどの画面になるかを確かめるため、ここで選びます。</p>'
-   +[['clean','正常受付・重複なし','計画IDが返り、他の計画と重複しない（通常の場合）'],['dup','正常受付・重複あり','登録されたが、他の計画と重複している'],['unknown','通信が途切れた（結果不明）','登録されたかどうかが分からない'],['err','入力内容が受け付けられなかった','エラー（内容を直して再送）']].map(r=>'<button class="card" style="width:100%;margin-bottom:6px" data-act="nf-result" data-k="'+r[0]+'"><b>'+r[1]+'</b><span>'+r[2]+'</span></button>').join('')+'</div>',
+  mock:()=>'<p class="note" style="margin:0 0 6px">実際はDIPSが返す結果です。どの結果のときにどの画面になるかを確かめるため、ここで選びます。</p>'
+   +[['clean','正常受付・重複なし','計画IDが返り、他の計画と重複しない（通常の場合）'],['dup','正常受付・重複あり','登録されたが、他の計画と重複している'],['unknown','通信が途切れた（結果不明）','登録されたかどうかが分からない'],['err','入力内容が受け付けられなかった','エラー（内容を直して再送）']].map(r=>'<button class="card" style="width:100%;margin-bottom:6px" data-act="nf-result" data-k="'+r[0]+'"><b>'+r[1]+'</b><span>'+r[2]+'</span></button>').join(''),
+  body:()=>'<div class="msg info"><span class="spin"></span> DIPSへ送信しています…</div>',
   foot:()=>'<button class="btn" data-act="nf-send-back">戻る</button>'
 });
 def('nf-manual',{t:'DIPS Webで通報する',st:'DIPSの入力順に確認しながら入力します',
@@ -419,9 +426,9 @@ def('nf-accepted',{t:()=>({clean:'通報完了・重複なし',dup:'通報済み
 /* ---------- モーダル ---------- */
 function flowHtml(){
   const rows=S.flow.map((f,i)=>'<div class="fl"><b>'+esc(nfName(f.id))+'<br><small class="note">'+esc(NFS[f.id].sub||'')+'</small></b><button class="btn sm" data-act="mv" data-i="'+i+'" data-d="-1"'+(i===0?' disabled':'')+'>▲</button><button class="btn sm" data-act="mv" data-i="'+i+'" data-d="1"'+(i===S.flow.length-1?' disabled':'')+'>▼</button><label class="note"><input type="checkbox" data-act="mg" data-i="'+i+'"'+(f.merge?' checked':'')+(i===S.flow.length-1?' disabled':'')+'> 次と1画面に</label><label class="note"><input type="checkbox" data-act="sk" data-i="'+i+'"'+(f.skip?' checked':'')+'> 省く</label></div>').join('');
-  return '<h3>全体の流れ（試してみる）</h3><p class="note">順序の入れ替え・次の画面とのまとめ・省略を試せます。省いた画面の項目は、自動入力や既定値のまま進みます（確認画面には必ず出ます）。</p>'
+  return '<h3>全体の流れ（設計確認用。試してみる）</h3><p class="note">順序の入れ替え・次の画面とのまとめ・省略を試せます。省いた画面の項目は、自動入力や既定値のまま進みます（確認画面には必ず出ます）。</p>'
    +'<div class="fl"><b>始め方</b><span class="note">固定</span></div>'+rows+'<div class="fl"><b>内容確認 → 通報の直前</b><span class="note">固定</span></div>'
-   +'<div class="row"><button class="btn" data-act="flow-reset">元の並びに戻す</button><button class="btn primary" data-act="close">閉じる</button></div>';
+   +'<div class="row"><button class="btn" data-act="flow-reset">元の並びに戻す</button><button class="btn primary" data-act="mclose">閉じる</button></div>';
 }
 function calHtml(){
   const y=S.cal.y,m=S.cal.m;const first=new Date(y,m,1);const last=new Date(y,m+1,0).getDate();
@@ -445,7 +452,7 @@ Object.assign(ACTS,{
   'nf-back':()=>{if(S.cur==='start')back();else nfStep(-1)},
   'nf-next':()=>{if(S.cur==='start'&&!S.start)S.start={mode:'new',label:'新しく作る'};nfStep(1)},
   'nf-restart':()=>{A.modal=null;S=blankNF(ENV());S.cur='start';render(false)},
-  'flow':()=>openSheet(flowHtml,'mockonly'),
+  'flow':()=>openMock(flowHtml),
   'rename':()=>openSheet(()=>'<h3>計画名称</h3><div class="row"><input class="in" data-bind="planName" value="'+esc(S.planName)+'"></div><p class="note">DIPSでは最初の項目です。自動で付いた名前を、変えられます。</p><div class="row"><button class="btn primary" data-act="close">OK</button></div>'),
   'start-new':()=>{S.start={mode:'new',label:'新しく作る'};nfGo(pages()[1].key)},
   'start-past':t=>{applyPast(ENV().flights.find(h=>h.id===t.dataset.id));nfGo(pages()[1].key)},
@@ -481,8 +488,8 @@ Object.assign(ACTS,{
   'ins-set':t=>{S.ins[t.dataset.k]=t.dataset.v;render()},
   'contact-src':t=>{const src=t.dataset.v;S.contact.src=src;const E=ENV();const c0=E.contact;
     if(src==='self'){if(c0)Object.assign(S.contact,{name:c0.name,country:c0.country,pref:c0.pref,addr:c0.addr,phone:c0.phone,email:c0.email})}
-    else if(src==='application'){Object.assign(S.contact,{name:'サンプル法人（申請書記載）',country:'日本/Japan',pref:'サンプル県',addr:'サンプル市サンプル4-5-6',phone:'0600000000',email:'office@example.invalid'})}
-    else{Object.assign(S.contact,{name:S.contact.pilotId?plName(S.contact.pilotId):'（操縦者を選択）',phone:'09011112222',email:'pilot@example.invalid'})}
+    else if(src==='application'){Object.assign(S.contact,{name:'○○株式会社（申請書記載）',country:'日本/Japan',pref:'○○県',addr:'○○市4-5-6',phone:'0600000000',email:'contact@example.com'})}
+    else{Object.assign(S.contact,{name:S.contact.pilotId?plName(S.contact.pilotId):'（操縦者を選択）',phone:'09011112222',email:'name@example.com'})}
     render()},
   'jump':t=>nfGo(t.dataset.s),
   'rv':t=>{S.reviewView=t.dataset.v;render()},
@@ -491,8 +498,11 @@ Object.assign(ACTS,{
     if(!A.online){toast('オフラインのため送信できません。通報の内容は、この端末に残っています。通信できる場所で、もう一度送信してください');return}
     if(!A.apiOk){toast('いまは、アプリからDIPSへ送信できません。［DIPS Webで通報する］を選んでください');return}
     if(!canWrite())return;
+    if(!A.dips.registered){openDipsNeed();return}
     nav('nf-send');
   },
+  'dips-now':()=>{A.modal=null;A.dipsRet={label:'新規飛行'};nav('set-dipscred')},
+  'dips-later':()=>{A.modal=null;render();toast('飛行計画は、そのまま残っています')},
   'nf-send-back':()=>back(),
   'nf-result':t=>{
     const k=t.dataset.k;
@@ -501,7 +511,7 @@ Object.assign(ACTS,{
     rep('nf-accepted');
   },
   'nf-manual-go':()=>{A.ui.mconf=null;A.ui.mnum='';nav('nf-manual')},
-  'nf-open-dips':()=>openSheet(()=>'<h3>DIPS Webを開く</h3><p>DIPS Webを別のタブで開き、この画面と見比べながら入力します。</p><div class="mockbox"><div class="mocktag">確認用（本番の画面にはありません）</div>このモックでは、DIPS Webは開きません。</div><div class="row"><button class="btn" data-act="close">閉じる</button></div>'),
+  'nf-open-dips':()=>openSheet(()=>'<h3>DIPS Webを開く</h3><p>DIPS Webを別のタブで開き、この画面と見比べながら入力します。</p><div class="row"><button class="btn" data-act="close">閉じる</button></div>'),
   'nf-manual-done':()=>{A.ui.mconf=null;nav('nf-manual-confirm')},
   'nf-mconf':t=>{A.ui.mconf=t.dataset.v;render()},
   'nf-mconf-ok':()=>{if(!canWrite())return;const pl=commitPlan('manual');A.nfResult={kind:'manual',planId:pl.id};rep('nf-accepted')},

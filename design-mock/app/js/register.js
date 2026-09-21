@@ -14,7 +14,7 @@ const REG_META={
   person:{doc:'31a §2・§3（人物・所属・役割・資格を分ける。アカウントを持たない補助者も人物として登録できる）／31d（離任は人物の削除ではなく、この環境との所属の終了）。',state:'accepted',
     tmp:['入力項目の列・画面構成は未確定（PENDING-S2-IDENTITY／PENDING-S2-MEMBERSHIP）','技能証明は「未発行のまま」保持できる','離任の画面・実行できる人は未確定（PENDING-S2-MEMBERSHIP）'],ask:['新規飛行の途中で登録するときの、最小の項目（氏名と資格だけ、など）']},
   permit:{doc:'25b／26（DIPSの飛行許可番号・発行日・期間・カテゴリー）。許可承認を設定のどこに置くか・どの責任領域に保存するかは未確定（PENDING-S6-DRIVE-PLACEMENT）。',state:'tmp',
-    tmp:['設定の分類（許可承認・保険・連絡先を1つにまとめる）は仮','許可の適用範囲（DID・夜間など）と機体の対応を持たせるのは、照合ヒントを見せるためのサンプル'],ask:['許可承認は、機体ごと・操縦者ごと・環境ごとのどれで持つか']},
+    tmp:['設定の分類（許可承認・保険・連絡先を1つにまとめる）は仮','許可の適用範囲（DID・夜間など）と機体の対応を持たせるのは、照合ヒントを見せるための仮の対応'],ask:['許可承認は、機体ごと・操縦者ごと・環境ごとのどれで持つか']},
   insurance:{doc:'25b／26（DIPSの保険に関する情報：会社名・商品名・対人／対物の無制限／金額）。設定のどこに置くかは未確定（PENDING-S6-DRIVE-PLACEMENT）。',state:'tmp',
     tmp:['環境に1つだけ持つ形は仮（機体ごと・複数契約もあり得る）','「賠償能力」は保険加入と同一視できない項目のため、登録には含めない'],ask:['保険は環境で1つか、複数持てるか']},
   contact:{doc:'25b／31c（DIPSの連絡先：自アカウント・申請書記載・操縦者から選ぶ）。設定のどこに置くかは未確定。',state:'tmp',
@@ -33,7 +33,7 @@ function openReg(type,o){
 }
 function regBanner(){
   const r=A.reg&&A.reg.ret;
-  return r?'<div class="msg info"><b>「'+esc(r.label)+'」の途中です。</b>登録が終わると、元の画面に戻ります。登録したものは選ばれた状態になります。<br><span class="note">先に［各種設定・管理］へ行って登録しなくても、ここで足りないものを追加できます。</span></div>':'';
+  return r?'<div class="msg info"><b>「'+esc(r.label)+'」の途中です。</b>登録が終わると、元の画面に戻ります。登録したものは選ばれた状態になります。</div>':'';
 }
 function finishReg(id,msg){
   const r=A.reg&&A.reg.ret;const t=A.reg.type;
@@ -60,9 +60,9 @@ function regInit(t,o){
    case 'person':return ex?{name:ex.name,kana:ex.kana||'',roles:ex.roles.slice(),lic:ex.lic||'未発行',licNo:ex.licNo||'',account:ex.account||'',phone:ex.phone||''}
      :{name:o.name||'',kana:'',roles:(o.roles||[]).slice(),lic:'未発行',licNo:'',account:'',phone:''};
    case 'permit':return ex?{no:ex.no,label:ex.label,issued:dstr(ex.issued),from:dstr(ex.from),to:dstr(ex.to),cat:ex.cat,cover:ex.cover.slice(),aircraft:ex.aircraft.slice()}
-     :{no:'',label:'',issued:ymd(TODAY),from:ymd(TODAY),to:ymd(addDays(TODAY,365)),cat:'II（サンプル値）',cover:[],aircraft:(o.aircraft||[]).slice()};
+     :{no:'',label:'',issued:ymd(TODAY),from:ymd(TODAY),to:ymd(addDays(TODAY,365)),cat:'II',cover:[],aircraft:(o.aircraft||[]).slice()};
    case 'insurance':return E.insurance?Object.assign({},E.insurance):{company:'',product:'',pUnl:'yes',pAmt:'',oUnl:'yes',oAmt:'',ability:''};
-   case 'contact':return E.contact?Object.assign({},E.contact):{name:me?me.name:'',country:'日本/Japan',pref:'',addr:'',cc:'日本/Japan(81)',phone:me&&me.phone||'',email:A.account.email};
+   case 'contact':return E.contact?Object.assign({},E.contact):{name:me?me.name:'',country:'日本/Japan',pref:'',addr:'',cc:'日本/Japan(81)',phone:me&&me.phone||'',email:''};
    case 'preset':return ex?{name:ex.name,geom:{kind:ex.geo.kind,pts:ex.geo.pts.map(p=>p.slice()),r:ex.geo.r,width:ex.geo.width||10,done:true,editing:false},layer:false,search:'',alt:ex.alt,from:ex.from,to:ex.to,biz:ex.biz.slice(),durH:ex.dur[0],durM:ex.dur[1]}
      :Object.assign({name:'',geom:newGeom(),layer:false,search:'',alt:30,from:'',to:'',biz:[],durH:0,durM:30},o.prefill||{});
    case 'bat':return ex?{label:ex.label,model:ex.model,group:ex.group||'',newGroup:'',source:ex.source||'new',cycle:ex.cycle==null?'':ex.cycle,check:ex.check,note:ex.note||''}
@@ -75,57 +75,57 @@ function formAircraft(){
   const E=ENV(),d=A.reg.d;const newG=d.batOn&&(d.group==='__new'||!E.batGroups.length);
   const gsel=d.batOn?fRow('BATグループ',fSel('group',E.batGroups.map(g=>[g.id,g.name]).concat([['__new','＋ 新しいグループを作る']]),newG?'__new':d.group||E.batGroups[0].id,true)):'';
   return '<div class="sec"><h3>機体の情報</h3>'
-   +fRow('機種',fSel('model',MODELS,d.model,true))+(d.model==='その他（手入力）'?fRow('機種名',fIn('modelOther',d.modelOther,'機種名')):'')
-   +fRow('登録記号',fIn('mark',d.mark,'登録記号'))+fRow('名称',fIn('name',d.name,'呼び名（任意）'))
+   +fRow('機種',fSel('model',MODELS,d.model,true))+(d.model==='その他（手入力）'?fRow('機種名',fIn('modelOther',d.modelOther,'例：○○○')):'')
+   +fRow('登録記号',fIn('mark',d.mark,'例：JU-○○○○'))+fRow('名称',fIn('name',d.name,'例：1号機（任意）'))
    +fRow('機体認証',fSel('cert',CERTS,d.cert))+fRow('登録の期限',fIn('expiry',d.expiry,'','date'))
    +'<p class="note">登録するのは「機種」ではなく、登録記号のある実際の1機です。</p></div>'
    +'<div class="sec"><h3>BAT管理 '+tmpChip+'</h3><div class="row">'+fSeg('batOn',[['false','OFF'],['true','ON']],String(d.batOn))+'</div>'
    +'<p class="note">OFFの機体でも、飛行記録・点検記録は最後まで残せます。ONにすると、この機体で使うBATのグループを決めます。</p>'
-   +gsel+(newG?fRow('グループ名',fIn('newGroup',d.newGroup,'例: EVO Lite系のBATグループ')):'')
+   +gsel+(newG?fRow('グループ名',fIn('newGroup',d.newGroup,'例：EVO Lite系のBATグループ')):'')
    +(d.batOn?'<p class="note">同じBATを共用できる機体は、同じグループにします。グループに入れると、その機体でグループのBATを選べるようになります。</p>':'')+'</div>';
 }
 function formPerson(){
   const d=A.reg.d;const isPilot=d.roles.includes('操縦者');const E=ENV();
   const ex=A.reg.id?E.people.find(p=>p.id===A.reg.id):null;
-  return '<div class="sec"><h3>名前など</h3>'+fRow('氏名',fIn('name',d.name,'氏名'))+fRow('フリガナ',fIn('kana',d.kana,'任意'))+fRow('電話',fIn('phone',d.phone,'任意'))
+  return '<div class="sec"><h3>名前など</h3>'+fRow('氏名',fIn('name',d.name,'例：山田 太郎'))+fRow('フリガナ',fIn('kana',d.kana,'例：ヤマダ タロウ（任意）'))+fRow('電話',fIn('phone',d.phone,'例：090-1234-5678（任意）'))
    +'<div class="row"><button class="btn sm" data-act="reg-self">自分の情報を使う</button><span class="note">操縦者になるかどうかは、下の役割で選びます。</span></div></div>'
    +'<div class="sec"><h3>役割 <small>複数選べます</small></h3>'+fPills('roles',ROLES,d.roles)
    +'<p class="note">役割は、ここでの立場です。飛行ごとの担当（操縦者・通報者・記録者）とは別です。</p></div>'
    +(isPilot?'<div class="sec"><h3>技能証明</h3>'+fRow('種別',fSel('lic',LICS,d.lic))+fRow('証明番号',fIn('licNo',d.licNo,'未発行なら空のまま'))+'<p class="note">まだ発行されていないときは、番号を空のままにしてください。</p></div>':'')
-   +'<div class="sec"><h3>Googleアカウント <small>任意</small></h3>'+fRow('メール',fIn('account',d.account,'アカウントを持たない補助者も登録できます'))+'</div>'
+   +'<div class="sec"><h3>Googleアカウント <small>任意</small></h3>'+fRow('メール',fIn('account',d.account,'例：name@example.com'))+'</div>'
    +(ex?'<div class="sec"><h3>参加の状態</h3>'+(ex.active!==false?'<p class="lead" style="margin:0 0 8px">参加しています。</p><button class="btn danger sm" data-act="person-leave">離任にする…</button>':'<p class="lead" style="margin:0 0 8px">離任しています（過去の記録は残っています）。</p><button class="btn sm" data-act="person-rejoin">再び参加にする</button>')+'</div>':'');
 }
 function formPermit(){
   const E=ENV(),d=A.reg.d;
-  return '<div class="sec"><h3>許可・承認</h3>'+fRow('許可番号',fIn('no',d.no,'例: 国空航第○○号'))+fRow('名称',fIn('label',d.label,'例: 包括許可'))
+  return '<div class="sec"><h3>許可・承認</h3>'+fRow('許可番号',fIn('no',d.no,'例：国空航第○○号'))+fRow('名称',fIn('label',d.label,'例：包括許可'))
    +fRow('発行日',fIn('issued',d.issued,'','date'))+fRow('期間（自）',fIn('from',d.from,'','date'))+fRow('期間（至）',fIn('to',d.to,'','date'))
-   +fRow('カテゴリー',fSel('cat',['II（サンプル値）','III（サンプル値）','—'],d.cat))+'</div>'
+   +fRow('カテゴリー',fSel('cat',['II','III','—'],d.cat))+'</div>'
    +'<div class="sec"><h3>適用範囲 '+tmpChip+'</h3>'+fPills('cover',COVERS,d.cover)+'<p class="note">この許可で飛べる飛行の種類です。新規飛行で、選んだ内容と合っているかの目安に使います。</p></div>'
    +'<div class="sec"><h3>対象の機体</h3>'+(E.aircraft.length?fPills('aircraft',E.aircraft.map(a=>[a.id,a.name]),d.aircraft):'<div class="empty">登録された機体がありません</div>')+'</div>';
 }
 function insAmt(k,ku,ka,label){const d=A.reg.d;return '<div class="row"><label>'+label+'</label>'+fSeg(ku,[['yes','無制限：はい'],['no','無制限：いいえ']],d[ku])+'</div><div class="row"><label></label><input class="in" type="number" data-bind="@d.'+ka+'" data-num="1" '+(d[ku]==='yes'?'disabled':'')+' value="'+esc(d[ka])+'" placeholder="金額"><span>円</span></div>'}
 function formInsurance(){
   const d=A.reg.d;
-  return '<div class="sec"><h3>保険</h3>'+fRow('保険会社名',fIn('company',d.company,'例: サンプル損害保険'))+fRow('商品名',fIn('product',d.product,'例: 賠償責任保険'))+insAmt('p','pUnl','pAmt','対人')+insAmt('o','oUnl','oAmt','対物')+'<p class="note">DIPSの「保険に関する情報」に当たる内容です。</p></div>';
+  return '<div class="sec"><h3>保険</h3>'+fRow('保険会社名',fIn('company',d.company,'例：○○損害保険'))+fRow('商品名',fIn('product',d.product,'例：賠償責任保険'))+insAmt('p','pUnl','pAmt','対人')+insAmt('o','oUnl','oAmt','対物')+'<p class="note">DIPSの「保険に関する情報」に当たる内容です。</p></div>';
 }
 function formContact(){
   const d=A.reg.d;
-  return '<div class="sec"><h3>連絡先</h3>'+fRow('氏名',fIn('name',d.name,'氏名'))+fRow('国/地域',fIn('country',d.country))+fRow('都道府県',fIn('pref',d.pref))+fRow('住所',fIn('addr',d.addr))
-   +'<div class="row"><label>電話</label><input class="in" data-bind="@d.cc" value="'+esc(d.cc)+'" style="max-width:9em"><input class="in" data-bind="@d.phone" value="'+esc(d.phone)+'"></div>'+fRow('メール',fIn('email',d.email))+'</div>';
+  return '<div class="sec"><h3>連絡先</h3>'+fRow('氏名',fIn('name',d.name,'例：山田 太郎'))+fRow('国/地域',fIn('country',d.country))+fRow('都道府県',fIn('pref',d.pref,'例：○○県'))+fRow('住所',fIn('addr',d.addr,'例：○○市1-2-3'))
+   +'<div class="row"><label>電話</label><input class="in" data-bind="@d.cc" value="'+esc(d.cc)+'" style="max-width:9em"><input class="in" data-bind="@d.phone" value="'+esc(d.phone)+'" placeholder="例：090-1234-5678"></div>'+fRow('メール',fIn('email',d.email,'例：name@example.com'))+'</div>';
 }
 function formPreset(){
   const d=A.reg.d;
-  return '<div class="sec"><h3>現場の名前</h3>'+fRow('名前',fIn('name',d.name,'例: 河川敷Aの現場'))+'</div>'
+  return '<div class="sec"><h3>現場の名前</h3>'+fRow('名前',fIn('name',d.name,'例：河川敷Aの現場'))+'</div>'
    +'<div class="sec"><h3>飛行範囲</h3>'+mapEditor(d)+'</div>'
    +'<div class="sec"><h3>既定の値</h3>'+fRow('高度（m）','<input class="in" type="number" data-bind="@d.alt" data-num="1" value="'+esc(d.alt)+'">')+fRow('出発地',fIn('from',d.from))+fRow('目的地',fIn('to',d.to))
    +'<div class="grp">飛行目的（任意）</div>'+fPills('biz',BIZ.slice(0,12),d.biz)+'<p class="note">新規飛行でこのプリセットを呼び出すと、範囲・高度・出発地/目的地・目的が自動入力されます。</p></div>';
 }
 function formBat(){
   const E=ENV(),d=A.reg.d;const newG=d.group==='__new'||!E.batGroups.length;
-  return '<div class="sec"><h3>BATの情報</h3>'+fRow('管理ラベル',fIn('label',d.label,'例: BAT 1'))
+  return '<div class="sec"><h3>BATの情報</h3>'+fRow('管理ラベル',fIn('label',d.label,'例：BAT 1'))
    +'<p class="note">管理ラベルは、実物のBATにも貼っておく名前です。</p>'
-   +fRow('型式',fIn('model',d.model,'例: 型式X（任意）'))
-   +fRow('BATグループ',fSel('group',E.batGroups.map(g=>[g.id,g.name]).concat([['__new','＋ 新しいグループを作る']]),newG?'__new':d.group,true))+(newG?fRow('グループ名',fIn('newGroup',d.newGroup,'例: EVO Lite系のBATグループ')):'')+'</div>'
+   +fRow('型式',fIn('model',d.model,'例：型式X（任意）'))
+   +fRow('BATグループ',fSel('group',E.batGroups.map(g=>[g.id,g.name]).concat([['__new','＋ 新しいグループを作る']]),newG?'__new':d.group,true))+(newG?fRow('グループ名',fIn('newGroup',d.newGroup,'例：EVO Lite系のBATグループ')):'')+'</div>'
    +'<div class="sec"><h3>取得 '+tmpChip+'</h3><div class="row">'+fSeg('source',[['new','新品'],['used','中古']],d.source)+'</div>'
    +(d.source==='used'?'<p class="note">中古のときは、取得したときに確認したサイクル数と状態から、記録を始めます。それ以前の履歴は記録しません。</p>':'')
    +'<div class="row"><label>サイクル数</label><input class="in" type="number" data-bind="@d.cycle" data-num="1" value="'+esc(d.cycle)+'" placeholder="確認できたときだけ（任意）"></div>'
@@ -215,7 +215,7 @@ Object.assign(ACTS,{
     render();
   },
   'reg-tog':t=>{const d=A.reg.d;const k=t.dataset.k,v=t.dataset.v;const i=d[k].indexOf(v);if(i>=0)d[k].splice(i,1);else d[k].push(v);render()},
-  'reg-self':()=>{const d=A.reg.d;const E=ENV();const me=E.people.find(p=>p.id===E.meId);d.name=me?me.name:A.account.name;d.phone=(me&&me.phone)||d.phone;d.account=A.account.email;render();toast('自分の情報を入れました')},
+  'reg-self':()=>{const d=A.reg.d;const E=ENV();const me=E.people.find(p=>p.id===E.meId);d.name=me?me.name:'';d.phone=(me&&me.phone)||d.phone;render();toast('自分の情報を入れました')},
   'person-leave':()=>openSheet(()=>'<h3>離任にしますか</h3><p>離任は、この人を、<b>この会社・団体（または個人）を離れた人</b>にすることです。人員を消すわけではなく、過去の飛行・点検・記録は残ります。これからの飛行の候補からは外れます。</p><p class="note">アプリで離任にしても、Google Driveの共有は、そのままです。共有が残っていると、Google Driveから見られることがあります。共有をやめるときは、Google Driveで設定してください。</p><div class="row"><button class="btn" data-act="close">やめる</button><button class="btn danger" data-act="person-leave-ok">離任にする</button></div>'),
   'person-leave-ok':()=>{const E=ENV();const p=E.people.find(x=>x.id===A.reg.id);if(p){p.active=false;p.left=slash(TODAY)}A.modal=null;A.reg=null;back();toast('離任にしました。過去の記録は残ります')},
   'person-rejoin':()=>{const E=ENV();const p=E.people.find(x=>x.id===A.reg.id);if(p){p.active=true;p.left=null}A.reg=null;back();toast('再び参加にしました。役割は、あらためて決めてください（以前の役割は自動では戻りません）')}

@@ -16,18 +16,18 @@ function makeOp(plan,s){
   return {planId:plan?plan.id:null,name:sn.planName,snap:sn,noDips:!plan,dips:plan?plan.dips:'none',kml:plan?plan.kml:'none',ac,acs:[ac],pilot,checked:{},pre:{},post:{},cur:{bat:null,offAt:null,extra:0},last:null,legs:[],ack:false,notes:''};
 }
 function startOp(plan,s){A.op=makeOp(plan,s);S=null;A.nfResult=null;opGo('op-pre')}
-/* 画面マップから、途中の画面へ直接飛ぶときの準備（サンプルの運航を自動で整える） */
+/* 画面一覧から、途中の画面へ直接飛ぶときの準備（仮データの運航を自動で整える。設計確認用） */
 function opPrep(id){
   const E=ENV();
   if(id==='op-done'){
-    if(!A.opDone){const f=E.flights[0];if(!f){toast('完了した飛行がありません。サンプルを入れるか、飛行を完了させてください');return false}A.opDone={fid:f.id,name:f.label,n:f.legs.length,synced:f.synced,kml:f.kml}}
+    if(!A.opDone){const f=E.flights[0];if(!f){mtoast('完了した飛行がありません。仮データを入れるか、飛行を完了させてください');return false}A.opDone={fid:f.id,name:f.label,n:f.legs.length,synced:f.synced,kml:f.kml}}
     return true;
   }
   if(!A.op){
     const pl=E.plans[0];
     if(pl)A.op=makeOp(pl,null);
-    else{const a=E.aircraft.find(x=>!x.dead);if(!a){toast('機体がありません。サンプルを入れるか、機体を登録してください');return false}
-      const sn=blankNF(E);sn.aircraft=[a.id];sn.pilots=[E.meId];sn.to='（サンプルの場所）';A.op=makeOp(null,sn)}
+    else{const a=E.aircraft.find(x=>!x.dead);if(!a){mtoast('機体がありません。仮データを入れるか、機体を登録してください');return false}
+      const sn=blankNF(E);sn.aircraft=[a.id];sn.pilots=[E.meId];sn.to='現場';A.op=makeOp(null,sn)}
   }
   const op=A.op,a=opAc();
   if(id!=='op-pre'){op.checked[a.id]=true;op.pre[a.id]={};PRE_ITEMS.forEach((_,i)=>op.pre[a.id][i]=true)}
@@ -37,7 +37,7 @@ function opPrep(id){
   }
   if(['op-landed','op-bat','op-switch','op-post','op-final'].includes(id)&&!op.legs.length){
     const b=a.batOn?E.bats.find(x=>x.group===a.group):null;
-    const leg={n:1,ac:a.id,bat:b?b.label:null,batId:b?b.id:null,batInfo:b?{id:b.id,cycle:'',check:'異常なし',note:''}:null,off:'10:00',on:'10:12',min:12,place:op.snap.to||'（サンプルの場所）',note:''};
+    const leg={n:1,ac:a.id,bat:b?b.label:null,batId:b?b.id:null,batInfo:b?{id:b.id,cycle:'',check:'異常なし',note:''}:null,off:'10:00',on:'10:12',min:12,place:op.snap.to||'現場',note:''};
     op.legs.push(leg);op.last=leg;
   }
   if(id==='op-landed'&&!op.last)op.last=op.legs[op.legs.length-1];
@@ -86,10 +86,11 @@ def('op-pre',{t:'飛行前点検',st:()=>A.op.name,back:false,
   doc:'35b §3（飛行前点検の10項目）／13c（飛行前日常点検が未実施・不合格なら、離陸待機へ進めない＝アプリの物理的な前提）／34g §2（対象機体を機種と登録記号で明示）／34d（通報内容から［飛行前点検へ］で接続。DIPS対象外も同じ点検以降へ合流できる）。',state:'spec',
   tmp:['点検項目の中身は仮（既存の点検・13cの正本を参照する）。実物のA4帳票の項目（プロペラ・モーターなど）に合わせている','戻る・中止の具体UIは未確定。「飛行0回の中止」と「実績がある運航の終了」を区別する（35b §3項目7）','入力途中は端末に保護し、この画面だけで正式なDrive記録は作らない（35b §3項目8）'],
   ask:['点検の入力のしかた（全部確認済みにする近道が要るか）','別人が点検した場合の入力'],
+  mock:()=>'<p class="note" style="margin:0 0 6px">点検項目を1つずつ押す代わりに、全部を確認済みにして、次の画面を確かめます。</p><button class="btn sm" data-act="op-pre-all">全部確認済みにする</button>',
   body:()=>{
     const op=A.op,a=opAc();const pre=op.pre[a.id]||(op.pre[a.id]={});const done=PRE_ITEMS.every((_,i)=>pre[i]);
     return opTarget()+'<div class="sec"><h3>点検項目 '+tmpChip+'</h3>'+PRE_ITEMS.map((x,i)=>tgl('op-pre-tog','data-i="'+i+'"',x,!!pre[i])).join('')
-     +'<div class="row"><button class="btn sm mockctl" data-act="op-pre-all">確認用：全部確認済みにする</button></div><p class="note">未実施を、正常として自動確定しません。</p></div>'
+     +'<p class="note">未実施を、正常として自動確定しません。</p></div>'
      +'<div class="msg '+(done?'ok':'warn')+'">'+(done?'点検が済んでいます。':'点検が済むまで、離陸待機へは進めません。')+'</div>'
      +(op.legs.length?'':'<p class="note">'+(op.noDips?'通報しない飛行として始めています。':'DIPS通報内容から、点検へ進みました。')+'</p>');
   },
@@ -112,9 +113,10 @@ def('op-standby',{t:'離陸待機',st:()=>A.op.name,back:false,
 def('op-fly',{t:'飛行中',st:()=>A.op.name,back:false,
   goal:'飛行中の状態を保持し、着陸を記録する。',
   doc:'35b §5（飛行中の10項目）／13a（ストップウォッチ。画面中央に大きな着陸ボタン。イベントは端末に即時保護され、再起動しても直前の状態へ復帰する）。',state:'spec',
-  tmp:['実際の現場では実時間で計る。モックでは「＋5分」で経過を早送りできる','戻る・中断・異常時の画面復帰は未確定（35b §5項目10）'],
+  tmp:['実際の現場では実時間で計る。右側の「この画面の確認用操作」で、経過を早送りできる','戻る・中断・異常時の画面復帰は未確定（35b §5項目10）'],
   ask:['飛行中に見せたい情報（対象機体・BAT・経過時間のほかに何が要るか）'],
-  body:()=>{const c=A.op.cur;const b=c.bat?batOf(c.bat.id):null;return opTarget()+'<div class="big-sw" id="sw">'+swText()+'</div><p class="note" style="text-align:center">離陸 '+hm(new Date(c.offAt))+(b?' ／ 使用BAT: '+esc(b.label):'')+'</p><div class="row" style="justify-content:center"><button class="btn sm mockctl" data-act="op-ff">確認用：＋5分（早送り）</button></div><p class="note" style="text-align:center">画面を閉じても、この端末に保存されているので、離陸した状態から続けられます。</p>'},
+  mock:()=>'<p class="note" style="margin:0 0 6px">実際の現場では、実時間で計ります。経過を早送りして、着陸後の画面を確かめます。</p><button class="btn sm" data-act="op-ff">＋5分（早送り）</button>',
+  body:()=>{const c=A.op.cur;const b=c.bat?batOf(c.bat.id):null;return opTarget()+'<div class="big-sw" id="sw">'+swText()+'</div><p class="note" style="text-align:center">離陸 '+hm(new Date(c.offAt))+(b?' ／ 使用BAT: '+esc(b.label):'')+'</p><p class="note" style="text-align:center">画面を閉じても、この端末に保存されているので、離陸した状態から続けられます。</p>'},
   foot:()=>'<button class="btn primary big" style="flex:1" data-act="op-land">着陸</button>',
   after:()=>{clearInterval(SWT);SWT=setInterval(()=>{const e=$('#sw');if(!e||A.route!=='op-fly'){clearInterval(SWT);return}e.textContent=swText()},500)}
 });
@@ -143,12 +145,13 @@ def('op-bat',{t:'BAT交換',st:()=>A.op.name,back:false,
 def('op-switch',{t:'機体交代',st:()=>A.op.name,back:false,
   goal:'場所・目的・操縦者・許可等の文脈を引き継いで、別の機体に切り替える。',
   doc:'35b §8（機体交代の10項目）：未点検の機体は正式な飛行前点検へ、点検済みなら必要条件を確認して待機へ。過去の点検を別の機体へ転用しない。飛行済み機体の記録と終了点検を失わせない。',state:'spec',
-  tmp:['Mission／Flightの境界・独立した交代イベントは未確定（35aのPENDING-S6-OPERATION-SCHEMA）','「点検済みにする」ボタンは、点検済みの分岐を見せるためのモックの操作','交代中止・戻るの具体UIは未確定'],
+  tmp:['Mission／Flightの境界・独立した交代イベントは未確定（35aのPENDING-S6-OPERATION-SCHEMA）','点検済みの分岐は、右側の「この画面の確認用操作」で「点検済みにする」を押すと確かめられる','交代中止・戻るの具体UIは未確定'],
   ask:['交代先の候補に、何を出すか（点検状況・BAT管理の有無など）'],
+  mock:()=>{const op=A.op,E=ENV();const c=E.aircraft.filter(a=>!a.dead&&a.id!==op.ac&&!op.checked[a.id]);return '<p class="note" style="margin:0 0 6px">未点検の機体を「この運航で点検済み」にして、点検済みの機体へ交代する分岐を確かめます。</p>'+(c.length?c.map(a=>'<button class="btn sm" data-act="op-switch-checked" data-id="'+a.id+'">'+esc(a.name)+'を点検済みにする</button>').join(' '):'<p class="note" style="margin:0">未点検の機体はありません。</p>')},
   body:()=>{
     const op=A.op,E=ENV();const cands=E.aircraft.filter(a=>!a.dead&&a.id!==op.ac);
     return opTarget()+'<div class="msg info">これまでの場所・目的・操縦者・許可などを引き継ぎます。現在の機体の実績と、終了時の点検は、失われません。</div>'
-     +(cands.length?cands.map(a=>'<div class="card" style="margin-bottom:8px"><b>'+esc(a.name)+'</b><span>'+esc(a.model)+' ／ <span class="mono">'+esc(a.mark)+'</span></span><span class="chips">'+(op.checked[a.id]?'<i class="chip ok">この運航で点検済み</i>':'<i class="chip warn">未点検</i>')+(a.batOn?'<i class="chip">BAT管理 ON</i>':'<i class="chip">BAT管理 OFF</i>')+'</span><div class="row"><button class="btn sm primary" data-act="op-switch-pick" data-id="'+a.id+'">この機体に交代</button>'+(op.checked[a.id]?'':'<button class="btn sm mockctl" data-act="op-switch-checked" data-id="'+a.id+'">確認用：点検済みにする</button>')+'</div></div>').join(''):'<div class="empty"><b>交代できる機体がありません</b><br>ほかの登録機体がない場合は、設定で機体を追加してください。<br><button class="btn sm" style="margin-top:8px" data-act="op-switch-reg">＋ 機体をここで登録する</button></div>');
+     +(cands.length?cands.map(a=>'<div class="card" style="margin-bottom:8px"><b>'+esc(a.name)+'</b><span>'+esc(a.model)+' ／ <span class="mono">'+esc(a.mark)+'</span></span><span class="chips">'+(op.checked[a.id]?'<i class="chip ok">この運航で点検済み</i>':'<i class="chip warn">未点検</i>')+(a.batOn?'<i class="chip">BAT管理 ON</i>':'<i class="chip">BAT管理 OFF</i>')+'</span><div class="row"><button class="btn sm primary" data-act="op-switch-pick" data-id="'+a.id+'">この機体に交代</button>'+'</div></div>').join(''):'<div class="empty"><b>交代できる機体がありません</b><br>ほかの登録機体がない場合は、設定で機体を追加してください。<br><button class="btn sm" style="margin-top:8px" data-act="op-switch-reg">＋ 機体をここで登録する</button></div>');
   },
   foot:()=>'<button class="btn" data-act="op-bat-cancel">戻る</button>'
 });
@@ -157,11 +160,12 @@ def('op-post',{t:'飛行後点検',st:()=>A.op.name,back:false,
   doc:'35b §9（飛行後点検の10項目）。異常なしを未確認で確定しない。整備台帳の詳細入力フォームをここへ混ぜない（36）。入力を含む下書きは端末に保護し、最終確定の対象へ含める（35d）。',state:'spec',
   tmp:['使用機体ごとの画面構成は未確定（35b §9項目10）。ここでは機体ごとに並べている','点検項目の中身は仮'],
   ask:['複数機体を使ったときの飛行後点検の見せ方（機体ごとの画面か、1画面か）'],
+  mock:()=>'<p class="note" style="margin:0 0 6px">点検項目を1つずつ押す代わりに、全部を確認済みにして、次の画面を確かめます。</p><button class="btn sm" data-act="op-post-all">全部確認済みにする</button>',
   body:()=>{
     const op=A.op;
     return op.acs.map(id=>{const a=acOf(id);const p=op.post[id]||(op.post[id]={});return '<div class="sec"><h3>'+esc(a.name)+' <small class="mono">'+esc(a.mark)+'</small></h3>'+POST_ITEMS.map((x,i)=>tgl('op-post-tog','data-a="'+id+'" data-i="'+i+'"',x,!!p[i])).join('')+'</div>'}).join('')
      +'<div class="sec"><h3>記事・不具合・処置</h3><div class="row"><textarea class="in" data-bind="~notes" placeholder="不具合があれば、発生の事情と処置を書く（なければ空のまま）">'+esc(op.notes)+'</textarea></div><p class="note">詳しい点検整備の記録は、［各種設定・管理］の［点検整備記録］で扱います。</p></div>'
-     +'<div class="row"><button class="btn sm mockctl" data-act="op-post-all">確認用：全部確認済みにする</button></div>';
+;
   },
   foot:()=>{const op=A.op;const ok=op.acs.every(id=>{const p=op.post[id]||{};return POST_ITEMS.every((_,i)=>p[i])});return '<button class="btn primary" data-act="op-to-final"'+(ok?'':' disabled')+'>最終送信・保存へ</button>'}
 });

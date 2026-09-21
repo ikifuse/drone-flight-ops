@@ -12,7 +12,7 @@ function mapBase(){
   +'<path d="M-10 70C80 90 140 40 230 120S340 180 380 170L380 215C330 225 250 170 200 165S60 130 -10 120Z" fill="#cfe4f3"/>'
   +'<g stroke="#fff" stroke-width="6" fill="none"><path d="M0 200H360M60 0V260M250 0V260M0 40H360"/></g>'
   +'<g fill="#d8d8d0"><rect x="70" y="205" width="40" height="30"/><rect x="120" y="210" width="50" height="25"/><rect x="262" y="50" width="45" height="40"/><rect x="262" y="205" width="60" height="35"/><rect x="8" y="50" width="40" height="35"/></g>'
-  +'<text x="10" y="253" font-size="10" fill="#5b6b5b">サンプルの地図（架空）</text><text x="196" y="106" font-size="10" fill="#4b7ea3">サンプル川</text><text x="268" y="46" font-size="10" fill="#555">サンプル公園</text>'
+  +'<text x="10" y="253" font-size="10" fill="#5b6b5b">地図（イメージ）</text><text x="196" y="106" font-size="10" fill="#4b7ea3">○○川</text><text x="268" y="46" font-size="10" fill="#555">○○公園</text>'
   +'<line x1="292" y1="240" x2="312" y2="240" stroke="#333" stroke-width="2"/><text x="292" y="236" font-size="9" fill="#333">100m</text>';
 }
 function mapLayers(o){

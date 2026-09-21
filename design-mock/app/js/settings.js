@@ -2,7 +2,7 @@
 /* ===================================================================
    各種設定・管理 — 設計の出典: 34b／34g（機体管理は案）／32d（BAT一覧・詳細は案）
    ここから事前に登録する経路。分類そのものは未確定で、この並びは案。
-   左側の画面には、内部の用語・設計書の番号・状態ラベルを出さない（それらは設計メモにだけ書く）。
+   左側の画面には、内部の用語・設計書の番号・状態ラベル・確認用の部品を出さない（それらは右側の設計確認メモにだけ書く）。
    =================================================================== */
 const li=(ico,title,sub,right,act,attrs)=>'<button class="li" data-act="'+act+'" '+(attrs||'')+'><span class="ico">'+ico+'</span><span class="tx"><b>'+title+'</b><small>'+sub+'</small></span>'+(right||'')+'<span class="go">›</span></button>';
 const cnt=(n,unit,warnZero)=>n?'<i class="chip ok">'+n+unit+'</i>':(warnZero?'<i class="chip warn">未登録</i>':'<i class="chip">なし</i>');
@@ -11,17 +11,17 @@ function unsynced(){const E=ENV();if(!E)return 0;return E.flights.filter(f=>!f.s
 def('set',{t:'各種設定・管理',st:()=>{const E=ENV();return E?envLabel(E)+'で使用中':''},
   goal:'使っている場所（個人・会社・団体）の、人員・機体・BAT・許可承認・保険・連絡先・現場などの登録や設定を扱う。',
   doc:'34b §1（ホーム4入口の1つ。内部の分類は未確定）／34g §3・§4（機体管理の入口の流れはCURRENT-PROPOSAL。各種設定・管理は、いま使っている場所を対象にする）。人員・BAT・場所・環境などの他の管理画面は、個別の画面設計がない（34f PENDING-D-SETTINGS-SCREENS）。',state:'proposal',
-  tmp:['この一覧の分類・並び順・名称は案（PENDING-S5-HOME-DETAIL）','「保存状態」は、以前の「保存・同期」を平易にした案（PENDING-U-WORDING）','許可・承認／保険／連絡先を設定のどこに置くかは未確定（PENDING-S6-DRIVE-PLACEMENT）','誰がどの項目を変更できるかは未確定（PENDING-D-AC-PERMISSION／PENDING-S2-ACCESS-DETAIL）。このモックでは制限していない'],
+  tmp:['この一覧の分類・並び順・名称は案（PENDING-S5-HOME-DETAIL）','「DIPSのログイン情報」を設定のどこに置くか（この一覧の1項目か、DIPS関連の中か）は未決。2026-09-22のオーナー指示で候補に加えた（PENDING-S5-DIPS-LOGIN-STORAGE）','左側の案内文（「飛行の途中でその場で登録することもできます」）は、説明を最小にするため置いていない。要るかどうかは未決','「保存状態」は、以前の「保存・同期」を平易にした案（PENDING-U-WORDING）','許可・承認／保険／連絡先を設定のどこに置くかは未確定（PENDING-S6-DRIVE-PLACEMENT）','誰がどの項目を変更できるかは未確定（PENDING-D-AC-PERMISSION／PENDING-S2-ACCESS-DETAIL）。このモックでは制限していない'],
   ask:['設定の分類の仕方（この9項目でよいか）','未登録のものをここで目立たせるか（登録漏れを減らすため）'],
   body:()=>{
     const E=ENV();const n=unsynced();
-    return '<p class="lead">「'+esc(envLabel(E))+'」の設定です。ここで先にまとめて登録もできますが、<b>飛行の途中でその場で登録することもできます</b>。</p>'
-     +li('🏢','個人・会社・団体の切り替え','使う場所を切り替える・新しく追加する',cnt(A.envs.length,'か所'),'go','data-s="set-env"')
+    return li('🏢','個人・会社・団体の切り替え','使う場所を切り替える・新しく追加する',cnt(A.envs.length,'か所'),'go','data-s="set-env"')
      +li('👥','人員・役割','人員の一覧・役割・離任',cnt(E.people.filter(p=>p.active!==false).length,'人'),'go','data-s="set-members"')
      +li('✈','機体管理','登録している機体・BAT管理の設定',cnt(E.aircraft.length,'機',true),'go','data-s="set-aircraft"')
      +li('🔋','BAT管理','BATの一覧・状態・使用履歴',cnt(E.bats.length,'本'),'go','data-s="set-bat"')
      +li('📄','許可・承認／保険／連絡先','DIPSの入力に自動で入る、登録済みの情報',(E.permits.length&&E.insurance&&E.contact?'<i class="chip ok">登録済み</i>':'<i class="chip warn">未登録あり</i>'),'go','data-s="set-docs"')
      +li('📍','現場プリセット','よく行く現場の範囲・高度',cnt(E.presets.length,'件'),'go','data-s="set-presets"')
+     +li('🔑','DIPSのログイン情報','DIPSログインID・パスワード',A.dips.registered?'<i class="chip ok">登録済み</i>':'<i class="chip warn">未登録</i>','dips-open')
      +li('🔌','DIPSへの通報方法','アプリから送信／DIPS Webで通報',A.apiOk?'<i class="chip">アプリから送信できます</i>':'<i class="chip warn">DIPS Webで通報</i>','go','data-s="set-dips"')
      +li('🔧','点検整備記録','機体ごとの詳しい点検整備の記録','','go','data-s="set-maint"')
      +li('🔄','保存状態','Google Driveへの保存の状況',n?'<i class="chip warn">未保存 '+n+'件</i>':'<i class="chip ok">保存済み</i>','go','data-s="set-sync"');
@@ -34,9 +34,9 @@ def('set-env',{t:'個人・会社・団体の切り替え',st:'使う場所を�
   doc:'31a §4／34a §5・§7.3／34g §2・§4（内部では運用環境の表示・切替。切り替えると、参照する機体・BAT・人員の正本も切り替わる）。Googleアカウントは、運用環境や人物そのものではない。',state:'accepted',
   tmp:['この画面の並びは案。使っている場所の表示位置と切替の形は未確定（PENDING-S2-ENVIRONMENT-UI）','名前の変更は、このモックでは動かない'],ask:['切り替えは、ここ・ホーム・ログイン直後の画面のどれを主にするか'],
   body:()=>{
-    const E=ENV();const admins=E.people.filter(p=>p.roles.includes('管理者')).map(p=>p.name);
+    const E=ENV();const admins=E.people.filter(p=>p.roles.includes('管理者')).map(p=>pnm(p));
     return '<div class="sec"><h3>いま使っている場所</h3><table class="kv"><tr><td>名前</td><td>'+esc(envLabel(E))+'</td></tr><tr><td>種類</td><td>'+esc(KIND_NAME(E.kind))+'</td></tr><tr><td>管理者</td><td>'+esc(admins.join('、')||'—')+'</td></tr><tr><td>あなたの役割</td><td>'+esc(envRole(E))+'</td></tr></table></div>'
-     +'<div class="sec"><h3>ログイン中のGoogleアカウント</h3><p class="lead" style="margin:0"><span class="mono">'+esc(A.account?A.account.email:'')+'</span></p><p class="note">同じ人が、個人用と会社用などで、別のGoogleアカウントを使うことがあります。</p></div>'
+     +'<div class="sec"><h3>ログイン中のGoogleアカウント</h3><p class="lead" style="margin:0">'+acctMail()+'</p></div>'
      +'<div class="sec"><h3>切り替える・追加する</h3>'+A.envs.map(e=>'<button class="tgl'+(A.cur===e.id?' sel':'')+'" data-act="env-pick" data-id="'+e.id+'"><span class="box">'+(A.cur===e.id?'✓':'')+'</span><span><b>'+esc(envLabel(e))+'</b><br><small class="note">'+esc(KIND_NAME(e.kind))+'</small></span></button>').join('')
      +'<div class="row"><button class="btn sm" data-act="ob-create">＋ 会社・団体で新しく使い始める</button><button class="btn sm" data-act="ob-join">招待を受けている会社・団体に参加する</button></div></div>';
   }
@@ -49,9 +49,9 @@ def('set-members',{t:'人員・役割',st:'人員の一覧',
   tmp:['一覧・詳細の構成は案（5タブの概念を1つの詳細に集約している）','設定変更ができる人は、操縦者または管理者（31b §4）。人員管理の権限は未確定','離任のUI・実行できる人は未確定（PENDING-S2-MEMBERSHIP）'],ask:['人員の一覧に、Googleアカウントの有無・資格の期限をどこまで見せるか'],
   body:()=>{
     const E=ENV();
-    return (E.people.length?E.people.map(p=>'<button class="li" data-act="reg-open" data-t="person" data-id="'+p.id+'" style="'+(p.active===false?'opacity:.55':'')+'"><span class="ico">👤</span><span class="tx"><b>'+esc(p.name)+(p.id===E.meId?'（あなた）':'')+'</b><small>'+esc(p.roles.join('・')||'役割はまだ決まっていません')+(p.pilot?' ／ 技能証明: '+esc(p.lic):'')+'</small></span>'+(p.account?'<i class="chip info">Googleアカウントあり</i>':'<i class="chip">Googleアカウントなし</i>')+(p.active===false?'<i class="chip ng">離任</i>':'')+'<span class="go">›</span></button>').join(''):'<div class="empty">人員が登録されていません</div>')
+    return (E.people.length?E.people.map(p=>'<button class="li" data-act="reg-open" data-t="person" data-id="'+p.id+'" style="'+(p.active===false?'opacity:.55':'')+'"><span class="ico">👤</span><span class="tx"><b>'+esc(pnm(p))+(p.id===E.meId?'（あなた）':'')+'</b><small>'+esc(p.roles.join('・')||'役割はまだ決まっていません')+(p.pilot?' ／ 技能証明: '+esc(p.lic):'')+'</small></span>'+(p.account?'<i class="chip info">Googleアカウントあり</i>':'<i class="chip">Googleアカウントなし</i>')+(p.active===false?'<i class="chip ng">離任</i>':'')+'<span class="go">›</span></button>').join(''):'<div class="empty">人員が登録されていません</div>')
      +'<button class="card add" style="width:100%" data-act="reg-open" data-t="person">＋ 人員を追加</button>'
-     +'<p class="note">Googleアカウントを持たない補助者・外部の点検者も、人員として登録できます。何ができるかは、その人の役割と、Google Driveでの共有の状態で決まります。</p>';
+     ;
   }
 });
 
@@ -63,10 +63,8 @@ def('set-aircraft',{t:'機体管理',st:'登録している機体の一覧',
   ask:['一覧に出す情報（BAT管理のON/OFF・BATグループ・登録期限）でよいか'],
   body:()=>{
     const E=ENV();
-    return '<p class="lead">「'+esc(envLabel(E))+'」に登録している、登録記号のある実際の機体の一覧です。</p>'
-     +(E.aircraft.length?E.aircraft.map(a=>{const g=groupOf(a.group);return '<button class="li" data-act="reg-open" data-t="aircraft" data-id="'+a.id+'" style="'+(a.dead?'opacity:.55':'')+'"><span class="ico">✈</span><span class="tx"><b>'+esc(a.name)+'</b><small>'+esc(a.model)+' ／ <span class="mono">'+esc(a.mark)+'</span></small><small>'+(a.batOn?'BAT管理 ON（'+esc(g?g.name:'BATグループ未設定')+'）':'BAT管理 OFF')+'</small></span>'+(a.dead?'<i class="chip ng">抹消</i>':(a.expiry&&daysTo(a.expiry)<=30?'<i class="chip warn">期限まで'+daysTo(a.expiry)+'日</i>':''))+'<span class="go">›</span></button>'}).join(''):'<div class="empty"><b>登録された機体がありません</b><br>ここで追加するか、新規飛行の途中で「機体を選ぶ」ときにその場で登録できます。</div>')
-     +'<button class="card add" style="width:100%" data-act="reg-open" data-t="aircraft">＋ 機体を追加</button>'
-     +'<p class="note">追加した機体は、新規飛行や機体交代で選べるようになります。Google Driveのファイル名などを知らなくても操作できます。</p>';
+    return (E.aircraft.length?E.aircraft.map(a=>{const g=groupOf(a.group);return '<button class="li" data-act="reg-open" data-t="aircraft" data-id="'+a.id+'" style="'+(a.dead?'opacity:.55':'')+'"><span class="ico">✈</span><span class="tx"><b>'+esc(a.name)+'</b><small>'+esc(a.model)+' ／ <span class="mono">'+esc(a.mark)+'</span></small><small>'+(a.batOn?'BAT管理 ON（'+esc(g?g.name:'BATグループ未設定')+'）':'BAT管理 OFF')+'</small></span>'+(a.dead?'<i class="chip ng">抹消</i>':(a.expiry&&daysTo(a.expiry)<=30?'<i class="chip warn">期限まで'+daysTo(a.expiry)+'日</i>':''))+'<span class="go">›</span></button>'}).join(''):'<div class="empty"><b>登録された機体がありません</b></div>')
+     +'<button class="card add" style="width:100%" data-act="reg-open" data-t="aircraft">＋ 機体を追加</button>';
   }
 });
 
@@ -132,11 +130,16 @@ def('set-presets',{t:'現場プリセット',st:'よく行く現場の範囲・�
 def('set-dips',{t:'DIPSへの通報方法',st:'アプリから送信／DIPS Webで通報',
   goal:'アプリからDIPSへ送信できるかどうかの状態と、DIPS Webで通報する方法がいつでも使えることを示す。',
   doc:'33b（API未承認・credential未発行・接続不能でも、Manual経路とAPI非依存の計画・現場記録は独立して成立する）／24（Manualを第一級とする）。この設定画面自体は、個別には設計されていない。',state:'none',
-  tmp:['この画面の存在自体が案。「送信できる／できない」の切替は、モック専用の操作（実際は審査結果・接続状態で決まる）'],ask:['アプリから送信できるかどうかの状態を、利用者に見せる必要があるか'],
-  body:()=>'<div class="sec"><h3>アプリからDIPSへ送信する</h3><p class="lead" style="margin:0">'+(A.apiOk?'いま、アプリからDIPSへ送信できます。新規飛行の最後で、［アプリからDIPSへ送信する］を選べます。':'いまは、アプリからDIPSへ送信できません。［DIPS Webで通報する］で、最後まで進められます。')+'</p></div>'
-   +'<div class="sec"><h3>DIPS Webで通報する</h3><p class="lead" style="margin:0">いつでも使えます。アプリからDIPSへ送信できないときでも、現場での運用は止まりません。</p></div>'
-   +'<div class="mockbox"><div class="mocktag">確認用の操作（本番の画面にはありません）</div><p class="note" style="margin:0 0 6px">アプリからDIPSへ送信できるかどうかを切り替えて、表示を確かめます。</p><div class="row"><span class="seg"><button class="'+(A.apiOk?'on':'')+'" data-act="api" data-v="1">送信できる</button><button class="'+(!A.apiOk?'on':'')+'" data-act="api" data-v="0">送信できない</button></span></div></div>'
+  tmp:['この画面の存在自体が案','「送信できる／できない」は、実際は審査結果・接続状態で決まる。右側の切替（DIPSへ送信）で状態を選ぶ'],ask:['アプリから送信できるかどうかの状態を、利用者に見せる必要があるか'],
+  body:()=>'<div class="sec"><h3>アプリからDIPSへ送信する</h3><p class="lead" style="margin:0">'+(A.apiOk?'いま、アプリからDIPSへ送信できます。':'いまは、アプリからDIPSへ送信できません。［DIPS Webで通報する］で、最後まで進められます。')+'</p></div>'
+   +'<div class="sec"><h3>DIPS Webで通報する</h3><p class="lead" style="margin:0">いつでも使えます。</p></div>'
 });
+/* ---------- DIPSのログイン情報（各種設定・管理から登録・変更／はじめの設定の一項目／通報の直前のその場登録） ---------- */
+def('set-dipscred',Object.assign({t:'DIPSのログイン情報',st:()=>A.dips.registered?'登録済み':'',backAct:'dips-cancel',
+  enter:()=>{A.ui.dform={id:A.dips.id||'',pw:''};A.ui.pwShow=false},
+  body:()=>dipsForm(),
+  foot:()=>'<button class="btn" data-act="dips-cancel">キャンセル</button><button class="btn primary" data-act="dips-save">'+(A.dipsRet?'登録して戻る':(A.dips.registered?'保存する':'登録する'))+'</button>'
+},DIPS_MEMO,{tmp:['この画面は、3か所から開く：各種設定・管理／はじめの設定の一項目（案B）／通報の直前でDIPSのログイン情報が未登録のとき（その場で登録して、元の飛行計画へ戻る）。3つで同じ画面を使っている'].concat(DIPS_MEMO.tmp)}));
 def('set-maint',{t:'点検整備記録',st:'機体ごとの詳しい点検整備',
   goal:'機体ごとの詳しい点検整備の記録（通常の日常点検とは別）への入口。',
   doc:'36（機体別の詳細な点検整備は05に置く。通常の日常点検と分離）。この入口の画面は未設計。整備台帳の詳細入力フォームを、通常運航の画面へ混ぜない（35b §9）。',state:'none',
@@ -146,11 +149,11 @@ def('set-maint',{t:'点検整備記録',st:'機体ごとの詳しい点検整備
 def('set-sync',{t:'保存状態',st:'Google Driveへの保存の状況',
   goal:'この端末には保存されているが、まだGoogle Driveに保存されていないものを確認し、通信できるときに保存する。',
   doc:'14 §3.4（記録ごとの状態表示）／38a §4（正本を確認する時点とcacheの表示）／27e §4（未保存のKMLを端末に保持し、通信復帰時と最後の保存のときに再送）。全画面に共通する見せ方は未設計（34f PENDING-D-STATUS-DISPLAY）。設定名は、以前の「保存・同期」を平易にした案。',state:'none',
-  tmp:['この画面自体が案。オフライン・未保存・エラーの共通の見せ方は未設計','設定名「保存状態」の最終形はPENDING-U-WORDING'],ask:['未保存の状態を、各画面のどこにどう見せるか'],
+  tmp:['この画面自体が案。オフライン・未保存・エラーの共通の見せ方は未設計','設定名「保存状態」の最終形はPENDING-U-WORDING','通信の状態（オンライン／オフライン）は、右側の切替（通信）で選ぶ'],ask:['未保存の状態を、各画面のどこにどう見せるか'],
   body:()=>{
     const E=ENV();const n=unsynced();
     return '<div class="sec"><h3>まだGoogle Driveに保存されていないもの</h3>'+(n?'<ul style="margin:0;padding-left:1.2em;font-size:13px">'+E.flights.filter(f=>!f.synced).map(f=>'<li>飛行記録「'+esc(f.label)+'」: この端末には保存されています。まだGoogle Driveには保存されていません。</li>').join('')+E.flights.filter(f=>f.kml==='pending').map(f=>'<li>KML「'+esc(f.label)+'」: まだGoogle Driveに保存されていません。</li>').join('')+E.plans.filter(p=>p.kml==='pending').map(p=>'<li>KML「'+esc(p.name)+'」: まだGoogle Driveに保存されていません。</li>').join('')+'</ul><button class="btn" style="margin-top:8px" data-act="sync-now"'+(A.online?'':' disabled')+'>もう一度保存する</button>'+(A.online?'':'<p class="note">いまは通信できません。通信が戻ったら、自動で保存します。</p>'):'<div class="msg ok">まだ保存されていないものは、ありません。</div>')+'</div>'
-     +'<div class="mockbox"><div class="mocktag">確認用の操作（本番の画面にはありません）</div><p class="note" style="margin:0 0 6px">通信の状態を切り替えて、表示を確かめます。</p><div class="row"><span class="seg"><button class="'+(A.online?'on':'')+'" data-act="online" data-v="1">オンライン</button><button class="'+(!A.online?'on':'')+'" data-act="online" data-v="0">オフライン</button></span></div></div>';
+;
   }
 });
 
@@ -163,6 +166,7 @@ Object.assign(ACTS,{
   },
   'bat-check-set':t=>{const b=batOf(A.ui.batId);b.check=t.dataset.v;b.hist.unshift({d:slash(TODAY),ac:b.lastAc,min:0,chk:b.check+'（手入力）'});A.modal=null;render();toast('状態確認を更新しました。履歴に残ります')},
   'api':t=>{A.apiOk=t.dataset.v==='1';render()},
+  'dips-open':()=>{A.dipsRet=null;nav('set-dipscred')},
   'online':t=>{A.online=t.dataset.v==='1';render()},
   'sync-now':()=>{const E=ENV();E.flights.forEach(f=>{f.synced=true;if(f.kml==='pending')f.kml='saved'});E.plans.forEach(p=>{if(p.kml==='pending')p.kml='saved'});render();toast('Google Driveに保存しました')}
 });
