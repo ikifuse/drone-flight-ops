@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>アプリ全体 設計確認用モック（低忠実度・送信も保存もしません）</title>
+<!--
+  アプリ全体 設計確認用モック（本番実装ではありません）
+  - 目的: 完全な初回利用者がアプリを開いてから、各機能を実際にクリックして歩き回り、
+          これまでの設計で決めた画面構成・導線を、実装の前に確かめるためのもの。
+  - このフォルダーだけで動作します（外部通信・保存・DIPS/Google Drive接続・本番コードへの依存は一切ありません）。
+  - データはすべてダミーです。新しいデータ構造・業務ルールの確定ではありません。
+  - 正式Docs・既存アプリ本体（src / public）とは無関係に置いています。実装開始ではありません。
+  - 画面の出典（どの設計書のどこか）と、設計上の状態（決定済み／案／仮／未設計）は、画面右のメモ欄（スマホ幅では「メモ」ボタン）に出ます。
+-->
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="root"></div>
+<script src="js/core.js"></script>
+<script src="js/data.js"></script>
+<script src="js/map.js"></script>
+<script src="js/onboarding.js"></script>
+<script src="js/home.js"></script>
+<script src="js/register.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
