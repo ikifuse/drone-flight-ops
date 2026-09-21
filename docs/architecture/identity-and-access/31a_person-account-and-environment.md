@@ -1,6 +1,6 @@
 # 31a. 人物・Googleアカウント・運用環境
 
-最終更新: 2026-09-20\
+最終更新: 2026-09-21\
 由来: 99.2 §2【発端・問題】【人物・所属の現在案】【会社利用】【画面/保存への反映】、基準Docs `ea73d08`（Step 1終了`cab30e4`でも同内容）。\
 主要責務: 人物同一性、アカウントとの対応、環境・所属・資格の概念境界。入口は[README](README.md)。状態は節内で区別する。
 
@@ -44,7 +44,7 @@
 
 **採らない案（CURRENT-ACCEPTED）**: 共有パスワードで1アカウントを複数人が使う運用は採用しない。原本は会社所有への依存問題と人物・アカウント分離の検討の中でこの結論を明記するが、パスワード共有単独の比較試験・詳細な却下理由までは記録していない。一般的なセキュリティ理由を当時調査済みの根拠として補わない。秘密の取り扱いは[16](../16_security.md)を参照する。
 
-**現在の画面・保存境界（CURRENT-ACCEPTED）**: 環境の取り違えを防ぐため、複数環境に所属する場合は現在環境名と切替手段を明示し、必要なら使用中Googleアカウントも併記する。所属環境が1つなら常時表示を省略できる。切替時は環境ごとのroot / 正本を切り替え、設定・管理は[31b](31b_roles-and-access-control.md)の権限に従って人員・環境・マスターを扱う。画面配置・切替時の詳細挙動・root対応の物理schemaは**PENDING-S2-ENVIRONMENT-UI**であり、[30の10項目](../presentation/30_screen-specification-standard.md)を推測で埋めない。認証実装や全Drive階層の設計移植は本書の範囲外。機体・BATも現在の環境に属するデータで、環境を切り替えると参照する正本も切り替わる（[32h §2](../asset-management/32h_registered-aircraft-and-battery-group-relations.md#2-運用環境に属するデータの連鎖既存の原則との接続)）。現在の環境の表示と、飛行で扱う対象機体の表示は別の責任（[34g §2](../presentation/34g_settings-aircraft-management-and-context-display.md#2-現在の運用環境の表示と対象機体の表示)）。
+**現在の画面・保存境界（CURRENT-ACCEPTED）**: 環境の取り違えを防ぐため、複数環境に所属する場合は現在環境名と切替手段を明示し、必要なら使用中Googleアカウントも併記する。所属環境が1つなら常時表示を省略できる。切替時は環境ごとのroot / 正本を切り替え、設定・管理は[31b](31b_roles-and-access-control.md)の権限に従って人員・環境・マスターを扱う。画面配置・切替時の詳細挙動・root対応の物理schemaは**PENDING-S2-ENVIRONMENT-UI**であり、[30の10項目](../presentation/30_screen-specification-standard.md)を推測で埋めない。認証実装や全Drive階層の設計移植は本書の範囲外。機体・BATも現在の環境に属するデータで、環境を切り替えると参照する正本も切り替わる（[32h §2](../asset-management/32h_registered-aircraft-and-battery-group-relations.md#2-運用環境に属するデータの連鎖既存の原則との接続)）。現在の環境の表示と、飛行で扱う対象機体の表示は別の責任（[34g §2](../presentation/34g_settings-aircraft-management-and-context-display.md#2-現在の運用環境の表示と対象機体の表示)）。画面に出す表示名は、これらの内部の概念名（OperationalEnvironment・Personnel・GoogleIdentity・Membershipなど）をそのまま使わず、「個人で使用中」「登録されている人」のように分ける（2026-09-21。内部の概念と責務分離は変えない。[34h](../presentation/34h_user-facing-wording-and-terminology.md)）。
 
 ## 5. 実装・検証で照合する境界
 

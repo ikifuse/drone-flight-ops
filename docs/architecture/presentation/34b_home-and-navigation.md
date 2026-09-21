@@ -1,6 +1,6 @@
 # 34b. ホーム4入口と画面から保存責任への接続
 
-最終更新: 2026-09-20\
+最終更新: 2026-09-21\
 由来: 99.2 §3。ホームの入口・名称・到達先・保存責任への接続を扱う。\
 規約: [30の10項目](30_screen-specification-standard.md)。初回と環境選択は[34a](34a_setup-and-environment-entry.md)。
 
@@ -63,3 +63,7 @@
 **VERIFY-S5-SETUP-EVIDENCE**（34a）: 旧99.1 §3、98.2、実Drive現在地資料の「画面遷移」等は未再確認。今回の現在案は99.2を直接読んで移管したもので、旧mainの画面仕様やモックを再利用していない。重要判断の記録は[ADR-0019](../../decisions/ADR-0019-home-entry-and-shared-plan-handoff.md)。
 
 Step 6の保存責任の詳細は[37](../drive-structure/37_environment-storage-responsibilities.md)、［飛行履歴・出力］から確認するA4は[35c](../operation-recording/35c_a4-operation-record.md)。ホーム4入口と画面→保存先の対応の因果は本書に維持する。
+
+## 5. 利用者向けの表示（2026-09-21）
+
+ホームの4入口の名称（［新規飛行］［飛行リスト］［飛行履歴・出力］［各種設定・管理］）は、§1のCURRENT-ACCEPTEDのとおり変えない。一方、使っている先の表示は、内部の概念名（OperationalEnvironment・運用環境）を出さず、「個人で使用中」「○○株式会社で使用中」のように名称で示し、切替の操作は［切り替える］とする（案。[34a §7](34a_setup-and-environment-entry.md#7-利用者向けの表示名と初回導線の訂正2026-09-21)、[34h](34h_user-facing-wording-and-terminology.md)）。ホームの説明や登録の案内にも、内部の用語・設計書の番号を使わない（[30 §4](30_screen-specification-standard.md#4-内部設計用語と利用者表示文言の分離)）。

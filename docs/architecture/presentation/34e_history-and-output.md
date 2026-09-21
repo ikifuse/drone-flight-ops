@@ -1,6 +1,6 @@
 # 34e. 飛行履歴・出力
 
-最終更新: 2026-09-19\
+最終更新: 2026-09-21\
 由来: 99.2 §8の飛行履歴・出力UIと出力選択（Step 7d）。34bが入口の意味までとした［飛行履歴・出力］の画面仕様を、10項目規約で記録する。\
 主要責務: 過去の飛行の検索・選択と、必要な出力（KML・PDF）への導線。出力の内容・生成契機は[27e](../output/27e_kml-generation-timing-and-content.md)・[27f](../output/27f_derived-pdf-roles-and-map-pdf.md)、A4は[35c](../operation-recording/35c_a4-operation-record.md)\
 規約: [30の10項目](30_screen-specification-standard.md)。
@@ -38,3 +38,7 @@
 - 既存のまま維持: PENDING-S5-HOME-DETAIL（各種設定・管理の分類等。飛行履歴・出力の詳細は本書へ移した）、PENDING-S7B-FLIGHT-KEY。
 
 本書は画面の記録であり、画面の実装・実機確認の完了ではない。旧資料（98.2の画面と保存先の整理）は今回再確認していない。
+
+## 4. 利用者向けの表示（2026-09-21）
+
+出力の画面には、内部の保存領域の番号（07など）や設計書の参照を表示しない（[30 §4](30_screen-specification-standard.md#4-内部設計用語と利用者表示文言の分離)）。出力後の表示は、いま何が起きているかを直接示す（案）。オンラインで保存できたときは「Google Driveに保存しました」、通信できないときは「この端末で作成しました。まだGoogle Driveには保存されていません。通信が戻ったら保存します」のようにする（[34h §5](34h_user-facing-wording-and-terminology.md#5-保存同期の表示)）。KMLの文字列は見せず、人が読む形で見るには地図付きPDFへ案内する（[27f](../output/27f_derived-pdf-roles-and-map-pdf.md)）。「KML」「PDF」は、利用者が扱うファイルの種類の名前として維持する。表示名の最終形はPENDING-U-WORDING。

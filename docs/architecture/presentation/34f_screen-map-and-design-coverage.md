@@ -1,6 +1,6 @@
 # 34f. 画面体系と遷移の俯瞰・設計の到達範囲
 
-最終更新: 2026-09-20\
+最終更新: 2026-09-21\
 状態: 俯瞰の索引（既存の各画面仕様を並べたもの）。新しい画面仕様・業務ルールは決めない。未設計領域の`PENDING`と、進め方の`NEW-PROPOSAL`を含む\
 主責務: アプリ全体の画面の並びと画面間の行き先、各画面の設計がどこまで進んでいるか、まだ設計されていない領域。各画面の中身と、画面ごとの遷移の正本は各画面仕様（項目6）\
 入口: [Presentation設計の入口](README.md)
@@ -13,8 +13,8 @@
 
 ```mermaid
 flowchart TD
-  FIRST["初回：環境の作成か参加"] --> HOME
-  START["通常の起動"] --> ENV["環境の選択"] --> HOME["ホーム（4入口）"]
+  FIRST["初回：アカウントを作る／ログイン → 使い方の選択（個人／会社・団体／招待）"] --> HOME
+  START["通常の起動・ログイン"] --> ENV["どこで使いますか？（使う先の選択）"] --> HOME["ホーム（4入口）"]
   HOME --> NEW["新規飛行"]
   HOME --> LIST["飛行リスト"]
   HOME --> HIST["飛行履歴・出力"]
@@ -45,8 +45,8 @@ flowchart TD
 
 | 画面・領域 | 設計の状態 | 正本 |
 |---|---|---|
-| 初回の環境作成／参加 | 10項目あり。必須登録範囲などの詳細はPENDING | [34a §4](34a_setup-and-environment-entry.md#4-初回セットアップ画面の10項目) |
-| 通常起動・環境の選択 | 10項目あり。専用画面かホーム内かはPENDING | [34a §5](34a_setup-and-environment-entry.md#5-通常起動と環境選択の10項目) |
+| 初回（アカウント・使い方の選択・作成／参加） | 作成／参加の区別の10項目あり。2026-09-21に入口の画面順と表示名を訂正した（案）。新しい入口の画面ごとの10項目は未記録（PENDING-S5-ENTRY-SCREENS）。必須登録範囲などもPENDING | [34a §4・§7](34a_setup-and-environment-entry.md#7-利用者向けの表示名と初回導線の訂正2026-09-21) |
+| 通常起動・使う先の選択 | 10項目あり。専用画面かホーム内かはPENDING。利用者向けの表示は「どこで使いますか？」「個人で使用中」（案。34a §7.3） | [34a §5](34a_setup-and-environment-entry.md#5-通常起動と環境選択の10項目) |
 | ホーム | 4入口の役割まで。10項目の画面仕様はない | [34b](34b_home-and-navigation.md) |
 | 新規飛行（計画入力〜通報内容の確認） | Manual入力支援の画面とコピー導線は個別仕様がある（10項目の形式ではない）。飛行範囲の作成は機能の一覧まで。Manual／API共通の画面の流れは未整理 | [25b](../dips-flight-plan/25b_manual-web-mapping.md)、[17 §2.2](../17_map-and-airspace.md) |
 | 正常受付（重複なし） | 10項目あり | [34d §3](34d_dips-accepted-and-plan-content.md#3-正常受付重複なし画面の10項目) |
@@ -56,6 +56,7 @@ flowchart TD
 | 飛行履歴・出力 | 10項目あり。詳細画面・出力の実行画面・出力の単位は未確定 | [34e](34e_history-and-output.md) |
 | 各種設定・管理 | 入口の意味と、機体管理の入口の流れ（案）まで。人員・BAT・場所・環境などの他の管理画面は未設計 | 34b、[34g §3](34g_settings-aircraft-management-and-context-display.md#3-各種設定管理から機体管理へ案)、下記PENDING-D-SETTINGS-SCREENS |
 | 現在の運用環境と対象機体の表示 | 環境の表示・切替は既存（31a・34a）。対象機体の表示責任と対象画面を整理（案）。位置・固定表示は未確定 | [34g §2](34g_settings-aircraft-management-and-context-display.md#2-現在の運用環境の表示と対象機体の表示) |
+| 利用者向けの表示名・文言（内部用語との分離） | 規約と対応表あり（個々の表示名は案。PENDING-U-WORDING） | [30 §4](30_screen-specification-standard.md#4-内部設計用語と利用者表示文言の分離)、[34h](34h_user-facing-wording-and-terminology.md) |
 | 同期・オフライン・エラーの共通の表示 | 記録ごとの状態表示（[14 §3.4](../14_offline-and-sync.md)）と、鮮度の判断の方向（[38a §4](../sync-and-cache/38a_shared-source-and-device-cache.md#4-正本を確認する時点とcacheの表示)）はある。全画面に共通する見せ方は未設計 | 下記PENDING-D-STATUS-DISPLAY |
 
 ## 4. まだ設計されていない領域

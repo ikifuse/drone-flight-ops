@@ -1,6 +1,6 @@
 # 34d. DIPS正常受付後と通報内容の通常画面
 
-最終更新: 2026-09-19\
+最終更新: 2026-09-21\
 由来: 99.2 §3と、§7の正常受付・共有リスト掲載・重複なし通常導線の部分。\
 主要責務: 正式掲載の契機、正常受付後の選択、「DIPS通報内容」画面。API基盤・payload・全FSM・重複調整・取消詳細は対象外。
 
@@ -78,3 +78,7 @@ flowchart TD
 API payloadは[25c](../dips-flight-plan/25c_api-payload-mapping.md)、固定出口は[33a](../dips-infrastructure/33a_fixed-egress-and-api-connection.md)。重複あり時の具体調整、取消不能・予定時刻経過・事故／急病・通信不能時の取消・作業リスト自動整理、KML生成／保存／再送は後続へ残し、本書にFSMや通信処理を追加しない。取消・作業リスト整理の意味は後続のStep 7bで[24b §3](../dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md#3-計画が作業対象でなくなる意味取消整理)へ配置した（正確な条件と重複あり調整は未確定）。
 
 Step 6の点検以降の通常運航は[35b](../operation-recording/35b_normal-operation-and-final-save.md)へ接続する。本書の正常受付・共有掲載の因果を変更せず、後続操作の詳細をここへ複製しない。
+
+## 6. 利用者向けの表示（2026-09-21）
+
+正常受付・結果不明・重複ありなどの表示は、内部の状態名やFSMの語を使わず、問題・データ保護状態・次の操作の型で示す（[30 §4](30_screen-specification-standard.md#4-内部設計用語と利用者表示文言の分離)、[34h §6](34h_user-facing-wording-and-terminology.md#6-エラー表示の型)）。結果不明の例（案）: 「DIPSに登録されたかどうか分かりません。同じ内容を自動で送り直すことはしません。DIPS Webの一覧で登録されているか確認してください」（[33b](../dips-infrastructure/33b_api-availability-and-retry-boundaries.md)の、結果不明を通常の通報済みとして扱わず盲目的に再送しない境界を、利用者の言葉で示したもの）。通報の主操作は［アプリからDIPSへ送信する］［DIPS Webで通報する］とし、「Manual」「API」だけを主ボタンの名前にしない（[34h §7](34h_user-facing-wording-and-terminology.md#7-通報方式の表示)）。§4の画面名「DIPS通報内容」は設計書上の名称であり、利用者向けには「DIPSに通報した内容」のように直接分かる表示を案とする（PENDING-U-WORDING）。

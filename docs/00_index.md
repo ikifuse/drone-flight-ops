@@ -1,6 +1,6 @@
 # ドキュメント総合目次
 
-最終更新: 2026-09-20\
+最終更新: 2026-09-21\
 プロジェクト: `drone-flight-ops`
 
 ## 1. 役割・読み順・現在状態
@@ -16,6 +16,7 @@
 - **Git本線と実装凍結（2026-09-19）**: `main`を99.2再移植の本線（`claude/99-2-continuation`のStep 8完了時点）へ整理し、整理前の旧mainはバックアップに保全した（[記録](migration/99-2-git-mainline-cutover.md)）。オーナーが明示的に「実装開始」と指示するまで実装は凍結し、設計検討を継続する。
 - **BAT管理設計の更新（2026-09-20）**: オーナーの方針に基づき、BAT管理は機体単位の任意、保存は共用機体系ごとの1Spreadsheet・1物理BAT＝1シート・総合台帳なし、現場入力は4項目とした。[32e](architecture/asset-management/32e_battery-management-scope-and-flight-separation.md)・[32f](architecture/asset-management/32f_battery-storage-structure.md)・[32g](architecture/asset-management/32g_battery-field-input.md)へ配置し、判断は[ADR-0028](decisions/ADR-0028-battery-storage-by-shareable-aircraft-family.md)・[ADR-0029](decisions/ADR-0029-battery-management-optional-per-aircraft.md)（Proposed）。シートの中身・命名・状態確認等は未確定（[04](04_open-questions.md#bat管理設計の未確定検証先2026-09-20)）。
 - **運用環境・登録機体・BAT共用グループの関係（2026-09-20）**: 機体・BATを現在の運用環境に属するデータとして扱う既存の原則を、02の登録済み実機、実機とBAT共用グループの関係（使用許可）、［各種設定・管理］の機体管理、対象機体の表示責任へ接続した。関係の意味は[32h](architecture/asset-management/32h_registered-aircraft-and-battery-group-relations.md)、画面責任は[34g](architecture/presentation/34g_settings-aircraft-management-and-context-display.md)（現在案）。ホーム4入口は変更しない。ADRは追加していない。未確定は[04](04_open-questions.md#運用環境登録機体bat共用グループの未確定検証先2026-09-20)。
+- **利用者向けの表示名と初回導線の訂正（2026-09-21）**: 設計確認用モックの確認で、内部の概念名・技術用語・設計書番号が一般利用者向けの画面へ漏れていることが分かった。内部モデルと責務分離は変えず、利用者へ見せる言葉だけを分ける規約を[30 §4](architecture/presentation/30_screen-specification-standard.md#4-内部設計用語と利用者表示文言の分離)に追加し、対応表と文言の型を[34h](architecture/presentation/34h_user-facing-wording-and-terminology.md)へ置いた。初回導線はアカウントから始める形に訂正した（[34a §7](architecture/presentation/34a_setup-and-environment-entry.md#7-利用者向けの表示名と初回導線の訂正2026-09-21)。個々の表示名は案でPENDING-U-WORDING）。失敗の表示は[19 §1](architecture/19_failure-recovery.md)の表を問題・データ保護状態・次の操作の型に直した。
 - **Step 6追補（2026-09-19）**: A4の機体個体別保存・日付次空き連番の補正は[35c](architecture/operation-recording/35c_a4-operation-record.md)、重要判断は[ADR-0021（Proposed）](decisions/ADR-0021-a4-record-layout-and-sheet-boundary.md)、確認範囲は[追補監査](migration/99-2-step-6-causal-audit.md#7-step-6追補機体個体別保存と日付連番)。次Stepへの移行ではない。
 - 状態は **確定**（承認済み基準）、**検討中**（判断待ち）、**調査**（観測・根拠・未検証）、**将来**（後続Phase）、**履歴**（当時の判断）、**移行案内**（詳細の移転入口）を区別します。文書の確定はアプリ実装・外部仕様の最新性の検証完了を意味しません。
 
@@ -57,7 +58,7 @@ docs/
     ├── identity-and-access/    # 人物・環境・権限・現場担当・離任（§2）
     ├── asset-management/       # 機材取得・共用・累計・取得確認Actor（§4と§6限定）、BAT管理の適用範囲・保存構造・現場入力（2026-09-20）
     ├── dips-infrastructure/    # 固定IP経路・API基盤・通信安全（§7限定）
-    ├── presentation/           # 10項目規約・初回・ホーム・共有リスト・正常受付後・飛行履歴・出力
+    ├── presentation/           # 10項目規約・初回・ホーム・共有リスト・正常受付後・飛行履歴・出力・利用者向け表示名
     ├── operation-recording/    # 柔軟な1飛行・通常操作・A4実物・最終保存
     ├── maintenance-storage/    # 機体別整備媒体と原本コピー
     ├── drive-structure/        # 運用環境01〜07と旧配置からの因果・保存の所有と費用の境界

@@ -1,6 +1,6 @@
 # アーキテクチャ設計目次
 
-最終更新: 2026-09-20\
+最終更新: 2026-09-21\
 状態: Phase B設計凍結 / C0 Shell構築完了・C1設計準備完了 / C1未着手（C0受入確認・オーナーGO待ち）
 
 ## 1. 本目次の役割と読み順
@@ -51,7 +51,8 @@
 | 保存・出力確認と依存実装の開始ゲート | [23 §1.2](23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート) | ADR-0015は選択理由、21は検証との接続 |
 | 設計因果・7状態・試作証拠・質問境界 | [設計証拠規約](../guidelines/03_design-evidence-and-causality.md) | 移植監査は対象と移管先の記録のみ |
 | 画面仕様の記録10項目 | [30](presentation/30_screen-specification-standard.md) | 個別画面は規約を適用し本文を複製しない |
-| 初回作成／参加・root再発見・通常起動 | [34a](presentation/34a_setup-and-environment-entry.md) | 人物・環境・権限は31a〜31d。物理方式は未確定 |
+| 内部設計用語と利用者表示文言の分離（規約）／利用者向け表示名の対応表 | [30 §4](presentation/30_screen-specification-standard.md#4-内部設計用語と利用者表示文言の分離)（規約）／[34h](presentation/34h_user-facing-wording-and-terminology.md)（対応表・文言の型） | 各画面文書は規約を適用。内部の概念・責務分離は31a・31bのまま。19は失敗表示の型を参照 |
+| 初回導線（アカウントから始める）・作成／参加・root再発見・通常起動 | [34a](presentation/34a_setup-and-environment-entry.md) | 人物・環境・権限は31a〜31d。表示名は34h。物理方式は未確定 |
 | ホーム4入口・画面→保存責任の接続 | [34b](presentation/34b_home-and-navigation.md) | 各領域は到達先。Drive全体構造の追加正本を作らない |
 | 共有飛行リスト・カード5系統・対象選択 | [34c](presentation/34c_shared-flight-worklist.md) | 24aは提出履歴保存。画面カードへ列全体を複製しない |
 | API正常受付時の掲載・後で飛行する・通報内容確認 | [34d](presentation/34d_dips-accepted-and-plan-content.md) | 13bはFSM、33bは通信安全、取消／重複調整の詳細は対象外 |

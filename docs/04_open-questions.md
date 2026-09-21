@@ -1,6 +1,6 @@
 # 未確認事項と将来の設計判断論点
 
-最終更新: 2026-09-20
+最終更新: 2026-09-21
 プロジェクト: `drone-flight-ops`
 
 
@@ -162,6 +162,8 @@
 | 対象 | 詳細正本 |
 |---|---|
 | PENDING-S5-ROOT-DISCOVERY / INITIAL-REQUIRED | [34a](architecture/presentation/34a_setup-and-environment-entry.md)：root再発見方式、参加・中断復旧、初回機体／BAT等の必須範囲 |
+| PENDING-S5-ENTRY-SCREENS | [34a §7.5](architecture/presentation/34a_setup-and-environment-entry.md#7-利用者向けの表示名と初回導線の訂正2026-09-21)：アカウントから始める新しい入口の画面（アカウントを作る／ログイン、使い方の選択、どこで使いますか？）ごとの10項目。ログイン時に登録済みかを判定する方法はPENDING-S5-ROOT-DISCOVERYに依存 |
+| PENDING-U-WORDING | [34h §8](architecture/presentation/34h_user-facing-wording-and-terminology.md#8-未確定と確定してはならないこと)：利用者向けの表示名・文言の最終形（オーナー指示の例を含め案）。「保存・同期」の言い換え、「離任」の表記、BATを共用する機体のグループの名称など |
 | VERIFY-S5-SETUP-EVIDENCE / GOOGLE-CONTRACT | 34a：旧資料・実Driveとの対応、Google認証・認可・scopeの実装時確認 |
 | PENDING-S5-HOME-DETAIL | [34b](architecture/presentation/34b_home-and-navigation.md)：設定管理分類、配置・権限／offline表現 |
 | PENDING-S5-LIST-DETAIL / MANUAL-LIST、VERIFY-S5-LIST-EVIDENCE | [34c](architecture/presentation/34c_shared-flight-worklist.md)：絞り込み方向・共有反映・cache・Manual接続、1枚作業台帳の確認 |
