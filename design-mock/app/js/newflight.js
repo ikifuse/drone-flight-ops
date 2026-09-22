@@ -52,7 +52,7 @@ const NFS={
  final:{t:'通報の直前',dips:[],
   goal:'DIPSへ通報する直前。通報の方法（APIで送信／DIPS Webへ転記）を選ぶ。',
   reuse:[],
-  tmp:['APIが使えるかどうかで見え方が変わる（メモ欄で切替）','「下書きとして保存」の置き場所は未確定'],
+  tmp:['APIが使えるかどうかで見え方が変わる（メモ欄で切替）','「下書きとして保存」の置き場所は未確定','はじめの登録で任意にした項目（フリガナ・住所・電話番号・メールアドレス・DIPSのログイン情報）が足りないときは、ここで不足分だけ補う。人物の連絡先は対象Personの人物情報へ、DIPSの認証情報はDIPSのログイン情報へ保存し、元の飛行計画へ戻る（25b §1.1・34a §8.3）','申請書記載を情報源に選んだときは人物に紐づかないため、Personへは保存しない（25b §1.1）','［DIPS Webで通報する］側で不足をどう扱うかは未決'],
   ask:[],
   ui:['通報方法を選ぶ位置と、「下書きとして保存」の置き場所は標準案']}
 };
@@ -361,9 +361,54 @@ def('nf',{
     return '<button class="btn" data-act="nf-back">戻る</button><button class="btn primary" data-act="nf-next">次へ：'+esc(pageTitle(next))+'</button>'}
 });
 
-/* ---------- 通報の直前で、DIPSのログイン情報が未登録のとき（その場で登録して、元の飛行計画へ戻る） ---------- */
-function openDipsNeed(){
-  openSheet(()=>'<h3>DIPSのログイン情報がまだ登録されていません</h3><p class="note" style="font-size:14px">入力した飛行計画は、そのまま残っています。</p><div class="row"><button class="btn" data-act="dips-later">あとで行う</button><button class="btn primary" data-act="dips-now">今設定する</button></div>');
+/* ---------- 通報の直前で、登録情報が足りないとき（不足分だけ補い、正本へ保存して、元の飛行計画へ戻る）
+   はじめの登録で任意にした項目（34a §9.3）が未登録のまま来ることがある。保存先は不足の種類で分ける。
+   ・人物の連絡先（フリガナ・住所・電話番号・メールアドレス）→ 対象Personの人物情報（25b §1.1）
+   ・DIPSの認証情報（ログインID・パスワード）→ DIPSのログイン情報（34a §8.3）
+   別々の案内に分けず、1回の「足りないものを補う」流れとして出す。新しい独立画面は作らない（34a §9.1）。 ---------- */
+function contactPerson(){
+  const E=ENV();if(!E||!S)return null;const c=S.contact;
+  if(c.src==='self')return E.people.find(p=>p.id===E.meId)||null;
+  if(c.src==='pilot')return c.pilotId?plOf(c.pilotId):null;
+  return null; /* 申請書記載は人物に紐づかない。Personへ保存しない（25b §1.1） */
+}
+const NEED_FIELDS=[
+  {k:'kana',label:'フリガナ',ph:'例：ヤマダ タロウ',personOnly:true},
+  {k:'addr',label:'住所',ph:'例：○○県○○市1-2-3'},
+  {k:'phone',label:'電話番号',ph:'例：090-1234-5678'},
+  {k:'email',label:'メールアドレス',ph:'例：name@example.com'}
+];
+/* 通報に足りない人物の連絡先。受け皿には、空いているものをまとめて出す。
+   フリガナは人物情報だけが持ち、DIPS側の要否は未確認（VERIFY-WEB-CONTACT-KANA）なので、
+   受け皿を出すきっかけ（needContactOpen）には数えず、出たときに一緒に補えるようにする。 */
+function needContact(){
+  if(!S)return [];
+  const p=contactPerson();
+  return NEED_FIELDS.filter(f=>f.personOnly?(p?!(p[f.k]||'').trim():false):!(S.contact[f.k]||'').trim());
+}
+/* きっかけになるのは、DIPSの連絡先として観測済みの項目（26 §2.13）だけ。
+   どれがDIPS側で必須かは未確認のため、「空のまま送らせない」ではなく「補う機会を出す」扱いにする（25b §1.1） */
+const needContactOpen=()=>needContact().filter(f=>!f.personOnly);
+const needDips=()=>!A.dips.registered;
+const needAny=()=>needContactOpen().length>0||needDips();
+function openNeedSheet(){
+  A.ui.needForm={};needContact().forEach(f=>{A.ui.needForm[f.k]=''});
+  openSheet(needSheetHtml);
+}
+function needSheetHtml(){
+  const miss=needContact();const f=A.ui.needForm||{};const who=contactPerson();
+  let h='<h3>通報に必要な情報が足りません</h3><p class="note" style="font-size:14px">足りないものだけ入れてください。入力した飛行計画は、そのまま残っています。</p>';
+  if(miss.length){
+    h+='<div class="sec"><h3>連絡先'+(who&&who.name?'（'+esc(pnm(who))+'）':'')+'</h3>'
+     +miss.map(x=>'<div class="fld"><label>'+esc(x.label)+'</label><input class="in" data-bind="#needForm.'+x.k+'" value="'+esc(f[x.k]||'')+'" placeholder="'+esc(x.ph)+'"></div>').join('')
+     +'<p class="note">'+(who?'登録されている人の情報として保存します。':'この飛行の連絡先として使います。')+'次の飛行からは、入れ直さずに使えます。</p>'
+     +'<div class="row"><button class="btn primary wide" data-act="need-save">保存して続ける</button></div></div>';
+  }
+  if(needDips()){
+    h+='<div class="sec"><h3>DIPSのログイン情報</h3><p class="note" style="margin:0 0 8px">まだ登録されていません。</p>'
+     +'<div class="row"><button class="btn primary wide" data-act="dips-now">今設定する</button></div></div>';
+  }
+  return h+'<div class="row"><button class="btn wide" data-act="dips-later">あとで行う</button></div>';
 }
 
 /* ---------- 通報後の画面（送信・Manual・結果） ---------- */
@@ -550,10 +595,25 @@ Object.assign(ACTS,{
     if(!A.online){toast('オフラインのため送信できません。通報の内容は、この端末に残っています。通信できる場所で、もう一度送信してください');return}
     if(!A.apiOk){toast('いまは、アプリからDIPSへ送信できません。［DIPS Webで通報する］を選んでください');return}
     if(!canWrite())return;
-    if(!A.dips.registered){openDipsNeed();return}
+    if(needAny()){openNeedSheet();return}
     nav('nf-send');
   },
   'dips-now':()=>{A.modal=null;A.dipsRet={label:'新規飛行'};nav('set-dipscred')},
+  /* 不足している人物の連絡先を、その場で補う。人物情報（人員台帳）へ保存し、この飛行の連絡先にも反映する */
+  'need-save':()=>{
+    if(!canWrite())return;
+    const f=A.ui.needForm||{};const p=contactPerson();let n=0;
+    needContact().forEach(x=>{
+      const v=(f[x.k]||'').trim();if(!v)return;
+      n++;
+      if(p)p[x.k]=v;                    /* 対象Personの人物情報へ保存（25b §1.1） */
+      if(!x.personOnly)S.contact[x.k]=v; /* この飛行の連絡先にも反映 */
+    });
+    if(!n){toast('入力してください');return}
+    A.ui.needForm=null;
+    if(!needAny())A.modal=null;else{A.ui.needForm={};needContact().forEach(x=>{A.ui.needForm[x.k]=''})}
+    render();toast(p?'登録されている人の情報として保存しました。次の飛行からは、入れ直さずに使えます':'連絡先を保存しました');
+  },
   'dips-later':()=>{A.modal=null;render();toast('飛行計画は、そのまま残っています')},
   'nf-send-back':()=>back(),
   'nf-result':t=>{

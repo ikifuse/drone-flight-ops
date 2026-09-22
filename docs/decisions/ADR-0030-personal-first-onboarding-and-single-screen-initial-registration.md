@@ -6,7 +6,7 @@
 - **関係性**: **Partially Supersedes** [34a §7.7](../architecture/presentation/34a_setup-and-environment-entry.md#77-どのように使いますかで種類を分けて聞かないことの確定2026-09-22)の3択画面そのものと、[34a §7.8](../architecture/presentation/34a_setup-and-environment-entry.md#78-ホームへ入る前を最小にした訂正2026-09-22)の「自分の情報・DIPSのログイン情報をホーム前の必須から外す」部分。**Clarifies** [ADR-0016](ADR-0016-environment-membership-and-access-separation.md)の人物・Googleアカウント・環境の分離を、初回導線と会社・団体環境の追加へ適用する。
 - **置換しない範囲**: ADR-0016の決定（人物の一元管理、PersonnelとUserAccountの分離、環境別所属と三層権限、離任を所属終了として扱うこと）は変えない。34a §7.8のうち、機体・許可承認・保険をホーム前に求めないこと、［各種設定・管理］からの事前登録、不足時のその場登録と元の操作への復帰も変えない。ホーム4入口（[34b](../architecture/presentation/34b_home-and-navigation.md)・[ADR-0019](ADR-0019-home-entry-and-shared-plan-handoff.md)）も変えない。
 - **判断の由来・記録者**: オーナーの2026-09-23の指示。AIが因果と配置を記録した。新しい業務判断やADR承認を代行しない。
-- **関連要件**: [34a §9](../architecture/presentation/34a_setup-and-environment-entry.md#9-初回は個人環境から始め初回登録を1画面にまとめる2026-09-23)、[31a](../architecture/identity-and-access/31a_person-account-and-environment.md)、[25b](../architecture/dips-flight-plan/25b_manual-web-mapping.md)、[16 §10](../architecture/16_security.md#10-利用者自身のdipsログイン情報2026-09-22方針のみ)。
+- **関連要件**: [34a §9](../architecture/presentation/34a_setup-and-environment-entry.md#9-初回は個人環境から始め初回登録を1画面にまとめる2026-09-23)、[31a](../architecture/identity-and-access/31a_person-account-and-environment.md)、[25b §1.1](../architecture/dips-flight-plan/25b_manual-web-mapping.md#11-通報時に不足している登録情報を補う受け皿2026-09-23)、[16 §10](../architecture/16_security.md#10-利用者自身のdipsログイン情報2026-09-22方針のみ)。
 
 ## 1. 背景と課題（Context）
 
@@ -25,7 +25,8 @@
 Cを現在の設計ベースラインとして記録する。詳細の正本は[34a §9](../architecture/presentation/34a_setup-and-environment-entry.md#9-初回は個人環境から始め初回登録を1画面にまとめる2026-09-23)であり、本ADRへ画面項目・文言・手順を複製しない。要点は次のとおり。
 
 1. **初回は全員が個人環境から始める**。会社でしか使う予定がない利用者も、自分の個人Googleアカウントで認証し、個人OperationalEnvironmentを1つ作成する。初回の3択は廃止する。
-2. **初回登録は1画面で、必須は氏名とGoogleアカウントの2つだけ**（同日改訂）。フリガナ・住所・電話番号・メールアドレス・DIPSログインID・DIPSパスワードは任意で、未入力のまま［登録してホームへ］からホームへ進める。任意項目の上に、DIPS通報の仕様上必要な情報であること・いま入力しなくても進められること・以後の入力が減ることを、短くやさしく説明する。未入力のまま進んだ利用者は、通報の直前でその場登録する既存の受け皿（34a §8.3）を使う。
+2. **初回登録は1画面で、必須は氏名とGoogleアカウントの2つだけ**（同日改訂）。フリガナ・住所・電話番号・メールアドレス・DIPSログインID・DIPSパスワードは任意で、未入力のまま［登録してホームへ］からホームへ進める。任意項目の上に、DIPS通報の仕様上必要な情報であること・いま入力しなくても進められること・以後の入力が減ることを、短くやさしく説明する。
+8. **任意にした項目が通報時に不足していたら、不足分だけをその場で補い、保存先を分けて残す**（同日追加）。人物の連絡先（フリガナ・住所・電話番号・メールアドレス）は**対象Personの人物情報（人員台帳）**へ、DIPSの認証情報（ログインID・パスワード）は**DIPSのログイン情報**へ保存し、元の飛行計画へ戻して通報を続ける。その場限りの入力にせず、次回以降の飛行計画で再利用する。受け皿の正本は、人物の連絡先が[25b §1.1](../architecture/dips-flight-plan/25b_manual-web-mapping.md#11-通報時に不足している登録情報を補う受け皿2026-09-23)、DIPSの認証情報が[34a §8.3](../architecture/presentation/34a_setup-and-environment-entry.md#83-未登録のまま通報が必要になったとき通常の経路ではなく受け皿)で、利用者から見れば1つの流れとして接続する。どのPersonへ保存するかは、連絡先の情報源（自アカウント／申請書記載／操縦者）の区別に従う（25b）。
 3. **会社・団体はホームから追加する**。「新しく作る」と「既存へ参加する」を別の処理として用意し、どちらもその会社で使うGoogle／Workspaceアカウントでの認証から始める。参加では新しいrootやOperationalEnvironmentを作らない。
 4. **人物・Googleアカウント・OperationalEnvironmentを同一概念にしない**。同一人物が個人用と会社用の複数アカウントを持ち、複数環境へ所属できる。個人環境は個人アカウント側、会社環境はその会社で使うアカウント側の保存領域を使う。
 5. **登録済みの人物情報を飛行計画で再利用する**。DIPS通報のたびに本人情報やDIPSログイン情報を手入力させない。

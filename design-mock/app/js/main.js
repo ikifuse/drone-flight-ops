@@ -8,7 +8,7 @@
 const SCREEN_MAP=[
   ['はじめて使う・ログイン',[['boot','はじめに（利用登録を始める／ログイン）'],['acct-exists','すでに登録されています'],['acct-none','ログインできませんでした'],['init-reg','はじめの登録（Googleアカウント・本人情報・DIPS情報）'],['create-name','会社・団体の名前'],['join1','参加する会社・団体'],['join2','参加の確認'],['join3','あなたの名前を選んでください'],['where','どこで使いますか？']]],
   ['ホーム',[['home','ホーム（4入口）']]],
-  ['新規飛行',[['nf-need','飛行を始めるために必要な設定（不足しているとき）'],['nf:start','始め方'],['nf:dips','飛行計画（DIPS基準案）'],['nf:use','使うもの（機体・操縦者・許可）'],['nf:content','飛行の内容'],['nf:area','飛行範囲（地図）'],['nf:time','日時・高度'],['nf:master','登録済み情報の確認（保険・連絡先）'],['nf:review','内容確認'],['nf:final','通報の直前'],['nf:dipsneed','通報の直前：DIPSのログイン情報が未登録のとき'],['nf-send','DIPSへ送信（アプリから）'],['nf-manual','DIPS Webで通報する（転記）'],['nf-manual-confirm','DIPS Webで通報したあとの確認'],['nf-accepted','通報の結果（正常受付・重複・結果不明・エラー）']]],
+  ['新規飛行',[['nf-need','飛行を始めるために必要な設定（不足しているとき）'],['nf:start','始め方'],['nf:dips','飛行計画（DIPS基準案）'],['nf:use','使うもの（機体・操縦者・許可）'],['nf:content','飛行の内容'],['nf:area','飛行範囲（地図）'],['nf:time','日時・高度'],['nf:master','登録済み情報の確認（保険・連絡先）'],['nf:review','内容確認'],['nf:final','通報の直前'],['nf:dipsneed','通報の直前：登録情報が足りないとき（連絡先・DIPS）'],['nf-send','DIPSへ送信（アプリから）'],['nf-manual','DIPS Webで通報する（転記）'],['nf-manual-confirm','DIPS Webで通報したあとの確認'],['nf-accepted','通報の結果（正常受付・重複・結果不明・エラー）']]],
   ['飛行リスト',[['list','飛行リスト'],['plan','DIPS通報内容']]],
   ['通常運航',[['op-pre','飛行前点検'],['op-standby','離陸待機'],['op-fly','飛行中'],['op-landed','着陸後入力'],['op-next','着陸記録完了・次の作業'],['op-bat','BAT交換'],['op-switch','機体交代'],['op-post','飛行後点検'],['op-final','最終送信・保存'],['op-done','保存後']]],
   ['飛行履歴・出力',[['hist','飛行履歴・出力（検索）'],['hist-detail','飛行の詳細'],['out-pdf','出力：PDF'],['out-kml','出力：KML']]],
@@ -32,7 +32,7 @@ function gotoScreen(id){
   if(id==='where'&&A.envs.length<2){ACTS['ob-normal']();return}
   if(typeof prepScreen==='function'&&prepScreen(id)===false){render();return}
   A.stack=id==='home'||PRE_ENV.includes(base)?[]:(id.indexOf('reg-')===0?['set']:['home']);
-  if(id.indexOf(':')>0){const pg=id.split(':')[1];if(pg==='dipsneed'){if(!S){S=blankNF(E);if(!fillSample())return}S.cur='final';A.dips={registered:false,id:''};A.ui.dipsSet=true;A.route='nf';A.modal=null;render(false);openDipsNeed();return}if(!S)S=blankNF(E);if(['use','content','time','master'].includes(pg))S.layout='app';S.cur=pg;A.route='nf';A.modal=null;render(false);return}
+  if(id.indexOf(':')>0){const pg=id.split(':')[1];if(pg==='dipsneed'){if(!S){S=blankNF(E);if(!fillSample())return}S.cur='final';A.dips={registered:false,id:''};A.ui.dipsSet=true;A.route='nf';A.modal=null;render(false);openNeedSheet();return}if(!S)S=blankNF(E);if(['use','content','time','master'].includes(pg))S.layout='app';S.cur=pg;A.route='nf';A.modal=null;render(false);return}
   A.route=id;enter(id);render(false);
 }
 
@@ -75,7 +75,7 @@ function controlsHtml(){
    +row('通信',mockSeg('online',A.online?1:0,[[1,'オンライン'],[0,'オフライン']]))
    +row('DIPSへ送信',mockSeg('api',A.apiOk?1:0,[[1,'できる'],[0,'できない']]))
    +row('DIPSログイン情報',mockSeg('dipsstate',A.dips.registered?1:0,[[1,'登録済み'],[0,'未登録']]))
-   +'<p class="note" style="margin:6px 0 0">初回は、Googleの認証 → 個人の保存場所の作成 → 本人情報とDIPSのログイン情報を1画面で登録 → ホーム。会社・団体は、ホームから、その会社で使うGoogleアカウントで追加します（34a §9）。機体・許可承認・保険などは、［各種設定・管理］から先に登録するか、必要になった場面で登録します。</p>'
+   +'<p class="note" style="margin:6px 0 0">初回は、はじめの登録（1画面）→ ホーム。必須は氏名とGoogleアカウントの2つだけで、フリガナ・住所・電話番号・メールアドレス・DIPSのログイン情報は任意です。Googleの認証・許可・保存場所の作成は、この画面の内部処理です（34a §9）。会社・団体は、ホームから、その会社で使うGoogleアカウントで追加します。任意にした項目が通報のときに足りなければ、その場で不足分だけ補い、人物の連絡先は人物情報へ、DIPSの認証情報はDIPSのログイン情報へ保存します（25b §1.1・34a §8.3）。機体・許可承認・保険は、［各種設定・管理］から先に登録するか、必要になった場面で登録します。</p>'
    +'<h4>そのほかの操作</h4>'
    +'<div class="row"><button class="btn sm" data-act="map">画面一覧を開く</button>'+(E?'<button class="btn sm" data-act="mk-sample">この使う場所に仮データを入れる</button>':'')+'</div>'
    +row('画面幅',mockSeg('width',A.width,[['phone','スマホ'],['tab','タブレット'],['pc','PC']]))

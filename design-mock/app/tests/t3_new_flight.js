@@ -55,8 +55,10 @@ suite('新規飛行',H=>{
     return route()==='nf'&&S().ins.mode==='auto'&&E().insurance.company==='その場の保険'&&txt().includes('保険に関する情報');
   });
   T('連絡先: 入力して登録しておく→次回から自動入力',()=>{
-    set('[data-bind="contact.name"]','その場の連絡先');set('[data-bind="contact.phone"]','09012345678');act('nf-save-contact');
-    return !!E().contact&&E().contact.name==='その場の連絡先'&&txt().includes('連絡先');
+    set('[data-bind="contact.name"]','その場の連絡先');set('[data-bind="contact.phone"]','09012345678');
+    set('[data-bind="contact.addr"]','○○県○○市1-2-3');set('[data-bind="contact.email"]','name@example.com');
+    act('nf-save-contact');
+    return !!E().contact&&E().contact.name==='その場の連絡先'&&E().contact.addr==='○○県○○市1-2-3'&&txt().includes('連絡先');
   });
   T('内容確認: 計画名称・DIPS項目が並び、DIPS項目順にも切り替えられる',()=>{
     next();if(page()!=='review'||!txt().includes('計画名称')||!txt().includes('飛行許可番号'))return 'text';
@@ -68,10 +70,12 @@ suite('新規飛行',H=>{
     return a.includes('アプリからDIPSへ送信する')&&b.includes('DIPS Webで通報する')&&!/\bManual\b/.test(a+b)&&!/\bOptional\b/.test(a+b);
   });
   /* ---- 送信の結果 ---- */
-  T('DIPSのログイン情報が未登録: ［アプリからDIPSへ送信する］→「まだ登録されていません」。入力した飛行計画は残っている',()=>{
+  T('DIPSのログイン情報が未登録: ［アプリからDIPSへ送信する］→ 足りないものを補う案内。入力した飛行計画は残っている',()=>{
     if(A().dips.registered)return 'already registered';
     const name=S().planName;act('nf-send-go');const sh=q('.phone .sheet');
-    return route()==='nf'&&!!sh&&sh.innerText.includes('DIPSのログイン情報がまだ登録されていません')&&sh.innerText.includes('入力した飛行計画は、そのまま残っています')&&sh.innerText.includes('今設定する')&&sh.innerText.includes('あとで行う')&&S().planName===name;
+    return route()==='nf'&&!!sh&&sh.innerText.includes('通報に必要な情報が足りません')&&sh.innerText.includes('DIPSのログイン情報')&&sh.innerText.includes('まだ登録されていません')
+      &&sh.innerText.includes('入力した飛行計画は、そのまま残っています')&&sh.innerText.includes('今設定する')&&sh.innerText.includes('あとで行う')&&S().planName===name
+      &&!sh.innerText.includes('住所');
   });
   T('［あとで行う］→ 通報の直前へ戻る。飛行計画はそのまま残る（行き止まりにしない）',()=>{
     const n=S().aircraft.length;act('dips-later');return route()==='nf'&&page()==='final'&&!q('.phone .sheet')&&S().aircraft.length===n&&!!q('[data-act=nf-manual-go]');
