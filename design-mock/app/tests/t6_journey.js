@@ -1,11 +1,11 @@
 'use strict';
-/* 完全な初回利用者の通し: ボタンだけで、アカウントを作るところから、飛行の保存・出力・2回目の飛行まで歩く */
+/* 完全な初回利用者の通し: ボタンだけで、利用登録を始めるところから、飛行の保存・出力・2回目の飛行まで歩く */
 suite('初回利用者の通し',H=>{
   const {T,act,txt,route,set,q,qa,A,E,S}=H;
   H.hash('');
-  T('1 最初の画面: アカウントを作る／ログイン',()=>route()==='boot'&&txt().includes('アカウントを作る'));
-  T('2 アカウントを作る→Google公式の画面→個人で使う→許可→準備ができました',()=>{
-    act('ob-start-new');act('ob-google');act('gauth-done');act('us-personal');act('consent-ok');
+  T('1 最初の画面: 利用登録を始める／ログイン',()=>route()==='boot'&&txt().includes('利用登録を始める'));
+  T('2 利用登録を始める→Google公式の画面→個人で使う→許可→準備ができました',()=>{
+    act('ob-start-new');act('gauth-done');act('us-personal');act('consent-ok');
     return route()==='created'&&E().name==='個人'&&txt().includes('個人で使う準備ができました');
   });
   T('3 DIPSのログイン情報は［あとで設定する］。はじめの設定も何も登録せずホームへ（「個人で使用中」）',()=>{act('ob-after-created');if(route()!=='dips-init')return route();act('dips-skip');act('ob-init-done');return route()==='home'&&E().aircraft.length===0&&!A().dips.registered&&txt().includes('まだ何も登録されていません')&&q('.hd2').innerText.includes('個人で使用中')});

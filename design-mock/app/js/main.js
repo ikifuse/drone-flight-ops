@@ -6,7 +6,7 @@
 
 /* 画面マップ（アプリ全体の画面一覧。ここからどの画面へも飛べる） */
 const SCREEN_MAP=[
-  ['はじめて使う・ログイン',[['boot','はじめに（アカウントを作る／ログイン）'],['acct-new','アカウントを作る'],['acct-login','ログイン'],['gauth','Googleアカウントを選択します（Googleが表示）'],['acct-exists','すでに登録されています'],['acct-none','ログインできませんでした'],['usage','どのように使いますか？'],['create-name','会社・団体の名前'],['consent','Google Driveの許可（Googleが表示）'],['created','準備ができました'],['dips-init','DIPSのログイン情報（はじめに登録）'],['init','はじめの設定'],['init-me','自分の情報'],['join1','招待を受けている会社・団体'],['join2','参加の確認'],['join3','あなたの名前を選んでください'],['where','どこで使いますか？']]],
+  ['はじめて使う・ログイン',[['boot','はじめに（利用登録を始める／ログイン）'],['gauth','Googleアカウントを選択します（Googleが表示）'],['acct-exists','すでに登録されています'],['acct-none','ログインできませんでした'],['usage','どのように使いますか？'],['create-name','会社・団体の名前'],['consent','Google Driveの許可（Googleが表示）'],['created','準備ができました'],['dips-init','DIPSのログイン情報（はじめに登録）'],['init','はじめの設定'],['init-me','自分の情報'],['join1','招待を受けている会社・団体'],['join2','参加の確認'],['join3','あなたの名前を選んでください'],['where','どこで使いますか？']]],
   ['ホーム',[['home','ホーム（4入口）']]],
   ['新規飛行',[['nf:start','始め方'],['nf:dips','飛行計画（DIPS基準案）'],['nf:use','使うもの（機体・操縦者・許可）'],['nf:content','飛行の内容'],['nf:area','飛行範囲（地図）'],['nf:time','日時・高度'],['nf:master','登録済み情報の確認（保険・連絡先）'],['nf:review','内容確認'],['nf:final','通報の直前'],['nf:dipsneed','通報の直前：DIPSのログイン情報が未登録のとき'],['nf-send','DIPSへ送信（アプリから）'],['nf-manual','DIPS Webで通報する（転記）'],['nf-manual-confirm','DIPS Webで通報したあとの確認'],['nf-accepted','通報の結果（正常受付・重複・結果不明・エラー）']]],
   ['飛行リスト',[['list','飛行リスト'],['plan','DIPS通報内容']]],
@@ -20,7 +20,7 @@ function mapHtml(){
    +SCREEN_MAP.map(g=>'<div class="grp">'+esc(g[0])+'</div><div class="pills">'+g[1].map(s=>{const cur=(s[0]===A.route)||(A.route==='nf'&&S&&s[0]==='nf:'+S.cur);return '<button class="pill'+(cur?' sel':'')+'" data-act="mk-goto" data-s="'+s[0]+'">'+esc(s[1])+'</button>'}).join('')+'</div>').join('')
    +'<div class="row"><button class="btn" data-act="mclose">閉じる</button></div>';
 }
-const PRE_ENV=['boot','acct-new','acct-login','gauth','acct-exists','acct-none','usage','create-name','consent','created','dips-init','init','init-me','join1','join2','join3','where'];
+const PRE_ENV=['boot','gauth','acct-exists','acct-none','usage','create-name','consent','created','dips-init','init','init-me','join1','join2','join3','where'];
 function gotoScreen(id){
   A.modal=null;A.mockModal=null;const E=ENV();
   const base=id.split(':')[0];

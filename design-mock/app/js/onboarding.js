@@ -1,7 +1,7 @@
 'use strict';
 /* ===================================================================
-   はじめて使う方／ログイン／使い方の選択／DIPSのログイン情報／はじめの設定／招待からの参加／使う場所の選択
-   設計の出典: 34a（§7 アカウントから始める導線、§8 DIPSログイン情報と初回設定の候補）／34h（表示名と文言の型）／30 §5（左右の役割）
+   はじめに（利用登録を始める／ログイン）／使い方の選択／DIPSのログイン情報／はじめの設定／招待からの参加／使う場所の選択
+   設計の出典: 34a（§7 アカウントから始める導線、§7.6 入口を1画面にまとめた訂正、§8 DIPSログイン情報と初回設定の候補）／34h（表示名と文言の型）／30 §5（左右の役割）
    - 左側の画面は、実際のアプリとして利用者が見る画面の候補だけにする。
      テスト用のアカウント・状態の説明・確認用の注記・設計書の番号は出さない。
      それらは、右側の設計確認メモ（goal / doc / tmp / ask / mock）と、右側の状態切替にだけ置く。
@@ -22,44 +22,31 @@ const bigCard=(act,title,sub,attrs)=>'<button class="card" style="width:100%;mar
 
 /* 右側の切替（Google認証のあとの状態）。gauth の確認用操作として出す */
 function gstateMock(){
-  const acc=ACCOUNTS.find(a=>a.id===A.ui.gState)||ACCOUNTS[0];const entry=A.entry==='login'?'ログイン':'アカウントを作る';
+  const acc=ACCOUNTS.find(a=>a.id===A.ui.gState)||ACCOUNTS[0];const entry=A.entry==='login'?'ログイン':'利用登録を始める';
   const out={new:{new:'「どのように使いますか？」へ',login:'「ログインできませんでした」へ'},one:{new:'「すでに登録されています」へ',login:'そのままホームへ（使う場所が1つ）'},many:{new:'「すでに登録されています」へ',login:'「どこで使いますか？」へ（使う場所が複数）'}};
   const key=A.entry==='login'?'login':'new';
   return '<p class="note" style="margin:0 0 6px">左の［次へ］は、Googleの認証が終わってアプリに戻った状態を作るための、モック上の操作です。認証のあとの状態を選んでから押します。</p>'
    +'<div class="row"><label>認証のあとの状態</label>'+mockSeg('gstate',A.ui.gState,[['new','未登録'],['one','登録済み・個人だけ'],['many','登録済み・個人＋会社']])+'</div>'
    +'<p class="note" style="margin:0 0 4px">この状態で使う、架空のテスト用Googleアカウント: <span class="mono">'+esc(acc.email)+'</span></p>'
    +'<p class="note" style="margin:0">いまの入口: ［'+entry+'］ → この状態では、'+out[A.ui.gState][key]+'。</p>'
-   +'<table style="margin-top:6px"><tr><th>状態</th><th>［アカウントを作る］から</th><th>［ログイン］から</th></tr>'
+   +'<table style="margin-top:6px"><tr><th>状態</th><th>［利用登録を始める］から</th><th>［ログイン］から</th></tr>'
    +'<tr><td>未登録</td><td>使い方を選ぶ</td><td>ログインできませんでした</td></tr><tr><td>登録済み・個人だけ</td><td>すでに登録されています</td><td>ホーム</td></tr><tr><td>登録済み・個人＋会社</td><td>すでに登録されています</td><td>どこで使いますか？</td></tr></table>';
 }
 
 /* ---------- 最初の画面 ---------- */
 def('boot',{t:'はじめに',st:'',back:false,env:false,
-  goal:'完全な初回利用者が最初に見る画面。はじめて使う方は［アカウントを作る］、すでに登録済みの方は［ログイン］。左側は、この2つのボタンだけにしている。',
-  doc:'34a §7.2（アカウントから始める初回導線。2026-09-21にオーナーの指示で訂正）。内部では、この画面は未ログインの入口。認証済みを仮定した最初の画面と、［新しい運用環境を作成］／［既存の運用環境に参加］の二択は、経緯（HISTORICAL）として34a §1に残っている。',state:'proposal',
-  tmp:['「アカウントを作る」「ログイン」の言葉は、オーナーが指示した表示の例（最終の製品用語ではない。PENDING-U-WORDING）','一言の説明は、左側の説明を最小にするため置いていない。要るかどうかは未決','ログイン時に登録済みかを判定する方法は、Driveの保存場所の再発見方式に依存して未確定（PENDING-S5-ROOT-DISCOVERY）。アプリ独自の会員データベースを持つ決定ではない'],
-  ask:['この二択の並べ方','ボタンの下に、一言の説明を置くか（置かないか）'],
-  body:()=>'<div class="entry"><h2>はじめて使う方</h2><button class="btn primary wide" style="padding:16px 10px;font-size:16px" data-act="ob-start-new">アカウントを作る</button>'
-   +'<h2 style="margin-top:26px">すでに登録済みの方</h2><button class="btn wide" style="padding:16px 10px;font-size:16px" data-act="ob-start-login">ログイン</button></div>'
-});
-def('acct-new',{t:'アカウントを作る',st:'',env:false,
-  goal:'Googleアカウントを使って、このアプリのアカウントを作ることを伝える。新しいGoogleアカウントを作るという意味に誤解させない。',
-  doc:'34a §7.2（順2）。アプリ独自のパスワードは作らず、Google公式の認証を使う。Googleのパスワードはアプリに入力させない（34a §1）。',state:'proposal',
-  tmp:['文言はオーナー指示の例（「Googleアカウントを使って、このアプリのアカウントを作ります」）を土台にした案。左側の説明は最小にしている','「アカウント」の実体（アプリ側に何を持つか）は未確定。中央の会員データベースは持たない方針（37）'],
-  ask:['説明の言い方（新しいGoogleアカウントを作ると思われないか）'],
-  body:()=>'<p class="lead2">お使いのGoogleアカウントで、このアプリのアカウントを作ります。</p><p class="note">新しいGoogleアカウントを作る必要はありません。Googleのパスワードは、このアプリには入力しません。</p>',
-  foot:()=>'<button class="btn" data-act="back">戻る</button><button class="btn primary" data-act="ob-google">Googleアカウントで続ける</button>'
-});
-def('acct-login',{t:'ログイン',st:'',env:false,
-  goal:'アカウントを作ったときと同じGoogleアカウントで、ログインする。',
-  doc:'34a §7.2（ログイン）。登録済みの方は、Google公式の認証のあと、使う場所が1つならそのままホーム、複数なら「どこで使いますか？」へ進む。',state:'proposal',
-  tmp:['登録がないGoogleアカウントでログインしたときの案内は案（34a §7.2）'],ask:['再ログイン・端末変更のときの見せ方'],
-  body:()=>'<p class="lead2">アカウントを作ったときと同じGoogleアカウントで、ログインします。</p><p class="note">Googleのパスワードは、このアプリには入力しません。</p>',
-  foot:()=>'<button class="btn" data-act="back">戻る</button><button class="btn primary" data-act="ob-google">Googleアカウントで続ける</button>'
+  goal:'完全な初回利用者が最初に見る画面。はじめて使う方は［利用登録を始める］、すでに登録済みの方は［ログイン］。説明だけの画面を別に置かず、この1画面にまとめ、それぞれのボタンの下に短い説明を置く。どちらを押しても、次はGoogleの認証・アカウント選択へ進む。',
+  doc:'34a §7.2・§7.6（2026-09-22のオーナーの指示で、説明だけの画面を廃止し、初回の入口を1画面にまとめた）。内部では、この画面は未ログインの入口。認証済みを仮定した最初の画面、［新しい運用環境を作成］／［既存の運用環境に参加］の二択、説明だけの中間画面は、経緯（HISTORICAL）として34a §1・§7.6に残っている。',state:'proposal',
+  tmp:['ボタンの文言（利用登録を始める／ログイン）と、その下の説明は、オーナーが2026-09-22に指示した文言そのもの（最終の製品用語ではない。PENDING-U-WORDING）','説明は1文ずつ改行して出している。続けて書くかどうかは未決','ログイン時に登録済みかを判定する方法は、Driveの保存場所の再発見方式に依存して未確定（PENDING-S5-ROOT-DISCOVERY）。アプリ独自の会員データベースを持つ決定ではない','「アカウント」という語と「利用登録」という語の使い分け（この画面のあとに出る「アカウントができました」など）は、今回の範囲外で未決'],
+  ask:['説明の改行の入れ方（1文ずつ改行するか、続けて書くか）','この画面のあとに出る画面の「アカウント」という語を、「利用登録」に合わせるか'],
+  body:()=>'<div class="entry"><h2>はじめて使う方</h2><button class="btn primary wide" style="padding:16px 10px;font-size:16px" data-act="ob-start-new">利用登録を始める</button>'
+   +'<p class="note">このアプリの利用登録を始めます。<br>お使いのGoogleアカウントで続けます。<br>新しいGoogleアカウントを作る必要はありません。<br>Googleのパスワードをこのアプリに入力することはありません。</p>'
+   +'<h2 style="margin-top:26px">すでに登録済みの方</h2><button class="btn wide" style="padding:16px 10px;font-size:16px" data-act="ob-start-login">ログイン</button>'
+   +'<p class="note">登録済みのGoogleアカウントで続けます。</p></div>'
 });
 def('gauth',{t:'Googleアカウントを選択します',st:'',env:false,
   goal:'Googleが表示する認証の画面。左側では、実際はGoogleが表示することだけを示し、アカウント選択の画面は再現しない。アプリはGoogleのパスワードを扱わない。',
-  doc:'34a §7.2（順3）／§1・§6（Google公式の認証。サインインとAPI利用への同意は別）。',state:'accepted',
+  doc:'34a §7.2（順2）／§1・§6（Google公式の認証。サインインとAPI利用への同意は別）。',state:'accepted',
   tmp:['Googleの画面の再現は目的ではない。認証のあとの状態（未登録／登録済み・個人だけ／登録済み・個人＋会社）は、この右側の切替で選び、その状態で認証後のアプリ画面がどうなるかを確かめる','実際の画面・必要な権限の範囲は正式実装時にGoogleの仕様で確認（VERIFY-S5-GOOGLE-CONTRACT）'],
   ask:['Googleの画面の前後に、アプリ側で何を見せるか'],
   mock:gstateMock,
@@ -67,22 +54,22 @@ def('gauth',{t:'Googleアカウントを選択します',st:'',env:false,
   foot:()=>'<button class="btn" data-act="back">キャンセル</button><button class="btn primary" data-act="gauth-done">次へ</button>'
 });
 def('acct-exists',{t:'すでに登録されています',st:'',env:false,back:false,
-  goal:'アカウントを作ろうとしたGoogleアカウントが、すでに登録済みだったときの案内。',
-  doc:'34a §7.2（案）。二重にアカウントを作らせない。',state:'proposal',tmp:['この分岐の文言は案。右側の切替（Google認証のあとの状態）を「登録済み」にして、［アカウントを作る］から進むと出る'],ask:['二重に作ろうとしたときの案内'],
-  body:()=>'<div class="msg warn big">すでに登録されています</div><p class="lead2">このGoogleアカウントは、すでにこのアプリで使っています。アカウントは作らず、［ログイン］から進んでください。</p>',
+  goal:'利用登録を始めようとしたGoogleアカウントが、すでに登録済みだったときの案内。',
+  doc:'34a §7.2（案）。二重にアカウントを作らせない。',state:'proposal',tmp:['この分岐の文言は案。右側の切替（Google認証のあとの状態）を「登録済み」にして、［利用登録を始める］から進むと出る'],ask:['二重に作ろうとしたときの案内'],
+  body:()=>'<div class="msg warn big">すでに登録されています</div><p class="lead2">このGoogleアカウントは、すでにこのアプリで使っています。あらためて利用登録をする必要はありません。［ログイン］から進んでください。</p>',
   foot:()=>'<button class="btn" data-act="mk-reset">最初に戻る</button><button class="btn primary" data-act="ob-to-login">ログインへ</button>'
 });
 def('acct-none',{t:'ログインできませんでした',st:'',env:false,back:false,
-  goal:'登録がないGoogleアカウントでログインしたときの案内。［アカウントを作る］へ誘導する。',
+  goal:'登録がないGoogleアカウントでログインしたときの案内。［利用登録を始める］へ誘導する。',
   doc:'34a §7.2（案）。問題／データ保護状態／次の操作の型（34h §6）。',state:'proposal',tmp:['この分岐の文言は案。右側の切替（Google認証のあとの状態）を「未登録」にして、［ログイン］から進むと出る'],ask:['登録のないアカウントでログインしたときの案内'],
-  body:()=>'<div class="msg ng big">ログインできませんでした</div><p class="lead2">このGoogleアカウントでは、まだこのアプリのアカウントがありません。まだ何も登録されていません。</p><p class="note">はじめて使う場合は、［アカウントを作る］から始めてください。</p>',
-  foot:()=>'<button class="btn" data-act="mk-reset">最初に戻る</button><button class="btn primary" data-act="ob-to-new">アカウントを作る</button>'
+  body:()=>'<div class="msg ng big">ログインできませんでした</div><p class="lead2">このGoogleアカウントでは、まだこのアプリのアカウントがありません。まだ何も登録されていません。</p><p class="note">はじめて使う場合は、［利用登録を始める］から始めてください。</p>',
+  foot:()=>'<button class="btn" data-act="mk-reset">最初に戻る</button><button class="btn primary" data-act="ob-to-new">利用登録を始める</button>'
 });
 
 /* ---------- 使い方の選択（アカウントを作ったあと） ---------- */
 def('usage',{t:'どのように使いますか？',st:'',env:false,back:false,
   goal:'アカウントができたあと、個人で使うか、会社・団体で新しく使い始めるか、招待を受けているかを選ぶ。',
-  doc:'34a §7.2（順4）／§7.4（内部の対応：個人・会社団体の新規作成＝新規の運用環境の作成、招待＝既存の運用環境への所属の追加）。最初に新しく作った人が最初の管理者になり、招待で参加しただけの人は自動では管理者にならない（31b）。',state:'proposal',
+  doc:'34a §7.2（順3）／§7.4（内部の対応：個人・会社団体の新規作成＝新規の運用環境の作成、招待＝既存の運用環境への所属の追加）。最初に新しく作った人が最初の管理者になり、招待で参加しただけの人は自動では管理者にならない（31b）。',state:'proposal',
   tmp:['3つの言葉（個人で使う／会社・団体で新しく使い始める／会社・団体から招待を受けている）はオーナー指示の例。最終の製品用語ではない（PENDING-U-WORDING）','会社・団体の種類（会社／スクール／臨時業務）を分けて聞くかは未確定。ここでは「会社・団体」にまとめている','各ボタンの一言の説明の要否・言い方は未決'],
   ask:['3つの選択肢の並べ方と説明','個人と会社・団体の両方を使う人には、あとから追加できると案内するか'],
   body:()=>'<p class="lead2">アカウントができました。使い方を選んでください。</p>'
@@ -92,7 +79,7 @@ def('usage',{t:'どのように使いますか？',st:'',env:false,back:false,
 });
 def('create-name',{t:'会社・団体の名前',st:'',env:false,
   goal:'新しく使い始める会社・団体の名前を決める。',
-  doc:'34a §4・§7.2（順5）。同名の保存場所がDrive上にすでにないか確認する（root重複防止・再発見の方式は未確定＝PENDING-S5-ROOT-DISCOVERY）。',state:'proposal',
+  doc:'34a §4・§7.2（順4）。同名の保存場所がDrive上にすでにないか確認する（root重複防止・再発見の方式は未確定＝PENDING-S5-ROOT-DISCOVERY）。',state:'proposal',
   tmp:['同じ名前の警告は、招待の一覧にある名前（○○株式会社）を入れると出る。見せ方は案','名前はあとから変えられる想定'],ask:['名前の入力を最初に求めてよいか'],
   enter:()=>{if(!A.create||A.create.kind==='personal')A.create={kind:'company',name:''}},
   body:()=>{
@@ -104,7 +91,7 @@ def('create-name',{t:'会社・団体の名前',st:'',env:false,
 });
 def('consent',{t:'Google Driveの許可',st:'',env:false,
   goal:'記録の保存場所を作るために、Google Driveの使用を許可してもらう。許可されなければ、何も作らない。左側は、実際はGoogleが許可の画面を表示することだけを示している。',
-  doc:'34a §1・§7.2（順5）。新規作成では、Google公式の同意を経て必要な権限が許可された後に、保存構造を生成する。許可を拒否したとき・途中で失敗したときの戻り方と回復は未確定（34a §4項目7）。',state:'accepted',
+  doc:'34a §1・§7.2（順4）。新規作成では、Google公式の同意を経て必要な権限が許可された後に、保存構造を生成する。許可を拒否したとき・途中で失敗したときの戻り方と回復は未確定（34a §4項目7）。',state:'accepted',
   tmp:['許可されたときの結果は、この右側の切替（Google Driveの許可）で選ぶ。「許可しない」を選んで［許可して続ける］を押すと、拒否されたときの画面を確かめられる','実際の同意画面と必要な権限の範囲は、正式実装時にGoogleの仕様で確認（VERIFY-S5-GOOGLE-CONTRACT）','許可を求める時点（新しく始めるときのみか、招待で参加する人にも求めるか）は未確定','拒否したときの文言は、問題／データ保護状態／次の操作の型の案'],
   ask:['許可されなかったときに、どこへ戻すか'],
   mock:()=>'<p class="note" style="margin:0 0 6px">Googleの許可の画面で選ばれる結果を選びます。</p><div class="row"><label>許可の結果</label>'+mockSeg('consentres',A.ui.consentOk?1:0,[[1,'許可する'],[0,'許可しない']])+'</div>',
@@ -117,7 +104,7 @@ def('consent',{t:'Google Driveの許可',st:'',env:false,
 });
 def('created',{t:'準備ができました',st:'',env:false,back:false,
   goal:'保存場所ができたことを伝え、次へ進む。左側は、できたことと、次のボタンだけにしている。',
-  doc:'34a §1・§7.2（順5）／31b §3（新しく作った人が最初のアプリ管理者）。生成するのは利用者の記録の保存場所のみで、設計管理の資料は作らない（34a §1）。',state:'accepted',
+  doc:'34a §1・§7.2（順4）／31b §3（新しく作った人が最初のアプリ管理者）。生成するのは利用者の記録の保存場所のみで、設計管理の資料は作らない（34a §1）。',state:'accepted',
   tmp:['作られる保存場所（内部の責任領域）: 人員／機体／バッテリー／運航記録／点検整備記録／DIPS関連／出力（PDF・KML）。フォルダー名は内部の表記であり、名称の確定ではない。左側には出していない','管理者は、新しく作った人（個人で使う人も同じ）。会社・団体では、左側に「最初の管理者です」と出している','次の画面は、右側の切替（DIPS設定の置き方）で変わる：案A＝DIPSのログイン情報の画面／案B＝はじめの設定','作成の進み具合の見せ方（一括か、順に見せるか）は案'],
   ask:['作成後に必ず次の設定を挟むか、すぐホームでよいか'],
   body:()=>{const E=ENV();const personal=E.kind==='personal';return '<div class="msg ok big">✓ '+(personal?'個人で使う準備ができました':'「'+esc(E.name)+'」を使い始める準備ができました')+'</div>'
@@ -249,11 +236,10 @@ function envSwitchSheet(){
 /* ---------- 操作 ---------- */
 function afterLoginRegistered(){if(!A.ui.dipsSet)A.dips={registered:true,id:'1234567890'}}
 Object.assign(ACTS,{
-  'ob-start-new':()=>{A.entry='new';nav('acct-new')},
-  'ob-start-login':()=>{A.entry='login';nav('acct-login')},
-  'ob-google':()=>nav('gauth'),
-  'ob-to-login':()=>{A.entry='login';rep('acct-login')},
-  'ob-to-new':()=>{A.entry='new';rep('acct-new')},
+  'ob-start-new':()=>{A.entry='new';nav('gauth')},
+  'ob-start-login':()=>{A.entry='login';nav('gauth')},
+  'ob-to-login':()=>{A.entry='login';rep('gauth')},
+  'ob-to-new':()=>{A.entry='new';rep('gauth')},
   /* Google認証が終わって戻った状態。どの状態かは、右側の切替（Google認証のあと）で選ぶ */
   'gauth-done':()=>{
     const acc=ACCOUNTS.find(a=>a.id===A.ui.gState)||ACCOUNTS[0];A.account=acc;

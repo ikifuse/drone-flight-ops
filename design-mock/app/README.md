@@ -14,7 +14,7 @@
 
 ## 検証記録
 
-`tests/index.html`をブラウザで開くと全自動テストが動く。修正前176件、Commit 1後179件、Commit 2後191件、Commit 3後201件。全体整合修正後は202件、失敗0、JSエラー0、左画面の禁止語違反0。表示テキストに加え、表示中の現在入力値・選択中の表示値を検査し、placeholderを例示として除外する。
+`tests/index.html`をブラウザで開くと全自動テストが動く。修正前176件、Commit 1後179件、Commit 2後191件、Commit 3後201件。全体整合修正後は202件、失敗0、JSエラー0、左画面の禁止語違反0。初回の入口を1画面へまとめたあとも202件（説明専用画面の検査を、1画面の入口の検査へ置き換えた）、失敗0、JSエラー0、左画面の禁止語違反0、検査1019回。表示テキストに加え、表示中の現在入力値・選択中の表示値を検査し、placeholderを例示として除外する。
 
 Chromeで412／430／1320px（高さ900px）を表示し、各24状態・計72画面を撮影・目視した。初回、DIPS情報の未登録／登録済み、22項目入力、機体／操縦者／許可選択、地図、通報直前、送信中、正常受付、重複、結果不明、エラー、点検から最終保存、保存失敗を含む。長い入力と飛行前点検は全長画像も確認した。
 
@@ -26,4 +26,4 @@ Chromeで412／430／1320px（高さ900px）を表示し、各24状態・計72�
 
 離陸待機への設計用直接移動でBATが未選択なのに管理OFFと表示していた点を修正。BAT交換の取消時は直前の装着状態を保持する回帰テストを追加。入力欄幅と確認画面の比較操作の位置も整えた。スマホ実機・Safariでの検証ではない。
 
-Responsibility Check: DIPS順は25b、観測限界は26、停止条件は34d、通常運航候補は35b、文言は34h、左右の規約は30へ配置した。34a・34fと目次・README・open-questionsを同期。新規ADRなし。PENDING-D-NEW-FLIGHT-SCREENS、PENDING-S6-OPERATION-UI、PENDING-S5-DIPS-LOGIN-STORAGE、PENDING-U-WORDINGと重複調整後の再開・地図詳細は未決のまま。
+Responsibility Check: DIPS順は25b、観測限界は26、停止条件は34d、通常運航候補は35b、文言は34h、左右の規約は30へ配置した。初回の入口を1画面へまとめた因果は34a §7.6へ配置し、34a・34f・34hと目次・README・open-questionsを同期。新規ADRなし。PENDING-D-NEW-FLIGHT-SCREENS、PENDING-S6-OPERATION-UI、PENDING-S5-DIPS-LOGIN-STORAGE、PENDING-U-WORDINGと重複調整後の再開・地図詳細は未決のまま。
