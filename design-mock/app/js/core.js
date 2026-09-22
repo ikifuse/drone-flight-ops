@@ -118,13 +118,25 @@ const STATE_LABEL={
   tmp:'仮（設計の個別仕様なし。たたき台）',
   none:'未設計（PENDING）'
 };
-const MEMO_HEAD='<div class="memohead"><b>設計確認メモ</b><br><small>この欄は、実際のアプリには表示されません。設計の根拠、状態の切替、テスト条件、未決の点、相談したい点を置いています。左のスマホ画面が、アプリの見え方です。</small></div>';
+const MEMO_HEAD='<div class="memohead"><b>設計確認メモ</b><br><small>この欄は、実際のアプリには表示されません。設計の根拠、状態の切替、テスト条件、未決の点、オーナー判断が必要な点を置いています。左のスマホ画面が、アプリの見え方です。</small></div>'
+ +'<div class="memohead"><b>この欄でお尋ねすること</b><br><small>選択肢の一般的な並び、余白、改行、ボタンの位置、「戻る」の配置と動き、説明文をどこに置くか、一覧に何をどの順で見せるか、意味や処理が変わらない画面の分け方——こうした<b>一般的なUI・UXは、AI側が既存の画面と一般的なスマートフォンUIに合わせた標準案を置いています</b>。一件ずつオーナー確認待ちにはしません。実際に触って違和感があれば、その場で直します。<br>オーナー判断としてお尋ねするのは、答えによって<b>アプリの意味・業務処理／責任主体／必須登録内容／保存する内容／権限／安全性／データの保持・削除・復旧／外部連携の意味や運用／記録として残す内容</b>のどれかが変わるものだけです。</small></div>';
 /* 設計確認用の切替の部品（右側・アプリの枠の外だけで使う） */
 const mockSeg=(act,cur,opts)=>'<span class="seg">'+opts.map(o=>'<button class="'+(String(cur)===String(o[0])?'on':'')+'" data-act="'+act+'" data-v="'+o[0]+'">'+o[1]+'</button>').join('')+'</span>';
 function designBasis(){
   const r=A.route;
   const basis=r.startsWith('op-')?'B. 旧運航記録アプリが基準（Pixel6a版 v2026.09.05.4・35b）。E. 未決・比較中：詳細配置と復帰UI。':r==='nf'?'A. DIPS iPhone実画面が基準。C. ワンエビ™️のスマホUIを参考。E. 未決・比較中：入力の画面分け。':r.startsWith('nf-')||r==='plan'||r==='list'?'D. 新アプリで必要な接続画面。E. 未決・比較中：受付結果・調整後の再開。':'D. 新アプリで必要な接続画面。C. ワンエビ™️のスマホUIを参考（大きい操作・入力例・次の操作）。E. 未決・比較中：画面の分類・文言。';
   return '<h4>設計根拠の分類</h4><p>'+basis+'</p>'+(r==='gauth'||r==='consent'?'<p>左側は外部のGoogle画面を表すモック上の中継表示です。本番アプリ自身がアカウント選択UIを描画する設計ではありません。認証後の状態だけを右で切り替えます。</p>':'');
+}
+/* 右側の3区分。オーナー判断が必要な設計論点／未決・仮置き／一般的なUI判断（AI標準案）を混ぜない。
+   一般的なUI・UX（並び・余白・改行・ボタン位置・「戻る」・説明文の置き場所・一覧の見せ方・意味が変わらない画面の分け方）は、
+   AI側が標準案を置き、オーナー確認待ちにしない。触って違和感があれば直す。 */
+function memoBuckets(ask,tmp,ui){
+  const li=a=>'<ul>'+a.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';
+  let h='<h4>オーナー判断が必要な設計論点</h4>'
+   +((ask&&ask.length)?li(ask):'<p class="note" style="margin:0">この画面に、いまオーナー判断が必要な点はありません。</p>');
+  if(tmp&&tmp.length)h+='<h4>未決・仮置き（いま決めなくてよいこと）</h4>'+li(tmp);
+  if(ui&&ui.length)h+='<h4>一般的なUI判断（AI側の標準案。オーナー確認待ちではありません）</h4>'+li(ui);
+  return h;
 }
 function memoHtml(){
   const d=SCR[A.route];if(!d)return '';
@@ -134,8 +146,7 @@ function memoHtml(){
   else{
     if(d.goal)h+='<p style="margin:0;font-size:13px">'+esc(d.goal)+'</p>';
     if(d.doc)h+='<h4>設計Docs上の位置づけ</h4><p style="margin:0;font-size:13px">'+esc(d.doc)+(d.state?'<br><span class="tag">'+esc(STATE_LABEL[d.state]||d.state)+'</span>':'')+'</p>';
-    if(d.tmp&&d.tmp.length)h+='<h4>未決・仮置き（この画面で決めていないこと）</h4><ul>'+d.tmp.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';
-    if(d.ask&&d.ask.length)h+='<h4>相談したい点（比較したい案・オーナー確認待ち）</h4><ul>'+d.ask.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';
+    h+=memoBuckets(d.ask,d.tmp,d.ui);
   }
   return h+(typeof controlsHtml==='function'?controlsHtml():'');
 }

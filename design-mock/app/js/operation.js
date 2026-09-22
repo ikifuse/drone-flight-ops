@@ -92,7 +92,8 @@ def('op-pre',{t:'飛行前点検',st:()=>A.op.name,back:false,
   goal:'対象機体・操縦者と、必要な点検結果を確認する。点検が済むまで、離陸待機へは進めない。',
   doc:'35b §3（飛行前点検の10項目）／13c（飛行前日常点検が未実施・不合格なら、離陸待機へ進めない＝アプリの物理的な前提）／34g §2（対象機体を機種と登録記号で明示）／34d（通報内容から［飛行前点検へ］で接続。DIPS対象外も同じ点検以降へ合流できる）。',state:'spec',
   tmp:['旧アプリの11項目を復元。8項目に簡略化していた履歴を訂正。装着BATを先に確認し、サイクル数は任意。BAT管理OFFは32eに従い個体選択を強制しない','戻る・中止の具体UIは未確定。「飛行0回の中止」と「実績がある運航の終了」を区別する（35b §3項目7）','入力途中は端末に保護し、この画面だけで正式なDrive記録は作らない（35b §3項目8）'],
-  ask:['点検の入力のしかた（全部確認済みにする近道が要るか）','別人が点検した場合の入力'],
+  ask:['飛行前点検で「すべて確認済み」にする近道を用意するか（点検記録の意味・安全性が変わる）','点検を別の人が行った場合に、誰が点検したかをどう記録するか（責任主体）'],
+  ui:['項目の並び、チェックの形、進み具合の見せ方は標準案'],
   mock:()=>'<p class="note" style="margin:0 0 6px">点検項目を1つずつ押す代わりに、全部を確認済みにして、次の画面を確かめます。</p><button class="btn sm" data-act="op-pre-all">全部確認済みにする</button>',
   body:()=>{
     const op=A.op,a=opAc();const pre=op.pre[a.id]||(op.pre[a.id]={});const done=preReady();
@@ -107,7 +108,8 @@ def('op-standby',{t:'離陸待機',st:()=>A.op.name,back:false,
   goal:'次の離陸を記録する準備を整える（BAT管理ONの機体は、使うBATを選ぶ）。',
   doc:'35b §4（離陸待機の10項目：大きな離陸ボタン、対象機体・運航文脈の表示）／13c（離陸前の総合確認：警告は促すが、実際の離陸の記録は拒否しない）／32g・32h §8（BAT選択は対象機体に使用許可されたBATだけ）。',state:'spec',
   tmp:['旧アプリ基準でBATは飛行前点検の先頭で選択。ここは点検済みBAT・離陸場所・対象機体を表示する。確認表は補助として折り畳む','離陸前の確認の並び・表現は仮。アプリは法令上の離陸可否を保証しない（13c）','ボタン配置・再準備の見せ方は未確定（35b §4項目10）'],
-  ask:['BATの選択を、離陸待機に含めるか、点検の直後に分けるか','警告があるときの「確認してから離陸」の見せ方'],
+  ask:['離陸前に警告があるとき、離陸へ進めないようにするか、確認のうえ進めるようにするか（安全性）'],
+  ui:['BATの選択を離陸待機の画面に含めるか分けるか、警告の出し方は標準案'],
   body:()=>{
     const op=A.op;const R=readiness();
     const b=op.cur.bat?batOf(op.cur.bat.id):null;
@@ -123,7 +125,8 @@ def('op-fly',{t:'飛行中',st:'',back:false,env:false,
   goal:'飛行中の状態を保持し、着陸を記録する。',
   doc:'35b §5（飛行中の10項目）／13a（ストップウォッチ。画面中央に大きな着陸ボタン。イベントは端末に即時保護され、再起動しても直前の状態へ復帰する）。',state:'spec',
   tmp:['実際の現場では実時間で計る。右側の「この画面の確認用操作」で、経過を早送りできる','戻る・中断・異常時の画面復帰は未確定（35b §5項目10）'],
-  ask:['飛行中に見せたい情報（対象機体・BAT・経過時間のほかに何が要るか）'],
+  ask:[],
+  ui:['飛行中に出す情報（対象機体・BAT・経過時間）と、操作を着陸完了だけにする置き方は標準案'],
   mock:()=>'<p class="note" style="margin:0 0 6px">実際の現場では、実時間で計ります。経過を早送りして、着陸後の画面を確かめます。</p><button class="btn sm" data-act="op-ff">＋5分（早送り）</button>',
   body:()=>{const c=A.op.cur;const b=c.bat?batOf(c.bat.id):null;return opTarget()+'<div class="big-sw" id="sw">'+swText()+'</div><p class="note" style="text-align:center">離陸 '+hm(new Date(c.offAt))+(b?' ／ 使用BAT: '+esc(b.label):'')+'</p><p class="flight-focus">飛行中は画面操作をせず、操縦と周囲確認に集中してください。</p>'},
   foot:()=>'<button class="btn primary big" style="flex:1" data-act="op-land">着陸完了（プロペラ停止後）</button>',
@@ -133,7 +136,8 @@ def('op-landed',{t:'着陸後入力',st:()=>A.op.name,back:false,
   goal:'その区間の実績を確かめ、次の作業（続行／BAT交換／機体交代／終了）を選ぶ。',
   doc:'35b §6（着陸後入力と次の操作選択の10項目）。区間の実績は端末に保護し、この時点で正式なDrive記録は作らない。BAT交換だけで飛行明細の実績を増やさない。',state:'spec',
   tmp:['各欄の入力UI・確認方法は未確定（35b §6項目10）','「続行」の表示名は未確定','修正・戻る・明細の削除の条件は未確定'],
-  ask:['次の作業の4択の並べ方・大きさ','安全に影響した事項の入力のしかた'],
+  ask:['安全に影響した事項を、何をどこまで記録として残すか'],
+  ui:['次の作業の4択の並べ方・大きさは標準案'],
   body:()=>{
     const op=A.op,l=op.last;
     return opTarget()+'<div class="sec"><h3>'+l.n+'回目の飛行</h3><p>離陸 '+l.off+' → 着陸 '+l.on+'</p>'
@@ -156,7 +160,8 @@ def('op-bat',{t:'BAT交換',st:()=>A.op.name,back:false,
   goal:'実際に使う次のBATを選び、同じ運航を続ける。',
   doc:'35b §7（BAT交換の10項目）／32d §5.3（交換時の選択UIの案）／32g（人の入力は管理ラベル・サイクル数（任意）・状態確認（必須）・備考（任意）の4項目）／32h §8（対象機体に使用許可されたBATだけ）。',state:'proposal',
   tmp:['個体選択UIは案（32d §5.3）','状態確認の選択肢・UIは未確定（PENDING-D-BAT-CHECK-UI）','交換中止・戻るUIは未確定'],
-  ask:['候補の並び（最終使用が古い順）と、異常のあるBATの扱い（薄く表示するか、選べなくするか）'],
+  ask:['異常のあるBATを選べなくするか、警告のうえ選べるようにするか（安全性）'],
+  ui:['候補は最終使用が古い順に並べている'],
   body:()=>opTarget()+batPicker()+simpleChecks()+'<p class="note">対象機体を先に示し、その機体に使用が許可されたBATだけを出しています。BATを交換しただけでは、飛行の明細（A4の行）は増えません。</p>',
   foot:()=>'<button class="btn" data-act="op-bat-cancel">戻る</button><button class="btn primary" data-act="op-bat-done"'+(batReady()&&simpleReady()?'':' disabled')+'>離陸待機へ</button>'
 });
@@ -164,7 +169,8 @@ def('op-switch',{t:'機体交代',st:()=>A.op.name,back:false,
   goal:'場所・目的・操縦者・許可等の文脈を引き継いで、別の機体に切り替える。',
   doc:'35b §8（機体交代の10項目）：未点検の機体は正式な飛行前点検へ、点検済みなら必要条件を確認して待機へ。過去の点検を別の機体へ転用しない。飛行済み機体の記録と終了点検を失わせない。',state:'spec',
   tmp:['Mission／Flightの境界・独立した交代イベントは未確定（35aのPENDING-S6-OPERATION-SCHEMA）','点検済みの分岐は、右側の「この画面の確認用操作」で「点検済みにする」を押すと確かめられる','交代中止・戻るの具体UIは未確定'],
-  ask:['交代先の候補に、何を出すか（点検状況・BAT管理の有無など）'],
+  ask:[],
+  ui:['交代先の候補に出す情報（点検状況・BAT管理の有無など）は標準案'],
   mock:()=>{const op=A.op,E=ENV();const c=E.aircraft.filter(a=>!a.dead&&a.id!==op.ac&&!op.checked[a.id]);return '<p class="note" style="margin:0 0 6px">未点検の機体を「この運航で点検済み」にして、点検済みの機体へ交代する分岐を確かめます。</p>'+(c.length?c.map(a=>'<button class="btn sm" data-act="op-switch-checked" data-id="'+a.id+'">'+esc(a.name)+'を点検済みにする</button>').join(' '):'<p class="note" style="margin:0">未点検の機体はありません。</p>')},
   body:()=>{
     const op=A.op,E=ENV();const cands=E.aircraft.filter(a=>!a.dead&&a.id!==op.ac);
@@ -177,7 +183,8 @@ def('op-post',{t:'飛行後点検',st:()=>A.op.name,back:false,
   goal:'使用した機体の飛行後点検と、不具合・処置などを確認して、運航を締める。',
   doc:'35b §9（飛行後点検の10項目）。異常なしを未確認で確定しない。整備台帳の詳細入力フォームをここへ混ぜない（36）。入力を含む下書きは端末に保護し、最終確定の対象へ含める（35d）。',state:'spec',
   tmp:['使用機体ごとの画面構成は未確定（35b §9項目10）。ここでは機体ごとに並べている','旧アプリの機体全般／プロペラ・フレーム／発熱／その他の4項目を継承。全て正常は全機体の実機確認を明示した後だけ。異常はチェックを外して記事へ記録'],
-  ask:['複数機体を使ったときの飛行後点検の見せ方（機体ごとの画面か、1画面か）'],
+  ask:[],
+  ui:['複数機体を使ったときの飛行後点検を、機体ごとの画面にするか1画面にするかは標準案。実際に飛ばした全機体を点検する決まりは変えない'],
   mock:()=>'<p class="note" style="margin:0 0 6px">点検項目を1つずつ押す代わりに、全部を確認済みにして、次の画面を確かめます。</p><button class="btn sm" data-act="op-post-all">全部確認済みにする</button>',
   body:()=>{
     const op=A.op;
@@ -192,7 +199,8 @@ def('op-final',{t:'最終送信・保存',st:()=>A.op.name,back:false,
   doc:'35b §10（最終送信・保存の10項目）／35d（保存の対象・時点・再送を別運航にしない）／27e §4（未同期のKMLは、最後の送信のときにも再送する）。通信失敗や戻る操作で、完了データを消さない。',state:'spec',
   tmp:['完了・部分失敗の表示、戻り先、再送・確認のUIは未確定（35b §10項目10）','KMLの再送を最終保存の一部とするか、同じ操作で起動する独立した再送とするかは未確定（PENDING-S7C-KML-FINAL-SEND）'],
   mock:()=>mockSeg('op-save-fail',A.ui.opSaveFail?1:0,[[0,'保存成功'],[1,'通信失敗']]),
-  ask:['保存に失敗したときの見せ方','保存後にどこへ戻すか（次の画面）'],
+  ask:[],
+  ui:['保存に失敗したときの見せ方と、保存後の戻り先は標準案。入力内容を失わない決まりは変えない'],
   body:()=>{
     const op=A.op;const kmlPend=op.kml==='pending';
     return '<div class="sec"><h3>確定する内容</h3><table class="kv"><tr><td>運航</td><td>'+esc(op.name)+'</td></tr><tr><td>機体</td><td>'+flownAcs().map(id=>esc(acLabel(id))).join('<br>')+'</td></tr><tr><td>操縦者</td><td>'+esc(plName(op.pilot))+'</td></tr><tr><td>飛行前・飛行後点検</td><td>済み</td></tr><tr><td>飛行</td><td>'+op.legs.length+'回・合計'+op.legs.reduce((s,l)=>s+l.min,0)+'分</td></tr></table>'+legTable(op.legs)+(op.notes.trim()?'<p class="note">記事・不具合・処置: '+esc(op.notes)+'</p>':'')+'</div>'
@@ -206,7 +214,8 @@ def('op-done',{t:'保存しました',st:()=>A.opDone?A.opDone.name:'',back:fals
   goal:'保存の結果（反映済みか未同期か）を示し、次の行き先を選ぶ。',
   doc:'35b §10項目6（成功後の帰着画面・再送UIの詳細は未確定）／35d／34f §2（保存後の戻り先は未確定）。',state:'none',
   tmp:['保存後の戻り先は未確定。ここでは3つの行き先を並べて、選び方を試せるようにしている（仮）'],
-  ask:['保存後は、ホームへ戻すか、履歴で結果を見せるか'],
+  ask:[],
+  ui:['保存後にホームへ戻すか、履歴で結果を見せるかは標準案'],
   body:()=>{const d=A.opDone;
     return (d.synced?'<div class="msg ok big">✓ 保存しました</div><div class="msg ok">飛行記録・BATの使用履歴・機体の飛行時間の合計を、Google Driveに保存しました。</div>':'<div class="msg warn big">この端末に保存しました</div><div class="msg warn">まだGoogle Driveには保存されていません。通信が戻ったら、自動で保存します。</div>')
      +'<div class="sec"><h3>この飛行</h3><table class="kv"><tr><td>飛行</td><td>'+esc(d.name)+'</td></tr><tr><td>飛行回数</td><td>'+d.n+'回</td></tr><tr><td>KML</td><td>'+({saved:'保存済み',pending:'まだGoogle Driveに保存されていません',none:'なし（通報しない飛行）'})[d.kml]+'</td></tr><tr><td>PDF</td><td>自動では作りません。必要なときに［飛行履歴・出力］から作ります。</td></tr></table></div>'

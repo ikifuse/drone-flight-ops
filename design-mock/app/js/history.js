@@ -28,7 +28,8 @@ def('hist',{t:'飛行履歴・出力',st:'完了した過去の飛行を探す',
   goal:'完了済みの過去の飛行を、人が読める条件で探して選び、その飛行の正式記録に基づく出力へ進む。',
   doc:'34e §1・§2（飛行履歴・出力画面の10項目）。日付・機体・場所や飛行名・目的・操縦者などの人が読める条件で探す。［飛行リスト］（これから扱う計画）とは別の目的。検索・詳細の表示は、記録を更新しない。',state:'spec',
   tmp:['検索条件の全項目・初期値・並び順・結果の見せ方は未確定（PENDING-S7D-HISTORY-DETAIL）。ここでは期間・機体・操縦者・目的・キーワードを仮に並べている','1つの飛行が複数のA4や複数機体にまたがる場合の出力単位は未確定（PENDING-S7D-HISTORY-OUTPUT-UNIT）','オフラインでは、端末に取得済みのデータの範囲に限られる（cacheの鮮度は未確定）'],
-  ask:['検索条件の並べ方（何を最初に見せるか）','一覧の各行に出す情報の量'],
+  ask:[],
+  ui:['検索条件の並べ方と、一覧の各行に出す情報の量は標準案'],
   body:()=>{
     const E=ENV(),u=A.ui;const purposes=[...new Set(E.flights.flatMap(fPurpose))];
     const opt=(v,l,cur)=>'<option value="'+esc(v)+'"'+(String(v)===String(cur||'')?' selected':'')+'>'+esc(l)+'</option>';
@@ -44,7 +45,8 @@ def('hist-detail',{t:()=>{const f=flightOf(A.ui.hSel);return f?f.label:'飛行�
   goal:'選んだ飛行の内容を確かめ、必要な出力（A4運航記録PDF・地図付きPDF・KML）だけを選んで作る。',
   doc:'34e §1（対象の飛行を選んだ後に、A4運航記録PDF・地図付きPDF・両方作成のように必要な出力を選ぶ方式は第一候補＝CURRENT-PROPOSAL）／27f §3（PDFは飛行完了時に自動で作らず、必要なときだけ生成する）／27e（KMLは通報時に作成・保存済み。ここで作り直さない）。',state:'proposal',
   tmp:['出力を選ぶ方式は第一候補であり、確定した仕様ではない','出力後の表示・共有・保存先の確認の遷移は未確定（34e 項目6）','履歴からKMLを取得するときの、保存済みKMLへの案内・未同期・未生成の扱い、再生成の可否は未確定（PENDING-S7D-HISTORY-KML）','通報しない飛行は通報内容・KMLがないため、地図付きPDFとKMLは出さない（仮。PENDING-S7C-KML-UNIT-MAPPING）'],
-  ask:['出力の選び方（チェックして作る／ボタンごとに作る）','PDFを作った後、どこへ何を見せるか'],
+  ask:[],
+  ui:['出力はチェックして作る形にし、作ったあとは同じ画面に結果を出している'],
   body:()=>{
     const f=flightOf(A.ui.hSel);if(!f)return '<div class="empty">飛行が見つかりません</div>';
     const s=f.snap;const nd=!!s.noDips;const sel=A.ui.outSel;
@@ -79,7 +81,8 @@ def('out-pdf',{t:'出力：PDF',st:()=>{const f=flightOf(A.ui.hSel);return f?f.l
   goal:'PDFを作った結果と、次にできること（保存・印刷・共有）を確かめる。',
   doc:'27f（A4運航記録PDFと地図付きPDFの役割分離。地図付きPDFは、地図を主な視覚要素とし、その右側または下側などにDIPSの通報項目を置く方向。最終レイアウトは1飛行のテストで確定）／18 §6（オフラインでも端末でPDF生成は成立する条件つき。地図タイルがない場合は座標・半径の印字）。',state:'proposal',
   tmp:['この画面は、出力後の遷移が未確定（34e 項目6）であることを見せるための仮の作り','A4・地図付きPDFのプレビューは、レイアウトを確かめるための粗い表示（実際のA4の書式は最新実物に合わせる。地図付きPDFの詳細レイアウトは未確定 PENDING-S7D-MAPPDF-DETAIL。最終のレイアウトは、1飛行のテストで確定する）','補助者への共有は、その1飛行のPDFなどを個別に共有する方向（補助者に元台帳の権限は与えない・31b §4）'],
-  ask:['出力後にまず何を見せるか（プレビュー／保存先／共有）','補助者への渡し方（個別共有）の入口をここに置くか'],
+  ask:['出力した記録を、補助者など他の人へ個別に渡せるようにするか（誰がどこまで見られるかが変わる）'],
+  ui:['出力後はまず保存先を示し、その下に次の操作を並べている'],
   body:()=>{
     const f=flightOf(A.ui.hSel);const m=A.ui.outMade||{a4:true,map:false,saved:A.online};
     return (m.saved?'<div class="msg ok big">✓ PDFを作成しました</div><div class="msg ok">Google Driveの「出力」フォルダーに保存しました。</div>':'<div class="msg warn big">端末で作成しました</div><div class="msg warn">通信できないため、<b>まだGoogle Driveに保存されていません</b>。通信が戻ったら保存します。地図が取得できない場合は、座標と半径を文字で入れて作成します。</div>')
@@ -93,7 +96,8 @@ def('out-kml',{t:'出力：KML',st:()=>{const f=flightOf(A.ui.hSel);return f?f.l
   goal:'保存済みのKMLの状態と、My Mapsで見る方法を案内する。KMLの文字列は見せない。',
   doc:'27e（KMLは飛行計画の通報時に作成・保存。通信断のときは端末に未同期で保持し、通信復帰時と最後の送信のときに再送。飛行後に作り直さない）／27c（My Mapsへ手動でインポートして重ねて見る。実機検証待ち）／34f PENDING-D-HUMAN-OUTPUT（KMLに保存した内容を、人が閲覧・印刷するときの復元。KMLの文字列を見せず、地図付きPDFで見る）。',state:'proposal',
   tmp:['ファイル名・保存階層の規則は未確定（27e §3・37 §4）','My Mapsでの見え方は実機検証待ち（27c）','共有時に氏名・機体登録記号などを出さない安全側の設定（27a §6）と、通報内容を同じ意味で保持することの合成は未確定（PENDING-S7C-KML-SHARE-PROJECTION）','履歴からKMLを取得するときの案内・再生成の可否は未確定（PENDING-S7D-HISTORY-KML）'],
-  ask:['KMLの取得の導線（この画面か、地図付きPDFか）','未同期のKMLを、履歴からも保存し直せるようにするか'],
+  ask:['未同期のKMLを、あとから履歴からも保存し直せるようにするか（記録の復旧）'],
+  ui:['KMLの取得は、この画面と地図付きPDFの両方に入口を置いている'],
   body:()=>{
     const f=flightOf(A.ui.hSel);const nd=!!f.snap.noDips;
     if(nd)return '<div class="empty"><b>この飛行にはKMLがありません</b><br>通報しない飛行では、KMLは作られません。</div>';

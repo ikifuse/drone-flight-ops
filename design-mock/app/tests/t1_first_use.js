@@ -63,7 +63,7 @@ suite('はじめて使う（左側だけで進める）',H=>{
     return JSON.stringify(rows)==='["自分の情報","機体","許可・承認","保険","連絡先"]'&&!t.includes('必須')&&!q('.phone [data-act=ob-init-done]').disabled&&qa('.phone [data-act=init-open]').length===5;
   });
   T('はじめの設定の説明は最小（あとからでも登録できます）。設計上の未決は右側にある',()=>{
-    const m=memo();return txt().includes('あとからでも登録できます')&&m.includes('この画面で何を必須にするかは未決')&&m.includes('画面を分けるか未決')&&m.includes('この画面は必要か');
+    const m=memo();return txt().includes('あとからでも登録できます')&&m.includes('この画面で何を必須にするかは未決')&&m.includes('画面を分けるか未決')&&m.includes('オーナー判断が必要な設計論点')&&m.includes('何を必須にするか')&&!m.includes('項目の並びと、必須／任意の分け方');
   });
   T('［ホームへ］→ホーム。「個人で使用中」。4入口がすべて開ける',()=>{
     actL('ob-init-done');

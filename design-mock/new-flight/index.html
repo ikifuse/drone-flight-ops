@@ -610,7 +610,8 @@ function memoHtml(pg){
     +'<h4>仮置き・未確定</h4><ul>'+s.tmp.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>'
     +'<h4>相談したい点</h4><ul>'+s.ask.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>'}).join('');
   const table='<table><tr><th>画面</th><th>DIPS項目</th></tr>'+SCREEN_ORDER.filter(k=>SCREENS[k].dips.length).map(k=>'<tr class="'+(cur.includes(k)?'cur':'')+'"><td>'+esc(SCREENS[k].t)+'</td><td>'+SCREENS[k].dips.map(n=>'#'+n+' '+esc(DNAME(n))).join('、')+(SCREENS[k].map?'、地図':'')+'</td></tr>').join('')+'</table>';
-  return blocks
+  const older='<p class="note" style="margin:0 0 10px;padding:8px 10px;border:1px dashed #b9c4d6;border-radius:8px">これは最初に作った、新規飛行だけのモック（参考）です。上の「相談したい点」は、粒度を整理する前のままにしてあります。<b>オーナー確認待ちではありません。</b>いまの区分（オーナー判断が必要な設計論点／未決・仮置き／一般的なUI判断のAI標準案）は、アプリ全体のモックの右側にあります。</p>';
+  return older+blocks
    +'<h4>DIPS22項目の対応</h4><p class="note" style="margin:0 0 4px">'+(cv.missing.length||cv.dup.length?'漏れ: '+cv.missing.join(',')+' 重複: '+cv.dup.join(','):'22項目すべてが、ちょうど1つの画面に割り当てられています（'+cv.ok+'/22）。')+'</p>'+table
    +'<h4>DIPSから変えたところ（たたき台）</h4><ul><li>機体・操縦者・許可を最初にまとめた（DIPSでは許可が2番目、機体・操縦者が続く）</li><li>計画名称は最後の確認画面（DIPSは最初）。ヘッダーからも直せる</li><li>参照経路・出発地・目的地は地図の画面へ（DIPSは別の位置）</li><li>保険は連絡先と一緒に「登録済み情報の確認」へ（DIPSは途中）</li><li>選択肢の名称は、DIPS Webの表記のまま</li></ul>'
    +'<h4>試せること</h4><ul><li>右上「全体」: 画面の順序入れ替え・次の画面と1画面にまとめる・省く</li><li>内容確認: 「画面ごと／DIPS項目順」の切替</li><li>ホームの環境ボタン: 運用環境を切り替える（選べる内容が変わる）</li></ul>'
