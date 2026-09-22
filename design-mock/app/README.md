@@ -32,4 +32,4 @@ Chromeで412／430／1320px（高さ900px）を表示し、各24状態・計72�
 
 離陸待機への設計用直接移動でBATが未選択なのに管理OFFと表示していた点を修正。BAT交換の取消時は直前の装着状態を保持する回帰テストを追加。入力欄幅と確認画面の比較操作の位置も整えた。スマホ実機・Safariでの検証ではない。
 
-Responsibility Check: DIPS順は25b、観測限界は26、停止条件は34d、通常運航候補は35b、文言は34h、左右の規約は30へ配置した。初回の入口を1画面へまとめた因果は34a §7.6、利用方法の選択で種類を分けて聞かない確定は34a §7.7、ホーム前を最小にした訂正は34a §7.8、表示の訂正は34a §7.9、2026-09-23の初回利用フローの確定は34a §9へ配置し、判断はADR-0030（Proposed）。オーナーに判断を求める粒度は30 §5.2。31a・34b・34f・34g・34h・25b・16と目次・README・open-questionsを同期。PENDING-D-NEW-FLIGHT-SCREENS、PENDING-S6-OPERATION-UI、PENDING-S5-DIPS-LOGIN-STORAGE、PENDING-U-WORDINGと重複調整後の再開・地図詳細は未決のまま。
+Responsibility Check: DIPS順は25b、観測限界は26、停止条件は34d、通常運航候補は35b、文言は34h、左右の規約は30へ配置した。初回の入口を1画面へまとめた因果は34a §7.6、利用方法の選択で種類を分けて聞かない確定は34a §7.7、ホーム前を最小にした訂正は34a §7.8（本人情報・DIPS情報の部分は§9.3で置換済み）、表示の訂正は34a §7.9、2026-09-23の初回利用フローの確定は34a §9へ配置し、判断はADR-0030（Proposed）。オーナーに判断を求める粒度は30 §5.2。31a・34b・34f・34g・34h・25b・16と目次・README・open-questionsを同期。PENDING-D-NEW-FLIGHT-SCREENS、PENDING-S6-OPERATION-UI、PENDING-S5-DIPS-LOGIN-STORAGE、PENDING-U-WORDINGと重複調整後の再開・地図詳細は未決のまま。
