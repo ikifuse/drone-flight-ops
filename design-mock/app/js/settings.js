@@ -9,14 +9,15 @@ const cnt=(n,unit,warnZero)=>n?'<i class="chip ok">'+n+unit+'</i>':(warnZero?'<i
 function unsynced(){const E=ENV();if(!E)return 0;return E.flights.filter(f=>!f.synced).length+E.flights.filter(f=>f.kml==='pending').length+E.plans.filter(p=>p.kml==='pending').length}
 
 def('set',{t:'各種設定・管理',st:()=>{const E=ENV();return E?envLabel(E)+'で使用中':''},
-  goal:'使っている場所（個人・会社・団体）の、人員・機体・BAT・許可承認・保険・連絡先・現場などの登録や設定を扱う。',
-  doc:'34b §1（ホーム4入口の1つ。内部の分類は未確定）／34g §3・§4（機体管理の入口の流れはCURRENT-PROPOSAL。各種設定・管理は、いま使っている場所を対象にする）。人員・BAT・場所・環境などの他の管理画面は、個別の画面設計がない（34f PENDING-D-SETTINGS-SCREENS）。',state:'proposal',
+  goal:'使っている場所（個人・会社・団体）の、自分の情報・人員・機体・BAT・許可承認・保険・連絡先・現場・DIPSのログイン情報などを、必要になる前に登録しておく入口。ホームへ入る前に一括で登録させない。',
+  doc:'34a §7.8（事前登録はここから。ホーム前に一括の初期設定を置かない）／34b §1（ホーム4入口の1つ。内部の分類は未確定）／34g §3・§4（機体管理の入口の流れはCURRENT-PROPOSAL。各種設定・管理は、いま使っている場所を対象にする）。人員・BAT・場所・環境などの他の管理画面は、個別の画面設計がない（34f PENDING-D-SETTINGS-SCREENS）。',state:'proposal',
   tmp:['この一覧の分類・並び順・名称は案（PENDING-S5-HOME-DETAIL）','「DIPSのログイン情報」を設定のどこに置くか（この一覧の1項目か、DIPS関連の中か）は未決。2026-09-22のオーナー指示で候補に加えた（PENDING-S5-DIPS-LOGIN-STORAGE）','左側の案内文（「飛行の途中でその場で登録することもできます」）は、説明を最小にするため置いていない。要るかどうかは未決','「保存状態」は、以前の「保存・同期」を平易にした案（PENDING-U-WORDING）','許可・承認／保険／連絡先を設定のどこに置くかは未確定（PENDING-S6-DRIVE-PLACEMENT）','誰がどの項目を変更できるかは未確定（PENDING-D-AC-PERMISSION／PENDING-S2-ACCESS-DETAIL）。このモックでは制限していない'],
   ask:[],
   ui:['設定の分類と並び、未登録のものの目立たせ方は標準案'],
   body:()=>{
-    const E=ENV();const n=unsynced();
+    const E=ENV();const n=unsynced();const me=E.people.find(p=>p.id===E.meId);
     return li('🏢','個人・会社・団体の切り替え','使う場所を切り替える・新しく追加する',cnt(A.envs.length,'か所'),'go','data-s="set-env"')
+     +li('👤','自分の情報','氏名・電話・操縦者としての登録',(me&&me.name?'<i class="chip ok">登録済み</i>':'<i class="chip warn">未登録</i>'),'go','data-s="set-me"')
      +li('👥','人員・役割','人員の一覧・役割・離任',cnt(E.people.filter(p=>p.active!==false).length,'人'),'go','data-s="set-members"')
      +li('✈','機体管理','登録している機体・BAT管理の設定',cnt(E.aircraft.length,'機',true),'go','data-s="set-aircraft"')
      +li('🔋','BAT管理','BATの一覧・状態・使用履歴',cnt(E.bats.length,'本'),'go','data-s="set-bat"')
@@ -142,7 +143,7 @@ def('set-dipscred',Object.assign({t:'DIPSのログイン情報',st:()=>A.dips.re
   enter:()=>{A.ui.dform={id:A.dips.id||'',pw:''};A.ui.pwShow=false},
   body:()=>dipsForm(),
   foot:()=>'<button class="btn" data-act="dips-cancel">キャンセル</button><button class="btn primary" data-act="dips-save">'+(A.dipsRet?'登録して戻る':(A.dips.registered?'保存する':'登録する'))+'</button>'
-},DIPS_MEMO,{tmp:['この画面は、3か所から開く：各種設定・管理／はじめの設定の一項目（案B）／通報の直前でDIPSのログイン情報が未登録のとき（その場で登録して、元の飛行計画へ戻る）。3つで同じ画面を使っている'].concat(DIPS_MEMO.tmp)}));
+},DIPS_MEMO,{tmp:['この画面は、2か所から開く：各種設定・管理（必要になる前に登録しておく）／通報の直前でDIPSのログイン情報が未登録のとき（その場で登録して、元の飛行計画へ戻る）。どちらも同じ画面を使う。初回にここを必ず通す構成にはしない（34a §7.8）'].concat(DIPS_MEMO.tmp)}));
 def('set-maint',{t:'点検整備記録',st:'機体ごとの詳しい点検整備',
   goal:'機体ごとの詳しい点検整備の記録（通常の日常点検とは別）への入口。',
   doc:'36（機体別の詳細な点検整備は05に置く。通常の日常点検と分離）。この入口の画面は未設計。整備台帳の詳細入力フォームを、通常運航の画面へ混ぜない（35b §9）。',state:'none',

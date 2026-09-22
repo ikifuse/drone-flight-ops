@@ -37,9 +37,9 @@ function freshApp(keep){
     reg:null,op:null,nfResult:null,init:null,join:null,create:null,
     ui:{plFilter:'all',hq:'',hAc:'',hPl:'',hPu:'',hSel:null,outSel:{a4:true,map:false},
       /* 設計確認用の切替（右側で選ぶ）。左側の画面には出さない */
-      gState:'new',consentOk:true,initLayout:'sep',req:{me:false,dips:false,aircraft:false,permit:false,insurance:false,contact:false}}
+      gState:'new',consentOk:true}
   };
-  if(keep){a.online=keep.online;a.apiOk=keep.apiOk;a.width=keep.width;a.gAccess=keep.gAccess;a.ui.gState=keep.ui.gState;a.ui.consentOk=keep.ui.consentOk;a.ui.initLayout=keep.ui.initLayout;a.ui.req=Object.assign({},keep.ui.req)}
+  if(keep){a.online=keep.online;a.apiOk=keep.apiOk;a.width=keep.width;a.gAccess=keep.gAccess;a.ui.gState=keep.ui.gState;a.ui.consentOk=keep.ui.consentOk}
   return a;
 }
 

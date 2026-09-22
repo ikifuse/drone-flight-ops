@@ -4,13 +4,13 @@ suite('初回利用者の通し',H=>{
   const {T,act,txt,route,set,q,qa,A,E,S}=H;
   H.hash('');
   T('1 最初の画面: 利用登録を始める／ログイン',()=>route()==='boot'&&txt().includes('利用登録を始める'));
-  T('2 利用登録を始める→Google公式の画面→個人で使う→許可→準備ができました',()=>{
+  T('2 利用登録を始める→Google公式の画面→個人で使う→許可→そのままホーム',()=>{
     act('ob-start-new');act('gauth-done');act('us-personal');act('consent-ok');
-    return route()==='created'&&E().name==='個人'&&txt().includes('個人で使う準備ができました');
+    return route()==='home'&&E().name==='個人';
   });
-  T('3 DIPSのログイン情報は［あとで設定する］。はじめの設定も何も登録せずホームへ（「個人で使用中」）',()=>{act('ob-after-created');if(route()!=='dips-init')return route();act('dips-skip');act('ob-init-done');return route()==='home'&&E().aircraft.length===0&&!A().dips.registered&&txt().includes('まだ何も登録されていません')&&q('.hd2').innerText.includes('個人で使用中')});
+  T('3 一括の初期設定を通らずにホーム。DIPSも機体も未登録のまま（「個人で使用中」）',()=>route()==='home'&&E().aircraft.length===0&&!A().dips.registered&&txt().includes('まだ何も登録されていません')&&q('.hd2').innerText.includes('個人で使用中'));
   T('4 飛行リスト・履歴・設定が、空でも開ける',()=>{const ok=[];for(const s of ['list','hist','set']){act('go','[data-s='+s+']');ok.push(route()===s);H.APP().back()}return ok.every(Boolean)&&route()==='home'});
-  T('5 新規飛行: 何も登録せずに開始→使うもの',()=>{act('nf-new');act('nf-layout','[data-v=app]');act('start-new');return route()==='nf'&&S().cur==='use'});
+  T('5 新規飛行: 足りない設定の案内→［このまま進む］→使うもの',()=>{act('nf-new');if(route()!=='nf-need')return 'need '+route();act('nf-need-go');act('nf-layout','[data-v=app]');act('start-new');return route()==='nf'&&S().cur==='use'});
   T('6 その場で機体を登録して戻る',()=>{act('nf-reg','[data-t=aircraft]');set('[data-bind="@d.mark"]','JU-JOURNEY-01');set('[data-bind="@d.name"]','通し機');act('reg-save');return route()==='nf'&&S().aircraft.length===1});
   T('7 自分を操縦者にして選ぶ／許可なし',()=>{act('nf-me-pilot');act('pick-pm','[data-id=none]');return S().pilots.length===1&&S().permit==='none'});
   T('8 飛行の内容を選ぶ',()=>{act('nf-next');act('tog-purpose','[data-g=biz][data-v=空撮]');act('tog-air','[data-v="上記空域の飛行は行わない"]');act('tog-met','[data-v="上記方法の飛行は行わない"]');return S().cur==='content'});

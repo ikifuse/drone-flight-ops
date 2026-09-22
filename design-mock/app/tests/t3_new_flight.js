@@ -5,7 +5,11 @@ suite('新規飛行',H=>{
   const page=()=>S()&&S().cur;
   const next=()=>act('nf-next');
   H.hash('scn=empty');
-  T('ホーム→新規飛行（何も登録がない状態）。過去の飛行・現場プリセットの空の案内',()=>{act('nf-new');return route()==='nf'&&page()==='start'&&txt().includes('複製できる過去の飛行がまだありません')&&txt().includes('現場プリセットはまだありません')});
+  T('ホーム→新規飛行（何も登録がない状態）: まず足りない設定を示す',()=>{
+    act('nf-new');
+    return route()==='nf-need'&&txt().includes('飛行を始めるために必要な設定がまだありません');
+  });
+  T('［このまま進む］で新規飛行へ。過去の飛行・現場プリセットの空の案内',()=>{act('nf-need-go');return route()==='nf'&&page()==='start'&&txt().includes('複製できる過去の飛行がまだありません')&&txt().includes('現場プリセットはまだありません')});
   T('使うもの: 機体・操縦者・許可の未登録の案内と、その場で登録するボタン',()=>{act('nf-layout','[data-v=app]');act('start-new');return page()==='use'&&txt().includes('登録された機体がありません')&&txt().includes('操縦者として登録された人がいません')&&qa('[data-act=nf-reg]').length===3});
   T('事前に設定へ行かなくても、次へ進める',()=>!q('[data-act=nf-next]').disabled);
   T('その場で機体を登録→元の新規飛行へ戻り、選ばれた状態',()=>{

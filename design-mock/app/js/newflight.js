@@ -460,6 +460,36 @@ function togExcl(arr,val,none){const i=arr.indexOf(val);if(val===none)return i>=
 
 /* ---------- 操作 ---------- */
 const NF_LABEL={aircraft:'使うもの',person:'使うもの',permit:'使うもの',insurance:'登録済み情報の確認',contact:'登録済み情報の確認'};
+/* 新規飛行を始めるのに足りない登録。条件そのものは既存の確定設計から取る
+   （34a §3: 飛行を始める際に操縦者を選ぶ／25b・26: DIPSの通報に機体と操縦者が要る）。ここで新しい必須条件を足さない */
+function nfMissing(){
+  const E=ENV();if(!E)return [];
+  const out=[];
+  if(!E.aircraft.length)out.push({type:'aircraft',label:'機体',sub:'この飛行で飛ばす機体'});
+  if(!E.people.some(p=>p.active!==false&&p.roles.includes('操縦者')))out.push({type:'person',label:'操縦者',sub:'この飛行を操縦する人'});
+  return out;
+}
+def('nf-need',{t:'新規飛行',st:'必要な設定',
+  goal:'新規飛行を押したときに、飛行に必要な登録が足りなければ、何が足りないかを示して、その場で登録へ進めるようにする。単にエラーで止めない。登録が終わると、ここへ戻る。',
+  doc:'34a §3（飛行を始める際に操縦者を選び、未登録ならその場で登録して元のフローへ戻る。CURRENT-ACCEPTED）／§7.8（ホーム前に一括の初期設定を置かず、必要になった場面で案内する）／25b・26（DIPSの通報には機体と操縦者が要る）。ここで新しい必須条件は足していない。',state:'proposal',
+  tmp:['機体・BAT等を、どこまで飛行開始の必須にするかは未決（PENDING-S5-INITIAL-REQUIRED の残り。最低1機案を含む）','足りないまま進んだときに、どの画面で止めるかは、内容確認・通報の直前の判定（34d）に従う'],
+  ask:['足りないときに、ここで止めるか、そのまま進めて途中で登録できるようにするか（いまは34a §3に従って、どちらも選べるようにしている）'],
+  ui:['足りないものだけを並べ、［必要な設定をする］を色の付いた主ボタンにしている','足りないものが複数あるときは、1つ登録するたびにこの画面へ戻り、残りが分かるようにしている'],
+  body:()=>{
+    const m=nfMissing();
+    if(!m.length)return '<div class="msg ok">必要な設定がそろいました。</div>';
+    return '<div class="msg warn"><b>飛行を始めるために必要な設定がまだありません。</b>下の設定を登録すると、飛行を始められます。</div>'
+     +m.map(x=>'<div class="li"><span class="tx"><b>'+esc(x.label)+'</b><small>'+esc(x.sub)+'</small></span><i class="chip warn">未登録</i></div>').join('')
+     +'<p class="note">あとから登録することもできます。その場合は、飛行の途中で登録する画面が出ます。</p>';
+  },
+  foot:()=>{
+    const m=nfMissing();
+    return m.length
+     ?'<button class="btn" data-act="nf-need-go">このまま進む</button><button class="btn primary" data-act="nf-need-set">必要な設定をする</button>'
+     :'<button class="btn" data-act="back">戻る</button><button class="btn primary" data-act="nf-need-go">新規飛行を始める</button>';
+  }
+});
+
 const NF_RET={
   aircraft:id=>{if(!S.aircraft.includes(id))S.aircraft.push(id);delete S.auto.aircraft},
   person:id=>{if(!S.pilots.includes(id))S.pilots.push(id);delete S.auto.pilots},
@@ -467,7 +497,9 @@ const NF_RET={
   insurance:()=>{const i=ENV().insurance;S.ins={mode:'auto',company:i.company,product:i.product,pUnl:i.pUnl,pAmt:i.pAmt,oUnl:i.oUnl,oAmt:i.oAmt,ability:''}}
 };
 Object.assign(ACTS,{
-  'nf-new':()=>{S=blankNF(ENV());S.cur='start';nav('nf')},
+  'nf-new':()=>{if(nfMissing().length){nav('nf-need');return}S=blankNF(ENV());S.cur='start';nav('nf')},
+  'nf-need-set':()=>{const m=nfMissing();if(!m.length){ACTS['nf-need-go']();return}const o={ret:{label:'新規飛行',apply:()=>{}}};if(m[0].type==='person')o.roles=['操縦者'];openReg(m[0].type,o)},
+  'nf-need-go':()=>{S=blankNF(ENV());S.cur='start';rep('nf')},
   'nf-back':()=>{if(S.cur==='start')back();else nfStep(-1)},
   'nf-next':()=>{if(S.cur==='start'&&!S.start)S.start={mode:'new',label:'新しく作る'};nfStep(1)},
   'nf-restart':()=>{A.modal=null;S=blankNF(ENV());S.cur='start';render(false)},

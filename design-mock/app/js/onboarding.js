@@ -1,7 +1,7 @@
 'use strict';
 /* ===================================================================
-   はじめに（利用登録を始める／ログイン）／使い方の選択／DIPSのログイン情報／はじめの設定／招待からの参加／使う場所の選択
-   設計の出典: 34a（§7 アカウントから始める導線、§7.6 入口を1画面にまとめた訂正、§8 DIPSログイン情報と初回設定の候補）／34h（表示名と文言の型）／30 §5（左右の役割）
+   はじめに（利用登録を始める／ログイン）／使い方の選択／Google Driveの許可／招待からの参加／使う場所の選択／自分の情報／DIPSのログイン情報（各種設定・管理から）
+   設計の出典: 34a（§3 初回必須登録、§7 Googleアカウントから始める導線、§7.6 入口を1画面にまとめた訂正、§7.8 ホーム前を最小にした訂正、§8 DIPSログイン情報）／34h（表示名と文言の型）／30 §5（左右の役割）
    - 左側の画面は、実際のアプリとして利用者が見る画面の候補だけにする。
      テスト用のアカウント・状態の説明・確認用の注記・設計書の番号は出さない。
      それらは、右側の設計確認メモ（goal / doc / tmp / ask / mock）と、右側の状態切替にだけ置く。
@@ -64,18 +64,18 @@ def('acct-exists',{t:'すでに登録されています',st:'',env:false,back:fa
 def('acct-none',{t:'ログインできませんでした',st:'',env:false,back:false,
   goal:'登録がないGoogleアカウントでログインしたときの案内。［利用登録を始める］へ誘導する。',
   doc:'34a §7.2（案）。問題／データ保護状態／次の操作の型（34h §6）。',state:'proposal',tmp:['この分岐の文言は案。右側の切替（Google認証のあとの状態）を「未登録」にして、［ログイン］から進むと出る'],ask:[],ui:['問題→いまの状態→次の操作の順で出し、［利用登録を始める］を色の付いた主ボタンにしている'],
-  body:()=>'<div class="msg ng big">ログインできませんでした</div><p class="lead2">このGoogleアカウントでは、まだこのアプリのアカウントがありません。まだ何も登録されていません。</p><p class="note">はじめて使う場合は、［利用登録を始める］から始めてください。</p>',
+  body:()=>'<div class="msg ng big">ログインできませんでした</div><p class="lead2">このGoogleアカウントでは、まだこのアプリを使い始めていません。まだ何も登録されていません。</p><p class="note">はじめて使う場合は、［利用登録を始める］から始めてください。</p>',
   foot:()=>'<button class="btn" data-act="mk-reset">最初に戻る</button><button class="btn primary" data-act="ob-to-new">利用登録を始める</button>'
 });
 
 /* ---------- 使い方の選択（アカウントを作ったあと） ---------- */
 def('usage',{t:'どのように使いますか？',st:'',env:false,back:false,
-  goal:'アカウントができたあと、個人で使うか、会社・団体で新しく使い始めるか、招待を受けているかを選ぶ。',
+  goal:'Googleアカウントの確認が終わったあと、個人で使うか、会社・団体で新しく使い始めるか、招待を受けているかを選ぶ。アプリ専用のIDやパスワードは作らない。',
   doc:'34a §7.2（順3）／§7.4（内部の対応：個人・会社団体の新規作成＝新規の運用環境の作成、招待＝既存の運用環境への所属の追加）／§7.7。最初に新しく作った人が最初の管理者になり、招待で参加しただけの人は自動では管理者にならない（31b）。2026-09-22にオーナーが確定：この画面では会社／スクール／臨時業務などの種類を分けて聞かず「会社・団体」にまとめる。招待で参加するときは参加先から分かるため、入口で種類を追加で尋ねない。3つの並びも現在のままとする。',state:'proposal',
   tmp:['3つの言葉（個人で使う／会社・団体で新しく使い始める／会社・団体から招待を受けている）はオーナー指示の例。最終の製品用語ではない（PENDING-U-WORDING）','内部では、個人・会社・スクール・臨時業務などを運用環境の種類として持つ（31a）。この画面で種類を聞かないことは、内部の区別をなくすことではない'],
   ask:[],
-  ui:['3つの並びは、個人で使う → 会社・団体で新しく使い始める → 会社・団体から招待を受けている（2026-09-22にオーナーが確定）','各ボタンの一言の説明の言い回し・改行・配置は、既存の画面に合わせた標準案','個人と会社・団体の両方を使う人は、あとから「どこで使いますか？」の画面の［＋ 会社・団体で新しく使い始める］で追加できる'],
-  body:()=>'<p class="lead2">アカウントができました。使い方を選んでください。</p>'
+  ui:['「アカウントができました」ではなく「このGoogleアカウントで、このアプリを使い始めます」にしている。アプリ専用のIDを発行したように見せない（34a §7.8）','3つの並びは、個人で使う → 会社・団体で新しく使い始める → 会社・団体から招待を受けている（2026-09-22にオーナーが確定）','各ボタンの一言の説明の言い回し・改行・配置は、既存の画面に合わせた標準案','個人と会社・団体の両方を使う人は、あとから「どこで使いますか？」の画面の［＋ 会社・団体で新しく使い始める］で追加できる'],
+  body:()=>'<p class="lead2">このGoogleアカウントで、このアプリを使い始めます。使い方を選んでください。</p>'
    +bigCard('us-personal','個人で使う','自分ひとりで使います')
    +bigCard('us-company','会社・団体で新しく使い始める','会社やスクールなどで使い始めます')
    +bigCard('us-invited','会社・団体から招待を受けている','すでに使っている会社・団体に参加します')
@@ -106,17 +106,6 @@ def('consent',{t:'Google Driveの許可',st:'',env:false,
   },
   foot:()=>'<button class="btn" data-act="back">戻る</button><button class="btn primary" data-act="consent-ok">許可して続ける</button>'
 });
-def('created',{t:'準備ができました',st:'',env:false,back:false,
-  goal:'保存場所ができたことを伝え、次へ進む。左側は、できたことと、次のボタンだけにしている。',
-  doc:'34a §1・§7.2（順4）／31b §3（新しく作った人が最初のアプリ管理者）。生成するのは利用者の記録の保存場所のみで、設計管理の資料は作らない（34a §1）。',state:'accepted',
-  tmp:['作られる保存場所（内部の責任領域）: 人員／機体／バッテリー／運航記録／点検整備記録／DIPS関連／出力（PDF・KML）。フォルダー名は内部の表記であり、名称の確定ではない。左側には出していない','管理者は、新しく作った人（個人で使う人も同じ）。会社・団体では、左側に「最初の管理者です」と出している','次の画面は、右側の切替（DIPS設定の置き方）で変わる：案A＝DIPSのログイン情報の画面／案B＝はじめの設定'],
-  ask:['保存場所を作った直後に、初回の設定を必ず通すか、すぐホームへ進めてよいか（何を登録しないと使い始められないかが変わる。PENDING-S5-INITIAL-REQUIRED）'],
-  ui:['できたことと、次へ進むボタンだけを置いている。作成の進み具合の見せ方（一括か、順に見せるか）も標準案'],
-  body:()=>{const E=ENV();const personal=E.kind==='personal';return '<div class="msg ok big">✓ '+(personal?'個人で使う準備ができました':'「'+esc(E.name)+'」を使い始める準備ができました')+'</div>'
-   +'<p class="lead2">記録の保存場所を、あなたのGoogle Driveに作りました。'+(personal?'':'あなたが最初の管理者です。')+'</p>';},
-  foot:()=>'<button class="btn primary" data-act="ob-after-created">次へ</button>'
-});
-
 /* ---------- DIPSのログイン情報（はじめに登録／各種設定・管理から登録・変更／通報の直前にその場で登録） ---------- */
 function dipsForm(){
   const d=A.ui.dform||(A.ui.dform={id:A.dips.id||'',pw:''});const show=!!A.ui.pwShow;const reg=A.dips.registered;
@@ -132,56 +121,20 @@ const DIPS_MEMO={
   ask:['DIPSのログインID・パスワードのほかに、何を登録させるか（DIPSのアカウント種別など）'],
   ui:['記入例は薄い文字（placeholder）で置き、パスワードは伏字にして［表示］／［非表示］で切り替えられるようにしている','登録の削除・変更は、各種設定・管理の同じ画面から行う形にしている']
 };
-def('dips-init',Object.assign({t:'DIPSのログイン情報',st:'',env:false,back:false,
-  enter:()=>{A.ui.dform={id:A.dips.id||'',pw:''};A.ui.pwShow=false;A.dipsRet=null},
-  body:()=>'<p class="lead2">DIPSにログインするための情報を登録します。</p>'+dipsForm(),
-  foot:()=>(A.ui.req.dips?'':'<button class="btn" data-act="dips-skip">あとで設定する</button>')+'<button class="btn primary" data-act="dips-save">登録する</button>'
-},DIPS_MEMO,{tmp:['この画面の位置は未決。案A：はじめの設定の前に、独立した画面として置く（いまの表示）／案B：はじめの設定の一項目に置く。右側の切替（DIPS設定の置き方）で比べられる','この画面で何を必須にするかは未決。右側の切替「必須にする項目」で、必須にした場合（［あとで設定する］が出ない）を試せる','左側の説明は「DIPSにログインするための情報を登録します。」の一行だけにしている'].concat(DIPS_MEMO.tmp)}));
-
-/* ---------- はじめの設定（何を置くか・何を必須にするかは未決） ---------- */
-const INIT_ROWS=[['me','👤','自分の情報'],['dips','🔑','DIPSのログイン情報'],['aircraft','✈','機体'],['permit','📄','許可・承認'],['insurance','🛡','保険'],['contact','☎','連絡先']];
-const countOf=(E,t)=>({aircraft:E.aircraft.length,person:E.people.length,permit:E.permits.length,insurance:E.insurance?1:0,contact:E.contact?1:0,preset:E.presets.length,bat:E.bats.length})[t]||0;
-function initDone(E,k){
-  switch(k){
-    case 'me':{const me=E.people.find(p=>p.id===E.meId);return !!(me&&me.name)}
-    case 'dips':return !!A.dips.registered;
-    case 'aircraft':return E.aircraft.length>0;
-    case 'permit':return E.permits.length>0;
-    case 'insurance':return !!E.insurance;
-    case 'contact':return !!E.contact;
-  }
-  return false;
-}
-const initRows=()=>INIT_ROWS.filter(r=>r[0]!=='dips'||A.ui.initLayout==='inline');
-def('init',{t:'はじめの設定',st:'',env:false,back:false,
-  goal:'最初に登録しておくものを並べ、ホームへ進む。左側は、項目・登録の状態・ボタンだけにしている。何を必須にするか、順番、同じ画面に置くか分けるかは、オーナーがこのモックを見ながら決める。',
-  doc:'34a §3・§8.2。初回の操縦者登録は強制しない（CURRENT-ACCEPTED）。場所・機体・BATなども「まず選択→なければその場で新規登録→元の処理へ戻る」は候補（CURRENT-PROPOSAL）。初回に何を必須にするかはPENDING-S5-INITIAL-REQUIRED。',state:'proposal',
-  tmp:['この画面で何を必須にするかは未決。いまは、すべて任意で動かしている。右側の切替「必須にする項目」で、必須にした場合の見え方を試せる','画面を分けるか未決：DIPSのログイン情報を、独立した画面（案A）にするか、この一覧の一項目（案B）にするかを、右側の切替で比べられる','項目の候補：自分の情報／DIPSのログインID・パスワード／機体／許可・承認／保険／連絡先。現場プリセットやBATを初回に置くかも未決','項目の順番も未決','「自分の情報」の中身（氏名・電話・操縦者かどうか）は案。Googleの認証者を自動で操縦者にしないため、操縦者としての登録は明示の選択にしている'],
-  ask:['はじめの設定の項目（自分の情報・DIPSのログイン情報・機体・許可承認・保険・連絡先）のうち、何を必須にするか。登録しないとホームへ進めない項目を作るか（PENDING-S5-INITIAL-REQUIRED）'],
-  ui:['項目の並び、必須・任意のバッジの見せ方、未登録の示し方は、既存の画面に合わせた標準案'],
-  enter:()=>{const E=ENV();const me=E.people.find(p=>p.id===E.meId);A.init={name:me?me.name:'',phone:me&&me.phone||'',isPilot:!!(me&&me.pilot)}},
-  body:()=>{
-    const E=ENV();const rows=initRows();const unmet=rows.filter(r=>A.ui.req[r[0]]&&!initDone(E,r[0]));
-    return '<p class="lead2">あとからでも登録できます。</p>'
-     +rows.map(r=>{const k=r[0];const done=initDone(E,k);const n=countOf(E,k);
-       return '<div class="li"><span class="ico">'+r[1]+'</span><span class="tx"><b>'+r[2]+'</b></span>'+(A.ui.req[k]?'<i class="chip warn">必須</i>':'')+(done?'<i class="chip ok">登録済み'+(['aircraft','permit'].includes(k)&&n?' '+n:'')+'</i>':'<i class="chip">未登録</i>')+'<button class="btn sm" data-act="init-open" data-t="'+k+'">'+(done?'変更する':'設定する')+'</button></div>'}).join('')
-     +(unmet.length?'<div class="msg warn">必須の項目が、まだ登録されていません。</div>':'');
-  },
-  foot:()=>{const E=ENV();const unmet=initRows().some(r=>A.ui.req[r[0]]&&!initDone(E,r[0]));return '<button class="btn primary" data-act="ob-init-done"'+(unmet?' disabled':'')+'>ホームへ</button>'}
-});
-def('init-me',{t:'自分の情報',st:'',env:false,back:false,
-  goal:'自分の氏名・電話・操縦者かどうかを登録する。',
-  doc:'34a §3・§8.2（初回設定の候補。Googleの認証者を自動で操縦者にしない）／31a §2・31c（人物とGoogleアカウントは別）。',state:'proposal',
-  tmp:['この画面の項目（氏名・電話・操縦者かどうか）は案。何を最初に聞くか、必須にするかは未決（PENDING-S5-INITIAL-REQUIRED）','氏名の記入例（山田 太郎）は入力例であり、登録済みの値ではない'],
+/* ---------- 自分の情報（各種設定・管理から） ---------- */
+def('set-me',{t:'自分の情報',st:'',
+  goal:'自分の氏名・電話・操縦者かどうかを登録する。各種設定・管理から、必要になったときに登録できる。ホームへ入る前に求めない。',
+  doc:'34a §3・§7.8（ホームへ入る前に一括の初期設定を置かない。事前登録は各種設定・管理から）／31a §2・31c（人物とGoogleアカウントは別。Googleで認証した人を自動で操縦者にしない）。',state:'proposal',
+  tmp:['この画面の項目（氏名・電話・操縦者かどうか）は案','氏名の記入例（山田 太郎）は入力例であり、登録済みの値ではない'],
   ask:['氏名を必須にするか（あとの通報の連絡先などに使う）','電話番号を自分の情報として登録・保存するか（通報の連絡先に使うか）'],
   ui:['入力欄は、氏名 → 電話番号 → 操縦者としても登録する、の順に置いている'],
   enter:()=>{const E=ENV();const me=E.people.find(p=>p.id===E.meId);A.init={name:me?me.name:'',phone:me&&me.phone||'',isPilot:!!(me&&me.pilot)}},
   body:()=>{const i=A.init||(A.init={name:'',phone:'',isPilot:false});
     return '<div class="fld"><label>氏名</label><input class="in" data-bind="%name" value="'+esc(i.name)+'" placeholder="例：山田 太郎"></div>'
      +'<div class="fld"><label>電話番号（任意）</label><input class="in" data-bind="%phone" value="'+esc(i.phone)+'" placeholder="例：090-1234-5678"></div>'
-     +'<button class="tgl'+(i.isPilot?' sel':'')+'" data-act="init-pilot"><span class="box">'+(i.isPilot?'✓':'')+'</span><span>操縦者としても登録する</span></button>';
+     +'<button class="tgl'+(i.isPilot?' sel':'')+'" data-act="me-pilot"><span class="box">'+(i.isPilot?'✓':'')+'</span><span>操縦者としても登録する</span></button>';
   },
-  foot:()=>'<button class="btn" data-act="init-me-cancel">キャンセル</button><button class="btn primary" data-act="init-me-save">登録する</button>'
+  foot:()=>'<button class="btn" data-act="me-cancel">キャンセル</button><button class="btn primary" data-act="me-save">登録する</button>'
 });
 
 /* ---------- 招待を受けている会社・団体に参加する（3画面） ---------- */
@@ -272,41 +225,32 @@ Object.assign(ACTS,{
     if(!A.ui.consentOk){A.ui.consentDenied=true;render();return}
     const c=A.create;const E=emptyEnv(c.name.trim()||'個人',c.kind);
     const me=newPerson('',['管理者'],{account:(A.account&&A.account.email)||''});E.people.push(me);E.meId=me.id;
-    A.envs.unshift(E);A.cur=E.id;A.ui.consentDenied=false;A.stack=[];rep('created');
+    A.envs.unshift(E);A.cur=E.id;A.ui.consentDenied=false;A.stack=[];resetDrafts();root('home');
+    toast(c.kind==='personal'?'個人で使い始めました。記録の保存場所を、あなたのGoogle Driveに作りました':'「'+E.name+'」で使い始めました。あなたが最初の管理者です');
   },
   'ob-create':()=>{A.modal=null;A.create={kind:'company',name:''};nav('create-name')},
   'ob-join':()=>{A.modal=null;nav('join1')},
   'ob-normal':()=>{A.account=ACCOUNTS[2];A.envs=accountEnvs(A.account);A.cur=null;A.stack=[];resetDrafts();afterLoginRegistered();root('where')},
-  'ob-after-created':()=>{if(A.ui.initLayout==='sep')nav('dips-init');else nav('init')},
   /* DIPSのログイン情報 */
   'dips-show':()=>{A.ui.pwShow=!A.ui.pwShow;render()},
-  'dips-skip':()=>{A.ui.dform=null;A.stack=[];rep('init')},
   'dips-save':()=>{
     const d=A.ui.dform;const had=A.dips.registered;
     if(!d.id.trim()){toast('DIPSログインIDを入れてください');return}
     if(!d.pw&&!had){toast('DIPSパスワードを入れてください');return}
     A.dips={registered:true,id:d.id.trim()};A.ui.dipsSet=true;A.ui.dform=null;A.ui.pwShow=false;
     const ret=A.dipsRet;A.dipsRet=null;
-    if(A.route==='dips-init'){A.stack=[];rep('init');return}
     back();toast('DIPSのログイン情報を'+(had?'更新':'登録')+'しました'+(ret?'。'+ret.label+'に戻りました':''));
   },
   'dips-cancel':()=>{const r=A.dipsRet;A.ui.dform=null;A.ui.pwShow=false;A.dipsRet=null;back();if(r)toast('登録せずに戻りました')},
-  /* はじめの設定 */
-  'init-open':t=>{
-    const k=t.dataset.t;
-    if(k==='me')nav('init-me');
-    else if(k==='dips'){A.dipsRet={label:'はじめの設定'};nav('set-dipscred')}
-    else openReg(k,{ret:{label:'はじめの設定',apply:()=>{}}});
-  },
-  'init-pilot':()=>{A.init.isPilot=!A.init.isPilot;render()},
-  'init-me-cancel':()=>back(),
-  'init-me-save':()=>{
+  /* 自分の情報（各種設定・管理から） */
+  'me-pilot':()=>{A.init.isPilot=!A.init.isPilot;render()},
+  'me-cancel':()=>{A.init=null;back()},
+  'me-save':()=>{
     const E=ENV();const me=E.people.find(p=>p.id===E.meId);const i=A.init;
     if(!i.name.trim()){toast('氏名を入れてください');return}
     if(me){me.name=i.name.trim();me.phone=i.phone;if(i.isPilot&&!me.roles.includes('操縦者'))me.roles.push('操縦者');if(!i.isPilot)me.roles=me.roles.filter(r=>r!=='操縦者');me.pilot=me.roles.includes('操縦者')}
-    back();toast('自分の情報を登録しました');
+    A.init=null;back();toast('自分の情報を登録しました');
   },
-  'ob-init-done':()=>{A.init=null;A.stack=[];root('home')},
   'ob-join-pick':t=>{
     const j=JOINABLE.find(x=>x.id===t.dataset.id);A.join.pick=j;A.join.env=sampleCompanyEnv(j.name,j.kind,null);nav('join2');
   },

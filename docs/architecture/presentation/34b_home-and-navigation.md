@@ -2,7 +2,7 @@
 
 最終更新: 2026-09-21\
 由来: 99.2 §3。ホームの入口・名称・到達先・保存責任への接続を扱う。\
-規約: [30の10項目](30_screen-specification-standard.md)。初回と環境選択は[34a](34a_setup-and-environment-entry.md)。
+規約: [30の10項目](30_screen-specification-standard.md)。初回と環境選択は[34a](34a_setup-and-environment-entry.md)。2026-09-22の訂正（[34a §7.8](34a_setup-and-environment-entry.md#78-ホームへ入る前を最小にした訂正2026-09-22)）で、初回利用者も一括の初期設定を通らずにホームへ着く。事前登録は［各種設定・管理］から、不足は必要になった場面で案内する。4入口は変更しない。
 
 ## 1. 2入口から3入口、4入口へ進んだ因果
 

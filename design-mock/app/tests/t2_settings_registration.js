@@ -3,20 +3,23 @@
 suite('設定・登録',H=>{
   const {T,act,txt,all,route,set,q,qa,A,E}=H;
   H.hash('scn=empty');
-  T('はじめの設定: 何も必須にせず、その場で機体を登録して戻れる',()=>{
-    H.APP().go('init');if(route()!=='init')return 'route '+route();
-    if(q('[data-act=ob-init-done]').disabled)return 'blocked';
-    act('init-open','[data-t=aircraft]');if(route()!=='reg-aircraft')return 'route '+route();
-    if(!txt().includes('途中です'))return 'no banner';
+  T('各種設定・管理から、必要になる前に自分の情報を登録できる',()=>{
+    act('go','[data-s=set]');if(route()!=='set')return 'route '+route();
+    act('go','[data-s=set-me]');if(route()!=='set-me')return 'route '+route();
+    set('[data-bind="%name"]','設定テスト氏名','input');act('me-pilot');act('me-save');
+    return route()==='set'&&E().people[0].name==='設定テスト氏名'&&E().people[0].roles.includes('操縦者');
+  });
+  T('各種設定・管理から、必要になる前に機体を登録できる',()=>{
+    act('go','[data-s=set-aircraft]');if(route()!=='set-aircraft')return 'route '+route();
+    act('reg-open','[data-t=aircraft]:not([data-id])');if(route()!=='reg-aircraft')return 'route '+route();
     set('[data-bind="@d.mark"]','JU000000000011');set('[data-bind="@d.name"]','テスト機1');act('reg-save');
-    return route()==='init'&&E().aircraft.length===1&&txt().includes('登録済み 1');
+    return route()==='set-aircraft'&&E().aircraft.length===1&&txt().includes('テスト機1');
   });
-  T('はじめの設定: キャンセルでは登録されない。自分の情報で操縦者にもなれる。完了でホームへ',()=>{
-    act('init-open','[data-t=permit]');act('reg-cancel');if(route()!=='init'||E().permits.length!==0)return 'cancel';
-    act('init-open','[data-t=me]');set('[data-bind="%name"]','設定テスト氏名','input');act('init-pilot');act('init-me-save');
-    if(route()!=='init'||!E().people[0].roles.includes('操縦者'))return 'me';
-    act('ob-init-done');return route()==='home'&&qa('.tile').length===4;
+  T('登録をキャンセルしたときは、何も増えない',()=>{
+    act('reg-open','[data-t=aircraft]:not([data-id])');act('reg-cancel');
+    return route()==='set-aircraft'&&E().aircraft.length===1;
   });
+  T('ホームへ戻れる',()=>{H.APP().root('home');return route()==='home'&&qa('.tile').length===4});
   T('設定メニュー→機体管理（登録済みが並ぶ）',()=>{act('go','[data-s=set]');if(route()!=='set'||!txt().includes('機体管理')||!txt().includes('BAT管理'))return 'menu';act('go','[data-s=set-aircraft]');return route()==='set-aircraft'&&txt().includes('テスト機1')});
   T('機体を追加（BAT管理ON→新しいBATグループ）',()=>{
     act('reg-open','[data-t=aircraft]:not([data-id])');if(route()!=='reg-aircraft')return 'route';

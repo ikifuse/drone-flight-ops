@@ -24,7 +24,7 @@ suite('はじめて使う（左側だけで進める）',H=>{
   });
   T('認証のあと（未登録）→「どのように使いますか？」。3つの選択',()=>{
     actL('gauth-done');
-    return route()==='usage'&&txt().includes('アカウントができました')&&txt().includes('個人で使う')&&txt().includes('会社・団体で新しく使い始める')&&txt().includes('会社・団体から招待を受けている')&&qa('.phone [data-act]').length===3;
+    return route()==='usage'&&txt().includes('このGoogleアカウントで、このアプリを使い始めます')&&!txt().includes('アカウントができました')&&txt().includes('個人で使う')&&txt().includes('会社・団体で新しく使い始める')&&txt().includes('会社・団体から招待を受けている')&&qa('.phone [data-act]').length===3;
   });
   T('個人で使う→Google Driveの許可。左側は説明と2つのボタンだけ',()=>{
     actL('us-personal');
@@ -35,83 +35,80 @@ suite('はじめて使う（左側だけで進める）',H=>{
     const ok=txt().includes('保存場所を作れませんでした')&&txt().includes('まだ何も作っていません')&&txt().includes('許可して続ける')&&route()==='consent'&&A().envs.length===0;
     act('consentres','[data-v="1"]');return ok;
   });
-  T('許可→「準備ができました」。保存場所の一覧や管理者の名前は左側に出さない',()=>{
+  T('許可→完了だけの画面を挟まず、そのままホーム。保存場所の一覧は左側に出さない',()=>{
     actL('consent-ok');const t=txt();
-    return route()==='created'&&t.includes('個人で使う準備ができました')&&!t.includes('運航記録')&&!t.includes('人員')&&!/0[1-7]/.test(t)&&E().kind==='personal'&&E().name==='個人'&&E().people[0].roles.includes('管理者')&&E().meId===E().people[0].id&&memo().includes('運航記録');
+    return route()==='home'&&toast().includes('個人で使い始めました')&&!t.includes('運航記録')&&!/0[1-7]/.test(t)
+      &&E().kind==='personal'&&E().name==='個人'&&E().people[0].roles.includes('管理者')&&E().meId===E().people[0].id;
   });
-  T('DIPSのログイン情報: 説明は一行。IDの記入例は薄い文字。パスワードは伏字',()=>{
-    actL('ob-after-created');
+  T('ホームに着いた時点で、はじめの設定もDIPSのログイン情報も求められていない',()=>{
+    const t=txt();
+    return route()==='home'&&!t.includes('はじめの設定')&&!t.includes('DIPS')&&A().dips.registered===false
+      &&qa('.tile').length===4&&q('.hd2').innerText.includes('個人で使用中');
+  });
+  T('ホームの4入口がすべて開ける。使う場所の切替もホームからできる',()=>{
+    const ok=[];for(const sc of ['list','hist','set']){actL('go','[data-s='+sc+']');ok.push(route()===sc);H.APP().back()}
+    return ok.every(Boolean)&&route()==='home'&&qa('[data-act=env]').some(b=>b.textContent.trim()==='切り替える')&&!all().includes('対象外');
+  });
+
+  /* ---- 各種設定・管理から、必要になる前に登録しておく ---- */
+  T('各種設定・管理に、自分の情報とDIPSのログイン情報の入口がある',()=>{
+    actL('go','[data-s=set]');const rows=qa('.phone .li b').map(x=>x.textContent);
+    return route()==='set'&&rows.includes('自分の情報')&&rows.includes('DIPSのログイン情報')&&rows.includes('機体管理');
+  });
+  T('自分の情報: 記入例は薄い文字。氏名が空なら登録できない。操縦者としても登録できる',()=>{
+    actL('go','[data-s=set-me]');
+    const n=q('.phone [data-bind="%name"]'),ph=q('.phone [data-bind="%phone"]');
+    if(route()!=='set-me'||n.value!==''||n.getAttribute('placeholder')!=='例：山田 太郎'||ph.getAttribute('placeholder')!=='例：090-1234-5678')return 'form';
+    actL('me-save');if(route()!=='set-me'||!toast().includes('氏名を入れてください'))return 'empty name';
+    setL('[data-bind="%name"]','テスト氏名');actL('me-pilot');actL('me-save');
+    const me=E().people.find(p=>p.id===E().meId);
+    return route()==='set'&&me.name==='テスト氏名'&&me.pilot&&qa('.phone .li').find(x=>x.textContent.includes('自分の情報')).textContent.includes('登録済み');
+  });
+  T('DIPSのログイン情報: IDの記入例は薄い文字。パスワードは伏字',()=>{
+    actL('dips-open');
     const id=q('.phone [data-bind="#dform.id"]'),pw=q('.phone [data-bind="#dform.pw"]');
-    return route()==='dips-init'&&q('.ttl').innerText.includes('DIPSのログイン情報')&&txt().includes('DIPSにログインするための情報を登録します')&&txt().includes('DIPSログインID')&&txt().includes('DIPSパスワード')
-      &&id.value===''&&id.getAttribute('placeholder')==='例：1234567890'&&pw.type==='password'&&pw.value===''&&pw.getAttribute('placeholder')==='パスワードを入力'
-      &&!!q('.phone [data-act=dips-skip]')&&!!q('.phone [data-act=dips-save]')&&q('.phone [data-act=dips-skip]').textContent.includes('あとで設定する')&&q('.phone [data-act=dips-save]').textContent.includes('登録する');
+    return route()==='set-dipscred'&&q('.ttl').innerText.includes('DIPSのログイン情報')&&txt().includes('DIPSログインID')&&txt().includes('DIPSパスワード')
+      &&id.value===''&&id.getAttribute('placeholder')==='例：1234567890'&&pw.type==='password'&&pw.value===''&&pw.getAttribute('placeholder')==='パスワードを入力';
   });
   T('パスワードは［表示］／［非表示］で切り替えられる',()=>{
     actL('dips-show');const a=q('.phone [data-bind="#dform.pw"]').type==='text'&&q('.phone [data-act=dips-show]').textContent.includes('非表示');
     actL('dips-show');return a&&q('.phone [data-bind="#dform.pw"]').type==='password'&&q('.phone [data-act=dips-show]').textContent.includes('表示');
   });
   T('空のまま［登録する］: 何が足りないかが分かり、画面は進まない',()=>{
-    actL('dips-save');const a=toast().includes('DIPSログインIDを入れてください')&&route()==='dips-init';
-    setL('[data-bind="#dform.id"]',dummyId);actL('dips-save');return a&&toast().includes('DIPSパスワードを入れてください')&&route()==='dips-init';
+    actL('dips-save');const a=toast().includes('DIPSログインIDを入れてください')&&route()==='set-dipscred';
+    setL('[data-bind="#dform.id"]',dummyId);actL('dips-save');return a&&toast().includes('DIPSパスワードを入れてください')&&route()==='set-dipscred';
   });
-  T('IDとパスワードを入れて［登録する］→はじめの設定。登録の状態だけ覚え、パスワードの文字は残さない',()=>{
+  T('IDとパスワードを入れて［登録する］→各種設定・管理へ戻る。登録の状態だけ覚え、パスワードの文字は残さない',()=>{
     setL('[data-bind="#dform.pw"]',dummyPw);actL('dips-save');
-    return route()==='init'&&A().dips.registered===true&&A().dips.id===dummyId&&A().ui.dform===null&&!JSON.stringify(A()).includes(dummyPw);
-  });
-  T('はじめの設定: 項目・登録の状態・ボタンだけ。何も必須にしていない',()=>{
-    const t=txt();const rows=qa('.phone .li').map(x=>x.querySelector('b').textContent);
-    return JSON.stringify(rows)==='["自分の情報","機体","許可・承認","保険","連絡先"]'&&!t.includes('必須')&&!q('.phone [data-act=ob-init-done]').disabled&&qa('.phone [data-act=init-open]').length===5;
-  });
-  T('はじめの設定の説明は最小（あとからでも登録できます）。設計上の未決は右側にある',()=>{
-    const m=memo();return txt().includes('あとからでも登録できます')&&m.includes('この画面で何を必須にするかは未決')&&m.includes('画面を分けるか未決')&&m.includes('オーナー判断が必要な設計論点')&&m.includes('何を必須にするか')&&!m.includes('項目の並びと、必須／任意の分け方');
-  });
-  T('［ホームへ］→ホーム。「個人で使用中」。4入口がすべて開ける',()=>{
-    actL('ob-init-done');
-    return route()==='home'&&q('.hd2').innerText.includes('個人で使用中')&&qa('[data-act=env]').some(b=>b.textContent.trim()==='切り替える')&&qa('.tile').length===4&&!all().includes('対象外');
+    return route()==='set'&&A().dips.registered===true&&A().dips.id===dummyId&&A().ui.dform===null&&!JSON.stringify(A()).includes(dummyPw);
   });
 
-  /* ---- DIPS設定を飛ばす・置き方を変える・必須にする（右側の切替で比べる） ---- */
+  /* ---- 設定が足りないまま［新規飛行］を押したとき ---- */
   start();
-  T('［あとで設定する］→はじめの設定へ。DIPSは未登録のまま',()=>{
-    actL('ob-start-new');actL('gauth-done');actL('us-personal');actL('consent-ok');actL('ob-after-created');
-    actL('dips-skip');return route()==='init'&&A().dips.registered===false;
+  T('設定が足りないまま［新規飛行］→ エラーで止めず、足りないものを示す',()=>{
+    actL('ob-start-new');actL('gauth-done');actL('us-personal');actL('consent-ok');
+    actL('nf-new');const t=txt();
+    return route()==='nf-need'&&t.includes('飛行を始めるために必要な設定がまだありません')&&t.includes('機体')&&t.includes('操縦者')
+      &&!!q('.phone [data-act=nf-need-set]')&&!!q('.phone [data-act=nf-need-go]');
   });
-  start();
-  T('案B（はじめの設定の一項目）: 独立したDIPS画面を挟まず、一覧からその場で登録して戻る',()=>{
-    act('initlayout','[data-v=inline]');
-    actL('ob-start-new');actL('gauth-done');actL('us-personal');actL('consent-ok');actL('ob-after-created');
-    if(route()!=='init')return 'route '+route();
-    const rows=qa('.phone .li b').map(x=>x.textContent);if(!rows.includes('DIPSのログイン情報'))return '一覧にDIPSがない';
-    actL('init-open','[data-t=dips]');if(route()!=='set-dipscred'||!txt().includes('「はじめの設定」の途中です'))return 'route '+route();
-    setL('[data-bind="#dform.id"]',dummyId);setL('[data-bind="#dform.pw"]',dummyPw);
-    if(!q('.phone [data-act=dips-save]').textContent.includes('登録して戻る'))return 'label';
-    actL('dips-save');
-    const row=qa('.phone .li').find(x=>x.textContent.includes('DIPSのログイン情報'));
-    return route()==='init'&&A().dips.registered&&row.textContent.includes('登録済み');
+  T('［必要な設定をする］→機体を登録→元の新規飛行へ戻り、残りが分かる',()=>{
+    actL('nf-need-set');if(route()!=='reg-aircraft')return 'route '+route();
+    if(!txt().includes('「新規飛行」の途中です'))return 'banner';
+    setL('[data-bind="@d.mark"]','JU000000000011');setL('[data-bind="@d.name"]','はじめの機体');actL('reg-save');
+    const rows=qa('.phone .li b').map(x=>x.textContent);
+    return route()==='nf-need'&&E().aircraft.length===1&&JSON.stringify(rows)==='["操縦者"]';
   });
-  T('必須にした項目: 「必須」の印が出て、登録するまで［ホームへ］が押せない',()=>{
-    H.hash('');
-    act('reqtog','[data-k=aircraft]');
-    actL('ob-start-new');actL('gauth-done');actL('us-personal');actL('consent-ok');actL('ob-after-created');actL('dips-skip');
-    const dis=q('.phone [data-act=ob-init-done]').disabled&&txt().includes('必須の項目が、まだ登録されていません');
-    const badge=qa('.phone .li').find(x=>x.textContent.includes('機体')).textContent.includes('必須');
-    actL('init-open','[data-t=aircraft]');setL('[data-bind="@d.mark"]','JU000000000011');actL('reg-save');
-    return dis&&badge&&route()==='init'&&!q('.phone [data-act=ob-init-done]').disabled&&!txt().includes('必須の項目が、まだ');
+  T('操縦者も登録すると、そのまま新規飛行を始められる',()=>{
+    actL('nf-need-set');if(route()!=='reg-person'||!A().reg.d.roles.includes('操縦者'))return 'form '+route();
+    setL('[data-bind="@d.name"]','はじめの操縦者');actL('reg-save');
+    if(route()!=='nf-need'||!txt().includes('必要な設定がそろいました'))return 'need '+route();
+    actL('nf-need-go');
+    return route()==='nf'&&H.APP().nf().cur==='start';
   });
-  T('DIPSを必須にすると、DIPSの画面に［あとで設定する］が出ない',()=>{
-    H.hash('');act('reqtog','[data-k=dips]');
-    actL('ob-start-new');actL('gauth-done');actL('us-personal');actL('consent-ok');actL('ob-after-created');
-    return route()==='dips-init'&&!q('.phone [data-act=dips-skip]')&&!!q('.phone [data-act=dips-save]');
-  });
-  T('自分の情報: 氏名の記入例は薄い文字。氏名が空なら登録できない。操縦者としても登録できる',()=>{
-    H.hash('');actL('ob-start-new');actL('gauth-done');actL('us-personal');actL('consent-ok');actL('ob-after-created');actL('dips-skip');
-    actL('init-open','[data-t=me]');
-    const n=q('.phone [data-bind="%name"]'),ph=q('.phone [data-bind="%phone"]');
-    if(route()!=='init-me'||n.value!==''||n.getAttribute('placeholder')!=='例：山田 太郎'||ph.getAttribute('placeholder')!=='例：090-1234-5678')return 'form';
-    actL('init-me-save');if(route()!=='init-me'||!toast().includes('氏名を入れてください'))return 'empty name';
-    setL('[data-bind="%name"]','テスト氏名');actL('init-pilot');actL('init-me-save');
-    const me=E().people.find(p=>p.id===E().meId);
-    return route()==='init'&&me.name==='テスト氏名'&&me.pilot&&qa('.phone .li').find(x=>x.textContent.includes('自分の情報')).textContent.includes('登録済み');
+  T('足りないままでも［このまま進む］で新規飛行へ入れる（途中で登録できる）',()=>{
+    start();actL('ob-start-new');actL('gauth-done');actL('us-personal');actL('consent-ok');
+    actL('nf-new');if(route()!=='nf-need')return 'route '+route();
+    actL('nf-need-go');return route()==='nf'&&E().aircraft.length===0;
   });
 
   /* ---- 会社・団体で新しく使い始める ---- */
@@ -124,13 +121,12 @@ suite('はじめて使う（左側だけで進める）',H=>{
     setL('[data-bind="&name"]','○○株式会社','change');const warn=txt().includes('同じ名前の会社・団体が、すでにGoogle Driveにあるようです');
     return stay&&warn;
   });
-  T('名前を入れて許可→作成。あなたが最初の管理者。「○○で使用中」',()=>{
+  T('名前を入れて許可→完了だけの画面を挟まず、そのままホーム。最初の管理者であることが分かる',()=>{
     setL('[data-bind="&name"]','テスト株式会社','change');actL('cr-name-next');
     if(route()!=='consent'||!txt().includes('「テスト株式会社」のGoogle Driveを使います'))return 'consent '+route();
     actL('consent-ok');
-    const ok1=route()==='created'&&txt().includes('「テスト株式会社」を使い始める準備ができました')&&txt().includes('あなたが最初の管理者です')&&E().kind==='company'&&E().name==='テスト株式会社'&&E().people[0].roles.includes('管理者');
-    actL('ob-after-created');actL('dips-skip');actL('ob-init-done');
-    return ok1&&q('.hd2').innerText.includes('テスト株式会社で使用中');
+    return route()==='home'&&toast().includes('あなたが最初の管理者です')&&E().kind==='company'&&E().name==='テスト株式会社'
+      &&E().people[0].roles.includes('管理者')&&q('.hd2').innerText.includes('テスト株式会社で使用中');
   });
 
   /* ---- ログイン（状態は右側の切替で選ぶ） ---- */
@@ -152,7 +148,7 @@ suite('はじめて使う（左側だけで進める）',H=>{
   T('ログイン（未登録）→「ログインできませんでした」。何が起きたか・次の操作が分かる',()=>{
     login('new');const t=txt();
     if(route()!=='acct-none')return 'route '+route();
-    if(!(t.includes('ログインできませんでした')&&t.includes('まだこのアプリのアカウントがありません')&&t.includes('まだ何も登録されていません')&&t.includes('利用登録を始める')))return 'text';
+    if(!(t.includes('ログインできませんでした')&&t.includes('まだこのアプリを使い始めていません')&&t.includes('まだ何も登録されていません')&&t.includes('利用登録を始める')))return 'text';
     actL('ob-to-new');return route()==='gauth';
   });
   T('利用登録を始める（登録済みのGoogleアカウント）→「すでに登録されています」→ログインへ',()=>{
