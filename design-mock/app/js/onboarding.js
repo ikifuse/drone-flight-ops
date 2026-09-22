@@ -1,7 +1,7 @@
 'use strict';
 /* ===================================================================
-   はじめに（利用登録を始める／ログイン）／使い方の選択／Google Driveの許可／招待からの参加／使う場所の選択／自分の情報／DIPSのログイン情報（各種設定・管理から）
-   設計の出典: 34a（§3 初回必須登録、§7 Googleアカウントから始める導線、§7.6 入口を1画面にまとめた訂正、§7.8 ホーム前を最小にした訂正、§8 DIPSログイン情報）／34h（表示名と文言の型）／30 §5（左右の役割）
+   はじめに（利用登録を始める／ログイン）／Google認証／Google Driveの許可／初回登録（本人情報＋DIPS情報を1画面）／会社・団体で新しく使い始める・既存環境に参加する／使う場所の選択／自分の情報
+   設計の出典: 34a §9（初回は個人環境から始め、本人情報とDIPS情報を1画面で登録し、会社・団体はホームから追加する。2026-09-23）／34a §7（入口の訂正の経緯）／31a §2・§4（人物・Googleアカウント・運用環境を分ける）／34h（表示名と文言の型）／30 §5（左右の役割）
    - 左側の画面は、実際のアプリとして利用者が見る画面の候補だけにする。
      テスト用のアカウント・状態の説明・確認用の注記・設計書の番号は出さない。
      それらは、右側の設計確認メモ（goal / doc / tmp / ask / mock）と、右側の状態切替にだけ置く。
@@ -14,6 +14,8 @@ function canWrite(){
   return false;
 }
 function resetDrafts(){S=null;A.op=null;A.reg=null;A.nfResult=null;A.init=null;A.ui.hSel=null;A.dipsRet=null;A.ui.dform=null}
+/* いま使っている場所のGoogleアカウント（個人用と会社用は別でよい。31a §2） */
+const envAccount=E=>(E&&E.gaccount)||'';
 function switchEnv(id){A.cur=id;resetDrafts();root('home')}
 function envRole(E){const p=E&&E.people.find(x=>x.id===E.meId);return p?(p.roles.length?p.roles.join('・'):'まだ決まっていません（管理者が決めます）'):'—'}
 /* ログイン中のGoogleアカウントの表示。実際のアプリでは、利用者のメールアドレスが入る場所（ここでは薄い文字の例） */
@@ -22,6 +24,9 @@ const bigCard=(act,title,sub,attrs)=>'<button class="card" style="width:100%;mar
 
 /* 右側の切替（Google認証のあとの状態）。gauth の確認用操作として出す */
 function gstateMock(){
+  if(A.entry==='co-new'||A.entry==='co-join')return '<p class="note" style="margin:0">会社・団体で使うGoogleアカウントの認証です。左の［次へ］で、認証が終わってアプリに戻った状態を作ります。'
+   +'この状態で使う、架空のテスト用アカウント: <span class="mono">'+esc(CO_ACCOUNT.email)+'</span>（個人用とは別のアカウント）。</p>'
+   +'<p class="note" style="margin:6px 0 0">'+(A.entry==='co-new'?'このあと、会社・団体の名前 → Google Driveの許可 → その会社側の保存場所の作成、へ進みます。':'このあと、その会社・団体のアカウントに共有されている既存の保存場所から選んで参加します。新しい保存場所は作りません。')+'</p>';
   const acc=ACCOUNTS.find(a=>a.id===A.ui.gState)||ACCOUNTS[0];const entry=A.entry==='login'?'ログイン':'利用登録を始める';
   const out={new:{new:'「どのように使いますか？」へ',login:'「ログインできませんでした」へ'},one:{new:'「すでに登録されています」へ',login:'そのままホームへ（使う場所が1つ）'},many:{new:'「すでに登録されています」へ',login:'「どこで使いますか？」へ（使う場所が複数）'}};
   const key=A.entry==='login'?'login':'new';
@@ -45,14 +50,15 @@ def('boot',{t:'はじめに',st:'',back:false,env:false,
    +'<h2 style="margin-top:26px">すでに登録済みの方</h2><button class="btn wide" style="padding:16px 10px;font-size:16px" data-act="ob-start-login">ログイン</button>'
    +'<p class="note">登録済みのGoogleアカウントで続けます。</p></div>'
 });
-def('gauth',{t:'Googleアカウントを選択します',st:'',env:false,
-  goal:'Googleが表示する認証の画面。左側では、実際はGoogleが表示することだけを示し、アカウント選択の画面は再現しない。アプリはGoogleのパスワードを扱わない。',
-  doc:'34a §7.2（順2）／§1・§6（Google公式の認証。サインインとAPI利用への同意は別）。',state:'accepted',
+const isCo=()=>A.entry==='co-new'||A.entry==='co-join';
+def('gauth',{t:()=>isCo()?'会社・団体で使うGoogleアカウントを選択します':'Googleアカウントを選択します',st:'',env:false,
+  goal:'Googleが表示する認証の画面。左側では、実際はGoogleが表示することだけを示し、アカウント選択の画面は再現しない。アプリはGoogleのパスワードを扱わない。会社・団体の環境を作る・参加するときは、個人用ではなく、その会社・団体で使うGoogle／Workspaceアカウントを選ぶ。',
+  doc:'34a §7.2（順2）／§1・§6（Google公式の認証。サインインとAPI利用への同意は別）／§9.4（会社・団体はその会社で使うGoogleアカウントで認証し、その側の保存領域へ作る）／31a §2（同じ人物へ個人用と会社用の複数アカウントを紐付けられる）。',state:'accepted',
   tmp:['Googleの画面の再現は目的ではない。認証のあとの状態（未登録／登録済み・個人だけ／登録済み・個人＋会社）は、この右側の切替で選び、その状態で認証後のアプリ画面がどうなるかを確かめる','実際の画面・必要な権限の範囲は正式実装時にGoogleの仕様で確認（VERIFY-S5-GOOGLE-CONTRACT）'],
   ask:[],
   ui:['Googleの画面の前は入口の1画面、あとは認証の結果に応じた画面だけにして、間に確認の画面を足していない'],
   mock:gstateMock,
-  body:()=>'<div class="gph"><b>Googleアカウントを選択します</b><span>実際の認証画面はGoogleが表示します。</span></div>',
+  body:()=>'<div class="gph"><b>'+(isCo()?'会社・団体で使うGoogleアカウントを選択します':'Googleアカウントを選択します')+'</b><span>実際の認証画面はGoogleが表示します。'+(isCo()?'個人で使っているアカウントとは別に選べます。':'')+'</span></div>',
   foot:()=>'<button class="btn" data-act="back">キャンセル</button><button class="btn primary" data-act="gauth-done">次へ</button>'
 });
 def('acct-exists',{t:'すでに登録されています',st:'',env:false,back:false,
@@ -68,40 +74,29 @@ def('acct-none',{t:'ログインできませんでした',st:'',env:false,back:f
   foot:()=>'<button class="btn" data-act="mk-reset">最初に戻る</button><button class="btn primary" data-act="ob-to-new">利用登録を始める</button>'
 });
 
-/* ---------- 使い方の選択（アカウントを作ったあと） ---------- */
-def('usage',{t:'どのように使いますか？',st:'',env:false,back:false,
-  goal:'Googleアカウントの確認が終わったあと、個人で使うか、会社・団体で新しく使い始めるか、招待を受けているかを選ぶ。アプリ専用のIDやパスワードは作らない。',
-  doc:'34a §7.2（順3）／§7.4（内部の対応：個人・会社団体の新規作成＝新規の運用環境の作成、招待＝既存の運用環境への所属の追加）／§7.7。最初に新しく作った人が最初の管理者になり、招待で参加しただけの人は自動では管理者にならない（31b）。2026-09-22にオーナーが確定：この画面では会社／スクール／臨時業務などの種類を分けて聞かず「会社・団体」にまとめる。招待で参加するときは参加先から分かるため、入口で種類を追加で尋ねない。3つの並びも現在のままとする。',state:'proposal',
-  tmp:['3つの言葉（個人で使う／会社・団体で新しく使い始める／会社・団体から招待を受けている）はオーナー指示の例。最終の製品用語ではない（PENDING-U-WORDING）','内部では、個人・会社・スクール・臨時業務などを運用環境の種類として持つ（31a）。この画面で種類を聞かないことは、内部の区別をなくすことではない'],
-  ask:[],
-  ui:['「アカウントができました」ではなく「このGoogleアカウントで、このアプリを使い始めます」にしている。アプリ専用のIDを発行したように見せない（34a §7.8）','3つの並びは、個人で使う → 会社・団体で新しく使い始める → 会社・団体から招待を受けている（2026-09-22にオーナーが確定）','各ボタンの一言の説明の言い回し・改行・配置は、既存の画面に合わせた標準案','個人と会社・団体の両方を使う人は、あとから「どこで使いますか？」の画面の［＋ 会社・団体で新しく使い始める］で追加できる'],
-  body:()=>'<p class="lead2">このGoogleアカウントで、このアプリを使い始めます。使い方を選んでください。</p>'
-   +bigCard('us-personal','個人で使う','自分ひとりで使います')
-   +bigCard('us-company','会社・団体で新しく使い始める','会社やスクールなどで使い始めます')
-   +bigCard('us-invited','会社・団体から招待を受けている','すでに使っている会社・団体に参加します')
-});
+/* ---------- 会社・団体で新しく使い始める（ホームから。会社のGoogleアカウントで認証したあと） ---------- */
 def('create-name',{t:'会社・団体の名前',st:'',env:false,
   goal:'新しく使い始める会社・団体の名前を決める。',
-  doc:'34a §4・§7.2（順4）。同名の保存場所がDrive上にすでにないか確認する（root重複防止・再発見の方式は未確定＝PENDING-S5-ROOT-DISCOVERY）。',state:'proposal',
+  doc:'34a §4・§9.4（会社・団体の環境は、ホームから、その会社で使うGoogleアカウントで認証したあとに作る）。同名の保存場所がDrive上にすでにないか確認する（root重複防止・再発見の方式は未確定＝PENDING-S5-ROOT-DISCOVERY）。',state:'proposal',
   tmp:['同じ名前の警告は、招待の一覧にある名前（○○株式会社）を入れると出る。見せ方は案','名前はあとから変えられる想定'],ask:[],ui:['名前は、Google Driveの許可を求める前に1画面で聞いている（何を作るのかが決まってから許可を求めるため）'],
-  enter:()=>{if(!A.create||A.create.kind==='personal')A.create={kind:'company',name:''}},
+  enter:()=>{if(!A.create||A.create.kind==='personal')A.create={kind:'company',name:''};A.create.account=(A.coAccount&&A.coAccount.email)||''},
   body:()=>{
     const c=A.create;const dup=JOINABLE.find(j=>j.name===c.name.trim());
     return '<div class="fld"><label>会社・団体名</label><input class="in" data-bind="&name" data-rerender="1" value="'+esc(c.name)+'" placeholder="例：○○株式会社"></div>'
-     +(dup?'<div class="msg warn"><b>同じ名前の会社・団体が、すでにGoogle Driveにあるようです。</b>新しく作ると二重になります。招待を受けている場合は、招待から参加してください。<br><button class="btn sm" data-act="ob-join">招待を受けている会社・団体に参加する</button></div>':'');
+     +(dup?'<div class="msg warn"><b>同じ名前の会社・団体が、すでにGoogle Driveにあるようです。</b>新しく作ると二重になります。すでに使っている場合は、参加から進んでください。<br><button class="btn sm" data-act="ob-co-join">すでに使っている会社・団体に参加する</button></div>':'');
   },
   foot:()=>'<button class="btn" data-act="back">戻る</button><button class="btn primary" data-act="cr-name-next">次へ</button>'
 });
 def('consent',{t:'Google Driveの許可',st:'',env:false,
   goal:'記録の保存場所を作るために、Google Driveの使用を許可してもらう。許可されなければ、何も作らない。左側は、実際はGoogleが許可の画面を表示することだけを示している。',
-  doc:'34a §1・§7.2（順4）。新規作成では、Google公式の同意を経て必要な権限が許可された後に、保存構造を生成する。許可を拒否したとき・途中で失敗したときの戻り方と回復は未確定（34a §4項目7）。',state:'accepted',
+  doc:'34a §1・§7.2（順4）／§9.4。新規作成では、Google公式の同意を経て必要な権限が許可された後に、保存構造を生成する。個人の環境は個人のGoogleアカウント側、会社・団体の環境はその会社で使うGoogleアカウント側へ作る。My DriveかShared Driveか、法人での所有主体は未確定（PENDING-S2-OWNERSHIP）。許可を拒否したとき・途中で失敗したときの戻り方と回復は未確定（34a §4項目7）。',state:'accepted',
   tmp:['許可されたときの結果は、この右側の切替（Google Driveの許可）で選ぶ。「許可しない」を選んで［許可して続ける］を押すと、拒否されたときの画面を確かめられる','実際の同意画面と必要な権限の範囲は、正式実装時にGoogleの仕様で確認（VERIFY-S5-GOOGLE-CONTRACT）','許可を求める時点（新しく始めるときのみか、招待で参加する人にも求めるか）は未確定',],
   ask:['Google Driveの許可が拒否された・途中で失敗したときに、作りかけの保存場所をどう扱い、どこから再開するか（34a §4項目7の未確定）'],
   ui:['拒否されたときは、同じ画面に問題→いまの状態（まだ何も作っていない）→次の操作の順で出している'],
   mock:()=>'<p class="note" style="margin:0 0 6px">Googleの許可の画面で選ばれる結果を選びます。</p><div class="row"><label>許可の結果</label>'+mockSeg('consentres',A.ui.consentOk?1:0,[[1,'許可する'],[0,'許可しない']])+'</div>',
   body:()=>{
     const c=A.create;const denied=A.ui.consentDenied;
-    return '<p class="lead2">記録を保存するために、'+(c.kind==='personal'?'あなたの':'「'+esc(c.name)+'」の')+'Google Driveを使います。</p><p class="note">許可の画面は、Googleが表示します。</p>'
+    return '<p class="lead2">記録を保存するために、'+(c.kind==='personal'?'あなたの':'「'+esc(c.name)+'」で使う')+'Google Driveを使います。</p><p class="note">許可の画面は、Googleが表示します。</p>'
      +(denied?'<div class="msg ng"><b>保存場所を作れませんでした。</b>Google Driveの使用が許可されなかったためです。まだ何も作っていません。もう一度やり直すときは、［許可して続ける］を押してください。</div>':'');
   },
   foot:()=>'<button class="btn" data-act="back">戻る</button><button class="btn primary" data-act="consent-ok">許可して続ける</button>'
@@ -121,31 +116,60 @@ const DIPS_MEMO={
   ask:['DIPSのログインID・パスワードのほかに、何を登録させるか（DIPSのアカウント種別など）'],
   ui:['記入例は薄い文字（placeholder）で置き、パスワードは伏字にして［表示］／［非表示］で切り替えられるようにしている','登録の削除・変更は、各種設定・管理の同じ画面から行う形にしている']
 };
-/* ---------- 自分の情報（各種設定・管理から） ---------- */
-def('set-me',{t:'自分の情報',st:'',
-  goal:'自分の氏名・電話・操縦者かどうかを登録する。各種設定・管理から、必要になったときに登録できる。ホームへ入る前に求めない。',
-  doc:'34a §3・§7.8（ホームへ入る前に一括の初期設定を置かない。事前登録は各種設定・管理から）／31a §2・31c（人物とGoogleアカウントは別。Googleで認証した人を自動で操縦者にしない）。',state:'proposal',
-  tmp:['この画面の項目（氏名・電話・操縦者かどうか）は案','氏名の記入例（山田 太郎）は入力例であり、登録済みの値ではない'],
-  ask:['氏名を必須にするか（あとの通報の連絡先などに使う）','電話番号を自分の情報として登録・保存するか（通報の連絡先に使うか）'],
-  ui:['入力欄は、氏名 → 電話番号 → 操縦者としても登録する、の順に置いている'],
-  enter:()=>{const E=ENV();const me=E.people.find(p=>p.id===E.meId);A.init={name:me?me.name:'',phone:me&&me.phone||'',isPilot:!!(me&&me.pilot)}},
-  body:()=>{const i=A.init||(A.init={name:'',phone:'',isPilot:false});
-    return '<div class="fld"><label>氏名</label><input class="in" data-bind="%name" value="'+esc(i.name)+'" placeholder="例：山田 太郎"></div>'
-     +'<div class="fld"><label>電話番号（任意）</label><input class="in" data-bind="%phone" value="'+esc(i.phone)+'" placeholder="例：090-1234-5678"></div>'
-     +'<button class="tgl'+(i.isPilot?' sel':'')+'" data-act="me-pilot"><span class="box">'+(i.isPilot?'✓':'')+'</span><span>操縦者としても登録する</span></button>';
+
+/* ---------- 初回登録（本人情報＋DIPSのログイン情報を1画面） ---------- */
+def('init-reg',{t:'はじめの登録',st:'',env:false,back:false,
+  goal:'個人の保存場所を作ったあと、DIPSの飛行計画通報で毎回使う情報を、1画面でまとめて登録する。飛行のたびに同じ情報を入れ直さずに済むようにする。画面を分けず、ここからホームへ進む。',
+  doc:'34a §9.2・§9.3（初回登録は1画面。氏名・フリガナ・住所・電話番号・メールアドレス・DIPSログインID・DIPSパスワード）／§9.5（登録した人物情報を飛行計画で再利用する）／25b（DIPSの連絡先は自アカウント情報・操縦者から自動入力できる）／31a §2（人物とGoogleアカウントは別。ここで登録するのは人物の情報）。DIPSログイン情報を保存できる方針は34a §8.1（オーナー指示）。',state:'proposal',
+  tmp:['DIPSログイン情報の保存先・暗号化・端末ごとか共有か・複数人が使うときの閲覧・自動ログインに使うか・API認証との関係・削除や無効化は未決（PENDING-S5-DIPS-LOGIN-STORAGE）','このモックは入力した内容を保存も送信もしない。DIPSパスワードの文字は、登録した時点で消している。本物のID・パスワードは入れないこと','住所・都道府県・国などの項目の分け方は、DIPSの連絡先の項目に合わせるところまでで、最終の列は未確定'],
+  ask:['この7項目のうち、何を必須にするか（いまは氏名だけ必須にしている）','ここで登録した人物を、そのまま操縦者として扱うか（役割は人物情報とは別に持つ設計のため、いまは自動で操縦者にしていない）'],
+  ui:['説明を入力欄の上に置き、なぜ登録するのかが先に分かるようにしている','本人情報 → DIPSのログイン情報 の順に並べ、1画面に収めている','DIPSパスワードは伏字にして、［表示］／［非表示］で切り替えられる'],
+  enter:()=>{const E=ENV();const me=E.people.find(p=>p.id===E.meId);A.init={name:me?me.name:'',kana:'',addr:'',phone:'',email:'',dipsId:'',dipsPw:''};A.ui.pwShow=false},
+  body:()=>{
+    const i=A.init||(A.init={name:'',kana:'',addr:'',phone:'',email:'',dipsId:'',dipsPw:''});const show=!!A.ui.pwShow;
+    return '<div class="msg info"><b>飛行計画の通報に必要な情報を登録します。</b><br>DIPSへの飛行計画の通報では、氏名・住所・電話番号・メールアドレスなどの連絡先が必要です。はじめに登録しておくと、飛行のたびに同じ情報を入れ直さずに済みます。</div>'
+     +'<div class="sec"><h3>あなたの情報</h3>'
+     +'<div class="fld"><label>氏名</label><input class="in" data-bind="%name" value="'+esc(i.name)+'" placeholder="例：山田 太郎"></div>'
+     +'<div class="fld"><label>フリガナ</label><input class="in" data-bind="%kana" value="'+esc(i.kana)+'" placeholder="例：ヤマダ タロウ"></div>'
+     +'<div class="fld"><label>住所</label><input class="in" data-bind="%addr" value="'+esc(i.addr)+'" placeholder="例：○○県○○市1-2-3"></div>'
+     +'<div class="fld"><label>電話番号</label><input class="in" data-bind="%phone" value="'+esc(i.phone)+'" placeholder="例：090-1234-5678"></div>'
+     +'<div class="fld"><label>メールアドレス</label><input class="in" data-bind="%email" value="'+esc(i.email)+'" placeholder="例：name@example.com"></div></div>'
+     +'<div class="sec"><h3>DIPSのログイン情報</h3><p class="note" style="margin:0 0 8px">アプリからDIPSへ飛行計画を送るときに使います。</p>'
+     +'<div class="fld"><label>DIPSログインID</label><input class="in" data-bind="%dipsId" autocomplete="off" inputmode="numeric" value="'+esc(i.dipsId)+'" placeholder="例：1234567890"></div>'
+     +'<div class="fld"><label>DIPSパスワード</label><div class="pwrow"><input class="in" data-bind="%dipsPw" autocomplete="new-password" type="'+(show?'text':'password')+'" value="'+esc(i.dipsPw)+'" placeholder="パスワードを入力"><button class="btn sm" data-act="dips-show">'+(show?'非表示':'表示')+'</button></div></div></div>'
+     +'<p class="note">あとから［各種設定・管理］で変更できます。</p>';
   },
-  foot:()=>'<button class="btn" data-act="me-cancel">キャンセル</button><button class="btn primary" data-act="me-save">登録する</button>'
+  foot:()=>'<button class="btn primary wide" data-act="init-reg-done">登録してホームへ</button>'
 });
 
-/* ---------- 招待を受けている会社・団体に参加する（3画面） ---------- */
-def('join1',{t:'招待を受けている会社・団体',st:'1/3',env:false,
-  goal:'招待を受けている会社・団体を選んで参加する。新しく保存場所は作らない。',
-  doc:'34a §1・§7.2（招待の場合）。既存の運用環境への参加では、新しい保存構造を作らず、参加者本人のGoogleアカウントを既存の環境へ結び付ける。招待の手段は選定していない（34a §4項目5）。',state:'spec',
+/* ---------- 自分の情報（各種設定・管理から） ---------- */
+def('set-me',{t:'自分の情報',st:'',
+  goal:'初回に登録した自分の情報を、あとから確かめて直す。DIPSの飛行計画の連絡先として使う。',
+  doc:'34a §9.2・§9.5（初回登録と同じ項目をここから変更できる）／31a §2・31c（人物とGoogleアカウントは別。Googleで認証した人を自動で操縦者にしない）。',state:'proposal',
+  tmp:['項目は初回登録（はじめの登録）と同じにしている。最終の列は未確定（PENDING-S2-IDENTITY）'],
+  ask:['操縦者としての登録を、この画面で行うか、人員・役割の画面で行うか（人物と役割を分ける設計のため、どちらでも成り立つ）'],
+  ui:['初回登録と同じ並びにして、どこを直せばよいか迷わないようにしている'],
+  enter:()=>{const E=ENV();const me=E.people.find(p=>p.id===E.meId)||{};A.init={name:me.name||'',kana:me.kana||'',addr:me.addr||'',phone:me.phone||'',email:me.email||'',isPilot:!!me.pilot}},
+  body:()=>{const i=A.init||(A.init={name:'',kana:'',addr:'',phone:'',email:'',isPilot:false});
+    return '<div class="fld"><label>氏名</label><input class="in" data-bind="%name" value="'+esc(i.name)+'" placeholder="例：山田 太郎"></div>'
+     +'<div class="fld"><label>フリガナ</label><input class="in" data-bind="%kana" value="'+esc(i.kana)+'" placeholder="例：ヤマダ タロウ"></div>'
+     +'<div class="fld"><label>住所</label><input class="in" data-bind="%addr" value="'+esc(i.addr)+'" placeholder="例：○○県○○市1-2-3"></div>'
+     +'<div class="fld"><label>電話番号</label><input class="in" data-bind="%phone" value="'+esc(i.phone)+'" placeholder="例：090-1234-5678"></div>'
+     +'<div class="fld"><label>メールアドレス</label><input class="in" data-bind="%email" value="'+esc(i.email)+'" placeholder="例：name@example.com"></div>'
+     +'<button class="tgl'+(i.isPilot?' sel':'')+'" data-act="me-pilot"><span class="box">'+(i.isPilot?'✓':'')+'</span><span>操縦者としても登録する</span></button>';
+  },
+  foot:()=>'<button class="btn" data-act="me-cancel">キャンセル</button><button class="btn primary" data-act="me-save">保存する</button>'
+});
+
+/* ---------- すでに使っている会社・団体に参加する（ホームから。会社のGoogleアカウントで認証したあと） ---------- */
+def('join1',{t:'参加する会社・団体',st:'1/3',env:false,
+  goal:'すでにある会社・団体の保存場所に参加する。新しく保存場所は作らない。会社・団体で使うGoogleアカウントで認証したあとに、そのアカウントから見える保存場所を選ぶ。',
+  doc:'34a §9.4（会社・団体の既存環境への参加。新しいrootや運用環境を作らない）／§1・§7.2（参加の場合）／31a §2（同じ人物へ個人用と会社用の複数アカウントを紐付ける）。参加の手段は選定していない（34a §4項目5）。',state:'spec',
   tmp:['招待の手段は未決（Drive共有から探す／招待コード／リンク）。ここでは「共有されている一覧から選ぶ」と「招待コードで探す」の2通りを並べて、比べられるようにしている','見つかる会社・団体は固定の仮データ（○○株式会社・○○スクール）。実際は、Googleアカウントに共有されているものが出る'],
   ask:['招待で参加する手段（Google Driveの共有から探す／招待コード／リンク）。誰が参加できるかの決まり方が変わる（34a §4項目5は未選定）'],
   ui:['いまは、共有された一覧と招待コードの両方を1画面に並べて比べられるようにしている'],
   enter:()=>{A.join={pick:null,env:null,code:'',me:null,newName:''}},
-  body:()=>'<p class="lead2">参加する会社・団体を選んでください。</p>'
+  body:()=>'<p class="lead2">参加する会社・団体を選んでください。</p><p class="note">新しい保存場所は作りません。</p>'
    +'<div class="cards">'+JOINABLE.map(j=>'<button class="card" data-act="ob-join-pick" data-id="'+j.id+'"><b>'+esc(j.name)+'</b><span>メンバー '+j.members+'人</span></button>').join('')+'</div>'
    +'<div class="fld" style="margin-top:14px"><label>招待コードで探す</label><div class="pwrow"><input class="in" data-bind="$code" placeholder="例：ABCD-1234" value=""><button class="btn sm" data-act="ob-join-code">探す</button></div></div>'
 });
@@ -190,11 +214,11 @@ def('where',{t:'どこで使いますか？',st:'',env:false,back:false,
   ask:['前回使った場所を自動で開くか、毎回選ばせるか（記録の保存先を取り違えないため）'],
   ui:['カードは実際の名称で並べ、前回使った場所に印を付けている'],
   body:()=>'<p class="lead2">今回使う場所を選んでください。</p>'+whereCards()
-   +'<div class="row" style="margin-top:12px"><button class="btn sm" data-act="ob-create">＋ 会社・団体で新しく使い始める</button><button class="btn sm" data-act="ob-join">招待を受けている会社・団体に参加する</button></div>'
+   +'<div class="row" style="margin-top:12px"><button class="btn sm" data-act="ob-co-new">＋ 会社・団体で新しく使い始める</button><button class="btn sm" data-act="ob-co-join">すでに使っている会社・団体に参加する</button></div>'
 });
 function envSwitchSheet(){
   return '<h3>どこで使いますか？</h3><p class="note">切り替えると、入力途中の内容は破棄され、選んだ場所のホームへ移ります。</p>'+whereCards()
-   +'<div class="row"><button class="btn sm" data-act="ob-create">＋ 会社・団体で新しく使い始める</button><button class="btn sm" data-act="ob-join">招待を受けている会社・団体に参加する</button></div>'
+   +'<div class="row"><button class="btn sm" data-act="ob-co-new">＋ 会社・団体で新しく使い始める</button><button class="btn sm" data-act="ob-co-join">すでに使っている会社・団体に参加する</button></div>'
    +'<div class="row"><button class="btn" data-act="close">閉じる</button></div>';
 }
 
@@ -207,9 +231,12 @@ Object.assign(ACTS,{
   'ob-to-new':()=>{A.entry='new';rep('gauth')},
   /* Google認証が終わって戻った状態。どの状態かは、右側の切替（Google認証のあと）で選ぶ */
   'gauth-done':()=>{
+    /* 会社・団体で使うGoogleアカウントでの認証（ホームから追加するとき） */
+    if(A.entry==='co-new'){A.coAccount=CO_ACCOUNT;A.create={kind:'company',name:'',account:CO_ACCOUNT.email};A.ui.consentDenied=false;rep('create-name');return}
+    if(A.entry==='co-join'){A.coAccount=CO_ACCOUNT;rep('join1');return}
     const acc=ACCOUNTS.find(a=>a.id===A.ui.gState)||ACCOUNTS[0];A.account=acc;
     if(A.entry!=='login'){
-      if(acc.id==='new'){A.stack=['boot'];rep('usage')}else rep('acct-exists');
+      if(acc.id==='new'){A.create={kind:'personal',name:'個人'};A.ui.consentDenied=false;A.stack=['boot'];rep('consent')}else rep('acct-exists');
       return;
     }
     if(acc.id==='new'){rep('acct-none');return}
@@ -217,19 +244,34 @@ Object.assign(ACTS,{
     if(A.envs.length===1){A.cur=A.envs[0].id;resetDrafts();root('home');toast(envLabel(A.envs[0])+'で使用中です')}
     else{A.cur=null;root('where')}
   },
-  'us-personal':()=>{A.create={kind:'personal',name:'個人'};A.ui.consentDenied=false;nav('consent')},
-  'us-company':()=>{A.create={kind:'company',name:''};nav('create-name')},
-  'us-invited':()=>nav('join1'),
+  /* ホームから会社・団体を追加する。どちらも、その会社・団体で使うGoogleアカウントでの認証から始める */
+  'ob-co-new':()=>{A.modal=null;A.entry='co-new';A.create={kind:'company',name:''};nav('gauth')},
+  'ob-co-join':()=>{A.modal=null;A.entry='co-join';nav('gauth')},
   'cr-name-next':()=>{if(!A.create.name.trim()){toast('会社・団体の名前を入れてください');return}A.ui.consentDenied=false;nav('consent')},
   'consent-ok':()=>{
     if(!A.ui.consentOk){A.ui.consentDenied=true;render();return}
     const c=A.create;const E=emptyEnv(c.name.trim()||'個人',c.kind);
-    const me=newPerson('',['管理者'],{account:(A.account&&A.account.email)||''});E.people.push(me);E.meId=me.id;
-    A.envs.unshift(E);A.cur=E.id;A.ui.consentDenied=false;A.stack=[];resetDrafts();root('home');
-    toast(c.kind==='personal'?'個人で使い始めました。記録の保存場所を、あなたのGoogle Driveに作りました':'「'+E.name+'」で使い始めました。あなたが最初の管理者です');
+    const mail=c.kind==='personal'?((A.account&&A.account.email)||''):((A.coAccount&&A.coAccount.email)||'');
+    E.gaccount=mail;
+    const src=c.kind!=='personal'?(A.envs.find(x=>x.kind==='personal')||null):null;
+    const src_me=src?src.people.find(p=>p.id===src.meId):null;
+    const me=newPerson(src_me?src_me.name:'',['管理者'],{account:mail,kana:src_me?src_me.kana:'',addr:src_me?src_me.addr:'',phone:src_me?src_me.phone:'',email:src_me?src_me.email:''});
+    E.people.push(me);E.meId=me.id;
+    A.envs.unshift(E);A.cur=E.id;A.ui.consentDenied=false;A.stack=[];resetDrafts();
+    if(c.kind==='personal'){rep('init-reg');return}
+    root('home');toast('「'+E.name+'」で使い始めました。あなたが最初の管理者です');
   },
-  'ob-create':()=>{A.modal=null;A.create={kind:'company',name:''};nav('create-name')},
-  'ob-join':()=>{A.modal=null;nav('join1')},
+  /* 初回登録（本人情報＋DIPSのログイン情報を1画面） */
+  'init-reg-done':()=>{
+    const E=ENV();const me=E.people.find(p=>p.id===E.meId);const i=A.init;
+    if(!i.name.trim()){toast('氏名を入れてください');return}
+    if(me){me.name=i.name.trim();me.kana=i.kana.trim();me.addr=i.addr.trim();me.phone=i.phone.trim();me.email=i.email.trim()}
+    if(i.dipsId.trim()){A.dips={registered:true,id:i.dipsId.trim()};A.ui.dipsSet=true}
+    A.init=null;A.ui.pwShow=false;A.stack=[];root('home');
+    toast(A.dips.registered?'登録しました。飛行計画では、この情報を自動で使います':'登録しました。DIPSのログイン情報は、あとから［各種設定・管理］で登録できます');
+  },
+  'ob-create':()=>ACTS['ob-co-new'](),
+  'ob-join':()=>ACTS['ob-co-join'](),
   'ob-normal':()=>{A.account=ACCOUNTS[2];A.envs=accountEnvs(A.account);A.cur=null;A.stack=[];resetDrafts();afterLoginRegistered();root('where')},
   /* DIPSのログイン情報 */
   'dips-show':()=>{A.ui.pwShow=!A.ui.pwShow;render()},
@@ -248,8 +290,9 @@ Object.assign(ACTS,{
   'me-save':()=>{
     const E=ENV();const me=E.people.find(p=>p.id===E.meId);const i=A.init;
     if(!i.name.trim()){toast('氏名を入れてください');return}
-    if(me){me.name=i.name.trim();me.phone=i.phone;if(i.isPilot&&!me.roles.includes('操縦者'))me.roles.push('操縦者');if(!i.isPilot)me.roles=me.roles.filter(r=>r!=='操縦者');me.pilot=me.roles.includes('操縦者')}
-    A.init=null;back();toast('自分の情報を登録しました');
+    if(me){me.name=i.name.trim();me.kana=i.kana.trim();me.addr=i.addr.trim();me.phone=i.phone.trim();me.email=i.email.trim();
+      if(i.isPilot&&!me.roles.includes('操縦者'))me.roles.push('操縦者');if(!i.isPilot)me.roles=me.roles.filter(r=>r!=='操縦者');me.pilot=me.roles.includes('操縦者')}
+    A.init=null;back();toast('自分の情報を保存しました');
   },
   'ob-join-pick':t=>{
     const j=JOINABLE.find(x=>x.id===t.dataset.id);A.join.pick=j;A.join.env=sampleCompanyEnv(j.name,j.kind,null);nav('join2');
@@ -258,7 +301,8 @@ Object.assign(ACTS,{
   'ob-join-go':()=>{if(A.gAccess==='none')return;nav('join3')},
   'ob-join-me':t=>{A.join.me=t.dataset.id;render()},
   'ob-join-done':()=>{
-    const e=A.join.env;const m=A.join.me;const mail=(A.account&&A.account.email)||'';
+    const e=A.join.env;const m=A.join.me;const mail=(A.coAccount&&A.coAccount.email)||(A.account&&A.account.email)||'';
+    e.gaccount=mail;
     if(m==='__new'){const p=newPerson(A.join.newName||'',[],{account:mail});e.people.push(p);e.meId=p.id}
     else{e.meId=m;const p=e.people.find(x=>x.id===m);if(p&&!p.account)p.account=mail}
     A.envs.unshift(e);A.cur=e.id;A.join=null;A.stack=[];resetDrafts();root('home');

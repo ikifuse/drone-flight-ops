@@ -45,8 +45,9 @@ function blankNF(env){
     durH:0,durM:30,maxH:0,maxM:0,multi:[],speed:10,alt:30,
     ins:i?{mode:'auto',company:i.company,product:i.product,pUnl:i.pUnl,pAmt:i.pAmt,oUnl:i.oUnl,oAmt:i.oAmt,ability:i.ability}
          :{mode:'unreg',company:'',product:'',pUnl:'yes',pAmt:'',oUnl:'yes',oAmt:'',ability:''},
-    contact:c?{src:'self',pilotId:'',name:c.name,country:c.country,pref:c.pref,addr:c.addr,cc:c.cc,phone:c.phone,email:c.email,other:''}
-             :{src:'self',pilotId:'',name:'',country:'日本/Japan',pref:'',addr:'',cc:'日本/Japan(81)',phone:'',email:'',other:''},
+    /* 連絡先は、登録済みの連絡先 → 登録済みの本人情報 の順に自動で入れる。
+       一度登録した人物情報を、飛行計画のたびに入れ直させない（34a §9.5／25b: DIPSも自アカウント情報・操縦者から自動入力できる） */
+    contact:Object.assign({src:'self',pilotId:'',name:'',country:'日本/Japan',pref:'',addr:'',cc:'日本/Japan(81)',phone:'',email:'',other:''},selfContact(env)||{}),
     auto:{},reviewView:'dips',cal:{y:st.getFullYear(),m:st.getMonth()}
   };
 }
@@ -62,8 +63,17 @@ function snapOf(env,o){
 }
 
 /* ---------- 使う場所（個人・会社・団体。内部名は運用環境） ---------- */
+/* 「自アカウントの情報」として使う連絡先。登録済みの連絡先がなければ、登録済みの本人情報から作る */
+function selfContact(env){
+  if(!env)return null;
+  const c=env.contact;
+  if(c)return {name:c.name,country:c.country,pref:c.pref,addr:c.addr,cc:c.cc,phone:c.phone,email:c.email};
+  const me=env.people.find(p=>p.id===env.meId);
+  if(me&&(me.name||me.phone||me.email||me.addr))return {name:me.name||'',country:'日本/Japan',pref:'',addr:me.addr||'',cc:'日本/Japan(81)',phone:me.phone||'',email:me.email||''};
+  return null;
+}
 function emptyEnv(name,kind){
-  return {id:uid('env'),name,kind,meId:null,people:[],aircraft:[],permits:[],insurance:null,contact:null,presets:[],batGroups:[],bats:[],plans:[],flights:[]};
+  return {id:uid('env'),name,kind,gaccount:'',meId:null,people:[],aircraft:[],permits:[],insurance:null,contact:null,presets:[],batGroups:[],bats:[],plans:[],flights:[]};
 }
 const acOf=id=>{const E=ENV();return E&&E.aircraft.find(x=>x.id===id)};
 const plOf=id=>{const E=ENV();return E&&E.people.find(x=>x.id===id)};
@@ -75,7 +85,7 @@ const plName=id=>{const p=plOf(id);return p?pnm(p):(id||'—')};
 const meName=()=>{const E=ENV();return E&&E.meId?plName(E.meId):'（未設定）'};
 
 function newPerson(name,roles,o){
-  return Object.assign({id:uid('p'),name,kana:'',roles:roles.slice(),pilot:roles.includes('操縦者'),dips:null,link:null,lic:'未発行',licNo:'',account:'',phone:'',active:true},o||{});
+  return Object.assign({id:uid('p'),name,kana:'',addr:'',email:'',roles:roles.slice(),pilot:roles.includes('操縦者'),dips:null,link:null,lic:'未発行',licNo:'',account:'',phone:'',active:true},o||{});
 }
 function batOf(id){const E=ENV();return E&&E.bats.find(b=>b.id===id)}
 function groupOf(id){const E=ENV();return E&&E.batGroups.find(g=>g.id===id)}
@@ -167,13 +177,15 @@ const ACCOUNTS=[
   {id:'one',email:'test.one@example.invalid',state:'登録済み・個人だけ'},
   {id:'many',email:'test.multi@example.invalid',state:'登録済み・個人＋会社'}
 ];
+/* 会社・団体で使うGoogle／Workspaceアカウント（個人用とは別のアカウント）。左側には出さない */
+const CO_ACCOUNT={id:'co',email:'test.company@example.invalid',state:'会社・団体で使うアカウント'};
 /* ログインしたアカウントが使える場所（個人・会社・団体）を返す */
 function accountEnvs(acc){
   if(acc.id==='one')return [samplePersonalEnv(acc)];
   if(acc.id==='many')return [samplePersonalEnv(acc),sampleCompanyEnv('○○株式会社','company','q1',acc)];
   return [];
 }
-/* 招待を受けている会社・団体（Google Driveで共有されているもの。確認用の固定の候補） */
+/* 参加できる会社・団体（その会社で使うGoogleアカウントに共有されているもの。確認用の固定の候補） */
 const JOINABLE=[
   {id:'j1',name:'○○株式会社',kind:'company',admin:'会社事務担当',members:4},
   {id:'j2',name:'○○スクール',kind:'school',admin:'スクール管理者',members:4}

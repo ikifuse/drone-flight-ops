@@ -39,9 +39,9 @@ const NFS={
   ui:['最大飛行時間の位置と、複数日指定の入口は標準案']},
  master:{t:'登録済み情報の確認',sub:'保険・連絡先',dips:[9,22],
   goal:'保険と連絡先を、登録済みの内容で自動入力して確認する（変えたいときだけ開く）。未登録ならその場で登録できる。',
-  reuse:['保険の登録','連絡先（自アカウント）'],
-  tmp:['毎回変わらない情報を1画面にまとめる案。DIPSの順序（保険は途中、連絡先は最後）からは動かしている'],
-  ask:['保険・連絡先を、登録済みの内容からどこまで自動で埋めるか（そのまま通報の記録になる値）'],
+  reuse:['保険の登録','連絡先（自アカウントの情報。初回登録した本人情報から自動で入る）','操縦者を選んだときの人物情報'],
+  tmp:['毎回変わらない情報を1画面にまとめる案。DIPSの順序（保険は途中、連絡先は最後）からは動かしている','連絡先は、初回登録した本人情報（氏名・住所・電話・メール）から自動で入る。操縦者を選んだときは、その人物の登録情報を使う（34a §9.5）','人物情報のどの列をDIPSのどの欄に対応させるかの最終形は未確定（PENDING-S2-IDENTITY）'],
+  ask:['保険を、登録済みの内容からどこまで自動で埋めるか（そのまま通報の記録になる値）'],
   ui:['この画面を独立させるか、確認画面にまとめるかは標準案']},
  review:{t:'内容確認',dips:[1],
   goal:'入力した内容を確認し、計画名称を確認・修正する。足りない項目を見つける。',
@@ -538,7 +538,7 @@ Object.assign(ACTS,{
   'cal-clear':()=>{S.multi=[];render()},
   'ins-mode':t=>{S.ins.mode=t.dataset.v;if(t.dataset.v==='auto'&&ENV().insurance){const i=ENV().insurance;Object.assign(S.ins,{company:i.company,product:i.product,pUnl:i.pUnl,pAmt:i.pAmt,oUnl:i.oUnl,oAmt:i.oAmt})}render()},
   'ins-set':t=>{S.ins[t.dataset.k]=t.dataset.v;render()},
-  'contact-src':t=>{const src=t.dataset.v;S.contact.src=src;const E=ENV();const c0=E.contact;
+  'contact-src':t=>{const src=t.dataset.v;S.contact.src=src;const E=ENV();const c0=selfContact(E);
     if(src==='self'){if(c0)Object.assign(S.contact,{name:c0.name,country:c0.country,pref:c0.pref,addr:c0.addr,phone:c0.phone,email:c0.email})}
     else if(src==='application'){Object.assign(S.contact,{name:'',addr:'',phone:'',email:''})}
     else{Object.assign(S.contact,{name:S.contact.pilotId?plName(S.contact.pilotId):'（操縦者を選択）',phone:'',email:''})}

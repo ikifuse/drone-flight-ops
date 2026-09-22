@@ -62,7 +62,7 @@ function regInit(t,o){
    case 'permit':return ex?{no:ex.no,label:ex.label,issued:dstr(ex.issued),from:dstr(ex.from),to:dstr(ex.to),cat:ex.cat,cover:ex.cover.slice(),aircraft:ex.aircraft.slice()}
      :{no:'',label:'',issued:ymd(TODAY),from:ymd(TODAY),to:ymd(addDays(TODAY,365)),cat:'II',cover:[],aircraft:(o.aircraft||[]).slice()};
    case 'insurance':return E.insurance?Object.assign({},E.insurance):{company:'',product:'',pUnl:'yes',pAmt:'',oUnl:'yes',oAmt:'',ability:''};
-   case 'contact':return E.contact?Object.assign({},E.contact):{name:me?me.name:'',country:'日本/Japan',pref:'',addr:'',cc:'日本/Japan(81)',phone:me&&me.phone||'',email:''};
+   case 'contact':return E.contact?Object.assign({},E.contact):Object.assign({name:'',country:'日本/Japan',pref:'',addr:'',cc:'日本/Japan(81)',phone:'',email:''},selfContact(E)||{});
    case 'preset':return ex?{name:ex.name,geom:{kind:ex.geo.kind,pts:ex.geo.pts.map(p=>p.slice()),r:ex.geo.r,width:ex.geo.width||10,done:true,editing:false},layer:false,search:'',alt:ex.alt,from:ex.from,to:ex.to,biz:ex.biz.slice(),durH:ex.dur[0],durM:ex.dur[1]}
      :Object.assign({name:'',geom:newGeom(),layer:false,search:'',alt:30,from:'',to:'',biz:[],durH:0,durM:30},o.prefill||{});
    case 'bat':return ex?{label:ex.label,model:ex.model,group:ex.group||'',newGroup:'',source:ex.source||'new',cycle:ex.cycle==null?'':ex.cycle,check:ex.check,note:ex.note||''}

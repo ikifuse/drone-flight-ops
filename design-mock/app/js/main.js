@@ -6,7 +6,7 @@
 
 /* 画面マップ（アプリ全体の画面一覧。ここからどの画面へも飛べる） */
 const SCREEN_MAP=[
-  ['はじめて使う・ログイン',[['boot','はじめに（利用登録を始める／ログイン）'],['gauth','Googleアカウントを選択します（Googleが表示）'],['acct-exists','すでに登録されています'],['acct-none','ログインできませんでした'],['usage','どのように使いますか？'],['create-name','会社・団体の名前'],['consent','Google Driveの許可（Googleが表示）'],['join1','招待を受けている会社・団体'],['join2','参加の確認'],['join3','あなたの名前を選んでください'],['where','どこで使いますか？']]],
+  ['はじめて使う・ログイン',[['boot','はじめに（利用登録を始める／ログイン）'],['gauth','Googleアカウントを選択します（Googleが表示）'],['acct-exists','すでに登録されています'],['acct-none','ログインできませんでした'],['consent','Google Driveの許可（Googleが表示）'],['init-reg','はじめの登録（本人情報＋DIPS情報）'],['create-name','会社・団体の名前'],['join1','参加する会社・団体'],['join2','参加の確認'],['join3','あなたの名前を選んでください'],['where','どこで使いますか？']]],
   ['ホーム',[['home','ホーム（4入口）']]],
   ['新規飛行',[['nf-need','飛行を始めるために必要な設定（不足しているとき）'],['nf:start','始め方'],['nf:dips','飛行計画（DIPS基準案）'],['nf:use','使うもの（機体・操縦者・許可）'],['nf:content','飛行の内容'],['nf:area','飛行範囲（地図）'],['nf:time','日時・高度'],['nf:master','登録済み情報の確認（保険・連絡先）'],['nf:review','内容確認'],['nf:final','通報の直前'],['nf:dipsneed','通報の直前：DIPSのログイン情報が未登録のとき'],['nf-send','DIPSへ送信（アプリから）'],['nf-manual','DIPS Webで通報する（転記）'],['nf-manual-confirm','DIPS Webで通報したあとの確認'],['nf-accepted','通報の結果（正常受付・重複・結果不明・エラー）']]],
   ['飛行リスト',[['list','飛行リスト'],['plan','DIPS通報内容']]],
@@ -20,7 +20,7 @@ function mapHtml(){
    +SCREEN_MAP.map(g=>'<div class="grp">'+esc(g[0])+'</div><div class="pills">'+g[1].map(s=>{const cur=(s[0]===A.route)||(A.route==='nf'&&S&&s[0]==='nf:'+S.cur);return '<button class="pill'+(cur?' sel':'')+'" data-act="mk-goto" data-s="'+s[0]+'">'+esc(s[1])+'</button>'}).join('')+'</div>').join('')
    +'<div class="row"><button class="btn" data-act="mclose">閉じる</button></div>';
 }
-const PRE_ENV=['boot','gauth','acct-exists','acct-none','usage','create-name','consent','join1','join2','join3','where'];
+const PRE_ENV=['boot','gauth','acct-exists','acct-none','consent','init-reg','create-name','join1','join2','join3','where'];
 function gotoScreen(id){
   A.modal=null;A.mockModal=null;const E=ENV();
   const base=id.split(':')[0];
@@ -29,6 +29,7 @@ function gotoScreen(id){
   if((id==='consent')&&!A.create)A.create={kind:'personal',name:'個人'};
   if(id==='create-name'&&(!A.create||A.create.kind==='personal'))A.create={kind:'company',name:''};
   if((id==='join2'||id==='join3')&&(!A.join||!A.join.pick)){const j=JOINABLE[0];A.join={pick:j,env:sampleCompanyEnv(j.name,j.kind,null),me:null,code:'',newName:''}}
+  if(id==='init-reg'&&!E){mtoast('まず個人の保存場所を作ってください');render();return}
   if(id==='where'&&A.envs.length<2){ACTS['ob-normal']();return}
   if(typeof prepScreen==='function'&&prepScreen(id)===false){render();return}
   A.stack=id==='home'||PRE_ENV.includes(base)?[]:(id.indexOf('reg-')===0?['set']:['home']);
@@ -75,7 +76,7 @@ function controlsHtml(){
    +row('通信',mockSeg('online',A.online?1:0,[[1,'オンライン'],[0,'オフライン']]))
    +row('DIPSへ送信',mockSeg('api',A.apiOk?1:0,[[1,'できる'],[0,'できない']]))
    +row('DIPSログイン情報',mockSeg('dipsstate',A.dips.registered?1:0,[[1,'登録済み'],[0,'未登録']]))
-   +'<p class="note" style="margin:6px 0 0">ホームへ入る前の一括の初期設定はありません。機体・操縦者・DIPSのログイン情報などは、［各種設定・管理］から先に登録するか、必要になった場面でその場で登録します（34a §7.8）。</p>'
+   +'<p class="note" style="margin:6px 0 0">初回は、Googleの認証 → 個人の保存場所の作成 → 本人情報とDIPSのログイン情報を1画面で登録 → ホーム。会社・団体は、ホームから、その会社で使うGoogleアカウントで追加します（34a §9）。機体・許可承認・保険などは、［各種設定・管理］から先に登録するか、必要になった場面で登録します。</p>'
    +'<h4>そのほかの操作</h4>'
    +'<div class="row"><button class="btn sm" data-act="map">画面一覧を開く</button>'+(E?'<button class="btn sm" data-act="mk-sample">この使う場所に仮データを入れる</button>':'')+'</div>'
    +row('画面幅',mockSeg('width',A.width,[['phone','スマホ'],['tab','タブレット'],['pc','PC']]))

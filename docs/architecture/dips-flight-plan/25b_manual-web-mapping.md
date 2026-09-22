@@ -19,7 +19,7 @@
 | Airspace / Flight Method | 目的と独立した複数checkbox。該当なしと具体選択の整合を確認。緊急用務空域は飛行直前確認へ分離 | OBSERVED 26§2.4–2.5、17 |
 | Permission | 登録済許可の番号・発行日・期間・カテゴリーを照合して選択。自動反映範囲は未確認 | OBSERVED 26§2.10、PENDING-WEB-02 |
 | Insurance | 保険会社・商品・加入有無・対人/対物を構造化入力。InsurancePolicyからロードして計画override可能 | OBSERVED 26§2.11 |
-| Contact | 自アカウント/申請書/操縦者の連絡先情報源を区別。SubmissionActor、Actual Pilot、Contactを同一人物と仮定しない | OBSERVED 26§2.13、[31c](../identity-and-access/31c_operational-actors.md) |
+| Contact | 自アカウント/申請書/操縦者の連絡先情報源を区別。SubmissionActor、Actual Pilot、Contactを同一人物と仮定しない。**登録済みの人物情報（氏名・住所・電話番号・メールアドレス）を情報源として再利用し、飛行計画のたびに再入力させない**（2026-09-23。[34a §9.5](../presentation/34a_setup-and-environment-entry.md#95-登録済みの人物情報を飛行計画で再利用する)） | OBSERVED 26§2.13、[31c](../identity-and-access/31c_operational-actors.md) |
 | 日時 | 開始/終了・時間を構造化して確認。定期/複数日拡張を阻害しない。日別時刻・通報ID・変更取消単位は保留 | OBSERVED / PENDING-WEB-04 |
 | Geometry | POLYGON / CIRCLE / BUFFERED_LINEを視認・再作図支援。頂点/経路/中心/半径/幅と高度を提示 | OBSERVED 26§2.7、一般型[17](../17_map-and-airspace.md) |
 

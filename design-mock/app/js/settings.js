@@ -32,7 +32,7 @@ def('set',{t:'各種設定・管理',st:()=>{const E=ENV();return E?envLabel(E)+
 
 /* ---------- 個人・会社・団体の切り替え ---------- */
 def('set-env',{t:'個人・会社・団体の切り替え',st:'使う場所を切り替える',
-  goal:'いま使っている場所（個人・会社・団体）を確かめ、切り替える・新しく追加する・招待を受けている会社・団体に参加する。',
+  goal:'いま使っている場所（個人・会社・団体）を確かめ、切り替える・会社・団体で新しく使い始める・すでに使っている会社・団体に参加する。会社・団体は、その会社・団体で使うGoogleアカウントで続ける（34a §9.4）。',
   doc:'31a §4／34a §5・§7.3／34g §2・§4（内部では運用環境の表示・切替。切り替えると、参照する機体・BAT・人員の正本も切り替わる）。Googleアカウントは、運用環境や人物そのものではない。',state:'accepted',
   tmp:['この画面の並びは案。使っている場所の表示位置と切替の形は未確定（PENDING-S2-ENVIRONMENT-UI）','名前の変更は、このモックでは動かない'],ask:[],ui:['この画面での切り替えの見せ方は標準案。どこを主な入口にするかは、上の未決（PENDING-S2-ENVIRONMENT-UI）のまま'],
   body:()=>{
@@ -40,7 +40,8 @@ def('set-env',{t:'個人・会社・団体の切り替え',st:'使う場所を�
     return '<div class="sec"><h3>いま使っている場所</h3><table class="kv"><tr><td>名前</td><td>'+esc(envLabel(E))+'</td></tr><tr><td>種類</td><td>'+esc(KIND_NAME(E.kind))+'</td></tr><tr><td>管理者</td><td>'+esc(admins.join('、')||'—')+'</td></tr><tr><td>あなたの役割</td><td>'+esc(envRole(E))+'</td></tr></table></div>'
      +'<div class="sec"><h3>ログイン中のGoogleアカウント</h3><p class="lead" style="margin:0">'+acctMail()+'</p></div>'
      +'<div class="sec"><h3>切り替える・追加する</h3>'+A.envs.map(e=>'<button class="tgl'+(A.cur===e.id?' sel':'')+'" data-act="env-pick" data-id="'+e.id+'"><span class="box">'+(A.cur===e.id?'✓':'')+'</span><span><b>'+esc(envLabel(e))+'</b><br><small class="note">'+esc(KIND_NAME(e.kind))+'</small></span></button>').join('')
-     +'<div class="row"><button class="btn sm" data-act="ob-create">＋ 会社・団体で新しく使い始める</button><button class="btn sm" data-act="ob-join">招待を受けている会社・団体に参加する</button></div></div>';
+     +'<div class="row"><button class="btn sm" data-act="ob-co-new">＋ 会社・団体で新しく使い始める</button><button class="btn sm" data-act="ob-co-join">すでに使っている会社・団体に参加する</button></div>'
+     +'<p class="note">会社・団体で使うときは、その会社・団体で使うGoogleアカウントで続けます。</p></div>';
   }
 });
 

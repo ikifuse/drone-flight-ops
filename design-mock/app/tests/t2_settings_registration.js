@@ -6,7 +6,7 @@ suite('設定・登録',H=>{
   T('各種設定・管理から、必要になる前に自分の情報を登録できる',()=>{
     act('go','[data-s=set]');if(route()!=='set')return 'route '+route();
     act('go','[data-s=set-me]');if(route()!=='set-me')return 'route '+route();
-    set('[data-bind="%name"]','設定テスト氏名','input');act('me-pilot');act('me-save');
+    set('[data-bind="%name"]','設定テスト氏名','input');set('[data-bind="%phone"]','09000000000','input');act('me-pilot');act('me-save');
     return route()==='set'&&E().people[0].name==='設定テスト氏名'&&E().people[0].roles.includes('操縦者');
   });
   T('各種設定・管理から、必要になる前に機体を登録できる',()=>{
@@ -85,8 +85,16 @@ suite('設定・登録',H=>{
   T('DIPSへの通報方法: 送信できる／できないで案内が変わる（右側の切替）',()=>{
     H.APP().root('home');act('go','[data-s=set]');act('go','[data-s=set-dips]');const a=txt().includes('いま、アプリからDIPSへ送信できます');act('api','[data-v="0"]');const b=txt().includes('いまは、アプリからDIPSへ送信できません')&&txt().includes('DIPS Webで通報する');act('api','[data-v="1"]');return a&&b;
   });
-  T('切り替えのシート（使う場所が1つ）',()=>{H.APP().root('home');act('env');return !!q('.sheet')&&q('.sheet').innerText.includes('どこで使いますか？')});
-  T('画面一覧（設計確認用）から設定の画面へ移動できる',()=>{act('close');act('map');const many=qa('[data-act=mk-goto]').length>30;act('mk-goto','[data-s=set-aircraft]');return many&&route()==='set-aircraft'});
+  T('使う場所が1つのときは、切替の操作を出さない（場所の名前だけ出す）',()=>{
+    H.APP().root('home');
+    return A().envs.length===1&&!q('.phone [data-act=env]')&&q('.hd2').innerText.includes('個人で使用中')
+      &&!!q('.phone [data-act=ob-co-new]')&&!!q('.phone [data-act=ob-co-join]');
+  });
+  T('各種設定・管理からも、使う場所の追加・切り替えへ進める',()=>{
+    act('go','[data-s=set]');act('go','[data-s=set-env]');
+    return route()==='set-env'&&txt().includes('会社・団体で新しく使い始める')&&txt().includes('すでに使っている会社・団体に参加する');
+  });
+  T('画面一覧（設計確認用）から設定の画面へ移動できる',()=>{act('map');const many=qa('[data-act=mk-goto]').length>30;act('mk-goto','[data-s=set-aircraft]');return many&&route()==='set-aircraft'});
   /* サンプルの投入とBATの一覧 */
   H.hash('scn=empty');
   T('空の状態に仮データを入れる（右側の操作。二重には入れない）',()=>{
