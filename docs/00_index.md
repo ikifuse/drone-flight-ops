@@ -9,11 +9,12 @@
 
 `AGENTS → 00_index → 対象領域README → 正本詳細文書` の順に読みます。
 
-- Phase A/A.5、B1〜B2最終監査完了、Phase B設計凍結。
-- ADR-0001〜0007 Accepted。2026-09-15のdocs再編指示に基づく部分置換はADR-0008/0009。
+- Phase A（要件整理・既存資料分析）、A.5（構造・案内・保守規約整備）、B1/B1.1/B1.2/B1.3（比較・再監査・最終整合）、B2/B2.1/B2.2/B2.3（詳細設計・実装前監査・手動台帳・凍結監査）、最終整合訂正パッチは完了。Phase B設計凍結。
+- ADR-0001〜0007 Accepted（オーナー承認2026-09-14、正規化マスター・統合帳票設計反映）。2026-09-15のdocs再編指示に基づく部分置換はADR-0008/0009。
 - **C0基盤・PWA Shell構築完了、C1設計準備完了。C1以降は未着手、C0受入確認・オーナーGO待ち。**
 - **99.2再移植はStep 7a（§7の実画面確認・共通Geometry・submission_snapshot・Manual／API経路・DIPS対象外）・Step 7b（§7の06の記録責任・作業台帳・取消／リスト整理の境界）・Step 7c（KMLの位置づけ・単位・生成契機・内容・再送）・Step 7d（PDFの役割分離・生成契機、飛行履歴・出力の画面）・Step 7e（§9の正本・端末cache・時点分離・費用の境界）・Step 8（§11の差分監査）まで**。Step 1（§0・§1）・Step 2（§2）を保持し、人物領域は[identity-and-access](architecture/identity-and-access/README.md)、機材の取得・共用・履歴は[asset-management](architecture/asset-management/README.md)を詳細正本とする。[移植記録](migration/README.md)から確認範囲へ進む。Step 3の機材領域も保持する。Step 4は[dips-infrastructure](architecture/dips-infrastructure/README.md)と[16](architecture/16_security.md)へ配置。Step 5の画面・因果は[presentation](architecture/presentation/README.md)へ配置。Step 6は[operation-recording](architecture/operation-recording/README.md)／[maintenance-storage](architecture/maintenance-storage/README.md)／[drive-structure](architecture/drive-structure/README.md)へ§5・§6残り・§10を配置。Step 7aは[dips-flight-plan](architecture/dips-flight-plan/README.md)の[25e](architecture/dips-flight-plan/25e_common-source-and-submission-boundaries.md)へ共通の源・Manual／API・DIPS対象外の因果を、[26](architecture/26_dips-web-ui-verification.md)へ実画面の証拠系列を配置（判断は[ADR-0023](decisions/ADR-0023-common-source-and-derived-submission-paths.md) Proposed）。Step 7bは[dips-submission](architecture/dips-submission/README.md)の[24b](architecture/dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md)へ06の記録責任・作業台帳・取消／整理の意味を配置（追補は[ADR-0022](decisions/ADR-0022-drive-responsibilities-and-human-records.md) Proposed）。Step 7cは[output](architecture/output/README.md)の[27e](architecture/output/27e_kml-generation-timing-and-content.md)へKMLの生成契機・内容・単位・再送を配置（判断は[ADR-0024](decisions/ADR-0024-kml-generated-at-plan-submission-from-report-content.md) Proposed）。Step 7dは[output](architecture/output/README.md)の[27f](architecture/output/27f_derived-pdf-roles-and-map-pdf.md)へPDFの役割・生成契機を、[presentation](architecture/presentation/README.md)の[34e](architecture/presentation/34e_history-and-output.md)へ飛行履歴・出力の画面を配置（判断は[ADR-0025](decisions/ADR-0025-derived-pdf-roles-and-on-demand-generation.md) Proposed）。Step 7eは[sync-and-cache](architecture/sync-and-cache/README.md)の38a・38bへ共有正本と端末cache・時点分離を、[37 §6](architecture/drive-structure/37_environment-storage-responsibilities.md#6-保存の所有と費用の境界)へ保存の所有と費用の境界を配置（判断は[ADR-0026](decisions/ADR-0026-shared-source-confirmation-and-timing-separation.md)・[ADR-0027](decisions/ADR-0027-storage-ownership-and-cost-boundary.md) Proposed）。§11の差分監査は[Step 8](migration/99-2-step-8-diff-audit.md)で実施した（語句検索と回収12項目・現状差分8項目の対照。実機・実Drive・旧資料の再確認ではない）。残る未確定は各正本のPENDING／VERIFYで、解決済みとは扱わない。依存実装は[23の開始ゲート](architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)に従う。
 - **Git本線と実装凍結（2026-09-19）**: `main`を99.2再移植の本線（`claude/99-2-continuation`のStep 8完了時点）へ整理し、整理前の旧mainはバックアップに保全した（[記録](migration/99-2-git-mainline-cutover.md)）。オーナーが明示的に「実装開始」と指示するまで実装は凍結し、設計検討を継続する。
+- **Git現在状態の訂正（2026-09-22）**: 最新モックを履歴ごとmainへ反映後、包含済み7 branchを削除し、GitHub上はmainのみ。旧mainの既存バックアップタグは保持（[記録§8](migration/99-2-git-mainline-cutover.md#8-mainへの集約と現在状態の訂正2026-09-22)）。通常はmainで作業し、Docs同期・必要な検査・commit・push後に停止する恒久ルールは[AGENTS](../AGENTS.md)。
 - **BAT管理設計の更新（2026-09-20）**: オーナーの方針に基づき、BAT管理は機体単位の任意、保存は共用機体系ごとの1Spreadsheet・1物理BAT＝1シート・総合台帳なし、現場入力は4項目とした。[32e](architecture/asset-management/32e_battery-management-scope-and-flight-separation.md)・[32f](architecture/asset-management/32f_battery-storage-structure.md)・[32g](architecture/asset-management/32g_battery-field-input.md)へ配置し、判断は[ADR-0028](decisions/ADR-0028-battery-storage-by-shareable-aircraft-family.md)・[ADR-0029](decisions/ADR-0029-battery-management-optional-per-aircraft.md)（Proposed）。シートの中身・命名・状態確認等は未確定（[04](04_open-questions.md#bat管理設計の未確定検証先2026-09-20)）。
 - **運用環境・登録機体・BAT共用グループの関係（2026-09-20）**: 機体・BATを現在の運用環境に属するデータとして扱う既存の原則を、02の登録済み実機、実機とBAT共用グループの関係（使用許可）、［各種設定・管理］の機体管理、対象機体の表示責任へ接続した。関係の意味は[32h](architecture/asset-management/32h_registered-aircraft-and-battery-group-relations.md)、画面責任は[34g](architecture/presentation/34g_settings-aircraft-management-and-context-display.md)（現在案）。ホーム4入口は変更しない。ADRは追加していない。未確定は[04](04_open-questions.md#運用環境登録機体bat共用グループの未確定検証先2026-09-20)。
 - **利用者向けの表示名と初回導線の訂正（2026-09-21）**: 設計確認用モックの確認で、内部の概念名・技術用語・設計書番号が一般利用者向けの画面へ漏れていることが分かった。内部モデルと責務分離は変えず、利用者へ見せる言葉だけを分ける規約を[30 §4](architecture/presentation/30_screen-specification-standard.md#4-内部設計用語と利用者表示文言の分離)に追加し、対応表と文言の型を[34h](architecture/presentation/34h_user-facing-wording-and-terminology.md)へ置いた。初回導線はアカウントから始める形に訂正した（[34a §7](architecture/presentation/34a_setup-and-environment-entry.md#7-利用者向けの表示名と初回導線の訂正2026-09-21)。個々の表示名は案でPENDING-U-WORDING）。失敗の表示は[19 §1](architecture/19_failure-recovery.md)の表を問題・データ保護状態・次の操作の型に直した。
@@ -28,7 +29,8 @@
 | 文書 / 入口 | 役割・読む場面 | 状態 / 関連領域 |
 |---|---|---|
 | [AGENTS](../AGENTS.md) | AI案内・読み順・プロジェクト全体の禁止事項と、規約の所在（規約本文はguidelines／ADRが正本） | 確定 / 全体 |
-| [CLAUDE.md](../CLAUDE.md)・[設計Docs更新Skill](../.claude/skills/design-docs-update/SKILL.md) | Claude Codeが毎回自動で読む入口（AGENTSを取り込む）と、設計Docs更新の実行手順（読む正本・確認項目・反映の順序。規約本文は持たない） | 確定 / 設計Docs更新 |
+| [CLAUDE.md](../CLAUDE.md) | AGENTSを取り込むだけの入口。プロジェクトルール本文は持たない | 確定 / 全体 |
+| [共通規約・ルーティン](guidelines/README.md) | 全AI共通の規約一覧。[設計Docs更新ルーティン](guidelines/04_design-docs-update-workflow.md)で設計影響判定・Docs同期・Git現在状態の訂正・検査・保存を行う | 確定 / 設計Docs更新 |
 | [root README](../README.md) | GitHubでの初期案内と現在の停止位置 | 確定 / 全体 |
 | [アプリ概要](../01_アプリ概要.md) | 背景・現場一気通貫フロー・申し送り | 確定 / 全体 |
 | [00_goal](00_goal.md) | 最終ゴール・運用思想・機能必要性の判断 | 確定 / 現場フロー・UI |
@@ -48,7 +50,7 @@
 ```text
 docs/
 ├── 00_index.md / 00_goal.md / 01〜04の要件・分析
-├── guidelines/                 # 構造・保守、法令・運用、設計証拠・因果
+├── guidelines/                 # 構造・保守、法令・運用、設計証拠・因果、共通更新ルーティン
 ├── migration/                  # 移管対応・証拠・検査の記録（仕様を複製しない）
 ├── decisions/
 │   ├── README.md               # ADR-0000はこの中の運用決定（独立ファイルなし）

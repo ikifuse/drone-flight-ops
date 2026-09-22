@@ -1,102 +1,55 @@
-# AGENTS.md — AIエージェント向け案内・開発規約
+# AGENTS.md — 全AI共通の入口・基本ルール
 
-最終更新: 2026-09-20
+最終更新: 2026-09-22
 対象リポジトリ: `ikifuse/drone-flight-ops`
 
----
+## 1. 目的と指示の構造
 
-## 1. このプロジェクトの大前提と目的
+iPhone・Androidのスマートフォン1台で、DIPS確認・計画・地図・通報から点検・離着陸・BAT交換・機体交代・日誌保存・出力・オフライン同期まで扱う総合運航管理アプリを目指す。PCだけを完成形にしない。詳細は[00_goal](docs/00_goal.md)。
 
-本リポジトリ `drone-flight-ops` の完成形は、
-**「iPhone と Android の両方で、ドローン飛行の現場で実用的に使える総合運航管理アプリ」** です。
+本書は全AI共通の入口。設計・仕様・規約・詳細ルーティンの正本は`docs/`に置く。AI固有の入口・Skillは共通正本への薄いアダプターに限定し、ルール本文を分岐・複製しない。
 
-- **単なるPC向けWebシステムを完成形としないでください。**
-- 現場においてスマートフォン1台で、DIPS確認 → 飛行計画作成 → 地図操作（POLYGON・CIRCLE・BUFFERED_LINE） → DIPS通報 → 飛行前点検 → 離陸 → 着陸 → バッテリー交換 → 機体交代 → 飛行後点検 → 飛行日誌保存 → PDF/CSV/Excel出力 → オフライン利用・通信復帰後同期 を、一続きの現場運用として扱えることを目標とします。
-- **GAS（Google Apps Script）は必須ではありません。** 基準アプリがGASであることは、新アプリもGASで作るという意味ではありません。Phase BのPWA・IndexedDB／Google Sheetsを維持し、DIPS API用Workers経路からの変更は[33a](docs/architecture/dips-infrastructure/33a_fixed-egress-and-api-connection.md)を参照します。Google Cloud＋Cloud NATの現在方針と具体実行基盤の未決を区別し、判断履歴は[ADR一覧](docs/decisions/README.md)に残します。未選定の地図ライブラリ等を独断で固定せず、承認済み決定の変更は後続ADRで記録してください。
+## 2. 安全ゲートと基本原則
 
----
+- **実装凍結**: オーナーが明示的に「実装開始」と指示するまで、C1を含む本体実装（`src`・`public`・Dexie・IndexedDB・Domain型等）の作成・変更へ進まない。Docsやモックの完成は実装許可ではない。設計で決められる論点を実装後へ逃がさず、必要なモック・帳票例等で詰める。
+- 現在のPhase・完了範囲は[総合目次](docs/00_index.md)、実装の依存条件は[23の開始ゲート](docs/architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)、移植履歴は[移植記録](docs/migration/README.md)を参照する。未確定事項は解消済みと扱わない。
+- 未承認の仕様変更・技術選定を行わない。既存要件の意味・根拠・履歴を保持し、DIPS等の未確認事項は推測で確定しない。GASは必須ではない。採用済み構成と未選定部分は[architecture README](docs/architecture/README.md)・[ADR一覧](docs/decisions/README.md)・[DIPS基盤33a](docs/architecture/dips-infrastructure/33a_fixed-egress-and-api-connection.md)に従う。
+- 基準アプリ`ikifuse/autel-evo-lite-flight-log`は実運用・法令判断・保存復旧の知見を持つ資産。旧構造の無条件コピーも、理由を確かめない単純化・削除・置換も行わない。
+- 法令の原則だけを一律の強制入力にしない。[法令・運用規約](docs/guidelines/02_legal-and-operations-rules.md)に従い、正式記録全体で評価する。確認済みの柔軟運用を一般論で未解決へ戻さない。
+- 秘密情報・認証情報・個人情報をGitHubへcommitしない。クライアントへ秘密情報を漏洩させない。
+- 既存の未commit差分・参照専用資料を保護する。参照資料を勝手に変更・削除・rename・追跡・ignore対象へ追加しない。説明できない変更が現れたら停止して報告する。
 
-## 2. 現在のPhase
+## 3. 最初に読む順番と範囲
 
-- **Phase A**: 要件整理・既存資料分析（完了）
-- **Phase A.5**: リポジトリ構造・設計書・AI案内・分割・保守ルールの整備（完了）
-- **Phase B1 / B1.1 / B1.2 / B1.3**: アーキテクチャ比較検討・再監査・最終整合（完了）
-- **Phase B2 / B2.1 / B2.2 / B2.3**: 詳細アーキテクチャ設計・実装前監査・DIPS手動台帳設計・最終設計凍結監査（完了）
-- **最終整合訂正パッチ**: 完了
-- **ADR-0001〜0007**: **承認済み（Accepted / オーナー承認 2026-09-14・Phase B設計凍結・正規化マスターおよび統合帳票設計反映）**
-- **追加決定**: ADR-0008（出力・復旧境界）/ ADR-0009（地図ライブラリ選定のC5留保）は、2026-09-15のオーナーの本docs再編指示に基づく部分置換。詳細は[ADR一覧](docs/decisions/README.md)。
-- **現在**: **Phase C0（基盤・PWA Shell 構築完了・Phase C1設計準備完了）**
-- **Phase C1以降**: 未着手（Phase C0受入確認・オーナーGO待ち）
-- **実装凍結・設計検討フェーズ（継続）**: オーナーが明示的に「実装開始」と指示するまで、C1を含む実装コード（`src`・`public`・Dexie・IndexedDB・Domain型等）の作成・変更に入らない。C1は次に自動的に始める工程ではない。99.2再移植の完了は設計全体の完了ではなく、コードを書かなくても決められる設計論点（画面の遷移と表示、KMLの人向け復元と地図付きPDF、多数の機体・BATの管理と台帳表示、帳票・検索・履歴・印刷・復元等）を設計段階で詰め続ける。実装してから決める方向へ逃がさず、必要なら画面モック・帳票見本・データ例・利用シナリオを使う。
-- **99.2再移植**: §0〜§11の再移植と差分監査（Step 1〜8）は完了した。`main`が本線（2026-09-19に整理）で、整理前の旧main（`6344d7a`）はバックアップ`archive/main-before-99-2-redo-20260919`とタグ`backup/main-6344d7a-20260919`に保全した比較証拠であり、再移植元ではない（[整理の記録](docs/migration/99-2-git-mainline-cutover.md)）。各Stepの範囲・正本・確認範囲は[移植記録](docs/migration/README.md)、現在の状態と領域別の入口は[総合目次](docs/00_index.md)、概念ごとの正本は[architecture README](docs/architecture/README.md#3-主要概念の正本)を参照する。残る未確定は各正本のPENDING／VERIFYに保持しており、解決済み・実装開始の許可とは扱わない。次の指示なく実装（C1）へ進まない。依存実装は[23の実装開始ゲート](docs/architecture/23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)に従う。
+`AGENTS.md → docs/00_index.mdの対象入口 → 対象領域のREADME → 必要な正本・直接の関連文書 → 必要なソース・テスト`。
 
----
+全Docs・全コード・全Git履歴を毎回読み直さない。明示依頼のない全体横断監査・全履歴再調査は行わず、変更対象と直接関係する必要最小限の整合確認を行う。確認済みの恒久ルールを毎回ユーザーへ再入力・再確認させない。
 
-## 3. AIが最初に読む順番（標準ナビゲーション）
+## 4. 設計変更とDocs同期の3原則
 
-本プロジェクトへ参加するすべてのAI（Codex, Antigravity, その他AI）は、過去の会話履歴を前提とせず、GitHubの最新コードから以下の順序で読み進めてください。
+1. **設計変更はDocs同期まで含めて1作業**。モック・コード・設定を変える場合も、設計への影響を判定 → 影響する現在有効な正本Docsを特定 → 変更物とDocsを同じ作業内で同期 → 必要な整合確認、まで行って完了とする。モック・コードだけで終了しない。
+2. **役割を分離する**。GitHubのmainの最新commitはリポジトリ全体の現在状態、`docs/`配下の該当正本文書は現在有効な設計・仕様・規約、Git commit履歴は変更の証拠・履歴・復元点。**commit履歴は設計Docsの代わりではなく、commitしたことを理由にDocs同期を省略しない。**
+3. **設計変更でないGit整理を区別する**。branch・tag等の整理だけなら設計仕様を書き換えない。ただし現在のbranch・作業先・Git状態を記録した運用文書やナビゲーションが古くなれば、「現在状態の記録訂正」として必要最小限更新する。過去の歴史的事実は消さない。
 
-```text
-1. AGENTS.md（本ファイル：開発憲法・ルール・入口）
-   ↓
-2. docs/00_index.md（総合目次：全文書の役割・状態・関連領域を把握）
-   ↓
-3. 作業対象領域の目次（README.md または 00_index.md）
-   ↓
-4. 必要な設計書・要件書（docs/配下の該当ドキュメント）
-   ↓
-5. 必要な場合は対応するソースコード（C0 Shellあり）
-   ↓
-6. 必要な場合は対応するテスト・受入検証
-```
+設計に影響する変更、Docsの追加・更新・整理、Git現在状態の記録訂正には、全AI共通の[設計Docs更新ルーティン](docs/guidelines/04_design-docs-update-workflow.md)を必要時に読み、適用する。個別の依頼文にDocs同期の指示がなくても適用する。
 
-設計Docs（`docs/`配下の設計書・ADR・INDEX・README・open-questions）を追加・更新・整理する作業は、[設計Docs更新Skill](.claude/skills/design-docs-update/SKILL.md)の手順（読む正本・確認項目・反映の順序）に従います。Claude Codeは[CLAUDE.md](CLAUDE.md)経由で自動的に使います。他のAIも同じ手順を参照してください。
+## 5. Git・作業完了の恒久ルール
 
----
+- 通常作業はmainで行う。ユーザーが明示しない限り新しいbranchを作らない。保存・復元点はcommit履歴を使い、保存目的でbranchを増やさない。
+- 開始時にbranch・HEAD・git statusを確認し、既存差分を捨てない。履歴の書換え・破壊的操作を独断で行わない。
+- 変更に必要なテスト・整合確認 → 今回のdiffと公開内容の確認 → commit → mainへpush、までを完了作業とする。
+- push後は停止し、ユーザーの画面確認・次の指示を待つ。勝手に次工程へ進まない。
+- その作業についてユーザーが明示したbranch・対象範囲・保存方法等の別指示は、通常運用より優先する。
 
-## 4. 正本資料と基準アプリの位置づけ
-
-### 4.1 GitHubを唯一の正本とする
-- ローカル環境やチャット内の一時的なやり取りではなく、GitHub上の最新コミットを唯一の正本とします。
-- 作業完了時は必ずGitHubへcommit/pushしてください。
-
-### 4.2 基準アプリ `ikifuse/autel-evo-lite-flight-log` の位置づけ
-新アプリを設計する際の最も重要な基準は、現行アプリ `ikifuse/autel-evo-lite-flight-log` です。これは単なる旧コードではなく、**実運用・法令確認結果・運用判断・飛行日誌・バッテリー管理・手動補記・保存復旧の知見が集約された資産**です。
-- 旧コードや旧スプレッドシート構造を盲目的にそのまま引き継ぐ必要はありません。
-- ただし、「なぜ現在その運用になっているのか」という設計理由・法令判断・実運用上の理由を確認せずに、単純化・削除・置換してはなりません。
-
----
-
-## 5. 法令・国交省資料の最重要原則
-
-国土交通省の航空法・施行規則・通達・取扱要領・ガイドライン・DIPS仕様等に従いますが、**「原則だけを読んで、そのまま全部をアプリの強制入力にする」という設計は禁止**します。
-
-法令・行政資料を根拠にするときは、[法令・運用規約](docs/guidelines/02_legal-and-operations-rules.md)の8区分（§2）で分類し、アプリ単独画面ではなく、飛行日誌・点検記録・バッテリー記録・機体記録・別紙・手動補記・帳票出力を含む「正式記録全体」（§3）で評価します。基準アプリで検討・採用された柔軟な運用を、一般論だけを理由に「未解決」「違反のおそれ」へ戻してはなりません（§4）。未確認事項は推測で断定せず、確認待ち（VERIFY）として扱います。
-
----
-
-## 6. 設計・開発・保守の鉄則
-
-### 6.1 勝手な仕様変更・実装の禁止
-- オーナーの明示的な指示・承認がない限り、アプリ本体の実装や技術スタック決定を行わないこと。
-- 既存要件（`docs/00_goal.md` 〜 `docs/04_open-questions.md`）を勝手に削除・変更しないこと。オーナーが明示したdocs再編・整合修正は、その指示範囲内で意味・根拠・履歴を保持して行うこと。
-
-### 6.2 未確認事項の推測禁止
-- DIPS2.0 APIの利用申請主体（個人可否等）や内部仕様など、未確認の事項を推測で「確定仕様」として扱わないこと。
-
-### 6.3 セキュリティと秘密情報の保護
-- API secret、token、認証情報、個人情報（実名・連絡先等）を絶対にGitHubへcommitしないこと。
-- ブラウザ側・クライアント側へ秘密情報を漏洩させない構造を徹底すること。
-
-### 6.4 設計・保守・因果・ADRの規約の所在
-規約の本文は次の正本にあり、本書へ複製しません。設計Docsを更新する作業では、毎回これらを適用します（実行手順は[設計Docs更新Skill](.claude/skills/design-docs-update/SKILL.md)）。
+## 6. 詳細正本への案内
 
 | 判断する内容 | 正本 |
 |---|---|
-| 構造・分割の9原則、再編成の兆候、構造レビューの時期とチェックリスト | [構造・保守規約](docs/guidelines/01_structure-and-maintenance-rules.md) §2〜§4 |
-| docs変更時のResponsibility Check、正本の一元化、INDEX／README更新、最終確認 | 同 §6 |
-| 因果の保持、7状態ラベル、実物証拠、質問と技術判断の境界。CURRENT-ACCEPTEDとADR Acceptedは同一視しない | [設計証拠・因果規約](docs/guidelines/03_design-evidence-and-causality.md) |
-| 重要な技術・設計判断のADR記録、承認済みADRの置換の規則 | [ADR一覧・運用ルール](docs/decisions/README.md) |
-| 概念ごとの正本（変更前に正本を特定する） | [architecture README §3](docs/architecture/README.md#3-主要概念の正本) |
-| 旧番号の12／13／24／25／27は移行案内であり、詳細の追記先にしない | [architecture README §5](docs/architecture/README.md#5-旧番号からの移行案内) |
+| 構造・分割・保守、Responsibility Checkと正本の一元化 | [構造・保守規約](docs/guidelines/01_structure-and-maintenance-rules.md) §2〜§6 |
+| 因果・7状態・実物証拠・質問と技術判断の境界 | [設計証拠・因果規約](docs/guidelines/03_design-evidence-and-causality.md) |
+| 設計影響判定・Docs同期・検査・保存の共通手順 | [設計Docs更新ルーティン](docs/guidelines/04_design-docs-update-workflow.md) |
+| 重要判断・承認済みADRの置換 | [ADR一覧・運用ルール](docs/decisions/README.md) |
+| 概念ごとの正本・旧番号12／13／24／25／27からの案内 | [architecture README](docs/architecture/README.md) §3・§5（旧番号へ詳細を追記しない） |
 | 未確定事項 | [未確認事項と論点](docs/04_open-questions.md) |
+
+CURRENT-ACCEPTEDとADR Acceptedを同一視しない。規約一覧は[guidelines README](docs/guidelines/README.md)、Git整理の経緯は[移行記録](docs/migration/99-2-git-mainline-cutover.md)から辿る。

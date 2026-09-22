@@ -1,6 +1,6 @@
 # アーキテクチャ決定記録（ADR: Architecture Decision Records）
 
-最終更新: 2026-09-20
+最終更新: 2026-09-22
 プロジェクト: `drone-flight-ops`
 
 ---
@@ -105,7 +105,7 @@
 | [ADR-0028](ADR-0028-battery-storage-by-shareable-aircraft-family.md) | BATの保存正本を共用機体系ごとに1つとし、1物理BAT＝1シート・総合台帳なしで管理する | **提案中（Proposed）** | 未承認（記録2026-09-20） | 0007の独立個体・N:M共用、0017をClarifies。0007 §2.8の限定置換をBAT媒体へ拡張（0021／0022と同じ扱い）。詳細は32f |
 | [ADR-0029](ADR-0029-battery-management-optional-per-aircraft.md) | BAT管理を機体単位の任意とし、BAT管理と飛行記録の区切りを分離する | **提案中（Proposed）** | 未承認（記録2026-09-20） | 0020・0007・0017をClarifies。OFFの機体でも基本運用は完結、BAT交換でA4の行を分けない。現場入力は4項目。詳細は32e／32g |
 
-ADR-0010〜0014は整理前の旧main（`6344d7a`。バックアップ`archive/main-before-99-2-redo-20260919`／タグ`backup/main-6344d7a-20260919`）にProposedとして存在する。本線はその作成前の`ea73d08`から再移植しており、旧Step成果をコピーしないため収録しない（対応関係は[Git本線の整理](../migration/99-2-git-mainline-cutover.md)）。番号を再利用せずStep 1で0015、Step 2で0016、Step 3で0017、Step 4で0018、Step 5で0019、Step 6で0020〜0022、Step 7aで0023、Step 7cで0024、Step 7dで0025、Step 7eで0026・0027、2026-09-20のBAT管理設計の更新で0028・0029を新設した。旧mainの0010〜0014をAcceptedへ変更していない。
+ADR-0010〜0014は整理前の旧main（`6344d7a`。既存タグ`backup/main-6344d7a-20260919`で参照可能。当時のバックアップbranchは2026-09-22に削除済み）にProposedとして存在する。本線はその作成前の`ea73d08`から再移植しており、旧Step成果をコピーしないため収録しない（対応関係は[Git本線の整理](../migration/99-2-git-mainline-cutover.md)）。番号を再利用せずStep 1で0015、Step 2で0016、Step 3で0017、Step 4で0018、Step 5で0019、Step 6で0020〜0022、Step 7aで0023、Step 7cで0024、Step 7dで0025、Step 7eで0026・0027、2026-09-20のBAT管理設計の更新で0028・0029を新設した。旧mainの0010〜0014をAcceptedへ変更していない。
 
 0028は、0007の独立した物理個体・N:M共用と0017をClarifiesとして記録し、BATの保存正本を共用機体系ごとの1Spreadsheet・1物理BAT＝1シートとする。0007 §2.8の物理シート全面禁止の限定置換を、04・05（0021・0022）に続いてBATの人間向け媒体へ拡張するが、Accepted本文は変更しない。0029は、0020・0007・0017をClarifiesとして記録し、BAT管理を機体単位の任意とし、BAT管理と飛行記録の区切りを分ける。物理BATを機体の所有物にしないことは既存の0007（Accepted）が定めており、新しいADRとして重ねない。詳細因果・限界・未確定は[32e](../architecture/asset-management/32e_battery-management-scope-and-flight-separation.md)・[32f](../architecture/asset-management/32f_battery-storage-structure.md)・[32g](../architecture/asset-management/32g_battery-field-input.md)へ保持する。
 
