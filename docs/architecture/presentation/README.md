@@ -22,3 +22,5 @@
 34a〜34dは実装ではなく因果と画面仕様の移管である。Geometry、API payload、重複調整、取消詳細、KML、通常運航全体、A4帳票、Drive全体構造、§8以降は対象外。[ADR-0019](../../decisions/ADR-0019-home-entry-and-shared-plan-handoff.md)はProposed、[Step 5監査](../../migration/99-2-step-5-causal-audit.md)は証拠・移管・検査の索引。
 
 Step 6で通常運航の10項目画面仕様を[35b](../operation-recording/35b_normal-operation-and-final-save.md)へ追加した。34dから点検以降へ接続し、Drive全体は[37](../drive-structure/37_environment-storage-responsibilities.md)が正本。上の「対象外」はStep 5の確認範囲を表す。Step 7dで［飛行履歴・出力］の画面仕様を[34e](34e_history-and-output.md)へ追加した。
+
+2026-09-22: [設計モックへの反映と未決の境界](34f_screen-map-and-design-coverage.md)を更新。標準候補と比較案を区別し、実装凍結を維持する。

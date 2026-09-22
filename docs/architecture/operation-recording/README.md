@@ -1,6 +1,6 @@
 # 運航記録・通常操作・A4
 
-最終更新: 2026-09-19
+最終更新: 2026-09-22
 
 99.2 §5と2026-09-19のA4保存追補による因果・現在ベースラインの入口。[architecture正本表](../README.md#3-主要概念の正本)／[総合目次](../../00_index.md)から読む。状態は[規約03](../../guidelines/03_design-evidence-and-causality.md)。C1以降は未着手。
 
@@ -14,3 +14,5 @@
 [13a](../state-machines/13a_operation.md)は論理状態、[12e](../domain-model/12e_operation-inspection-maintenance.md)はEntityと旧schema候補、[18](../18_reports.md)は帳票生成技術。[31c](../identity-and-access/31c_operational-actors.md)の人物、[32a〜32c](../asset-management/README.md)の機材・取得確認を複製しない。詳細整備は[36](../maintenance-storage/README.md)、保存領域は[37](../drive-structure/README.md)。
 
 [ADR-0020](../../decisions/ADR-0020-flexible-flight-and-finalization.md)／[0021](../../decisions/ADR-0021-a4-record-layout-and-sheet-boundary.md)はProposed。[Step 6監査](../../migration/99-2-step-6-causal-audit.md)は移管先と検証範囲の索引であり、上表の因果の代替ではない。
+
+2026-09-22: [設計モックへの反映と未決の境界](35b_normal-operation-and-final-save.md)を更新。標準候補と比較案を区別し、実装凍結を維持する。

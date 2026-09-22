@@ -47,7 +47,7 @@ function blankNF(env){
          :{mode:'unreg',company:'',product:'',pUnl:'yes',pAmt:'',oUnl:'yes',oAmt:'',ability:''},
     contact:c?{src:'self',pilotId:'',name:c.name,country:c.country,pref:c.pref,addr:c.addr,cc:c.cc,phone:c.phone,email:c.email,other:''}
              :{src:'self',pilotId:'',name:'',country:'日本/Japan',pref:'',addr:'',cc:'日本/Japan(81)',phone:'',email:'',other:''},
-    auto:{},reviewView:'screen',cal:{y:st.getFullYear(),m:st.getMonth()}
+    auto:{},reviewView:'dips',cal:{y:st.getFullYear(),m:st.getMonth()}
   };
 }
 const at=(days,h,m)=>{const d=addDays(TODAY,days);d.setHours(h,m||0,0,0);return d};

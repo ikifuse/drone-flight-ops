@@ -75,3 +75,5 @@ docs/
 
 1. **基準アプリ**: `ikifuse/autel-evo-lite-flight-log`。実装・法令運用判断の参照箇所は `01_ドローン運航記録_設計書/`、`docs/`、`src/`。旧物理構造を新アプリへ無条件にコピーしません。
 2. **非公開調査メモ**: `ikifuse/autel-evo-lite-flight-log-private-notes`。DIPS調査・原本アーカイブ（`01_DIPS2.0_API調査.md`〜`10_ワンエビ原本アーカイブ保存状況.md`）。公開docsに私的URL・認証情報・個人情報を転記しません。
+
+2026-09-22: [画面設計の到達範囲](architecture/presentation/34f_screen-map-and-design-coverage.md#6-モックで比較できる範囲の更新2026-09-22)に、DIPS公式順・重複時停止・旧現場UI継承のモック候補を反映。C1は未着手、各PENDINGは維持。

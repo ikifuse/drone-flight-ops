@@ -301,7 +301,7 @@ function vReview(){
   else{list=groups.filter(k=>NFS[k].dips.length).map(k=>'<div class="sec"><h3>'+esc(nfName(k))+'</h3>'+NFS[k].dips.map(n=>rowHtml(n,k)).join('')+(k==='area'?'<div class="rev"><div class="k">飛行範囲（地図）</div><div class="v">'+esc(geomSummary(S))+'<div class="mapwrap" style="margin-top:6px">'+mapSvg(S,'mini')+'</div></div><div class="e"><button class="chip" data-act="jump" data-s="area">直す</button></div></div>':'')+'</div>').join('')}
   return banner
    +'<div class="sec"><h3>計画名称 <small>DIPSでは最初の項目</small> '+tmpChip+'</h3><div class="row"><input class="in" data-bind="planName" value="'+esc(S.planName)+'"></div><p class="note">名称は自動で付きます（DIPSと同じ形式）。上の計画名からも直せます。</p></div>'
-   +(S.noDips?'<div class="msg info">通報しない飛行のため、日時・保険・連絡先は入力しません。</div>':'<div class="row" style="justify-content:space-between"><b>内容</b><span class="seg"><button class="'+(S.reviewView==='screen'?'on':'')+'" data-act="rv" data-v="screen">画面ごと</button><button class="'+(S.reviewView==='dips'?'on':'')+'" data-act="rv" data-v="dips">DIPS項目順</button></span></div>')
+   +(S.noDips?'<div class="msg info">通報しない飛行のため、日時・保険・連絡先は入力しません。</div>':'<h3>内容</h3>')
    +(S.reviewView==='dips'&&!S.noDips?'<div class="sec">'+list+'<div class="rev"><div class="k">飛行範囲（地図）</div><div class="v">'+esc(geomSummary(S))+'</div><div class="e"><button class="chip" data-act="jump" data-s="area">直す</button></div></div></div><p class="note">「DIPS項目順」は、DIPS Webに入力するときの並びです。</p>':list)
    +(S.noDips?'':'<div class="sec"><h3>カテゴリー</h3><p class="lead" style="margin:0">DIPSが判定して表示します（登録前は空欄）。アプリ側では入力しません。</p></div>');
 }
@@ -343,7 +343,7 @@ function nfMemo(){
 }
 def('nf',{
   t:'新規飛行',st:()=>pageTitle(curPage()),backAct:'nf-back',memo:nfMemo,
-  mock:()=>'<div class="row">'+mockSeg('nf-layout',S.layout||'dips',[['dips','DIPS基準案'],['app','アプリでまとめた案']])+'</div><div class="row"><button class="btn sm" data-act="flow">全体の流れを並べ替える・省く</button><button class="btn sm" data-act="fill">仮データで全部埋めて確認画面へ</button><button class="btn sm" data-act="nf-restart">最初からやり直す</button></div>'
+  mock:()=>'<div class="row">'+mockSeg('rv',S.reviewView,[['dips','確認もDIPS項目順'],['screen','確認を画面ごと']])+'</div><div class="row">'+mockSeg('nf-layout',S.layout||'dips',[['dips','DIPS基準案'],['app','アプリでまとめた案']])+'</div><div class="row"><button class="btn sm" data-act="flow">全体の流れを並べ替える・省く</button><button class="btn sm" data-act="fill">仮データで全部埋めて確認画面へ</button><button class="btn sm" data-act="nf-restart">最初からやり直す</button></div>'
    +'<div class="row"><label>DIPSログイン情報</label>'+mockSeg('dipsstate',A.dips.registered?1:0,[[1,'登録済み'],[0,'未登録']])+'</div><p class="note" style="margin:0">未登録にして、通報の直前で［アプリからDIPSへ送信する］を押すと、その場で登録して元の飛行計画へ戻る流れを確かめられます。</p>',
   chips:()=>S.cur==='start'?'':'<button class="chip" data-act="rename">計画名: '+esc(S.planName)+' ✎</button>'+(S.start?'<i class="chip tmp">始め方: '+esc(S.start.label)+'</i>':'')+(S.noDips?'<i class="chip warn">通報しない飛行</i>':''),
   prog:()=>{if(S.cur==='start')return '';const ps=pages();const idx=ps.findIndex(p=>p.key===curPage().key);return '<div class="prog">'+ps.slice(1).map((p,i)=>'<i class="'+(i+1<idx?'done':i+1===idx?'cur':'')+'"></i>').join('')+'</div>'},

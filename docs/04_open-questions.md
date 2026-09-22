@@ -287,3 +287,13 @@ BAT管理を機体単位の任意にすること、保存を共用機体系ご�
 | PENDING-D-AC-CONTEXT-DISPLAY / -SCREENS | [34g](architecture/presentation/34g_settings-aircraft-management-and-context-display.md)：対象機体の表示位置・固定表示（ホームの現在機体の常時表示を含む）、機体追加・変更・BAT共用グループ設定の画面レイアウト |
 
 現在の運用環境に機体・BATが属すること、環境の表示・切替、ホーム4入口、現在の環境と対象機体が別の情報であること、BAT管理が機体単位の任意であることは、既存の設計ベースラインへの接続（CURRENT-ACCEPTED）。02での登録機体の管理、実機とBAT共用グループの関係、使用許可機体の表示、機体を追加する流れ、紐付けのない機体でのBAT選択制限、各種設定・管理を機体管理の入口とする流れ、対象機体の表示は`CURRENT-PROPOSAL`。
+
+## 2026-09-22 設計モック修正後も維持する未決
+
+- **PENDING-D-NEW-FLIGHT-SCREENS**: [25b §7](architecture/dips-flight-plan/25b_manual-web-mapping.md#7-スマートフォンの標準候補と比較案2026-09-22)のDIPS公式22項目順を標準候補にした。独自まとめ案・selectorの形・地図の入口と詳細操作は比較中。新規のDIPS実画面調査ではない。
+- **PENDING-S7B-DUPLICATE-ADJUST**: 結果画面とリストで通常運航への接続を止めたが、調整後の再開条件・解除方法・状態名は未決（34d §7）。
+- **PENDING-S6-OPERATION-UI**: [35b §12](architecture/operation-recording/35b_normal-operation-and-final-save.md#12-旧現場uiを継承した設計候補2026-09-22)の旧UI継承、操作ゼロ、BAT交換2項目、保存失敗再試行はモックの候補。製品の詳細UI・永続復旧・実通信の保証を確定していない。
+- **PENDING-S5-DIPS-LOGIN-STORAGE**: 保存できる方針は維持。保存先・暗号化・端末／共有・Drive／Sheets・閲覧者・自動ログイン・API認証・削除無効化は未決（34a §8）。
+- **PENDING-U-WORDING**: 空欄表示とサンプル漏れを訂正したが、個々の製品用語を確定しない（34h §10）。
+
+今回のモック・自動テスト・3幅画像の検証はEVIDENCE/EXAMPLEであり、上記をCURRENT-ACCEPTEDへ昇格させない。新規ADRなし、C1開始の許可なし。

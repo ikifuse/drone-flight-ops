@@ -1,6 +1,6 @@
 # DIPS Flight Plan設計群
 
-最終更新: 2026-09-19
+最終更新: 2026-09-22
 
 手動入力支援はC6第一級、API送信はC7 Optional。まず[25 overview](25_overview.md)で通報入力支援原則と境界を読み、変更対象だけへ進む。共通の源からManual／APIを分ける因果は25eに置く。
 
@@ -18,3 +18,5 @@ Geometry一般仕様は[17](../17_map-and-airspace.md)、Entity schemaは[Domain
 上位入口: [architecture README](../README.md) → [docs index](../../00_index.md)。
 
 API電文をどの経路から送るかは[dips-infrastructure](../dips-infrastructure/README.md)、正式認証の確認待ちは[16](../16_security.md)。本領域のMapper／DTO／Snapshot詳細をインフラ正本へ移さない。
+
+2026-09-22: [設計モックへの反映と未決の境界](25b_manual-web-mapping.md)を更新。標準候補と比較案を区別し、実装凍結を維持する。
