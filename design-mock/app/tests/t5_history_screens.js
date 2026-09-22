@@ -95,7 +95,8 @@ suite('全画面の表示',H=>{
   T('参加の確認（共有の状態3種）と、ログインできない場合の画面',()=>{
     H.hash('');window.gotoScreen('join2');for(const v of ['edit','view','none']){A().gAccess=v;H.APP().render();H.scan('参加 '+v)}A().gAccess='edit';
     window.gotoScreen('acct-none');H.scan('acct-none');window.gotoScreen('acct-exists');H.scan('acct-exists');
-    window.gotoScreen('consent');A().ui.consentOk=false;H.APP().ACTS['consent-ok']();H.scan('許可しない');A().ui.consentOk=true;
+    window.gotoScreen('init-reg');A().init.name='テスト氏名';A().ui.consentOk=false;H.APP().ACTS['init-reg-done']();H.scan('許可しない（はじめの登録）');A().ui.consentOk=true;A().ui.consentDenied=false;
+    window.gotoScreen('create-name');A().create.name='テスト団体';A().ui.consentOk=false;H.APP().ACTS['cr-name-next']();H.scan('許可しない（会社団体名）');A().ui.consentOk=true;A().ui.consentDenied=false;
     return true;
   });
 });

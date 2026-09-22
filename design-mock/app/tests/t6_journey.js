@@ -4,16 +4,16 @@ suite('初回利用者の通し',H=>{
   const {T,act,txt,route,set,q,qa,A,E,S}=H;
   H.hash('');
   T('1 最初の画面: 利用登録を始める／ログイン',()=>route()==='boot'&&txt().includes('利用登録を始める'));
-  T('2 利用登録を始める→Google公式の画面→個人の保存場所の作成→はじめの登録',()=>{
-    act('ob-start-new');act('gauth-done');act('consent-ok');
-    return route()==='init-reg'&&E().name==='個人'&&txt().includes('飛行計画の通報に必要な情報を登録します');
+  T('2 利用登録を始める→Googleアカウント選択（うすいシート）→そのまま「はじめの登録」。保存場所はまだない',()=>{
+    act('ob-start-new');act('gauth-done');
+    return route()==='init-reg'&&A().envs.length===0&&txt().includes('Googleアカウント')&&txt().includes('氏名');
   });
   T('3 本人情報とDIPS情報を1画面で登録→ホーム（「個人で使用中」）',()=>{
     set('[data-bind="%name"]','通し氏名','input');set('[data-bind="%addr"]','○○県○○市1-2-3','input');
     set('[data-bind="%phone"]','09000000001','input');set('[data-bind="%email"]','name@example.com','input');
     set('[data-bind="%dipsId"]','1234567890','input');set('[data-bind="%dipsPw"]','Abc-123-xyz','input');
     act('init-reg-done');
-    return route()==='home'&&E().aircraft.length===0&&A().dips.registered&&txt().includes('まだ何も登録されていません')&&q('.hd2').innerText.includes('個人で使用中');
+    return route()==='home'&&E().name==='個人'&&E().aircraft.length===0&&A().dips.registered&&txt().includes('まだ何も登録されていません')&&q('.hd2').innerText.includes('個人で使用中');
   });
   T('4 飛行リスト・履歴・設定が、空でも開ける',()=>{const ok=[];for(const s of ['list','hist','set']){act('go','[data-s='+s+']');ok.push(route()===s);H.APP().back()}return ok.every(Boolean)&&route()==='home'});
   T('5 新規飛行: 足りない設定の案内→［このまま進む］→使うもの',()=>{act('nf-new');if(route()!=='nf-need')return 'need '+route();act('nf-need-go');act('nf-layout','[data-v=app]');act('start-new');return route()==='nf'&&S().cur==='use'});

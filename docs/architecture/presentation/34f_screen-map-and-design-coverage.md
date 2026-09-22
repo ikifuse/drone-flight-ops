@@ -13,7 +13,7 @@
 
 ```mermaid
 flowchart TD
-  FIRST["初回：1画面の入口（利用登録を始める／ログイン） → 個人Googleアカウントの認証 → Google Driveの許可・個人の保存場所の作成 → はじめの登録（本人情報＋DIPS情報を1画面）"] --> HOME
+  FIRST["初回：1画面の入口（利用登録を始める／ログイン） → はじめの登録（Googleアカウントの確認＋氏名［必須］＋任意項目を1画面。Google認証・許可・保存場所の作成は内部処理）"] --> HOME
   HOME --> CO["会社・団体で新しく使い始める／すでに使っている会社・団体に参加する<br>（その会社で使うGoogleアカウントで認証）"] --> HOME
   START["通常の起動・ログイン"] --> ENV["どこで使いますか？（使う先の選択）"] --> HOME["ホーム（4入口）"]
   HOME --> NEED{"飛行に必要な登録がある？"}
@@ -91,4 +91,4 @@ flowchart TD
 
 新規飛行は[25b §7](../dips-flight-plan/25b_manual-web-mapping.md#7-スマートフォンの標準候補と比較案2026-09-22)のDIPS公式22項目順を標準候補とし、独自まとめ案を右側から比較できる。通常運航は[35b §12](../operation-recording/35b_normal-operation-and-final-save.md#12-旧現場uiを継承した設計候補2026-09-22)の旧現場UIを継承した候補へ更新した。どちらもCURRENT-PROPOSALで、PENDING-D-NEW-FLIGHT-SCREENS／PENDING-S6-OPERATION-UIは継続する。
 
-通報結果と飛行リスト双方で、正常受付・重複なし以外は通常運航への接続を止める（[34d §7](34d_dips-accepted-and-plan-content.md#7-通常運航へ進めない結果のモック境界2026-09-22)）。停止後の調整・解除・再開方法は未決。画面の存在と製品仕様の確定を区別し、DIPS情報の保存方式・利用者文言のPENDINGも維持する。初回に何を登録するかは2026-09-23に確定した（[34a §9.3](34a_setup-and-environment-entry.md#93-初回登録は1画面にまとめる)）。残るPENDING-S5-INITIAL-REQUIREDは、はじめの登録の必須項目と、飛行開始時の必須範囲である。
+通報結果と飛行リスト双方で、正常受付・重複なし以外は通常運航への接続を止める（[34d §7](34d_dips-accepted-and-plan-content.md#7-通常運航へ進めない結果のモック境界2026-09-22)）。停止後の調整・解除・再開方法は未決。画面の存在と製品仕様の確定を区別し、DIPS情報の保存方式・利用者文言のPENDINGも維持する。初回に何を登録するかは2026-09-23に確定した（[34a §9.3](34a_setup-and-environment-entry.md#93-初回登録は1画面にまとめる)）。はじめの登録の必須項目（氏名とGoogleアカウントの2つ）は2026-09-23同日中に確定した。残るPENDING-S5-INITIAL-REQUIREDは、飛行開始時の必須範囲だけである。

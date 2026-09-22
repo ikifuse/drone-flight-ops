@@ -53,14 +53,14 @@ suite('オーナーに聞く粒度（右側の設計確認メモ）',H=>{
     H.hash('');const m=memo();
     return m.includes('この画面に、いまオーナー判断が必要な点はありません')&&m.includes('説明は1文ずつ改行し');
   });
-  T('はじめの登録: 必須の範囲だけをオーナー判断として残し、並び・説明の位置はAI標準案にする',()=>{
-    H.hash('');H.act('ob-start-new');H.act('gauth-done');H.act('consent-ok');
+  T('はじめの登録: 必須の範囲（氏名とGoogleアカウントの2つ）は決定済みでオーナー判断を求めない。並び・説明の位置はAI標準案にする',()=>{
+    H.hash('');H.act('ob-start-new');H.act('gauth-done');
     if(H.route()!=='init-reg')return 'route '+H.route();
     const m=memo();
-    return m.includes('オーナー判断が必要な設計論点')&&m.includes('何を必須にするか')&&m.includes('一般的なUI判断')&&m.includes('説明を入力欄の上に置き');
+    return m.includes('この画面に、いまオーナー判断が必要な点はありません')&&m.includes('一般的なUI判断')&&m.includes('なぜ登録するのかの説明を項目のすぐ上に置いている');
   });
   T('必須登録・保存・安全に関わる点は、オーナー判断として残っている',()=>{
     const t=allAsk().map(r=>r[1]).join(' ／ ');
-    return ['最低限どの項目を登録させるか','何を必須にするか','記録として残すか','安全性','記録として残した値を書き換えられる'].every(k=>t.includes(k))||t;
+    return ['最低限どの項目を登録させるか','記録として残すか','安全性','記録として残した値を書き換えられる'].every(k=>t.includes(k))||t;
   });
 });
