@@ -85,10 +85,10 @@ suite('設定・登録',H=>{
   T('DIPSへの通報方法: 送信できる／できないで案内が変わる（右側の切替）',()=>{
     H.APP().root('home');act('go','[data-s=set]');act('go','[data-s=set-dips]');const a=txt().includes('いま、アプリからDIPSへ送信できます');act('api','[data-v="0"]');const b=txt().includes('いまは、アプリからDIPSへ送信できません')&&txt().includes('DIPS Webで通報する');act('api','[data-v="1"]');return a&&b;
   });
-  T('使う場所が1つのときは、切替の操作を出さない（場所の名前だけ出す）',()=>{
+  T('使う場所が1つでも現在地ボタンがあり、ホーム本体には会社追加ボタンを出さない',()=>{
     H.APP().root('home');
-    return A().envs.length===1&&!q('.phone [data-act=env]')&&q('.hd2').innerText.includes('個人で使用中')
-      &&!!q('.phone [data-act=ob-co-new]')&&!!q('.phone [data-act=ob-co-join]');
+    return A().envs.length===1&&!!q('.phone [data-act=env]')&&q('.hd2').innerText.includes('個人で使用中')
+      &&!q('.phone [data-act=ob-co-new]')&&!q('.phone [data-act=ob-co-join]');
   });
   T('各種設定・管理からも、使う場所の追加・切り替えへ進める',()=>{
     act('go','[data-s=set]');act('go','[data-s=set-env]');

@@ -1,6 +1,6 @@
 # Presentation設計の入口
 
-最終更新: 2026-09-22\
+最終更新: 2026-09-23\
 範囲: Step 1の10項目規約、Step 2の人物・環境・権限への接続、Step 5の§3と§7の通常画面・共有リスト限定部分、Step 7dの飛行履歴・出力、2026-09-21の利用者向け表示名・文言と内部設計用語の分離、2026-09-22の設計確認用モックの左右の役割・DIPSログイン情報の登録方針。C1未着手。
 
 | 正本 | 責任 |
@@ -24,3 +24,5 @@
 Step 6で通常運航の10項目画面仕様を[35b](../operation-recording/35b_normal-operation-and-final-save.md)へ追加した。34dから点検以降へ接続し、Drive全体は[37](../drive-structure/37_environment-storage-responsibilities.md)が正本。上の「対象外」はStep 5の確認範囲を表す。Step 7dで［飛行履歴・出力］の画面仕様を[34e](34e_history-and-output.md)へ追加した。
 
 2026-09-22: [設計モックへの反映と未決の境界](34f_screen-map-and-design-coverage.md)を更新。標準候補と比較案を区別し、実装凍結を維持する。
+
+2026-09-23の動くモック同期：初回・環境入口は34a §9、通報の疑似成功は34d §8、運航完了は35b §13へ配置した。操作証拠と未決の境界は[34f §7](34f_screen-map-and-design-coverage.md#7-動くモックと正式docsの同期監査2026-09-23)。

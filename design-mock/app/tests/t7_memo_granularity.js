@@ -51,10 +51,10 @@ suite('オーナーに聞く粒度（右側の設計確認メモ）',H=>{
   });
   T('最初の画面は、オーナー確認待ちを出さず、AI側の標準案を出す',()=>{
     H.hash('');const m=memo();
-    return m.includes('この画面に、いまオーナー判断が必要な点はありません')&&m.includes('説明は1文ずつ改行し');
+    return m.includes('この画面に、いまオーナー判断が必要な点はありません')&&m.includes('Googleアカウントの表示・変更を画面の最上部に置き');
   });
   T('はじめの登録: 必須の範囲（氏名とGoogleアカウントの2つ）は決定済みでオーナー判断を求めない。並び・説明の位置はAI標準案にする',()=>{
-    H.hash('');H.act('ob-start-new');H.act('gauth-done');
+    H.hash('');H.act('init-reg-gaccount');H.act('gauth-change');
     if(H.route()!=='init-reg')return 'route '+H.route();
     const m=memo();
     return m.includes('この画面に、いまオーナー判断が必要な点はありません')&&m.includes('一般的なUI判断')&&m.includes('なぜ登録するのかの説明を項目のすぐ上に置いている');

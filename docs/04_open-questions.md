@@ -1,6 +1,6 @@
 # 未確認事項と将来の設計判断論点
 
-最終更新: 2026-09-22
+最終更新: 2026-09-23
 プロジェクト: `drone-flight-ops`
 
 
@@ -131,7 +131,7 @@
 
 | 対象 | 詳細正本 |
 |---|---|
-| PENDING-S2-IDENTITY / PENDING-S2-ENVIRONMENT-UI / VERIFY-S2-IDENTITY-EVIDENCE | [31a](architecture/identity-and-access/31a_person-account-and-environment.md)：組織・環境・ID・資格列・切替UI・試作確認 |
+| PENDING-S2-IDENTITY / PENDING-S2-ENVIRONMENT-UI / VERIFY-S2-IDENTITY-EVIDENCE | [31a](architecture/identity-and-access/31a_person-account-and-environment.md)：組織・環境・ID・資格列・起動／復帰／失効時の切替詳細・試作確認（ホームの環境ボタンとシートは34a §9.6で確定） |
 | PENDING-S2-ACCESS-DETAIL / VERIFY-S2-ACCESS-EVIDENCE | [31b](architecture/identity-and-access/31b_roles-and-access-control.md)：未定義の複合役割・機能詳細と実共有確認 |
 | PENDING-S2-ACTOR-SCHEMA/UI / VERIFY-S2-ACTOR-EVIDENCE・代理通報範囲 | [31c](architecture/identity-and-access/31c_operational-actors.md)：担当の保持先・別人点検UI・観測証拠。基準C1 schema未確定へ接続 |
 | PENDING-S2-MEMBERSHIP / PENDING-S2-OWNERSHIP | [31d](architecture/identity-and-access/31d_membership-lifecycle.md)：離任実行権限・UI・offline・履歴列・再所属形式・会社所有 |
@@ -165,7 +165,7 @@
 | PENDING-S5-DIPS-LOGIN-STORAGE | [34a §8](architecture/presentation/34a_setup-and-environment-entry.md#8-dipsログイン情報の登録と初回設定の候補2026-09-22)・[§9.3](architecture/presentation/34a_setup-and-environment-entry.md#93-初回登録は1画面にまとめる)・[16 §10](architecture/16_security.md#10-利用者自身のdipsログイン情報2026-09-22方針のみ)：DIPSログインID・パスワードの保存先・暗号化方式・端末ごと／共有・Google Drive／Sheetsでの持ち方・複数人利用時の閲覧・自動ログインに使うか・API認証との関係・DIPS公式ログイン画面への自動入力の可否・トークンの具体実装。**方針は「アプリに登録・保存する」「初回登録で登録する」（オーナーの指示）で、AIの判断で変えない**。詳細は未決 |
 | PENDING-S2-OWNERSHIP（会社・団体環境の所有） | [31d §4](architecture/identity-and-access/31d_membership-lifecycle.md#4-組織所有と事業継続の未確定境界)・[34a §9.4](architecture/presentation/34a_setup-and-environment-entry.md#94-会社団体はホームからその会社で使うgoogleアカウントで追加する)：2026-09-23に、会社・団体環境は**その会社で使うGoogle／Workspaceアカウント側の保存領域へ作る**ことを確定した。**My DriveかShared Driveか、所有権の継承方式、法人での所有主体は未決のまま** |
 | PENDING-WEB-CONTACT-SOURCE / VERIFY-WEB-CONTACT-KANA | [25b §1.1](architecture/dips-flight-plan/25b_manual-web-mapping.md#11-通報時に不足している登録情報を補う受け皿2026-09-23)：環境に登録された連絡先と人物情報の重複・優先関係（どちらを正とするか）は未決。フリガナがDIPS側で必要かは未確認のため、DIPSの必須としては扱わず、人物基本情報として同じ受け皿で補う。Manual経路（DIPS Webで通報する）側で不足をどう扱うかも未決 |
-| PENDING-S5-ENTRY-SCREENS | [34a §7.5](architecture/presentation/34a_setup-and-environment-entry.md#7-利用者向けの表示名と初回導線の訂正2026-09-21)：入口の各画面（1画面の入口［利用登録を始める］／［ログイン］、はじめの登録、会社・団体の追加、どこで使いますか？）ごとの10項目の記録。2026-09-22に説明専用画面を廃止して入口を1画面へまとめ（[§7.6](architecture/presentation/34a_setup-and-environment-entry.md#76-初回の入口を1画面にまとめた訂正2026-09-22)）、2026-09-23に初回の「使い方の選択」を廃止して初回登録1画面とホームからの会社・団体追加へ改めた（[§9](architecture/presentation/34a_setup-and-environment-entry.md#9-初回は個人環境から始め初回登録を1画面にまとめる2026-09-23)）。**画面の構成そのものは確定済みで、残る未決は10項目の記録**。ログイン時に登録済みかを判定する方法はPENDING-S5-ROOT-DISCOVERYに依存 |
+| PENDING-S5-ENTRY-SCREENS | [34a §7.5・§9](architecture/presentation/34a_setup-and-environment-entry.md#75-未確定)：現行のはじめの登録・会社追加／参加・通常起動の選択の未記載10項目詳細。二択入口・独立したGoogle選択／Drive許可画面はHISTORICALで、復活させる意味ではない。初回順・必須2項目・ホームの環境シートは確定済み。root再発見・再認証の詳細はPENDING-S5-ROOT-DISCOVERYに残す |
 | PENDING-U-WORDING | [34h §8](architecture/presentation/34h_user-facing-wording-and-terminology.md#8-未確定と確定してはならないこと)：利用者向けの表示名・文言の最終形（オーナー指示の例と、[§10](architecture/presentation/34h_user-facing-wording-and-terminology.md#10-dipsログイン情報の表示案2026-09-22)のDIPSログイン情報の表示を含め案）。「保存・同期」の言い換え、「離任」の表記、BATを共用する機体のグループの名称など |
 | VERIFY-S5-SETUP-EVIDENCE / GOOGLE-CONTRACT | 34a：旧資料・実Driveとの対応、Google認証・認可・scopeの実装時確認 |
 | PENDING-S5-HOME-DETAIL | [34b](architecture/presentation/34b_home-and-navigation.md)：設定管理分類、配置・権限／offline表現 |
@@ -299,3 +299,9 @@ BAT管理を機体単位の任意にすること、保存を共用機体系ご�
 - **PENDING-U-WORDING**: 空欄表示とサンプル漏れを訂正したが、個々の製品用語を確定しない（34h §10）。
 
 今回のモック・自動テスト・3幅画像の検証はEVIDENCE/EXAMPLEであり、上記をCURRENT-ACCEPTEDへ昇格させない。新規ADRなし、C1開始の許可なし。
+
+## 2026-09-23 動くモック同期後の未決境界
+
+初回二択入口はHISTORICAL。ホームの［〜で使用中］ボタンと環境シートは単一環境でも有効と確定した（[34a §9.6](architecture/presentation/34a_setup-and-environment-entry.md#96-複数環境と切替)）。PENDING-S2-ENVIRONMENT-UIは削除せず、通常起動時の選択・復帰、未保存作業、offline・権限失効時の詳細へ限定する。
+
+機体・操縦者の不足登録から同じ作業へ戻れることは、飛行開始時の全必須条件を確定しない（PENDING-S5-INITIAL-REQUIRED）。運航完了と保存済み表示まで接続しても、PENDING-S6-OPERATION-UIの詳細復旧・部分成功UI、本番schema・保存列・KML配置／命名・PDF詳細は維持する。DIPS／Driveの実API、credential暗号化・token、PENDING-S2-OWNERSHIP、PENDING-S5-ROOT-DISCOVERY、会社参加方式、VERIFY-WEB-CONTACT-KANA、VERIFY-S4-API-CONTRACT、VERIFY-S5-GOOGLE-CONTRACTを解消しない。主フローの実物証拠と採用範囲は[34f §7](architecture/presentation/34f_screen-map-and-design-coverage.md#7-動くモックと正式docsの同期監査2026-09-23)。

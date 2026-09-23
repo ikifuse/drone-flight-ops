@@ -1,6 +1,6 @@
 'use strict';
 /* ===================================================================
-   はじめに（利用登録を始める／ログイン）／はじめの登録（Googleアカウント・本人情報・DIPS情報を1画面）／
+   はじめの登録（Googleアカウント・本人情報・DIPS情報を1画面）／
    会社・団体で新しく使い始める・すでに使っている会社・団体に参加する（ホームから）／使う場所の選択／自分の情報
    設計の出典: 34a §9（2026-09-23。§9.3を同日中に更新：必須は氏名とGoogleアカウントの2つだけ、残りは任意。
    個人環境の作成・Google認証／同意は、画面を分けず［登録してホームへ］の内部処理として扱う）／
@@ -24,7 +24,7 @@ const envAccount=E=>(E&&E.gaccount)||'';
 function switchEnv(id){A.cur=id;resetDrafts();root('home')}
 function envRole(E){const p=E&&E.people.find(x=>x.id===E.meId);return p?(p.roles.length?p.roles.join('・'):'まだ決まっていません（管理者が決めます）'):'—'}
 /* ログイン中のGoogleアカウントの表示。実際のアプリでは、利用者のメールアドレスが入る場所（ここでは薄い文字の例） */
-const acctMail=()=>'<span class="ph">name@example.com</span>';
+const acctMail=()=>A.account?'<span class="ph">'+esc(({new:'name',one:'personal',many:'member'}[A.account.id]||'name')+'@example.com')+'</span>':'<span>未選択</span>';
 const bigCard=(act,title,sub,attrs)=>'<button class="card" style="width:100%;margin-bottom:8px" data-act="'+act+'" '+(attrs||'')+'><b>'+title+'</b>'+(sub?'<span>'+sub+'</span>':'')+'</button>';
 const isCo=()=>A.entry==='co-new'||A.entry==='co-join';
 
@@ -38,48 +38,6 @@ function gauthSheet(mode){
   return '<h3>'+esc(title)+'</h3><p class="note">実際の認証画面はGoogleが表示します。'+note+'</p>'
    +'<div class="row"><button class="btn" data-act="close">キャンセル</button><button class="btn primary" data-act="'+(mode==='change'?'gauth-change':'gauth-done')+'">次へ</button></div>';
 }
-/* 右側の切替（Google認証のあとの状態）。boot の確認用操作として出す */
-function gstateMock(){
-  if(isCo())return '<p class="note" style="margin:0">会社・団体で使うGoogleアカウントの認証です。左のシートの［次へ］で、認証が終わってアプリに戻った状態を作ります。'
-   +'この状態で使う、架空のテスト用アカウント: <span class="mono">'+esc(CO_ACCOUNT.email)+'</span>（個人用とは別のアカウント）。</p>'
-   +'<p class="note" style="margin:6px 0 0">'+(A.entry==='co-new'?'このあと、会社・団体の名前を入れると、その場で許可・作成まで内部処理し、そのままホームへ進みます。':'このあと、その会社・団体のアカウントに共有されている既存の保存場所から選んで参加します。新しい保存場所は作りません。')+'</p>';
-  const acc=ACCOUNTS.find(a=>a.id===A.ui.gState)||ACCOUNTS[0];const entry=A.entry==='login'?'ログイン':'利用登録を始める';
-  const out={new:{new:'「はじめの登録」へ',login:'「ログインできませんでした」へ'},one:{new:'「すでに登録されています」へ',login:'そのままホームへ（使う場所が1つ）'},many:{new:'「すでに登録されています」へ',login:'「どこで使いますか？」へ（使う場所が複数）'}};
-  const key=A.entry==='login'?'login':'new';
-  return '<p class="note" style="margin:0 0 6px">左のシートの［次へ］は、Googleの認証が終わってアプリに戻った状態を作るための、モック上の操作です。認証のあとの状態を選んでから押します。</p>'
-   +'<div class="row"><label>認証のあとの状態</label>'+mockSeg('gstate',A.ui.gState,[['new','未登録'],['one','登録済み・個人だけ'],['many','登録済み・個人＋会社']])+'</div>'
-   +'<p class="note" style="margin:0 0 4px">この状態で使う、架空のテスト用Googleアカウント: <span class="mono">'+esc(acc.email)+'</span></p>'
-   +'<p class="note" style="margin:0">いまの入口: ［'+entry+'］ → この状態では、'+out[A.ui.gState][key]+'。</p>'
-   +'<table style="margin-top:6px"><tr><th>状態</th><th>［利用登録を始める］から</th><th>［ログイン］から</th></tr>'
-   +'<tr><td>未登録</td><td>はじめの登録</td><td>ログインできませんでした</td></tr><tr><td>登録済み・個人だけ</td><td>すでに登録されています</td><td>ホーム</td></tr><tr><td>登録済み・個人＋会社</td><td>すでに登録されています</td><td>どこで使いますか？</td></tr></table>';
-}
-
-/* ---------- 最初の画面 ---------- */
-def('boot',{t:'はじめに',st:'',back:false,env:false,
-  goal:'完全な初回利用者が最初に見る画面。はじめて使う方は［利用登録を始める］、すでに登録済みの方は［ログイン］。説明だけの画面を別に置かず、この1画面にまとめ、それぞれのボタンの下に短い説明を置く。どちらを押しても、次はGoogleのアカウント選択（うすいシート）を経て、その結果に応じた画面へ進む。',
-  doc:'34a §7.2・§7.6（2026-09-22のオーナーの指示で、説明だけの画面を廃止し、初回の入口を1画面にまとめた）。2026-09-23に、Googleのアカウント選択も独立した中継画面にせず、うすいシートに変えた（§9.3改訂）。内部では、この画面は未ログインの入口。認証済みを仮定した最初の画面、［新しい運用環境を作成］／［既存の運用環境に参加］の二択、説明だけの中間画面は、経緯（HISTORICAL）として34a §1・§7.6に残っている。',state:'proposal',
-  tmp:['ボタンの文言（利用登録を始める／ログイン）と、その下の説明は、オーナーが2026-09-22に指示した文言そのもの（最終の製品用語ではない。PENDING-U-WORDING）','ログイン時に登録済みかを判定する方法は、Driveの保存場所の再発見方式に依存して未確定（PENDING-S5-ROOT-DISCOVERY）。アプリ独自の会員データベースを持つ決定ではない','「アカウント」という語と「利用登録」という語の使い分け（この画面のあとに出る「アカウントができました」など）は、今回の範囲外で未決'],
-  ask:[],
-  ui:['説明は1文ずつ改行し、それぞれのボタンのすぐ下に置いている','はじめて使う方を上、すでに登録済みの方を下に置き、色の付いた主ボタンは［利用登録を始める］だけにしている'],
-  mock:gstateMock,
-  body:()=>'<div class="entry"><h2>はじめて使う方</h2><button class="btn primary wide" style="padding:16px 10px;font-size:16px" data-act="ob-start-new">利用登録を始める</button>'
-   +'<p class="note">このアプリの利用登録を始めます。<br>お使いのGoogleアカウントで続けます。<br>新しいGoogleアカウントを作る必要はありません。<br>Googleのパスワードをこのアプリに入力することはありません。</p>'
-   +'<h2 style="margin-top:26px">すでに登録済みの方</h2><button class="btn wide" style="padding:16px 10px;font-size:16px" data-act="ob-start-login">ログイン</button>'
-   +'<p class="note">登録済みのGoogleアカウントで続けます。</p></div>'
-});
-def('acct-exists',{t:'すでに登録されています',st:'',env:false,back:false,
-  goal:'利用登録を始めようとしたGoogleアカウントが、すでに登録済みだったときの案内。',
-  doc:'34a §7.2（案）。二重にアカウントを作らせない。',state:'proposal',tmp:['この分岐の文言は案。右側の切替（Google認証のあとの状態）を「登録済み」にして、［利用登録を始める］から進むと出る'],ask:[],ui:['問題→いまの状態→次の操作の順で1画面に出し、［ログインへ］を色の付いた主ボタンにしている'],
-  body:()=>'<div class="msg warn big">すでに登録されています</div><p class="lead2">このGoogleアカウントは、すでにこのアプリで使っています。あらためて利用登録をする必要はありません。［ログイン］から進んでください。</p>',
-  foot:()=>'<button class="btn" data-act="mk-reset">最初に戻る</button><button class="btn primary" data-act="ob-to-login">ログインへ</button>'
-});
-def('acct-none',{t:'ログインできませんでした',st:'',env:false,back:false,
-  goal:'登録がないGoogleアカウントでログインしたときの案内。［利用登録を始める］へ誘導する。',
-  doc:'34a §7.2（案）。問題／データ保護状態／次の操作の型（34h §6）。',state:'proposal',tmp:['この分岐の文言は案。右側の切替（Google認証のあとの状態）を「未登録」にして、［ログイン］から進むと出る'],ask:[],ui:['問題→いまの状態→次の操作の順で出し、［利用登録を始める］を色の付いた主ボタンにしている'],
-  body:()=>'<div class="msg ng big">ログインできませんでした</div><p class="lead2">このGoogleアカウントでは、まだこのアプリを使い始めていません。まだ何も登録されていません。</p><p class="note">はじめて使う場合は、［利用登録を始める］から始めてください。</p>',
-  foot:()=>'<button class="btn" data-act="mk-reset">最初に戻る</button><button class="btn primary" data-act="ob-to-new">利用登録を始める</button>'
-});
-
 /* ---------- 初回登録（Googleアカウント・本人情報・DIPSのログイン情報を1画面。2026-09-23）
    必須は氏名とGoogleアカウントの2つだけ。残りは任意で、未登録でもホームへ進める（同日中に確定・PENDING-S5-INITIAL-REQUIREDから除外）。
    個人の保存場所の作成・Google Driveの許可は、画面を分けず［登録してホームへ］の内部処理で行う。 ---------- */
@@ -92,9 +50,9 @@ def('init-reg',{t:'はじめの登録',st:'',env:false,back:false,
   enter:()=>{A.init={name:'',kana:'',addr:'',phone:'',email:'',dipsId:'',dipsPw:''};A.ui.pwShow=false;A.ui.consentDenied=false},
   body:()=>{
     const i=A.init||(A.init={name:'',kana:'',addr:'',phone:'',email:'',dipsId:'',dipsPw:''});const show=!!A.ui.pwShow;const denied=A.ui.consentDenied;
-    return '<div class="sec"><h3>Googleアカウント</h3><div class="row" style="justify-content:space-between;align-items:center">'+acctMail()+'<button class="btn sm" data-act="init-reg-gaccount">変更する</button></div></div>'
+    return '<div class="sec"><h3>Googleアカウント【必須】</h3><p class="note">現在選択中のGoogleアカウント</p><div class="row" style="justify-content:space-between;align-items:center">'+acctMail()+'<button class="btn sm" data-act="init-reg-gaccount">'+(A.account?'変更する':'Googleアカウントを選択')+'</button></div></div>'
      +(denied?'<div class="msg ng"><b>保存場所を作れませんでした。</b>Google Driveの使用が許可されなかったためです。まだ何も作っていません。もう一度［登録してホームへ］を押してください。</div>':'')
-     +'<div class="fld"><label>氏名</label><input class="in" data-bind="%name" value="'+esc(i.name)+'" placeholder="例：山田 太郎"></div>'
+     +'<div class="fld"><label>氏名【必須】</label><input class="in" data-bind="%name" value="'+esc(i.name)+'" placeholder="例：山田 太郎"></div>'
      +'<p class="note">DIPSは国土交通省の飛行計画通報の仕組みで、通報には氏名・住所・電話番号・メールアドレスなどの連絡先が必要です。いま入力しなくても進められますが、DIPSへ通報するときに未登録の項目は入力が必要になります。一度登録した情報は、以後の通報で再利用します。</p>'
      +'<div class="sec"><h3>連絡先（任意）</h3>'
      +'<div class="fld"><label>フリガナ</label><input class="in" data-bind="%kana" value="'+esc(i.kana)+'" placeholder="例：ヤマダ タロウ"></div>'
@@ -209,14 +167,14 @@ function whereCards(){
 def('where',{t:'どこで使いますか？',st:'',env:false,back:false,
   goal:'個人用と会社用など、使う場所が複数あるとき、今回使う場所を取り違えずに選ぶ。',
   doc:'34a §5・§7.3／31a §4。前回使ったものを初期の候補にする方向はCURRENT-PROPOSAL。専用の選択画面にするか、ホームの中に置くかは未確定（PENDING-S2-ENVIRONMENT-UI）。使う場所が1つだけなら、この画面を出さずそのままホームへ進める。',state:'proposal',
-  tmp:['「どこで使いますか？」はオーナー指示の例。カードには個人／会社・団体の実際の名称を出す。カードの名称・役割は仮データ','専用の画面にするか、ホームの中に置くかは未決（PENDING-S2-ENVIRONMENT-UI）。意味は変わらないため、いまは専用の画面とホームの［切り替える］の両方を確認できるようにしている'],
+  tmp:['「どこで使いますか？」はオーナー指示の例。カードには個人／会社・団体の実際の名称を出す。カードの名称・役割は仮データ','専用の画面にするか、ホームの中に置くかは未決（PENDING-S2-ENVIRONMENT-UI）。意味は変わらないため、いまは専用の画面とホームの［〜で使用中］の両方を確認できるようにしている'],
   ask:['前回使った場所を自動で開くか、毎回選ばせるか（記録の保存先を取り違えないため）'],
   ui:['カードは実際の名称で並べ、前回使った場所に印を付けている'],
   body:()=>'<p class="lead2">今回使う場所を選んでください。</p>'+whereCards()
    +'<div class="row" style="margin-top:12px"><button class="btn sm" data-act="ob-co-new">＋ 会社・団体で新しく使い始める</button><button class="btn sm" data-act="ob-co-join">すでに使っている会社・団体に参加する</button></div>'
 });
 function envSwitchSheet(){
-  return '<h3>どこで使いますか？</h3><p class="note">切り替えると、入力途中の内容は破棄され、選んだ場所のホームへ移ります。</p>'+whereCards()
+  return '<h3>どこで使いますか？</h3><p>現在の利用先：<b>'+esc(envLabel(ENV()))+'で使用中</b></p>'+(A.envs.length>1?'<p class="note">切り替えると、入力途中の内容は破棄され、選んだ場所のホームへ移ります。</p>'+whereCards():'')
    +'<div class="row"><button class="btn sm" data-act="ob-co-new">＋ 会社・団体で新しく使い始める</button><button class="btn sm" data-act="ob-co-join">すでに使っている会社・団体に参加する</button></div>'
    +'<div class="row"><button class="btn" data-act="close">閉じる</button></div>';
 }
@@ -238,28 +196,16 @@ function tryCreateEnv(){
   return E;
 }
 Object.assign(ACTS,{
-  'ob-start-new':()=>{A.entry='new';openSheet(()=>gauthSheet())},
-  'ob-start-login':()=>{A.entry='login';openSheet(()=>gauthSheet())},
-  'ob-to-login':()=>{A.entry='login';rep('boot');openSheet(()=>gauthSheet())},
-  'ob-to-new':()=>{A.entry='new';rep('boot');openSheet(()=>gauthSheet())},
   /* Google認証が終わって戻った状態。どの状態かは、右側の切替（Google認証のあと）で選ぶ */
   'gauth-done':()=>{
     A.modal=null;
     /* 会社・団体で使うGoogleアカウントでの認証（ホームから追加するとき） */
     if(A.entry==='co-new'){A.coAccount=CO_ACCOUNT;A.create={kind:'company',name:'',account:CO_ACCOUNT.email};A.ui.consentDenied=false;nav('create-name');return}
     if(A.entry==='co-join'){A.coAccount=CO_ACCOUNT;nav('join1');return}
-    const acc=ACCOUNTS.find(a=>a.id===A.ui.gState)||ACCOUNTS[0];A.account=acc;
-    if(A.entry!=='login'){
-      if(acc.id==='new'){A.create={kind:'personal',name:'個人'};A.ui.consentDenied=false;nav('init-reg')}else nav('acct-exists');
-      return;
-    }
-    if(acc.id==='new'){nav('acct-none');return}
-    A.envs=accountEnvs(acc);afterLoginRegistered();
-    if(A.envs.length===1){A.cur=A.envs[0].id;resetDrafts();root('home');toast(envLabel(A.envs[0])+'で使用中です')}
-    else{A.cur=null;root('where')}
+    ACTS['gauth-change']();
   },
-  /* はじめの登録の中から、Googleアカウントを選び直す（作成前の変更。exists／none判定はやり直さない） */
-  'init-reg-gaccount':()=>openSheet(()=>gauthSheet('change')),
+  /* はじめの登録内で選択し、入力内容を保って同じ画面に戻る */
+  'init-reg-gaccount':()=>{A.entry='new';openSheet(()=>gauthSheet('change'))},
   'gauth-change':()=>{const acc=ACCOUNTS.find(a=>a.id===A.ui.gState)||ACCOUNTS[0];A.account=acc;A.modal=null;render()},
   /* ホームから会社・団体を追加する。どちらも、その会社・団体で使うGoogleアカウントでの認証から始める */
   'ob-co-new':()=>{A.modal=null;A.entry='co-new';A.create={kind:'company',name:''};openSheet(()=>gauthSheet())},
@@ -308,9 +254,9 @@ Object.assign(ACTS,{
     A.init=null;back();toast('自分の情報を保存しました');
   },
   'ob-join-pick':t=>{
-    const j=JOINABLE.find(x=>x.id===t.dataset.id);A.join.pick=j;A.join.env=sampleCompanyEnv(j.name,j.kind,null);nav('join2');
+    const j=JOINABLE.find(x=>x.id===t.dataset.id);A.join.pick=j;A.join.env=A.envs.find(e=>e.joinSource===j.id)||Object.assign(sampleCompanyEnv(j.name,j.kind,null),{joinSource:j.id});nav('join2');
   },
-  'ob-join-code':()=>{const j=JOINABLE[0];A.join.pick=j;A.join.env=sampleCompanyEnv(j.name,j.kind,null);nav('join2')},
+  'ob-join-code':()=>{const j=JOINABLE[0];A.join.pick=j;A.join.env=A.envs.find(e=>e.joinSource===j.id)||Object.assign(sampleCompanyEnv(j.name,j.kind,null),{joinSource:j.id});nav('join2')},
   'ob-join-go':()=>{if(A.gAccess==='none')return;nav('join3')},
   'ob-join-me':t=>{A.join.me=t.dataset.id;render()},
   'ob-join-done':()=>{
@@ -318,7 +264,7 @@ Object.assign(ACTS,{
     e.gaccount=mail;
     if(m==='__new'){const p=newPerson(A.join.newName||'',[],{account:mail});e.people.push(p);e.meId=p.id}
     else{e.meId=m;const p=e.people.find(x=>x.id===m);if(p&&!p.account)p.account=mail}
-    A.envs.unshift(e);A.cur=e.id;A.join=null;A.stack=[];resetDrafts();root('home');
+    if(!A.envs.some(x=>x.id===e.id))A.envs.unshift(e);A.cur=e.id;A.join=null;A.stack=[];resetDrafts();root('home');
   },
   'env':()=>openSheet(envSwitchSheet),
   'env-pick':t=>{A.modal=null;switchEnv(t.dataset.id);toast(envLabel(ENV())+'で使用中です。入力途中の内容は破棄しました')}

@@ -1,7 +1,7 @@
 'use strict';
 /* 初回導線。左側（アプリの画面）だけを見て、完全な初回利用者が最後まで進めるかを確かめる。
    Googleのアカウント選択は、独立した画面ではなく「うすいシート」として重なるだけなので、
-   route()はそのまま（boot／home など）で、シートの有無は q('.phone .sheet') で確かめる（2026-09-23改訂）。
+   route()はそのまま（init-reg／home など）で、シートの有無は q('.phone .sheet') で確かめる（2026-09-23改訂）。
    右側（設計確認）の切替は、状態を変えて試すときだけ使う。 */
 suite('はじめて使う（左側だけで進める）',H=>{
   const {T,act,actL,setL,txt,route,q,qa,A,E,all,memo}=H;
@@ -12,29 +12,23 @@ suite('はじめて使う（左側だけで進める）',H=>{
 
   /* ---- 完全な初回利用者: 左側の操作だけで、ホームまで ---- */
   start();
-  T('最初の画面: 「利用登録を始める」と「ログイン」の2つだけ。認証済みを前提にしない',()=>route()==='boot'&&txt().includes('はじめて使う方')&&txt().includes('利用登録を始める')&&txt().includes('すでに登録済みの方')&&txt().includes('ログイン')&&!txt().includes('認証済み')&&!q('.hd2')&&qa('.phone [data-act]').length===2);
-  T('最初の画面: それぞれのボタンの下に説明がある（説明だけの画面を別に置かない）',()=>{
-    const t=txt();
-    return t.includes('このアプリの利用登録を始めます')&&t.includes('お使いのGoogleアカウントで続けます')&&t.includes('新しいGoogleアカウントを作る必要はありません')&&t.includes('Googleのパスワードをこのアプリに入力することはありません')&&t.includes('登録済みのGoogleアカウントで続けます');
+  T('初回起動は未認証のまま「はじめの登録」を直接表示',()=>route()==='init-reg'&&q('.ttl').textContent.includes('はじめの登録')&&!A().account&&txt().includes('未選択'));
+  T('利用登録を始める／ログインの入口が左画面にない',()=>!qa('.phone button').some(b=>/利用登録を始める|ログイン/.test(b.textContent)));
+  T('Google未選択では氏名があってもホームへ進めない',()=>{
+    setL('[data-bind="%name"]','入力中の氏名');actL('init-reg-done');return route()==='init-reg'&&!A().envs.length&&toast().includes('Googleアカウントを選択してください');
   });
-  T('最初の画面の左側に、サンプル・確認用の文字がない',()=>!/サンプル|確認用|テスト|設計|モック/.test(all()));
-  T('「利用登録を始める」: 独立した中継画面を挟まず、Googleのアカウント選択がうすいシートで重なるだけ。入力欄も一覧もない',()=>{
-    actL('ob-start-new');
-    return route()==='boot'&&sheetText().includes('Googleアカウントを選択します')&&sheetText().includes('実際の認証画面はGoogleが表示します')&&!q('.phone .sheet input')&&!/@/.test(all())&&!/花子|太郎/.test(all());
+  T('登録欄からだけGoogle選択シートを開き、キャンセルしても登録欄を保持',()=>{
+    actL('init-reg-gaccount');const ok=route()==='init-reg'&&sheetText().includes('Googleアカウントを選択します');actL('close');return ok&&!A().account&&q('.phone [data-bind="%name"]').value==='入力中の氏名';
   });
-  T('Googleの画面の状態（未登録・登録済み）は、右側の切替で選ぶ。テスト用アカウントは右側にだけある',()=>{
-    const m=memo();return qa('#memo [data-act=gstate]').length>=3&&m.includes('架空のテスト用Googleアカウント')&&m.includes('test.new@example.invalid')&&!all().includes('test.new@example.invalid');
-  });
-  T('認証のあと（未登録）→ 使い方を選ぶ画面もGoogle Driveの許可の画面も挟まず、直接「はじめの登録」へ。保存場所はまだ作られていない',()=>{
-    actL('gauth-done');
-    return route()==='init-reg'&&A().envs.length===0&&!txt().includes('個人で使う')&&!txt().includes('アカウントができました')&&!txt().includes('準備ができました')&&!!q('.phone [data-act=init-reg-gaccount]');
+  T('Google選択後も同じ登録画面に戻り、入力中の氏名を保持',()=>{
+    actL('init-reg-gaccount');actL('gauth-change');const ok=route()==='init-reg'&&!!A().account&&!q('.phone .sheet')&&q('.phone [data-bind="%name"]').value==='入力中の氏名'&&qa('.phone [data-act=init-reg-gaccount]').length===1&&txt().includes('name@example.com');setL('[data-bind="%name"]','');return ok;
   });
   T('はじめの登録: Googleアカウントの表示・変更が画面の最上部にある',()=>{
     return q('.phone h3').textContent.includes('Googleアカウント')&&!!q('.phone [data-act=init-reg-gaccount]')&&q('.phone [data-act=init-reg-gaccount]').textContent.includes('変更する');
   });
-  T('はじめの登録: 必須は氏名だけ。フリガナ・住所・電話・メール・DIPSは「任意」と分かる',()=>{
+  T('はじめの登録: 必須はGoogleアカウントと氏名。フリガナ・住所・電話・メール・DIPSは「任意」と分かる',()=>{
     const labels=qa('.phone .fld label').map(x=>x.textContent);
-    return JSON.stringify(labels)==='["氏名","フリガナ","住所","電話番号","メールアドレス","DIPSログインID","DIPSパスワード"]'
+    return JSON.stringify(labels)==='["氏名【必須】","フリガナ","住所","電話番号","メールアドレス","DIPSログインID","DIPSパスワード"]'
       &&txt().includes('連絡先（任意）')&&txt().includes('DIPSのログイン情報（任意）')
       &&q('.phone [data-bind="%dipsPw"]').type==='password'
       &&q('.phone [data-bind="%name"]').getAttribute('placeholder')==='例：山田 太郎'
@@ -68,10 +62,10 @@ suite('はじめて使う（左側だけで進める）',H=>{
     const t=txt();
     return route()==='home'&&!t.includes('はじめの設定')&&!t.includes('運航記録')&&!/0[1-7]/.test(t)&&qa('.tile').length===4&&q('.hd2').innerText.includes('個人で使用中');
   });
-  T('使う場所が1つだけのときは、ホームに［切り替える］を出さない',()=>!q('.phone [data-act=env]')&&A().envs.length===1);
-  T('ホームから、会社・団体で新しく使い始める／すでに使っている会社・団体に参加する、へ進める',()=>{
-    const t=txt();
-    return t.includes('会社・団体で新しく使い始める')&&t.includes('すでに使っている会社・団体に参加する')&&!!q('.phone [data-act=ob-co-new]')&&!!q('.phone [data-act=ob-co-join]')&&!t.includes('環境');
+  T('使う場所が1つだけのときは、ホームに［切り替える］を出さない',()=>!!q('.phone [data-act=env]')&&!qa('.phone button').some(b=>b.textContent==='切り替える')&&A().envs.length===1);
+  T('ホームに会社利用の常設ブロックはなく、単一環境でも現在地ボタンから追加・参加へ進める',()=>{
+    const clean=!q('.phone [data-act=ob-co-new]')&&!txt().includes('あなたの役割');actL('env');
+    const ok=clean&&sheetText().includes('現在の利用先')&&!!q('.phone .sheet [data-act=ob-co-new]')&&!!q('.phone .sheet [data-act=ob-co-join]')&&!q('.phone .sheet [data-act=env-pick]');actL('close');return ok;
   });
   T('ホームの4入口がすべて開ける',()=>{
     const ok=[];for(const sc of ['list','hist','set']){actL('go','[data-s='+sc+']');ok.push(route()===sc);H.APP().back()}
@@ -107,7 +101,7 @@ suite('はじめて使う（左側だけで進める）',H=>{
 
   /* ---- 設定が足りないまま［新規飛行］を押したとき ---- */
   start();
-  const registerPersonal=(name)=>{actL('ob-start-new');actL('gauth-done');setL('[data-bind="%name"]',name||'テスト氏名');actL('init-reg-done')};
+  const registerPersonal=(name)=>{actL('init-reg-gaccount');actL('gauth-change');setL('[data-bind="%name"]',name||'テスト氏名');actL('init-reg-done')};
   T('設定が足りないまま［新規飛行］→ エラーで止めず、足りないものを示す',()=>{
     registerPersonal();
     actL('nf-new');const t=txt();
@@ -119,7 +113,7 @@ suite('はじめて使う（左側だけで進める）',H=>{
     if(!txt().includes('「新規飛行」の途中です'))return 'banner';
     setL('[data-bind="@d.mark"]','JU000000000011');setL('[data-bind="@d.name"]','はじめの機体');actL('reg-save');
     const rows=qa('.phone .li b').map(x=>x.textContent);
-    return route()==='nf-need'&&E().aircraft.length===1&&JSON.stringify(rows)==='["操縦者"]';
+    return route()==='nf-need'&&E().aircraft.length===1&&JSON.stringify(rows)==='["機体","操縦者"]'&&qa('.phone .li')[0].textContent.includes('登録済み')&&qa('.phone .li')[1].textContent.includes('未登録');
   });
   T('操縦者も登録すると、そのまま新規飛行を始められる',()=>{
     actL('nf-need-set');if(route()!=='reg-person'||!A().reg.d.roles.includes('操縦者'))return 'form '+route();
@@ -132,7 +126,7 @@ suite('はじめて使う（左側だけで進める）',H=>{
   /* ---- ホームから、会社・団体で新しく使い始める（会社のGoogleアカウントで認証する） ---- */
   start();
   T('会社・団体で新しく使い始める: ホームのまま、会社・団体で使うGoogleアカウントの選択がうすいシートで重なる',()=>{
-    registerPersonal();actL('ob-co-new');
+    registerPersonal();actL('env');actL('ob-co-new');
     return route()==='home'&&sheetText().includes('会社・団体で使うGoogleアカウントを選択します')&&sheetText().includes('個人で使っているアカウントとは別に選べます')&&!/@/.test(sheetText());
   });
   T('認証のあと→会社・団体の名前。名前は必須。同じ名前の警告',()=>{
@@ -155,12 +149,12 @@ suite('はじめて使う（左側だけで進める）',H=>{
       &&co.gaccount==='test.company@example.invalid'&&A().envs.find(x=>x.kind==='personal').gaccount==='test.new@example.invalid'
       &&q('.hd2').innerText.includes('テスト株式会社で使用中');
   });
-  T('使う場所が2つになったので、ホームに［切り替える］が出る',()=>!!q('.phone [data-act=env]'));
+  T('使う場所が2つになったので、上部の［〜で使用中］から切り替えられる',()=>!!q('.phone [data-act=env]'));
 
   /* ---- ホームから、すでに使っている会社・団体に参加する ---- */
   start();
   T('参加も、まずホームのまま会社・団体で使うGoogleアカウントの選択→次へで参加する会社・団体の一覧',()=>{
-    registerPersonal();actL('ob-co-join');
+    registerPersonal();actL('env');actL('ob-co-join');
     if(route()!=='home'||!sheetText().includes('会社・団体で使うGoogleアカウントを選択します'))return 'sheet '+route();
     actL('gauth-done');
     return route()==='join1'&&q('.ttl').innerText.includes('参加する会社・団体')&&txt().includes('新しい保存場所は作りません')&&txt().includes('○○株式会社')&&txt().includes('○○スクール');
@@ -183,13 +177,18 @@ suite('はじめて使う（左側だけで進める）',H=>{
       &&E().aircraft.length===2&&E().plans.length===3&&me.id==='q1'&&!me.roles.includes('管理者')
       &&A().envs.some(x=>x.kind==='personal')&&q('.hd2').innerText.includes('○○株式会社で使用中');
   });
-  T('参加した人の役割が表示される（管理者が決めた役割）',()=>txt().includes('操縦者'));
+  T('ホームに役割とGoogleアカウントの情報カードを表示しない',()=>!q('.phone table.kv')&&!txt().includes('あなたの役割'));
+  T('同じ会社へ再度参加しても、既存の機体・計画を保持し、別環境を増やさない',()=>{
+    const id=E().id,plans=E().plans.map(p=>p.id).join(',');
+    actL('env');actL('ob-co-join');actL('gauth-done');actL('ob-join-pick','[data-id=j1]');actL('ob-join-go');actL('ob-join-me','[data-id=q1]');actL('ob-join-done');
+    return route()==='home'&&E().id===id&&A().envs.length===2&&E().plans.map(p=>p.id).join(',')===plans;
+  });
   T('参加: 名前が一覧にないときは新しく追加（記入例は薄い文字）。役割はまだ決まっていない',()=>{
-    start();registerPersonal();actL('ob-co-join');actL('gauth-done');actL('ob-join-pick','[data-id=j2]');actL('ob-join-go');actL('ob-join-me','[data-id=__new]');
+    start();registerPersonal();actL('env');actL('ob-co-join');actL('gauth-done');actL('ob-join-pick','[data-id=j2]');actL('ob-join-go');actL('ob-join-me','[data-id=__new]');
     const inp=q('.phone [data-bind="$newName"]');if(inp.value!==''||inp.getAttribute('placeholder')!=='例：山田 太郎')return 'placeholder';
     setL('[data-bind="$newName"]','新しい参加者');actL('ob-join-done');
     const me=E().people.find(p=>p.id===E().meId);
-    return route()==='home'&&E().name==='○○スクール'&&me.name==='新しい参加者'&&me.roles.length===0&&txt().includes('まだ決まっていません')&&!me.roles.includes('管理者');
+    return route()==='home'&&E().name==='○○スクール'&&me.name==='新しい参加者'&&me.roles.length===0&&!me.roles.includes('管理者');
   });
   T('Google Driveが閲覧のみ: 保存や登録はできない（入力した内容は残る旨）',()=>{
     act('gaccess','[data-v=view]');actL('go','[data-s=set]');actL('go','[data-s=set-docs]');actL('reg-open','[data-t=contact]');actL('reg-save');
@@ -197,36 +196,19 @@ suite('はじめて使う（左側だけで進める）',H=>{
     actL('reg-cancel');act('gaccess','[data-v=edit]');return stay&&msg;
   });
 
-  /* ---- ログイン（状態は右側の切替で選ぶ） ---- */
-  const login=(state)=>{start();act('gstate','[data-v='+state+']');actL('ob-start-login');if(!q('.phone .sheet'))throw new Error('no sheet '+route());actL('gauth-done')};
-  T('ログイン（登録済み・個人だけ）→使う場所が1つならそのままホーム',()=>{
-    login('one');return route()==='home'&&A().envs.length===1&&q('.hd2').innerText.includes('個人で使用中');
+  T('単一環境でも上部に個人で使用中ボタンを表示し、別の切替ボタンはない',()=>{
+    H.hash('scn=personal');return !!q('.hd2 button')&&q('.hd2 button').textContent==='個人で使用中'&&!!q('.phone [data-act=env]')&&!qa('.phone button').some(b=>b.textContent==='切り替える');
   });
-  T('ログイン（登録済み・個人＋会社）→「どこで使いますか？」→ 個人／会社の名称のカード',()=>{
-    login('many');const cards=qa('.phone [data-act=env-pick]');
-    return route()==='where'&&q('.ttl').innerText.includes('どこで使いますか？')&&cards.length===2&&cards[0].textContent.includes('個人')&&cards[1].textContent.includes('○○株式会社')&&txt().includes('前回使用');
+  T('複数環境では会社で使用中ボタンから個人へ切替できる',()=>{
+    H.hash('scn=normal');qa('.phone [data-act=env-pick]')[1].click();
+    const button=q('.hd2 [data-act=env]');if(!button||!button.textContent.includes('○○株式会社で使用中'))return false;
+    button.click();qa('.phone .sheet [data-act=env-pick]')[0].click();return route()==='home'&&q('.hd2').textContent.includes('個人で使用中');
   });
-  T('会社を選ぶ→ホーム「○○株式会社で使用中」。［切り替える］で個人へ',()=>{
-    qa('.phone [data-act=env-pick]')[1].click();
-    if(route()!=='home'||!q('.hd2').innerText.includes('○○株式会社で使用中'))return 'home '+route();
-    actL('env');const sheet=q('.phone .sheet').innerText.includes('どこで使いますか？');
-    qa('.phone .sheet [data-act=env-pick]')[0].click();
-    return sheet&&route()==='home'&&q('.hd2').innerText.includes('個人で使用中')&&!txt().includes('運用環境');
+  T('ホーム4入口の意味と並びを維持',()=>{
+    return JSON.stringify(qa('.phone .tile').map(b=>b.dataset.act==='nf-new'?'nf-new':b.dataset.s))==='["nf-new","list","hist","set"]';
   });
-  T('ログイン（未登録）→「ログインできませんでした」。何が起きたか・次の操作が分かる',()=>{
-    login('new');const t=txt();
-    if(route()!=='acct-none')return 'route '+route();
-    if(!(t.includes('ログインできませんでした')&&t.includes('まだこのアプリを使い始めていません')&&t.includes('まだ何も登録されていません')&&t.includes('利用登録を始める')))return 'text';
-    actL('ob-to-new');return route()==='boot'&&!!q('.phone .sheet');
-  });
-  T('利用登録を始める（登録済みのGoogleアカウント）→「すでに登録されています」→ログインへ',()=>{
-    start();act('gstate','[data-v=one]');actL('ob-start-new');actL('gauth-done');
-    if(route()!=='acct-exists'||!txt().includes('すでに登録されています'))return 'route '+route();
-    actL('ob-to-login');return route()==='boot'&&!!q('.phone .sheet');
-  });
-  T('認証のあとの状態は、右側の表で、入口ごとの行き先が分かる',()=>{
-    start();actL('ob-start-new');const m=memo();
-    return route()==='boot'&&m.includes('［利用登録を始める］から')&&m.includes('［ログイン］から')&&m.includes('どこで使いますか？')&&m.includes('すでに登録されています');
+  T('Googleアカウントを変更しても登録画面のまま',()=>{
+    start();actL('init-reg-gaccount');actL('gauth-change');act('gstate','[data-v=one]');actL('init-reg-gaccount');actL('gauth-change');return route()==='init-reg'&&A().account.id==='one'&&txt().includes('personal@example.com')&&!A().envs.length;
   });
 
   /* ---- 設計確認の部品は、左側の外にある ---- */

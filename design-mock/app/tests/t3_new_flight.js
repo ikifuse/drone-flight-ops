@@ -87,8 +87,12 @@ suite('新規飛行',H=>{
     if(route()!=='nf'||page()!=='final'||!A().dips.registered||S().aircraft.length!==1)return 'back '+route()+' '+page();
     act('nf-send-go');return route()==='nf-send';
   });
-  T('API送信→DIPSの返事の画面。結果の選択は右側にあり、左側は送信中の表示だけ',()=>{
-    return route()==='nf-send'&&txt().includes('DIPSへ送信しています')&&qa('.phone [data-act=nf-result]').length===0&&qa('#memo [data-act=nf-result]').length===4&&memo().includes('DIPSが返す結果');
+  T('通報内容確認→左側の通報操作で正常受付へ進める。異常系の切替は右側',()=>{
+    return route()==='nf-send'&&!!q('.phone [data-act=nf-submit]')&&qa('.phone [data-act=nf-result]').length===0&&qa('#memo [data-act=nf-result]').length===4&&memo().includes('DIPSが返す結果');
+  });
+  T('通報確認から直す→同じ計画へ戻り、再度通報確認できる',()=>{
+    const name=S().planName;act('jump');const ok=route()==='nf'&&S().planName===name;
+    window.nfGo('final');act('nf-send-go');return ok&&route()==='nf-send';
   });
   T('正常受付・重複なし→通報完了。飛行リストに載る。KMLはGoogle Driveに保存',()=>{
     const n=E().plans.length;act('nf-result','[data-k=clean]');const pl=E().plans[0];

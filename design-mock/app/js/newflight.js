@@ -418,16 +418,16 @@ function commitPlan(dips){
   const pl={id:uid('pl'),name:S.planName,snap,start:startDT(),place:S.to||S.from||'（場所未入力）',ac:S.aircraft.slice(),pl:S.pilots.slice(),rep:E.meId,dips,kml:A.online?'saved':'pending'};
   E.plans.unshift(pl);return pl;
 }
-def('nf-send',{t:'DIPSへ送信',st:'アプリからDIPSへ送信する',env:false,back:false,
-  goal:'送信して、DIPSからの応答（正常受付・重複の有無・結果不明・エラー）を待つ。',
+def('nf-send',{t:'DIPSへ通報する内容の確認',st:'アプリからDIPSへ送信する',env:false,back:false,
+  goal:'通報する内容を確認し、［通報する］で正常受付を疑似実行する。右側では重複・結果不明・エラーも確認できる。',
   doc:'34d §2（送信開始と正常受付は別。正常応答で計画IDと重複有無を確定した時点が、共有飛行リストへの掲載契機）／33b（通信断で登録成否が不明なときは、通常の通報済みとして扱わず、盲目的に再送しない）。',state:'accepted',
-  tmp:['この画面の見せ方は仮。DIPSの応答は、右側の「この画面の確認用操作」で選ぶ（実際はDIPSが返す）','応答契約・検証項目は正式API仕様の確認待ち（VERIFY-S5-RESPONSE-EVIDENCE／VERIFY-S4-API-CONTRACT）'],
+  tmp:['［通報する］はモック内だけで正常受付に進む。異常系は右側の確認用操作で選ぶ。実送信はしない','応答契約・検証項目は正式API仕様の確認待ち（VERIFY-S5-RESPONSE-EVIDENCE／VERIFY-S4-API-CONTRACT）'],
   ask:[],
-  ui:['送信中の表示と待ち方、取消できないことの伝え方は標準案'],
+  ui:['通報内容を確認してから［通報する］へ進む。戻って直す場合も同じ計画を保持する'],
   mock:()=>'<p class="note" style="margin:0 0 6px">実際はDIPSが返す結果です。どの結果のときにどの画面になるかを確かめるため、ここで選びます。</p>'
    +[['clean','正常受付・重複なし','計画IDが返り、他の計画と重複しない（通常の場合）'],['dup','正常受付・重複あり','登録されたが、他の計画と重複している'],['unknown','通信が途切れた（結果不明）','登録されたかどうかが分からない'],['err','入力内容が受け付けられなかった','エラー（内容を直して再送）']].map(r=>'<button class="card" style="width:100%;margin-bottom:6px" data-act="nf-result" data-k="'+r[0]+'"><b>'+r[1]+'</b><span>'+r[2]+'</span></button>').join(''),
-  body:()=>'<div class="msg info"><span class="spin"></span> DIPSへ送信しています…</div>',
-  foot:()=>'<button class="btn" data-act="nf-send-back">戻る</button>'
+  body:()=>'<div class="msg info">この内容で通報します。</div>'+vReview(),
+  foot:()=>'<button class="btn" data-act="nf-send-back">戻る</button><button class="btn primary" data-act="nf-submit">通報する</button>'
 });
 def('nf-manual',{t:'DIPS Webで通報する',st:'DIPSの入力順に確認しながら入力します',
   goal:'DIPS Webを別画面で開き、DIPSの入力順に、コピー・選択・照合しながら転記する。',
@@ -519,12 +519,14 @@ def('nf-need',{t:'新規飛行',st:'必要な設定',
   doc:'34a §3（飛行を始める際に操縦者を選び、未登録ならその場で登録して元のフローへ戻る。CURRENT-ACCEPTED）／§9.3（機体・許可承認・保険はホーム前に必須にせず、必要になった場面で案内する）／25b・26（DIPSの通報には機体と操縦者が要る）。ここで新しい必須条件は足していない。',state:'proposal',
   tmp:['機体・BAT等を、どこまで飛行開始の必須にするかは未決（PENDING-S5-INITIAL-REQUIRED の残り。最低1機案を含む）','足りないまま進んだときに、どの画面で止めるかは、内容確認・通報の直前の判定（34d）に従う'],
   ask:['足りないときに、ここで止めるか、そのまま進めて途中で登録できるようにするか（いまは34a §3に従って、どちらも選べるようにしている）'],
-  ui:['足りないものだけを並べ、［必要な設定をする］を色の付いた主ボタンにしている','足りないものが複数あるときは、1つ登録するたびにこの画面へ戻り、残りが分かるようにしている'],
+  ui:['機体・操縦者の登録状況を並べ、不足しているものだけ登録できる。［必要な設定をする］は最初の不足項目へ進む','足りないものが複数あるときは、1つ登録するたびにこの画面へ戻り、残りが分かるようにしている'],
   body:()=>{
     const m=nfMissing();
-    if(!m.length)return '<div class="msg ok">必要な設定がそろいました。</div>';
-    return '<div class="msg warn"><b>飛行を始めるために必要な設定がまだありません。</b>下の設定を登録すると、飛行を始められます。</div>'
-     +m.map(x=>'<div class="li"><span class="tx"><b>'+esc(x.label)+'</b><small>'+esc(x.sub)+'</small></span><i class="chip warn">未登録</i></div>').join('')
+    const rows=[['aircraft','機体'],['person','操縦者']].map(([type,label])=>{
+      const missing=m.some(x=>x.type===type);
+      return '<div class="li"><span class="tx"><b>'+label+'</b></span><i class="chip '+(missing?'warn':'ok')+'">'+(missing?'未登録':'登録済み')+'</i>'+(missing?'<button class="btn sm" data-act="nf-need-set" data-t="'+type+'">登録する</button>':'')+'</div>';
+    }).join('');
+    return (m.length?'<div class="msg warn"><b>飛行を始めるために必要な設定がまだありません。</b>下の設定を登録すると、飛行を始められます。</div>':'<div class="msg ok">必要な設定がそろいました。</div>')+rows
      +'<p class="note">あとから登録することもできます。その場合は、飛行の途中で登録する画面が出ます。</p>';
   },
   foot:()=>{
@@ -543,7 +545,7 @@ const NF_RET={
 };
 Object.assign(ACTS,{
   'nf-new':()=>{if(nfMissing().length){nav('nf-need');return}S=blankNF(ENV());S.cur='start';nav('nf')},
-  'nf-need-set':()=>{const m=nfMissing();if(!m.length){ACTS['nf-need-go']();return}const o={ret:{label:'新規飛行',apply:()=>{}}};if(m[0].type==='person')o.roles=['操縦者'];openReg(m[0].type,o)},
+  'nf-need-set':t=>{const m=nfMissing();if(!m.length){ACTS['nf-need-go']();return}const target=m.find(x=>x.type===t?.dataset.t)||m[0];const o={ret:{label:'新規飛行',apply:()=>{}}};if(target.type==='person')o.roles=['操縦者'];openReg(target.type,o)},
   'nf-need-go':()=>{S=blankNF(ENV());S.cur='start';rep('nf')},
   'nf-back':()=>{if(S.cur==='start')back();else nfStep(-1)},
   'nf-next':()=>{if(S.cur==='start'&&!S.start)S.start={mode:'new',label:'新しく作る'};nfStep(1)},
@@ -588,7 +590,7 @@ Object.assign(ACTS,{
     else if(src==='application'){Object.assign(S.contact,{name:'',addr:'',phone:'',email:''})}
     else{Object.assign(S.contact,{name:S.contact.pilotId?plName(S.contact.pilotId):'（操縦者を選択）',phone:'',email:''})}
     render()},
-  'jump':t=>nfGo(t.dataset.s),
+  'jump':t=>{if(A.route==='nf-send'){back();}nfGo(t.dataset.s)},
   'rv':t=>{S.reviewView=t.dataset.v;render()},
   'nf-draft':()=>openStub('下書きとして保存','入力途中の内容は、この端末に残っています。あとから、続きの入力ができます。'),
   'nf-send-go':()=>{
@@ -616,6 +618,7 @@ Object.assign(ACTS,{
   },
   'dips-later':()=>{A.modal=null;render();toast('飛行計画は、そのまま残っています')},
   'nf-send-back':()=>back(),
+  'nf-submit':()=>{if(A.route!=='nf-send')return;if(!A.online||!A.apiOk||!canWrite()){toast('送信できません。入力した計画は残っています');return}ACTS['nf-result']({dataset:{k:'clean'}})},
   'nf-result':t=>{
     const k=t.dataset.k;
     if(k==='clean'||k==='dup'){const pl=commitPlan(k);A.nfResult={kind:k,planId:pl.id}}

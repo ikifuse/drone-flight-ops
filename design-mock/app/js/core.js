@@ -29,12 +29,12 @@ const def=(id,d)=>{d.id=id;SCR[id]=d};
 
 function freshApp(keep){
   const a={
-    route:'boot',stack:[],modal:null,
+    route:'init-reg',stack:[],modal:null,
     account:null,   /* Googleで認証したアカウント。アプリ独自の認証は作らない。画面には出さない */
     envs:[],cur:null,mockModal:null,
     online:true,apiOk:true,width:'phone',gAccess:'edit',
     dips:{registered:false,id:''},dipsRet:null,
-    reg:null,op:null,nfResult:null,init:null,join:null,create:null,
+    reg:null,op:null,nfResult:null,init:null,join:null,create:{kind:'personal',name:'個人'},
     ui:{plFilter:'all',hq:'',hAc:'',hPl:'',hPu:'',hSel:null,outSel:{a4:true,map:false},
       /* 設計確認用の切替（右側で選ぶ）。左側の画面には出さない */
       gState:'new',consentOk:true}
@@ -56,7 +56,7 @@ function rep(id){
 function root(id){A.stack=[];A.route=id;A.modal=null;A.mockModal=null;enter(id);render(false)}
 function back(){
   const r=A.stack.pop();A.modal=null;A.mockModal=null;
-  if(r){A.route=r;render(false)}else root(A.cur?'home':'boot');
+  if(r){A.route=r;render(false)}else root(A.cur?'home':'init-reg');
 }
 
 /* ---------- 描画 ---------- */
@@ -66,8 +66,8 @@ function shell(){
   const title=val(d.t),st=val(d.st)||'';
   const canBack=d.back!==false&&(A.stack.length>0||!!d.backAct);
   const chips=[];
-  /* 使う場所が1つだけの人には、切替の操作を出さない（31a §4・34a §9.6）。名前の表示は、取り違え防止のため残す */
-  if(E&&d.env!==false&&A.route!=='op-fly')chips.push(A.envs.length>1?'<button class="chip" data-act="env">'+esc(envLabel(E))+'で使用中 ▾</button>':'<i class="chip">'+esc(envLabel(E))+'で使用中</i>');
+  /* ホームでは単一環境でも、現在地確認と会社追加のシートを開く。 */
+  if(E&&d.env!==false&&A.route!=='op-fly')chips.push((A.envs.length>1||A.route==='home')?'<button class="chip" data-act="env">'+esc(envLabel(E))+'で使用中</button>':'<i class="chip">'+esc(envLabel(E))+'で使用中</i>');
   if(!A.online)chips.push('<i class="chip warn">オフライン</i>');
   if(A.gAccess==='view'&&E)chips.push('<i class="chip warn">Google Driveは閲覧のみ</i>');
   if(A.gAccess==='none'&&E)chips.push('<i class="chip warn">Google Driveに保存できません</i>');
@@ -173,20 +173,33 @@ function setBind(t){
 }
 
 /* ---------- イベント ---------- */
+/* 入力欄のblur/changeでボタンを作り直すと、続くclickが消える。
+   ボタンを押している間だけ再描画を待ち、入力値は先に状態へ反映する。 */
+let actionPress=false,changeRenderPending=false;
+document.addEventListener('pointerdown',e=>{
+  const b=e.target.closest&&e.target.closest('button[data-act]');actionPress=!!b&&!b.disabled;
+});
+const releaseActionPress=()=>setTimeout(()=>{
+  actionPress=false;if(changeRenderPending){changeRenderPending=false;render()}
+},0);
+document.addEventListener('pointerup',releaseActionPress);
+document.addEventListener('pointercancel',releaseActionPress);
 document.addEventListener('click',e=>{
   if(!A)return;
   if(e.target.closest&&e.target.closest('#map')&&typeof mapTap==='function'){const svg=$('#map');const r=svg.getBoundingClientRect();mapTap(Math.round((e.clientX-r.left)/r.width*360),Math.round((e.clientY-r.top)/r.height*260));return}
   const t=e.target.closest&&e.target.closest('[data-act]');if(!t)return;
   if(t.dataset.stop)return;
   if(t.tagName==='INPUT'&&t.type==='checkbox')return;
+  const pending=changeRenderPending;actionPress=false;changeRenderPending=false;
   const fn=ACTS[t.dataset.act];
   if(fn)fn(t,e);
   else{console.warn('未実装の操作: '+t.dataset.act);openStub('準備中です','この操作は、まだ用意できていません。')}
+  if(pending)render();
 });
 document.addEventListener('change',e=>{
   if(!A)return;const t=e.target;
   if(t.tagName==='INPUT'&&t.type==='checkbox'&&t.dataset.act){const fn=ACTS[t.dataset.act];if(fn)fn(t,e);return}
-  if(t.dataset&&t.dataset.bind){setBind(t);if(t.dataset.rerender)render()}
+  if(t.dataset&&t.dataset.bind){setBind(t);if(t.dataset.rerender){if(actionPress)changeRenderPending=true;else render()}}
 });
 document.addEventListener('input',e=>{
   if(!A)return;const t=e.target;if(!(t.dataset&&t.dataset.bind))return;

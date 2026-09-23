@@ -1,11 +1,11 @@
 'use strict';
-/* 完全な初回利用者の通し: ボタンだけで、利用登録を始めるところから、飛行の保存・出力・2回目の飛行まで歩く */
+/* 完全な初回利用者の通し: はじめの登録から、飛行の保存・出力・2回目の飛行まで歩く */
 suite('初回利用者の通し',H=>{
   const {T,act,txt,route,set,q,qa,A,E,S}=H;
   H.hash('');
-  T('1 最初の画面: 利用登録を始める／ログイン',()=>route()==='boot'&&txt().includes('利用登録を始める'));
-  T('2 利用登録を始める→Googleアカウント選択（うすいシート）→そのまま「はじめの登録」。保存場所はまだない',()=>{
-    act('ob-start-new');act('gauth-done');
+  T('1 最初の画面: はじめの登録',()=>route()==='init-reg'&&q('.ttl').textContent.includes('はじめの登録'));
+  T('2 はじめの登録内のGoogleアカウント選択（うすいシート）→同じ「はじめの登録」。保存場所はまだない',()=>{
+    act('init-reg-gaccount');act('gauth-change');
     return route()==='init-reg'&&A().envs.length===0&&txt().includes('Googleアカウント')&&txt().includes('氏名');
   });
   T('3 必須の氏名だけ入れて［登録してホームへ］（任意項目はすべて空のまま）→ホーム（「個人で使用中」）',()=>{
@@ -58,13 +58,13 @@ suite('初回利用者の通し',H=>{
     act('nf-send-go');
     if(q('.phone .sheet'))return 'まだ止まる';
     if(route()!=='nf-send')return 'send '+route();
-    act('nf-result','[data-k=clean]');return route()==='nf-accepted'&&txt().includes('通報完了・重複なし')&&E().plans.length===1});
+    act('nf-submit');return route()==='nf-accepted'&&txt().includes('通報完了・重複なし')&&E().plans.length===1&&E().plans[0].dips==='clean'&&E().plans[0].kml==='saved'});
   T('16 後で飛行する→飛行リストのカード→通報内容',()=>{act('nf-later');act('go','[data-s=list]');const c=qa('[data-act=plan-open]').length;act('plan-open');return c===1&&route()==='plan'&&qa('.rev').length>=23});
   T('17 飛行前点検へ（新しく登録した機体。BAT管理OFF）',()=>{act('plan-to-op');return route()==='op-pre'&&txt().includes('JU-JOURNEY-01')});
   T('18 点検→離陸待機→離陸→着陸→終了→飛行後点検→保存',()=>{
     act('op-pre-all');act('op-pre-done');if(!txt().includes('BAT管理がOFF'))return 'BAT';
     act('op-takeoff');act('op-ff');act('op-land');act('op-land-confirm');act('op-to-post');act('op-post-all');act('op-to-final');act('op-finalize');
-    return route()==='op-done'&&txt().includes('保存しました')&&E().flights.length===1&&E().plans.length===0;
+    return route()==='op-done'&&txt().includes('保存しました')&&E().flights.length===1&&E().plans.length===0&&E().flights[0].dailySaved&&A().opDone.dips==='clean'&&txt().includes('運航完了')&&txt().includes('日常点検');
   });
   T('19 履歴に1件→詳細→PDF（A4＋地図付き）→KML',()=>{
     act('op-open-hist');if(route()!=='hist-detail')return 'route '+route();
