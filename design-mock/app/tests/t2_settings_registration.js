@@ -32,7 +32,7 @@ suite('設定・登録',H=>{
   T('BAT管理: BATを登録（中古・サイクル数）',()=>{
     H.APP().root('home');act('go','[data-s=set]');act('go','[data-s=set-bat]');
     if(!txt().includes('テストBATグループ'))return 'no group';
-    act('reg-open','[data-t=bat]');set('[data-bind="@d.label"]','BAT 1');act('reg-set','[data-k=source][data-v=used]');set('[data-bind="@d.cycle"]','30');act('reg-save');
+    act('reg-open','[data-t=bat]');set('[data-bind="@d.label"]','BAT 1');act('reg-set','[data-k=source][data-v=used]');set('[data-bind="@d.cycle"]','30');set('[data-bind="@d.check"]','異常なし');act('reg-save');
     return route()==='set-bat'&&E().bats.length===1&&E().bats[0].source==='used'&&E().bats[0].cycle===30&&txt().includes('BAT 1');
   });
   T('BAT詳細（このBATを使える機体）と状態確認の更新（履歴に残る）',()=>{

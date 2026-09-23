@@ -21,7 +21,14 @@ function canWrite(){
 function resetDrafts(){S=null;A.op=null;A.reg=null;A.nfResult=null;A.init=null;A.ui.hSel=null;A.dipsRet=null;A.ui.dform=null}
 /* いま使っている場所のGoogleアカウント（個人用と会社用は別でよい。31a §2） */
 const envAccount=E=>(E&&E.gaccount)||'';
-function switchEnv(id){A.cur=id;resetDrafts();root('home')}
+function switchEnv(id){
+  if(id===A.cur)return render();
+  A.envDrafts=A.envDrafts||{};
+  if(A.cur)A.envDrafts[A.cur]={S,op:A.op,reg:A.reg,nfResult:A.nfResult,init:A.init,ui:A.ui,route:A.route,stack:A.stack.slice()};
+  A.cur=id;const saved=A.envDrafts[id];resetDrafts();
+  if(saved){S=saved.S;['op','reg','nfResult','init','ui','route','stack'].forEach(k=>A[k]=saved[k]);render(false)}
+  else{A.ui=Object.assign({},freshApp().ui,{gState:A.ui.gState,consentOk:A.ui.consentOk});root('home')}
+}
 function envRole(E){const p=E&&E.people.find(x=>x.id===E.meId);return p?(p.roles.length?p.roles.join('・'):'まだ決まっていません（管理者が決めます）'):'—'}
 /* ログイン中のGoogleアカウントの表示。実際のアプリでは、利用者のメールアドレスが入る場所（ここでは薄い文字の例） */
 const acctMail=()=>A.account?'<span class="ph">'+esc(({new:'name',one:'personal',many:'member'}[A.account.id]||'name')+'@example.com')+'</span>':'<span>未選択</span>';
@@ -128,7 +135,7 @@ def('join1',{t:'参加する会社・団体',st:'1/3',env:false,
   enter:()=>{A.join={pick:null,env:null,code:'',me:null,newName:''}},
   body:()=>'<p class="lead2">参加する会社・団体を選んでください。</p><p class="note">新しい保存場所は作りません。</p>'
    +'<div class="cards">'+JOINABLE.map(j=>'<button class="card" data-act="ob-join-pick" data-id="'+j.id+'"><b>'+esc(j.name)+'</b><span>メンバー '+j.members+'人</span></button>').join('')+'</div>'
-   +'<div class="fld" style="margin-top:14px"><label>招待コードで探す</label><div class="pwrow"><input class="in" data-bind="$code" placeholder="例：ABCD-1234" value=""><button class="btn sm" data-act="ob-join-code">探す</button></div></div>'
+   +'<div class="fld" style="margin-top:14px"><label>招待コードで探す</label><div class="pwrow"><input class="in" data-bind="$code" placeholder="例：ABCD-1234" value="'+esc(A.join.code||'')+'"><button class="btn sm" data-act="ob-join-code">探す</button></div></div>'
 });
 def('join2',{t:'参加の確認',st:'2/3',env:false,
   goal:'参加する会社・団体と、Google Driveの共有状態を確認する。',
@@ -225,7 +232,7 @@ Object.assign(ACTS,{
     if(!E){render();return}
     const me=E.people.find(p=>p.id===E.meId);
     me.name=i.name.trim();me.kana=i.kana.trim();me.addr=i.addr.trim();me.phone=i.phone.trim();me.email=i.email.trim();
-    if(i.dipsId.trim()){A.dips={registered:true,id:i.dipsId.trim()};A.ui.dipsSet=true}
+    if(i.dipsId.trim()){A.dips={registered:!!i.dipsPw.trim(),id:i.dipsId.trim()};A.ui.dipsSet=true}
     resetDrafts();root('home');
     toast(A.dips.registered?'登録しました。飛行計画では、この情報を自動で使います':'登録しました。あとから登録した情報は、次回以降の飛行計画で使います');
   },
@@ -261,11 +268,12 @@ Object.assign(ACTS,{
   'ob-join-me':t=>{A.join.me=t.dataset.id;render()},
   'ob-join-done':()=>{
     const e=A.join.env;const m=A.join.me;const mail=(A.coAccount&&A.coAccount.email)||(A.account&&A.account.email)||'';
+    if(!m||(m==='__new'&&!A.join.newName.trim())){toast('氏名を選ぶか入力してください');return}
     e.gaccount=mail;
     if(m==='__new'){const p=newPerson(A.join.newName||'',[],{account:mail});e.people.push(p);e.meId=p.id}
     else{e.meId=m;const p=e.people.find(x=>x.id===m);if(p&&!p.account)p.account=mail}
     if(!A.envs.some(x=>x.id===e.id))A.envs.unshift(e);A.cur=e.id;A.join=null;A.stack=[];resetDrafts();root('home');
   },
   'env':()=>openSheet(envSwitchSheet),
-  'env-pick':t=>{A.modal=null;switchEnv(t.dataset.id);toast(envLabel(ENV())+'で使用中です。入力途中の内容は破棄しました')}
+  'env-pick':t=>{A.modal=null;switchEnv(t.dataset.id);toast(envLabel(ENV())+'で使用中です。入力途中の内容は残っています')}
 });

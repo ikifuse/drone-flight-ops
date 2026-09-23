@@ -148,8 +148,9 @@ def('set-dipscred',Object.assign({t:'DIPSのログイン情報',st:()=>A.dips.re
 def('set-maint',{t:'点検整備記録',st:'機体ごとの詳しい点検整備',
   goal:'機体ごとの詳しい点検整備の記録（通常の日常点検とは別）への入口。',
   doc:'36（機体別の詳細な点検整備は05に置く。通常の日常点検と分離）。この入口の画面は未設計。整備台帳の詳細入力フォームを、通常運航の画面へ混ぜない（35b §9）。',state:'none',
-  tmp:['入口だけ置いた案の画面。中身は未設計'],ask:[],ui:['点検整備記録を設定の中に置くか、機体の詳細から開くかは標準案'],
-  body:()=>{const E=ENV();return '<div class="empty"><b>準備中です</b><br>機体ごとの詳しい点検整備の記録は、まだ使えません。</div>'+E.aircraft.map(a=>'<button class="li" data-act="stub" data-t="'+esc(a.name)+'の点検整備記録" data-m="機体ごとの点検整備記録の画面は、準備中です。通常の飛行前・飛行後の点検とは別に扱います。"><span class="ico">🔧</span><span class="tx"><b>'+esc(a.name)+'</b><small class="mono">'+esc(a.mark)+'</small></span><span class="go">›</span></button>').join('')}
+  tmp:['Google Sheetsへの引渡しをシートで示す。実通信・原本コピー・整備記録作成はしない。通常運航へ整備フォームを追加しない'],ask:[],ui:['点検整備記録を設定の中に置くか、機体の詳細から開くかは標準案'],
+  body:()=>{const E=ENV();return '<p>機体を選び、Google Sheetsの点検整備記録を開きます。原本をコピーして、実際の整備内容を記入してください。</p>'+E.aircraft.map(a=>'<button class="li" data-act="maintenance-open" data-id="'+a.id+'"><span class="ico">🔧</span><span class="tx"><b>'+esc(a.name)+'</b><small class="mono">'+esc(a.mark)+'</small></span><span class="go">›</span></button>').join('')}
+
 });
 def('set-sync',{t:'保存状態',st:'Google Driveへの保存の状況',
   goal:'この端末には保存されているが、まだGoogle Driveに保存されていないものを確認し、通信できるときに保存する。',

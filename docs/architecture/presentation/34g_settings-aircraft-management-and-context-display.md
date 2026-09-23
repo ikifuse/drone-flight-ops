@@ -126,3 +126,11 @@ flowchart TD
 - 他の文書が定義する未確定: PENDING-D-AC-PERMISSION・PENDING-D-AC-REGISTRY-STORAGE・PENDING-D-AC-PERMITTED-DISPLAY・PENDING-D-AC-UNLINKED-EXCEPTION・PENDING-D-AC-GROUP-NAMING（[32h](../asset-management/32h_registered-aircraft-and-battery-group-relations.md)）、PENDING-D-BAT-SWITCH（[32e](../asset-management/32e_battery-management-scope-and-flight-separation.md)）、PENDING-S2-ENVIRONMENT-UI（31a）、PENDING-S5-HOME-DETAIL（34b。各種設定・管理の分類）。
 
 **再検討条件**: 対象機体の表示が現場で取り違えの防止に足りない場合、機体管理を［各種設定・管理］の入口に置く流れが運用に合わない場合、環境の切替と機体の設定を取り違える事故が起きた場合。
+
+## 8. 固定機体情報の後補完と現場の識別（2026-09-23）
+
+**CURRENT-ACCEPTED（オーナー追補）**: 通常の機体識別はJUから始まるDIPS登録記号 `registration_mark` を主に使用する。製造番号 `serial_number` は必要な固定機体情報として機体マスターに保持し、必要な帳票ではそこから利用する。DIPS通報、飛行前後点検、BAT交換、機体交代で毎回入力・確認させない。取得経路の不足だけを理由に現場入力欄を増やさない。
+
+**EVIDENCE/EXAMPLE**: モックの設定側の機体登録・変更に折畳みの固定情報欄（製造番号・メーカー・種類・管理開始日・確認できた取得前時間／回数）を置いた。現場から戻るための機体登録にはこの欄を出さず、未入力でも登録・運航を継続できる。実機は登録記号で選び、固定情報はあとから補う。空欄の取得前履歴はnullのまま保持し、管理開始後の記録時間と区別する（[32a](../asset-management/32a_aircraft-acquisition-and-cumulative-time.md)）。未知の生涯累計を0として確定しない。
+
+機体マスターの意味は[12b](../domain-model/12b_aircraft-and-battery.md)、取得履歴は32a、画面の最終形は既存PENDING-D-AC-SCREENSに残す。今回のモック用キーを本番schema・台帳列の確定とはしない。人員の住所・連絡用メールも既存登録画面で事前登録・後補完でき、毎回の再入力を避ける。

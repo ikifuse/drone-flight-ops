@@ -22,7 +22,7 @@ function histCards(){
   const E=ENV();const L=histList();
   if(!E.flights.length)return '<div class="empty"><b>完了した飛行はまだありません</b><br>飛行を終えて［保存する］と、ここに出ます。<br><button class="btn sm" style="margin-top:8px" data-act="nf-new">新規飛行へ</button></div>';
   if(!L.length)return '<div class="empty">この条件に合う飛行はありません</div>';
-  return L.map(f=>'<button class="card" style="width:100%;margin-bottom:8px" data-act="hist-open" data-id="'+f.id+'"><b>'+esc(f.label)+'</b><span>'+slash(f.date)+' ／ 📍 '+esc(fPlace(f))+'</span><span>✈ '+f.ac.map(id=>esc(acName(id))).join('・')+' ／ 👤 '+f.pl.map(id=>esc(plName(id))).join('・')+'</span><span>飛行 '+f.legs.length+'回・'+fMin(f)+'分 ／ '+esc(fPurpose(f).join('・')||'—')+'</span><span class="chips">'+(f.synced?'':'<i class="chip warn">未保存</i>')+(f.outs.a4?'<i class="chip ok">A4 PDF作成済み</i>':'')+(f.outs.map?'<i class="chip ok">地図付きPDF作成済み</i>':'')+(f.snap.noDips?'<i class="chip">通報なし</i>':'')+'</span></button>').join('');
+  return L.map(f=>'<button class="card" style="width:100%;margin-bottom:8px" data-act="hist-open" data-id="'+f.id+'"><b>'+esc(f.label)+'</b><span>'+slash(f.date)+' ／ 📍 '+esc(fPlace(f))+'</span><span>✈ '+f.ac.map(id=>esc(acName(id))).join('・')+' ／ 👤 '+f.pl.map(id=>esc(savedPerson(f,id))).join('・')+'</span><span>飛行 '+f.legs.length+'回・'+fMin(f)+'分 ／ '+esc(fPurpose(f).join('・')||'—')+'</span><span class="chips">'+(f.synced?'':'<i class="chip warn">未保存</i>')+(f.outs.a4?'<i class="chip ok">A4 PDF作成済み</i>':'')+(f.outs.map?'<i class="chip ok">地図付きPDF作成済み</i>':'')+(f.snap.noDips?'<i class="chip">通報なし</i>':'')+'</span></button>').join('');
 }
 def('hist',{t:'飛行履歴・出力',st:'完了した過去の飛行を探す',
   goal:'完了済みの過去の飛行を、人が読める条件で探して選び、その飛行の正式記録に基づく出力へ進む。',
@@ -50,7 +50,7 @@ def('hist-detail',{t:()=>{const f=flightOf(A.ui.hSel);return f?f.label:'飛行�
   body:()=>{
     const f=flightOf(A.ui.hSel);if(!f)return '<div class="empty">飛行が見つかりません</div>';
     const s=f.snap;const nd=!!s.noDips;const sel=A.ui.outSel;
-    return '<div class="sec"><h3>この飛行</h3><table class="kv"><tr><td>日付</td><td>'+slash(f.date)+'</td></tr><tr><td>場所</td><td>'+esc(fPlace(f))+'</td></tr><tr><td>目的</td><td>'+esc(fPurpose(f).join('・')||'—')+'</td></tr><tr><td>機体</td><td>'+f.ac.map(id=>esc(acLabel(id))).join('<br>')+'</td></tr><tr><td>操縦者</td><td>'+f.pl.map(id=>esc(plName(id))).join('、')+'</td></tr><tr><td>飛行</td><td>'+f.legs.length+'回・合計'+fMin(f)+'分</td></tr><tr><td>保存</td><td>'+(f.synced?'Google Driveに保存済み':'<i class="chip warn">未保存</i> この端末には保存されています')+'</td></tr></table></div>'
+    return '<div class="sec"><h3>この飛行</h3><table class="kv"><tr><td>日付</td><td>'+slash(f.date)+'</td></tr><tr><td>場所</td><td>'+esc(fPlace(f))+'</td></tr><tr><td>目的</td><td>'+esc(fPurpose(f).join('・')||'—')+'</td></tr><tr><td>機体</td><td>'+f.ac.map(id=>{const a=savedAc(f,id);return esc(a?a.name+'（'+a.mark+'）':id)}).join('<br>')+'</td></tr><tr><td>操縦者</td><td>'+f.pl.map(id=>esc(savedPerson(f,id))).join('、')+'</td></tr><tr><td>飛行</td><td>'+f.legs.length+'回・合計'+fMin(f)+'分</td></tr><tr><td>保存</td><td>'+(f.synced?'Google Driveに保存済み':'<i class="chip warn">未保存</i> この端末には保存されています')+'</td></tr></table></div>'
      +'<div class="sec"><h3>飛行の記録</h3><table class="kv grid"><tr><th>#</th><th>機体</th><th>BAT</th><th>離陸→着陸</th><th>時間</th></tr>'+f.legs.map((l,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(l.ac?acName(l.ac):acName(f.ac[0]))+'</td><td>'+esc(l.bat)+'</td><td>'+esc(l.off)+'→'+esc(l.on)+'</td><td>'+l.min+'分</td></tr>').join('')+'</table>'+(f.notes?'<p class="note">記事・不具合・処置: '+esc(f.notes)+'</p>':'')
      +(nd?'':'<div class="row"><button class="btn sm" data-act="hist-dips">通報した内容を見る</button></div>')+'</div>'
      +'<div class="sec"><h3>出力 <small>必要なものだけ作ります</small></h3>'
@@ -64,13 +64,23 @@ def('hist-detail',{t:()=>{const f=flightOf(A.ui.hSel);return f?f.label:'飛行�
 
 /* ---------- 出力の見本（PDF・KMLは実際には作らない） ---------- */
 function a4Preview(f){
-  const rows=Array.from({length:7},(_,i)=>f.legs[i]||null);const ac=acOf(f.ac[0]);const E=ENV();
-  const pre=PRE_ITEMS.map(x=>x.split('（')[0]);const post=POST_ITEMS.map(x=>x.split('（')[0]);
-  return '<div class="paper a4"><h5>無人航空機の飛行記録・日常点検記録</h5>'
-   +'<table><tr><td>対象機体</td><td colspan="3">'+esc(ac?ac.model+' / '+ac.mark:'')+'</td><td>実施年月日</td><td>'+slash(f.date)+'</td></tr><tr><td>操縦者</td><td colspan="2">'+f.pl.map(id=>esc(plName(id))).join('、')+'</td><td>記録者</td><td colspan="2">'+esc(plName(E.meId))+'</td></tr><tr><td>飛行目的</td><td colspan="2">'+esc(fPurpose(f).join('・'))+'</td><td>飛行経路・場所</td><td colspan="2">'+esc(fPlace(f))+'</td></tr></table>'
-   +'<div class="two" style="margin-top:4px"><table><tr><th colspan="2">飛行前点検</th></tr>'+pre.map(x=>'<tr><td>'+esc(x)+'</td><td>☑</td></tr>').join('')+'</table><table><tr><th colspan="2">飛行後点検</th></tr>'+post.map(x=>'<tr><td>'+esc(x)+'</td><td>☑</td></tr>').join('')+'</table></div>'
-   +'<table style="margin-top:4px"><tr><th>#</th><th>BAT</th><th>場所</th><th>離陸</th><th>着陸</th><th>時間</th><th>安全に影響した事項</th></tr>'+rows.map((l,i)=>'<tr><td>'+(i+1)+'</td>'+(l?'<td>'+esc(l.bat)+'</td><td>'+esc(l.place)+'</td><td>'+esc(l.off)+'</td><td>'+esc(l.on)+'</td><td>'+l.min+'分</td><td>'+esc(l.note)+'</td>':'<td></td><td></td><td></td><td></td><td></td><td></td>')+'</tr>').join('')+'</table>'
-   +'<table style="margin-top:4px"><tr><th>記事・不具合・処置</th></tr><tr><td style="height:26px">'+esc(f.notes||'')+'</td></tr></table></div>';
+  return f.ac.map(id=>{
+    const ac=savedAc(f,id),legs=f.legs.filter(l=>(l.ac||f.ac[0])===id);
+    const chunks=Array.from({length:Math.max(1,Math.ceil(legs.length/7))},(_,i)=>legs.slice(i*7,i*7+7));
+    const checks=kind=>{
+      const c=f.inspections?.[kind]?.[id],items=kind==='pre'?PRE_ITEMS:POST_ITEMS;
+      return '<table><tr><th colspan="2">'+(kind==='pre'?'飛行前':'飛行後')+'点検</th></tr>'
+       +'<tr><td colspan="2">'+esc(c?savedPerson(f,c.person)+' ／ '+slash(c.at)+' ／ '+c.place:'記録を確認してください')+'</td></tr>'
+       +items.map((x,i)=>'<tr><td>'+esc(x.split('（')[0])+'</td><td>'+((f[kind]?.[id]||{})[i]===true?'☑':(f[kind]?.[id]||{})[i]===false?'異常あり':'未記録')+'</td></tr>').join('')+'</table>';
+    };
+    return chunks.map((ls,page)=>'<div class="paper a4"><h5>無人航空機の飛行記録・日常点検記録</h5>'
+      +'<table><tr><td>対象機体</td><td>'+esc(ac?ac.model+' / '+ac.mark:'—')+'</td><td>実施年月日</td><td>'+slash(f.date)+'</td></tr>'
+      +'<tr><td>飛行目的</td><td colspan="3">'+esc(fPurpose(f).join('・'))+'</td></tr></table>'
+      +'<div class="two">'+checks('pre')+checks('post')+'</div>'
+      +'<table><tr><th>#</th><th>操縦者／記録者</th><th>BAT</th><th>離陸場所→着陸場所</th><th>離陸→着陸</th><th>時間</th><th>安全に影響した事項</th></tr>'
+      +Array.from({length:7},(_,i)=>{const l=ls[i];return '<tr><td>'+(page*7+i+1)+'</td>'+(l?'<td>'+esc(savedPerson(f,l.pilot||f.pl[0]))+' / '+esc(savedPerson(f,l.recorder||l.pilot||f.pl[0]))+'</td><td>'+esc(l.bat)+'</td><td>'+esc(l.takeoffPlace||'')+'→'+esc(l.place)+'</td><td>'+esc(l.off)+'→'+esc(l.on)+'</td><td>'+l.min+'分</td><td>'+esc(l.note)+'</td>':'<td colspan="6"></td>')+'</tr>'}).join('')+'</table>'
+      +'<table><tr><th>記事・不具合・処置</th></tr><tr><td>'+esc([f.preNotes?.[id],f.notes].filter(Boolean).join(' ／ '))+'</td></tr></table></div>').join('');
+  }).join('');
 }
 function mapPdfPreview(f){
   const s=f.snap;const key=[1,4,5,6,7,8,17,18,21];const rest=DIPS_ITEMS.filter(x=>!key.includes(x.n));

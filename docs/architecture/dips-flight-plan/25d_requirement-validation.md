@@ -1,6 +1,6 @@
 # 25d. DIPS Field Requirement・入力充足判定
 
-最終更新: 2026-09-15\
+最終更新: 2026-09-23\
 状態: 設計整合（C1未着手）\
 主責務: 3軸要件、effective値、validation、SUBMISSION_READY\
 入口: [DIPS Flight Plan設計群](README.md)
@@ -204,3 +204,15 @@ export interface DipsSubmissionReadiness {
 - 実画面の青い `i` を必須マークと推定しない。API契約の必須と、手動Web側の入力・選択方法を区別し、Web固有の未確認validationは[26](../26_dips-web-ui-verification.md)の `PENDING-WEB-08` に残す。
 - `SUBMISSION_READY` は提出内容の充足であり、通報完了・法的な飛行可能の判断ではない。非特定飛行の推奨通報、通報義務の未確定、システム障害例外および離陸打刻は[13c](../state-machines/13c_takeoff-readiness.md)の `DipsReportingRequirementEvaluator` / `TakeoffReadinessAssessment` に委譲する。
 - ルール検証では「マスター充足」「その他条件」「条件未決」「override 0/false」「不適用」「不正形式」を独立に評価する。固定12入力フォームやAPI JSON生成を判定の前提にしない。
+
+## 4. 入力時点を分ける横断監査（2026-09-23）
+
+**CURRENT-ACCEPTED（同日のオーナー指示）**: 最終的に法定記録・DIPS通報へ必要な情報と、その画面で直ちに手入力する情報を分ける。既登録情報の再利用、自動取得、後補完、条件付き処理、別紙・原本・手動補記が既存運用として成立する場合はそちらを優先する。一般的な法令論だけで確定済みの柔軟運用をPENDINGや必須候補へ戻さない。[法令・運用規約02](../../guidelines/02_legal-and-operations-rules.md)の8区分と正式記録全体での評価を維持する。
+
+分類は「今この工程で必要」「最終的には必要だが後補完」「マスター再利用」「条件該当時のみ」「独自の任意機能」。分類をAPIのREQUIREDと一対一対応させない。製造番号の扱いは[34g](../presentation/34g_settings-aircraft-management-and-context-display.md)を参照する。
+
+**HISTORICAL（モックの不整合）**: 内容確認で不足を表示しても、送信ボタンの処理は同じ判定を通らず疑似正常受付に進めた。
+
+**EVIDENCE/EXAMPLE（今回のモック）**: 既存の機体・操縦者・目的・地図・日時・速度・高度の判定を、送信確認へ進む操作と送信操作の双方へ接続。目的「その他」の説明は該当時だけ確認する。登録・計画途中でこれら全部の入力を要求しない。通報しない運航には通報用の地図・空域・方法を要求しない。許可の未入力日付を今日／1年後で捏造せず、未入力として保持する。これは外部API契約の完全なvalidationではない。
+
+25aの88フィールドにはレスポンス・旧互換・条件付き・マスター由来も含まれる。モックの22項目が揃ったことだけで、exact API契約・未観測の6確認項目・最大飛行時間の意味・複数日単位を検証済みとはしない。既存VERIFY／PENDINGを維持し、未観測事項を現場の必須欄へ昇格させない。

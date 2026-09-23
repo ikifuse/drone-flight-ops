@@ -29,6 +29,7 @@ const REG_META={
 function openReg(type,o){
   o=o||{};
   A.reg={type,id:o.id||null,ret:o.ret||null,d:regInit(type,o)};
+  if(type==='aircraft'){const a=acOf(o.id);AIRCRAFT_DETAILS.forEach(([k])=>A.reg.d[k]=a?.[k]??'')}
   nav('reg-'+type);
 }
 function regBanner(){
@@ -57,16 +58,16 @@ function regInit(t,o){
   switch(t){
    case 'aircraft':return ex?{name:ex.name,model:MODELS.includes(ex.model)?ex.model:'その他（手入力）',modelOther:MODELS.includes(ex.model)?'':ex.model,mark:ex.mark,cert:ex.cert||'なし',expiry:dstr(ex.expiry),batOn:!!ex.batOn,group:ex.group||'',newGroup:''}
      :{name:'',model:'EVO Lite+',modelOther:'',mark:'',cert:'なし',expiry:'',batOn:false,group:'',newGroup:''};
-   case 'person':return ex?{name:ex.name,kana:ex.kana||'',roles:ex.roles.slice(),lic:ex.lic||'未発行',licNo:ex.licNo||'',account:ex.account||'',phone:ex.phone||''}
-     :{name:o.name||'',kana:'',roles:(o.roles||[]).slice(),lic:'未発行',licNo:'',account:'',phone:''};
+   case 'person':return ex?{name:ex.name,kana:ex.kana||'',roles:ex.roles.slice(),lic:ex.lic||'未発行',licNo:ex.licNo||'',account:ex.account||'',phone:ex.phone||'',addr:ex.addr||'',email:ex.email||''}
+     :{name:o.name||'',kana:'',roles:(o.roles||[]).slice(),lic:'未発行',licNo:'',account:'',phone:'',addr:'',email:''};
    case 'permit':return ex?{no:ex.no,label:ex.label,issued:dstr(ex.issued),from:dstr(ex.from),to:dstr(ex.to),cat:ex.cat,cover:ex.cover.slice(),aircraft:ex.aircraft.slice()}
-     :{no:'',label:'',issued:ymd(TODAY),from:ymd(TODAY),to:ymd(addDays(TODAY,365)),cat:'II',cover:[],aircraft:(o.aircraft||[]).slice()};
+     :{no:'',label:'',issued:'',from:'',to:'',cat:'II',cover:[],aircraft:(o.aircraft||[]).slice()};
    case 'insurance':return E.insurance?Object.assign({},E.insurance):{company:'',product:'',pUnl:'yes',pAmt:'',oUnl:'yes',oAmt:'',ability:''};
    case 'contact':return E.contact?Object.assign({},E.contact):Object.assign({name:'',country:'日本/Japan',pref:'',addr:'',cc:'日本/Japan(81)',phone:'',email:''},selfContact(E)||{});
    case 'preset':return ex?{name:ex.name,geom:{kind:ex.geo.kind,pts:ex.geo.pts.map(p=>p.slice()),r:ex.geo.r,width:ex.geo.width||10,done:true,editing:false},layer:false,search:'',alt:ex.alt,from:ex.from,to:ex.to,biz:ex.biz.slice(),durH:ex.dur[0],durM:ex.dur[1]}
      :Object.assign({name:'',geom:newGeom(),layer:false,search:'',alt:30,from:'',to:'',biz:[],durH:0,durM:30},o.prefill||{});
    case 'bat':return ex?{label:ex.label,model:ex.model,group:ex.group||'',newGroup:'',source:ex.source||'new',cycle:ex.cycle==null?'':ex.cycle,check:ex.check,note:ex.note||''}
-     :{label:'BAT '+(E.bats.length+1),model:'',group:o.group||(E.batGroups[0]?E.batGroups[0].id:''),newGroup:'',source:'new',cycle:'',check:'異常なし',note:''};
+     :{label:'BAT '+(E.bats.length+1),model:'',group:o.group||(E.batGroups[0]?E.batGroups[0].id:''),newGroup:'',source:'new',cycle:'',check:'',note:''};
   }
 }
 
@@ -79,7 +80,7 @@ function formAircraft(){
    +fRow('登録記号',fIn('mark',d.mark,'例：JU-○○○○'))+fRow('名称',fIn('name',d.name,'例：1号機（任意）'))
    +fRow('機体認証',fSel('cert',CERTS,d.cert))+fRow('登録の期限',fIn('expiry',d.expiry,'','date'))
    +'<p class="note">登録するのは「機種」ではなく、登録記号のある実際の1機です。</p></div>'
-   +'<div class="sec"><h3>BAT管理 '+tmpChip+'</h3><div class="row">'+fSeg('batOn',[['false','OFF'],['true','ON']],String(d.batOn))+'</div>'
+   +aircraftDetails()+'<div class="sec"><h3>BAT管理 '+tmpChip+'</h3><div class="row">'+fSeg('batOn',[['false','OFF'],['true','ON']],String(d.batOn))+'</div>'
    +'<p class="note">OFFの機体でも、飛行記録・点検記録は最後まで残せます。ONにすると、この機体で使うBATのグループを決めます。</p>'
    +gsel+(newG?fRow('グループ名',fIn('newGroup',d.newGroup,'例：EVO Lite系のBATグループ')):'')
    +(d.batOn?'<p class="note">同じBATを共用できる機体は、同じグループにします。グループに入れると、その機体でグループのBATを選べるようになります。</p>':'')+'</div>';
@@ -87,7 +88,7 @@ function formAircraft(){
 function formPerson(){
   const d=A.reg.d;const isPilot=d.roles.includes('操縦者');const E=ENV();
   const ex=A.reg.id?E.people.find(p=>p.id===A.reg.id):null;
-  return '<div class="sec"><h3>名前など</h3>'+fRow('氏名',fIn('name',d.name,'例：山田 太郎'))+fRow('フリガナ',fIn('kana',d.kana,'例：ヤマダ タロウ（任意）'))+fRow('電話',fIn('phone',d.phone,'例：090-1234-5678（任意）'))
+  return '<div class="sec"><h3>名前など</h3>'+fRow('氏名',fIn('name',d.name,'例：山田 太郎'))+fRow('フリガナ',fIn('kana',d.kana,'例：ヤマダ タロウ（任意）'))+fRow('電話',fIn('phone',d.phone,'例：090-1234-5678（任意）'))+fRow('住所',fIn('addr',d.addr,'あとから入力できます'))+fRow('連絡用メール',fIn('email',d.email,'あとから入力できます'))
    +'<div class="row"><button class="btn sm" data-act="reg-self">自分の情報を使う</button><span class="note">操縦者になるかどうかは、下の役割で選びます。</span></div></div>'
    +'<div class="sec"><h3>役割 <small>複数選べます</small></h3>'+fPills('roles',ROLES,d.roles)
    +'<p class="note">役割は、ここでの立場です。飛行ごとの担当（操縦者・通報者・記録者）とは別です。</p></div>'
@@ -129,7 +130,7 @@ function formBat(){
    +'<div class="sec"><h3>取得 '+tmpChip+'</h3><div class="row">'+fSeg('source',[['new','新品'],['used','中古']],d.source)+'</div>'
    +(d.source==='used'?'<p class="note">中古のときは、取得したときに確認したサイクル数と状態から、記録を始めます。それ以前の履歴は記録しません。</p>':'')
    +'<div class="row"><label>サイクル数</label><input class="in" type="number" data-bind="@d.cycle" data-num="1" value="'+esc(d.cycle)+'" placeholder="確認できたときだけ（任意）"></div>'
-   +fRow('状態確認',fSel('check',BAT_CHECKS,d.check))+'<div class="row"><label>備考</label><textarea class="in" data-bind="@d.note">'+esc(d.note)+'</textarea></div></div>';
+   +fRow('状態確認',fSel('check',[['','選択してください'],...BAT_CHECKS],d.check))+'<div class="row"><label>備考</label><textarea class="in" data-bind="@d.note">'+esc(d.note)+'</textarea></div></div>';
 }
 const FORMS={aircraft:formAircraft,person:formPerson,permit:formPermit,insurance:formInsurance,contact:formContact,preset:formPreset,bat:formBat};
 
@@ -142,21 +143,23 @@ function ensureGroup(E,d,model){
 const SAVE={
   aircraft(E,d,id){
     if(!d.mark.trim()){toast('登録記号を入れてください');return null}
-    const model=d.model==='その他（手入力）'?(d.modelOther.trim()||'その他'):d.model;
+    const model=d.model==='その他（手入力）'?d.modelOther.trim():d.model;
+    if(!model){toast('機種名を入れてください');return null}
     const obj={name:d.name.trim()||model,model,mark:d.mark.trim(),cert:d.cert,expiry:dparse(d.expiry),batOn:!!d.batOn,group:null};
+    for(const [k,,type] of AIRCRAFT_DETAILS){if(d[k]==null)continue;if(type==='number'&&d[k]!==''&&(!Number.isFinite(Number(d[k]))||Number(d[k])<0)){toast('取得前の履歴を確認してください');return null}obj[k]=d[k]===''?null:type==='number'?Number(d[k]):d[k]}
     if(d.batOn)obj.group=ensureGroup(E,d,model);
     if(id){Object.assign(E.aircraft.find(a=>a.id===id),obj);return id}
     Object.assign(obj,{id:uid('a'),dips:null,dead:false});E.aircraft.push(obj);return obj.id;
   },
   person(E,d,id){
     if(!d.name.trim()){toast('氏名を入れてください');return null}
-    const obj={name:d.name.trim(),kana:d.kana,roles:d.roles.slice(),pilot:d.roles.includes('操縦者'),lic:d.lic,licNo:d.licNo,account:d.account,phone:d.phone};
+    const obj={name:d.name.trim(),kana:d.kana,roles:d.roles.slice(),pilot:d.roles.includes('操縦者'),lic:d.lic,licNo:d.licNo,account:d.account,phone:d.phone,addr:d.addr||'',email:d.email||''};
     if(id){Object.assign(E.people.find(p=>p.id===id),obj);return id}
     const p=newPerson(obj.name,obj.roles,obj);E.people.push(p);return p.id;
   },
   permit(E,d,id){
     if(!d.no.trim()){toast('許可番号を入れてください');return null}
-    const obj={no:d.no.trim(),label:d.label.trim()||'許可・承認',issued:dparse(d.issued)||TODAY,from:dparse(d.from)||TODAY,to:dparse(d.to)||addDays(TODAY,365),cat:d.cat,cover:d.cover.slice(),aircraft:d.aircraft.slice()};
+    const obj={no:d.no.trim(),label:d.label.trim()||'許可・承認',issued:dparse(d.issued),from:dparse(d.from),to:dparse(d.to),cat:d.cat,cover:d.cover.slice(),aircraft:d.aircraft.slice()};
     if(id){Object.assign(E.permits.find(p=>p.id===id),obj);return id}
     obj.id=uid('m');E.permits.push(obj);return obj.id;
   },
@@ -171,16 +174,18 @@ const SAVE={
   preset(E,d,id){
     if(!d.name.trim()){toast('現場の名前を入れてください');return null}
     if(!d.geom.done){toast('飛行範囲を作ってください（完了まで）');return null}
-    const obj={name:d.name.trim(),geo:{kind:d.geom.kind,pts:d.geom.pts.map(p=>p.slice()),r:d.geom.r,width:d.geom.width||10},alt:Number(d.alt)||30,from:d.from,to:d.to,biz:d.biz.slice(),dur:[Number(d.durH)||0,Number(d.durM)||0]};
+    const obj={name:d.name.trim(),geo:{kind:d.geom.kind,pts:d.geom.pts.map(p=>p.slice()),r:d.geom.r,width:d.geom.width||10},alt:d.alt===''?30:Number(d.alt),from:d.from,to:d.to,biz:d.biz.slice(),dur:[Number(d.durH)||0,Number(d.durM)||0]};
     if(id){Object.assign(E.presets.find(p=>p.id===id),obj);return id}
     obj.id=uid('pr');E.presets.push(obj);return obj.id;
   },
   bat(E,d,id){
     if(!d.label.trim()){toast('管理ラベルを入れてください');return null}
+    if(!BAT_CHECKS.includes(d.check)){toast('状態を確認してください');return null}
+    if(d.cycle!==''&&(!Number.isInteger(Number(d.cycle))||Number(d.cycle)<0)){toast('サイクル数を確認してください');return null}
     const gid=ensureGroup(E,d,d.model);
     const obj={label:d.label.trim(),model:d.model||'型式（未入力）',group:gid,source:d.source,cycle:d.cycle===''?null:Number(d.cycle),cycleAt:d.cycle===''?null:'今日',check:d.check,note:d.note};
     if(id){Object.assign(E.bats.find(b=>b.id===id),obj);return id}
-    Object.assign(obj,{id:uid('b'),min:0,uses:0,lastDays:null,lastAc:null,hist:[{d:slash(TODAY),ac:null,min:0,chk:d.check+'（取得時）'}]});E.bats.push(obj);return obj.id;
+    Object.assign(obj,{id:uid('b'),min:0,uses:0,lastDays:null,lastAc:null,hist:[{d:slash(TODAY),ac:null,min:0,cycle:obj.cycle,note:d.note,chk:d.check+'（取得時）'}]});E.bats.push(obj);return obj.id;
   }
 };
 
@@ -215,7 +220,7 @@ Object.assign(ACTS,{
     render();
   },
   'reg-tog':t=>{const d=A.reg.d;const k=t.dataset.k,v=t.dataset.v;const i=d[k].indexOf(v);if(i>=0)d[k].splice(i,1);else d[k].push(v);render()},
-  'reg-self':()=>{const d=A.reg.d;const E=ENV();const me=E.people.find(p=>p.id===E.meId);d.name=me?me.name:'';d.phone=(me&&me.phone)||d.phone;render();toast('自分の情報を入れました')},
+  'reg-self':()=>{const d=A.reg.d;const E=ENV();const me=E.people.find(p=>p.id===E.meId);d.name=me?me.name:'';['kana','phone','addr','email'].forEach(k=>{if(me&&me[k])d[k]=me[k]});render();toast('自分の情報を入れました')},
   'person-leave':()=>openSheet(()=>'<h3>離任にしますか</h3><p>離任は、この人を、<b>この会社・団体（または個人）を離れた人</b>にすることです。人員を消すわけではなく、過去の飛行・点検・記録は残ります。これからの飛行の候補からは外れます。</p><p class="note">アプリで離任にしても、Google Driveの共有は、そのままです。共有が残っていると、Google Driveから見られることがあります。共有をやめるときは、Google Driveで設定してください。</p><div class="row"><button class="btn" data-act="close">やめる</button><button class="btn danger" data-act="person-leave-ok">離任にする</button></div>'),
   'person-leave-ok':()=>{const E=ENV();const p=E.people.find(x=>x.id===A.reg.id);if(p){p.active=false;p.left=slash(TODAY)}A.modal=null;A.reg=null;back();toast('離任にしました。過去の記録は残ります')},
   'person-rejoin':()=>{const E=ENV();const p=E.people.find(x=>x.id===A.reg.id);if(p){p.active=true;p.left=null}A.reg=null;back();toast('再び参加にしました。役割は、あらためて決めてください（以前の役割は自動では戻りません）')}

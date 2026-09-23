@@ -51,5 +51,5 @@ Object.assign(ACTS,{
   'plan-open':t=>{A.ui.planId=t.dataset.id;nav('plan')},
   'plan-to-op':()=>{const p=planOf(A.ui.planId);if(p&&p.dips==='clean'&&typeof startOp==='function')startOp(p,null);else toast('DIPSで受付と重複の状態を確認してください')},
   'plan-cancel':()=>openSheet(()=>'<h3>この飛行を中止・削除しますか</h3><ul style="padding-left:1.2em;font-size:14px"><li>制度上可能な範囲で、DIPS側の取消を行います（DIPS側の取消は、アプリの外の手続きです）。</li><li>アプリ側では取消を記録し、この計画を<b>飛行リストから外します</b>。</li><li>これまでの通報履歴・受付の証跡は、消えません。</li></ul><p class="note">事故・急病・通信できないなどで、DIPS側の取消ができなかった場合でも、飛行リストからは外せます。</p><div class="row"><button class="btn" data-act="close">やめる</button><button class="btn danger" data-act="plan-cancel-ok">中止する</button></div>'),
-  'plan-cancel-ok':()=>{if(!canWrite())return;const E=ENV();E.plans=E.plans.filter(p=>p.id!==A.ui.planId);A.ui.planId=null;A.modal=null;back();toast('計画を中止し、飛行リストから外しました。通報の履歴は残ります')}
+  'plan-cancel-ok':()=>{if(!canWrite())return;const E=ENV(),p=planOf(A.ui.planId);if(p){E.cancelledPlans=E.cancelledPlans||[];E.cancelledPlans.push(Object.assign({},clone(p),{cancelledAt:new Date().toISOString()}))}E.plans=E.plans.filter(p=>p.id!==A.ui.planId);A.ui.planId=null;A.modal=null;back();toast('計画を中止し、飛行リストから外しました。通報の履歴は残ります')}
 });

@@ -21,7 +21,7 @@ suite('飛行リスト・通常運航',H=>{
   T('11項目を確認しても装着BAT未確認では進めない',()=>{for(let i=0;i<11;i++){qa('[data-act=op-pre-tog]')[i].click()}return qa('[data-act=op-pre-tog]').length===11&&q('[data-act=op-pre-done]').disabled});
   T('装着BATは点検項目より先に表示される',()=>{const a=q('[data-act=op-bat-pick]'),b=q('[data-act=op-pre-tog]');return !!a&&!!(a.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING)});
   T('BAT管理ONの機体は、BATを選ぶまで離陸できない',()=>{const dis=q('[data-act=op-pre-done]').disabled;return dis&&qa('[data-act=op-bat-pick]').length===3});
-  T('BATを選ぶ→状態確認が必須→選ぶと離陸できる',()=>{act('op-bat-pick');const d1=q('[data-act=op-pre-done]').disabled;act('op-bat-check','[data-v=異常なし]');act('op-pre-done');q('details').open=true;return d1&&route()==='op-standby'&&txt().includes('離陸前の確認')&&txt().includes('通報済み・重複なし')&&!q('[data-act=op-takeoff]').disabled});
+  T('BATを選ぶ→状態確認が必須→選ぶと離陸できる',()=>{act('op-bat-pick');const d1=q('[data-act=op-pre-done]').disabled;act('op-bat-check','[data-v=異常なし]');act('op-pre-done');qa('details').forEach(e=>e.open=true);return d1&&route()==='op-standby'&&txt().includes('離陸前の確認')&&txt().includes('通報済み・重複なし')&&!q('[data-act=op-takeoff]').disabled});
   T('離陸→飛行中（ストップウォッチ・着陸ボタン）',()=>{act('op-takeoff');return route()==='op-fly'&&!!q('#sw')&&!!q('[data-act=op-land]')});
   T('着陸→着陸後入力（区間の実績・次の作業の4択）',()=>{act('op-ff');act('op-land');return route()==='op-landed'&&OP().legs.length===1&&OP().legs[0].min>=5&&!!q('[data-act=op-land-confirm]')&&!q('[data-act=op-continue]')});
   T('続行: 同じBATで再離陸',()=>{act('op-land-confirm');act('op-continue');if(route()!=='op-standby'||q('[data-act=op-takeoff]').disabled)return 'BAT lost';act('op-takeoff');act('op-land');return OP().legs.length===2});

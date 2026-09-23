@@ -99,7 +99,7 @@ suite('初回利用者の通し',H=>{
     window.nfGo('final');act('nf-nodips-go');act('op-pre-all');act('op-pre-done');
     if(!txt().includes('使えるBATが登録されていません'))return 'no empty state';
     act('op-bat-reg');if(route()!=='reg-bat'||!txt().includes('BATの選択'))return 'reg '+route();
-    set('[data-bind="@d.label"]','BAT A');act('reg-save');
+    set('[data-bind="@d.label"]','BAT A');set('[data-bind="@d.check"]','異常なし');act('reg-save');
     return route()==='op-pre'&&!!A().op.cur.bat&&E().bats.length===1&&E().bats[0].label==='BAT A'&&E().bats[0].group===a2.group;
   });
   T('25 状態確認を選んで離陸→着陸→保存→BATの履歴に載る',()=>{

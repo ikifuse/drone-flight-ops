@@ -106,18 +106,21 @@ function fmtDT(d,ref){const s=slash(d)+' '+pad(d.getHours())+':'+pad(d.getMinute
 function issues(){
   const E=ENV();const L=[];const add=(lv,text,scr)=>L.push({lv,text,scr});
   if(!S.aircraft.length)add('ng','機体が選ばれていません','use');
-  S.aircraft.forEach(id=>{const a=E.aircraft.find(x=>x.id===id);if(a&&a.dead)add('ng',a.name+'は抹消・期限切れです','use');else if(a&&a.expiry&&daysTo(a.expiry)<=30)add('warn',a.name+'の登録期限が近いです（'+daysTo(a.expiry)+'日）','use')});
-  if(!S.pilots.length)add('ng','操縦者が選ばれていません','use');
+  S.aircraft.forEach(id=>{const a=E.aircraft.find(x=>x.id===id);if(!a||a.dead)add('ng',(a?a.name:'選択した機体')+'は使用できません','use');else if(a&&a.expiry&&daysTo(a.expiry)<=30)add('warn',a.name+'の登録期限が近いです（'+daysTo(a.expiry)+'日）','use')});
+  if(!S.pilots.length||S.pilots.some(id=>!livePl(id)||!plOf(id).pilot))add('ng','操縦者が選ばれていません','use');
   if(S.permit===null)add('warn','許可・承認が未選択です（不要なら「なし」を選ぶ）','use');
   permitHints().forEach(h=>add('warn',h,'use'));
   if(!S.biz.length&&!S.non.length)add('ng','飛行目的が選ばれていません','content');
-  if((S.biz.includes('その他')&&!S.otherBiz.trim())||(S.non.includes('その他')&&!S.otherNon.trim()))add('warn','目的「その他」の内容が空です','content');
-  if(!S.air.length)add('ng','飛行空域が未選択です（該当しない場合は「上記空域の飛行は行わない」）','content');
-  if(!S.met.length)add('ng','飛行方法が未選択です（該当しない場合は「上記方法の飛行は行わない」）','content');
-  if(!S.geom.done)add('ng','飛行範囲が完成していません','area');
+  if((S.biz.includes('その他')&&!S.otherBiz.trim())||(S.non.includes('その他')&&!S.otherNon.trim()))add('ng','目的「その他」の内容が空です','content');
+  if(!S.noDips&&!S.air.length)add('ng','飛行空域が未選択です（該当しない場合は「上記空域の飛行は行わない」）','content');
+  if(!S.noDips&&!S.met.length)add('ng','飛行方法が未選択です（該当しない場合は「上記方法の飛行は行わない」）','content');
+  if(!S.noDips&&!S.geom.done)add('ng','飛行範囲が完成していません','area');
   if(!S.from.trim())add('warn','出発地が空です','area');
   if(!S.to.trim())add('warn','目的地が空です','area');
   if(!S.noDips){
+    if(!S.planName.trim())add('ng','飛行計画名称を入れてください','review');
+    if(!Number.isFinite(+startDT()))add('ng','開始日時を確認してください','time');
+    if(!Number.isInteger(Number(S.assist))||Number(S.assist)<0)add('ng','補助者人数を確認してください','content');
     if(S.durH*60+S.durM<=0)add('ng','所要時間が0です','time');
     if(startDT()<new Date())add('warn','開始日時が過去です','time');
     if(!(S.speed>0))add('ng','飛行速度が正しくありません','time');
@@ -140,10 +143,10 @@ function valueOf(n,s){
   s=s||S;const E=ENV();
   switch(n){
    case 1:return esc(s.planName);
-   case 2:{const m=E.permits.find(x=>x.id===s.permit);return s.permit==='none'?'許可・承認なし':m?esc(m.no):'<i class="chip warn">未選択</i>'}
+   case 2:{const m=s.masters?s.permitRecord:E.permits.find(x=>x.id===s.permit);return s.permit==='none'?'許可・承認なし':m?esc(m.no):'<i class="chip warn">未選択</i>'}
    case 3:return s.savedRoute?esc(s.savedRoute):'なし';
-   case 4:return s.aircraft.length?s.aircraft.map(id=>{const a=acOf(id);return a?esc(a.name)+'（'+esc(a.mark)+'）':esc(id)}).join('<br>'):'<i class="chip ng">未選択</i>';
-   case 5:return s.pilots.length?s.pilots.map(id=>esc(plName(id))).join('、'):'<i class="chip ng">未選択</i>';
+   case 4:return s.aircraft.length?s.aircraft.map(id=>{const a=s.masters?s.masters.aircraft[id]:acOf(id);return a?esc(a.name)+'（'+esc(a.mark)+'）':esc(id)}).join('<br>'):'<i class="chip ng">未選択</i>';
+   case 5:return s.pilots.length?s.pilots.map(id=>esc(s.masters?(s.masters.people[id]?.name||'—'):plName(id))).join('、'):'<i class="chip ng">未選択</i>';
    case 6:{const b=s.biz.map(x=>x==='その他'?'その他（'+esc(s.otherBiz)+'）':esc(x));const o=s.non.map(x=>x==='その他'?'その他（'+esc(s.otherNon)+'）':esc(x));return (b.length?'業務: '+b.join('、'):'')+(b.length&&o.length?'<br>':'')+(o.length?'業務以外: '+o.join('、'):'')||'<i class="chip ng">未選択</i>'}
    case 7:return s.air.length?s.air.map(esc).join('<br>'):'<i class="chip ng">未選択</i>';
    case 8:return s.met.length?s.met.map(esc).join('<br>'):'<i class="chip ng">未選択</i>';
@@ -179,6 +182,7 @@ function applyPast(fl){
   S.aircraft=s.aircraft.filter(liveAc);S.pilots=s.pilots.filter(livePl);S.permit=s.permit;S.biz=s.biz.slice();S.non=s.non.slice();S.air=s.air.slice();S.met=s.met.slice();
   S.tsu=s.tsu.slice();S.tether=s.tether;S.assist=s.assist;applyGeo(s.geom);S.from=s.from;S.to=s.to;S.durH=s.durH;S.durM=s.durM;S.alt=s.alt;S.speed=s.speed;
   ['aircraft','pilots','permit','purpose','air','met','area','from','to','dur','alt'].forEach(k=>S.auto[k]='前回（'+fl.label+'）から');
+  ['otherBiz','otherNon','maxH','maxM','savedRoute'].forEach(k=>{if(s[k]!=null)S[k]=clone(s[k])});
   S.start={mode:'past',label:fl.label};
 }
 function fillSample(){
@@ -282,7 +286,7 @@ function vMaster(part){
   const abil=i.mode==='none'?'<div class="grp">賠償能力（保険に入っていない場合の支払能力に関する項目）</div><div class="pills">'+pill('ins-set','data-k="ability" data-v="yes"','はい',i.ability==='yes')+pill('ins-set','data-k="ability" data-v="no"','いいえ',i.ability==='no')+'</div>':'';
   const src=[['self','自アカウントの情報'],['application','申請書記載の情報'],['pilot','操縦者']];
   const pilotSel=c.src==='pilot'?'<div class="row"><label>操縦者</label><select class="in" data-bind="contact.pilotId" data-rerender="1" style="flex:1"><option value="">選択してください</option>'+S.pilots.map(id=>'<option value="'+id+'"'+(c.pilotId===id?' selected':'')+'>'+esc(plName(id))+'</option>').join('')+'</select></div>':'';
-  const noC=!E.contact;
+  const noC=!E.contact||c.src==='application';
   const insurance='<div class="sec"><h3>保険に関する情報 '+autoChip('ins')+'</h3>'
    +(i.mode==='unreg'?'<div class="msg warn"><b>保険が未登録です。</b>ここで登録するか、この飛行だけ入力するか、加入していないを選びます。</div><div class="pills"><button class="pill" data-act="nf-reg" data-t="insurance">保険をここで登録する</button>'+pill('ins-mode','data-v="custom"','この飛行だけ入力',false)+pill('ins-mode','data-v="none"','保険に加入していない',false)+'</div>'
      :'<div class="msg ok">'+esc(insSummary())+'</div><div class="pills">'+(E.insurance?pill('ins-mode','data-v="auto"','登録済みのまま',i.mode==='auto'):'')+pill('ins-mode','data-v="custom"','この飛行だけ変更',i.mode==='custom')+pill('ins-mode','data-v="none"','保険に加入していない',i.mode==='none')+'</div>')+insForm+abil+'</div>'
@@ -292,7 +296,7 @@ function vMaster(part){
    +(noC?'<div class="row"><label>氏名</label><input class="in" data-bind="contact.name" value="'+esc(c.name)+'"></div><div class="row"><label>住所</label><input class="in" data-bind="contact.addr" value="'+esc(c.addr)+'" placeholder="任意"></div>'
         :'<table class="kv" style="margin-top:8px"><tr><td>氏名</td><td>'+esc(c.name)+'</td></tr><tr><td>国/地域・都道府県</td><td>'+esc(c.country)+' / '+esc(c.pref)+'</td></tr><tr><td>住所</td><td>'+esc(c.addr)+'</td></tr></table><p class="note">氏名・住所は連絡先の情報源から自動（読み取り専用）。</p>')
    +'<div class="row"><label>電話</label><input class="in" data-bind="contact.cc" value="'+esc(c.cc)+'" style="max-width:9em"><input class="in" data-bind="contact.phone" placeholder="例：090-1234-5678" value="'+esc(c.phone)+'"></div><div class="row"><label>メール</label><input class="in" data-bind="contact.email" placeholder="例：name@example.com" value="'+esc(c.email)+'"></div><div class="row"><label>その他情報</label><textarea class="in" data-bind="contact.other">'+esc(c.other)+'</textarea></div>'
-   +(noC?'<div class="row"><button class="btn sm" data-act="nf-save-contact">この内容を連絡先として登録しておく</button></div>':'')+'</div>'
+   +(noC&&c.src!=='application'?'<div class="row"><button class="btn sm" data-act="nf-save-contact">この内容を連絡先として登録しておく</button></div>':'')+'</div>'
    +'<p class="note">毎回ほとんど変わらない情報です。登録しておくと、次から自動で入ります。</p>';
   return part==='insurance'?insurance:part==='contact'?contact:insurance+contact;
 }
@@ -368,6 +372,7 @@ def('nf',{
    別々の案内に分けず、1回の「足りないものを補う」流れとして出す。新しい独立画面は作らない（34a §9.1）。 ---------- */
 function contactPerson(){
   const E=ENV();if(!E||!S)return null;const c=S.contact;
+  if(c.src==='self'&&E.contact)return null;
   if(c.src==='self')return E.people.find(p=>p.id===E.meId)||null;
   if(c.src==='pilot')return c.pilotId?plOf(c.pilotId):null;
   return null; /* 申請書記載は人物に紐づかない。Personへ保存しない（25b §1.1） */
@@ -392,7 +397,7 @@ const needContactOpen=()=>needContact().filter(f=>!f.personOnly);
 const needDips=()=>!A.dips.registered;
 const needAny=()=>needContactOpen().length>0||needDips();
 function openNeedSheet(){
-  A.ui.needForm={};needContact().forEach(f=>{A.ui.needForm[f.k]=''});
+  A.ui.needForm=A.ui.needForm||{};needContact().forEach(f=>{if(A.ui.needForm[f.k]==null)A.ui.needForm[f.k]=''});
   openSheet(needSheetHtml);
 }
 function needSheetHtml(){
@@ -401,7 +406,7 @@ function needSheetHtml(){
   if(miss.length){
     h+='<div class="sec"><h3>連絡先'+(who&&who.name?'（'+esc(pnm(who))+'）':'')+'</h3>'
      +miss.map(x=>'<div class="fld"><label>'+esc(x.label)+'</label><input class="in" data-bind="#needForm.'+x.k+'" value="'+esc(f[x.k]||'')+'" placeholder="'+esc(x.ph)+'"></div>').join('')
-     +'<p class="note">'+(who?'登録されている人の情報として保存します。':'この飛行の連絡先として使います。')+'次の飛行からは、入れ直さずに使えます。</p>'
+     +'<p class="note">'+(who?'登録されている人の情報として保存します。':'この飛行の連絡先として使います。')+(who||S.contact.src==='self'?'次の飛行からは、入れ直さずに使えます。':'')+'</p>'
      +'<div class="row"><button class="btn primary wide" data-act="need-save">保存して続ける</button></div></div>';
   }
   if(needDips()){
@@ -414,7 +419,7 @@ function needSheetHtml(){
 /* ---------- 通報後の画面（送信・Manual・結果） ---------- */
 const planLink=()=>{const E=ENV();return E.plans.find(p=>p.id===(A.nfResult&&A.nfResult.planId))};
 function commitPlan(dips){
-  const E=ENV();const snap=clone(S);
+  const E=ENV();const snap=clone(S);snap.masters=recordMasters(S.aircraft,S.pilots);snap.permitRecord=clone(E.permits.find(p=>p.id===S.permit)||null);
   const pl={id:uid('pl'),name:S.planName,snap,start:startDT(),place:S.to||S.from||'（場所未入力）',ac:S.aircraft.slice(),pl:S.pilots.slice(),rep:E.meId,dips,kml:A.online?'saved':'pending'};
   E.plans.unshift(pl);return pl;
 }
@@ -455,7 +460,7 @@ def('nf-manual-confirm',{t:'通報後の確認',st:'DIPSで登録を確認する
   body:()=>'<div class="msg ok">「手動通報した」を記録しました（'+hm(new Date())+'）。<span class="note">これは、DIPSに登録されたことの確認ではありません。</span></div>'
    +'<div class="sec"><h3>DIPSで確認しましたか？</h3><p class="lead">DIPS Webの飛行計画一覧で、登録されていることを確認してください。</p>'
    +'<button class="tgl'+(A.ui.mconf==='num'?' sel':'')+'" data-act="nf-mconf" data-v="num"><span class="box">'+(A.ui.mconf==='num'?'✓':'')+'</span><span><b>受付番号で確認した</b></span></button>'
-   +(A.ui.mconf==='num'?'<div class="row"><label>番号</label><input class="in" data-bind="#mnum" placeholder="DIPSの計画ID（任意）"></div>':'')
+   +(A.ui.mconf==='num'?'<div class="row"><label>番号</label><input class="in" data-bind="#mnum" value="'+esc(A.ui.mnum||'')+'" placeholder="DIPSの計画ID（任意）"></div>':'')
    +'<button class="tgl'+(A.ui.mconf==='list'?' sel':'')+'" data-act="nf-mconf" data-v="list"><span class="box">'+(A.ui.mconf==='list'?'✓':'')+'</span><span><b>一覧で、日時・機体・範囲を照合した</b><br><small class="note">番号を取得できない場合はこちら</small></span></button></div>',
   foot:()=>'<button class="btn" data-act="back">戻る</button><button class="btn primary" data-act="nf-mconf-ok"'+(A.ui.mconf?'':' disabled')+'>DIPSで確認できた</button>'
 });
@@ -569,7 +574,7 @@ Object.assign(ACTS,{
   'nf-me-pilot':()=>{const E=ENV();const me=E.people.find(p=>p.id===E.meId);if(!me)return;if(!me.roles.includes('操縦者'))me.roles.push('操縦者');me.pilot=true;if(!S.pilots.includes(me.id))S.pilots.push(me.id);delete S.auto.pilots;render();toast('自分を操縦者として登録し、選びました')},
   'nf-save-preset':()=>openReg('preset',{prefill:{name:'',geom:clone(S.geom),alt:S.alt,from:S.from,to:S.to,biz:S.biz.slice(),durH:S.durH,durM:S.durM},ret:{label:'新規飛行の「飛行範囲」',apply:()=>{}}}),
   'nf-save-contact':()=>{
-    if(!canWrite())return;const c=S.contact;if(!c.name.trim()){toast('氏名を入れてください');return}
+    if(!canWrite())return;const c=S.contact;if(c.src==='application')return;if(c.src==='pilot'){const p=contactPerson();if(!p)return;['name','addr','phone','email'].forEach(k=>p[k]=c[k]);render();toast('選んだ人の連絡先を保存しました');return}if(!c.name.trim()){toast('氏名を入れてください');return}
     ENV().contact={name:c.name,country:c.country,pref:c.pref,addr:c.addr,cc:c.cc,phone:c.phone,email:c.email};render();toast('連絡先として登録しました。次回から自動入力されます');
   },
   'tog-purpose':t=>{const k=t.dataset.g,v=t.dataset.v;const a=S[k];const i=a.indexOf(v);if(i>=0)a.splice(i,1);else a.push(v);delete S.auto.purpose;render()},
@@ -585,10 +590,9 @@ Object.assign(ACTS,{
   'cal-clear':()=>{S.multi=[];render()},
   'ins-mode':t=>{S.ins.mode=t.dataset.v;if(t.dataset.v==='auto'&&ENV().insurance){const i=ENV().insurance;Object.assign(S.ins,{company:i.company,product:i.product,pUnl:i.pUnl,pAmt:i.pAmt,oUnl:i.oUnl,oAmt:i.oAmt})}render()},
   'ins-set':t=>{S.ins[t.dataset.k]=t.dataset.v;render()},
-  'contact-src':t=>{const src=t.dataset.v;S.contact.src=src;const E=ENV();const c0=selfContact(E);
-    if(src==='self'){if(c0)Object.assign(S.contact,{name:c0.name,country:c0.country,pref:c0.pref,addr:c0.addr,phone:c0.phone,email:c0.email})}
-    else if(src==='application'){Object.assign(S.contact,{name:'',addr:'',phone:'',email:''})}
-    else{Object.assign(S.contact,{name:S.contact.pilotId?plName(S.contact.pilotId):'（操縦者を選択）',phone:'',email:''})}
+  'contact-src':t=>{const src=t.dataset.v;S.contactDrafts=S.contactDrafts||{};S.contactDrafts[S.contact.src]=clone(S.contact);
+    if(S.contactDrafts[src])S.contact=clone(S.contactDrafts[src]);
+    else{const base={src,pilotId:'',name:'',country:'日本/Japan',pref:'',addr:'',cc:'日本/Japan(81)',phone:'',email:'',other:''};S.contact=Object.assign(base,src==='self'?selfContact(ENV()):{});S.contact.src=src}
     render()},
   'jump':t=>{if(A.route==='nf-send'){back();}nfGo(t.dataset.s)},
   'rv':t=>{S.reviewView=t.dataset.v;render()},
@@ -596,7 +600,7 @@ Object.assign(ACTS,{
   'nf-send-go':()=>{
     if(!A.online){toast('オフラインのため送信できません。通報の内容は、この端末に残っています。通信できる場所で、もう一度送信してください');return}
     if(!A.apiOk){toast('いまは、アプリからDIPSへ送信できません。［DIPS Webで通報する］を選んでください');return}
-    if(!canWrite())return;
+    if(!canWrite()||!planReady())return;
     if(needAny()){openNeedSheet();return}
     nav('nf-send');
   },
@@ -608,7 +612,8 @@ Object.assign(ACTS,{
     needContact().forEach(x=>{
       const v=(f[x.k]||'').trim();if(!v)return;
       n++;
-      if(p)p[x.k]=v;                    /* 対象Personの人物情報へ保存（25b §1.1） */
+      if(p)p[x.k]=v;
+      else if(S.contact.src==='self'&&ENV().contact&&!x.personOnly)ENV().contact[x.k]=v;                    /* 対象Personの人物情報へ保存（25b §1.1） */
       if(!x.personOnly)S.contact[x.k]=v; /* この飛行の連絡先にも反映 */
     });
     if(!n){toast('入力してください');return}
@@ -618,7 +623,7 @@ Object.assign(ACTS,{
   },
   'dips-later':()=>{A.modal=null;render();toast('飛行計画は、そのまま残っています')},
   'nf-send-back':()=>back(),
-  'nf-submit':()=>{if(A.route!=='nf-send')return;if(!A.online||!A.apiOk||!canWrite()){toast('送信できません。入力した計画は残っています');return}ACTS['nf-result']({dataset:{k:'clean'}})},
+  'nf-submit':()=>{if(A.route!=='nf-send')return;if(!A.online||!A.apiOk||!canWrite()){toast('送信できません。入力した計画は残っています');return}if(!planReady())return;if(needAny()){openNeedSheet();return}ACTS['nf-result']({dataset:{k:'clean'}})},
   'nf-result':t=>{
     const k=t.dataset.k;
     if(k==='clean'||k==='dup'){const pl=commitPlan(k);A.nfResult={kind:k,planId:pl.id}}
@@ -629,11 +634,11 @@ Object.assign(ACTS,{
   'nf-open-dips':()=>openSheet(()=>'<h3>DIPS Webを開く</h3><p>DIPS Webを別のタブで開き、この画面と見比べながら入力します。</p><div class="row"><button class="btn" data-act="close">閉じる</button></div>'),
   'nf-manual-done':()=>{A.ui.mconf=null;nav('nf-manual-confirm')},
   'nf-mconf':t=>{A.ui.mconf=t.dataset.v;render()},
-  'nf-mconf-ok':()=>{if(!canWrite())return;const pl=commitPlan('manual');A.nfResult={kind:'manual',planId:pl.id};rep('nf-accepted')},
+  'nf-mconf-ok':()=>{if(!canWrite()||!A.ui.mconf||(A.ui.mconf==='num'&&!A.ui.mnum.trim())){toast('DIPSでの確認内容を入れてください');return}const pl=commitPlan('manual');pl.confirmation={method:A.ui.mconf,number:A.ui.mconf==='num'?A.ui.mnum.trim():null,at:new Date().toISOString()};A.nfResult={kind:'manual',planId:pl.id};rep('nf-accepted')},
   'nf-later':()=>{toast('計画は飛行リストに残しました。あとから、本人または権限のある人が続けられます');S=null;A.nfResult=null;root('home')},
   'nf-open-list':()=>{root('home');nav('list')},
   'nf-fix':()=>{A.nfResult=null;back();nfGo('review')},
-  'nf-nodips-go':()=>{if(typeof startOp==='function')startOp(null,S);else openStub('準備中です','飛行前点検以降の画面は、まだ用意できていません。')},
+  'nf-nodips-go':()=>{if(!planReady())return;if(typeof startOp==='function')startOp(null,S);else openStub('準備中です','飛行前点検以降の画面は、まだ用意できていません。')},
   'nf-to-op':()=>{
     if(!A.nfResult||A.nfResult.kind!=='clean')return;
     const pl=planLink();

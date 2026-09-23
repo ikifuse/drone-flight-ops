@@ -42,7 +42,7 @@ const assert=require('node:assert/strict');
   await click('nf-send-go');await expectRoute('nf-send');await click('nf-submit');await expectRoute('nf-accepted');
   let st=await state();assert.equal(st.env.plans[0].dips,'clean');assert.equal(st.env.plans[0].kml,'saved');
   await click('nf-later');await expectRoute('home');await click('go','[data-s=list]');await click('plan-open');await click('plan-to-op');await expectRoute('op-pre');
-  const bat=async label=>{await click('op-bat-reg');await fill('@d.label',label);await click('reg-save');await click('op-bat-check','[data-v="異常なし"]')};
+  const bat=async label=>{await click('op-bat-reg');await fill('@d.label',label);await p.locator('.phone [data-bind="@d.check"]').selectOption('異常なし');await click('reg-save');await click('op-bat-check','[data-v="異常なし"]')};
   const pre=async()=>{for(let i=0;i<11;i++)await click('op-pre-tog','[data-i="'+i+'"]');await click('op-pre-done')};
   const fly=async()=>{await click('op-takeoff');await expectRoute('op-fly');await click('op-land');await fill('~last.min','3');await click('op-land-confirm')};
   await bat('BAT A');await pre();await fly();

@@ -12,9 +12,9 @@ const pad=n=>String(n).padStart(2,'0');
 const TODAY=(()=>{const d=new Date();d.setHours(0,0,0,0);return d})();
 const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-const slash=d=>d.getFullYear()+'/'+pad(d.getMonth()+1)+'/'+pad(d.getDate());
+const slash=d=>{if(!d)return '未入力';d=new Date(d);return Number.isNaN(+d)?'未入力':d.getFullYear()+'/'+pad(d.getMonth()+1)+'/'+pad(d.getDate())};
 const hm=d=>pad(d.getHours())+':'+pad(d.getMinutes());
-const daysTo=d=>Math.round((d-TODAY)/86400000);
+const daysTo=d=>d?Math.round((new Date(d)-TODAY)/86400000):NaN;
 const clone=o=>JSON.parse(JSON.stringify(o));
 let UID=100;const uid=p=>p+(++UID);
 const tmpChip='';   /* 未確定の注記は設計メモへ。利用者画面には出さない */
