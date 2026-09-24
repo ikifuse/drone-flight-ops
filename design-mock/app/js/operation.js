@@ -21,7 +21,7 @@ function makeOp(plan,s){
   const pilot=(plan?plan.pl[0]:s.pilots[0])||E.meId;
   return {submission:plan?clone(plan):null,planId:plan?plan.id:null,name:sn.planName,snap:sn,noDips:!plan,dips:plan?plan.dips:'none',kml:plan?plan.kml:'none',ac,acs:[ac],pilot,recorder:'',inspections:{pre:{},post:{}},checked:{},pre:{},post:{},preNotes:{},preObserved:false,postObserved:false,cur:{bat:null,offAt:null,extra:0,simple:[false,false],takeoffPlace:sn.to||sn.from||''},last:null,legs:[],ack:false,notes:''};
 }
-function startOp(plan,s){if(plan&&plan.dips!=='clean'){toast('DIPSで受付と重複の状態を確認してください');return}const selected=plan?plan.ac[0]:s.aircraft[0];if(!acOf(selected)||acOf(selected).dead){toast('対象機体の登録情報を確認してください');return}A.op=makeOp(plan,s);S=null;A.nfResult=null;opGo('op-pre')}
+function startOp(plan,s){if(plan&&plan.dips!=='clean'){toast('DIPSで受付と重複の状態を確認してください');return}const selected=plan?plan.ac[0]:s.aircraft[0];if(!acOf(selected)||acOf(selected).dead){toast('対象機体の登録情報を確認してください');return}A.op=makeOp(plan,s);if(!plan)delete ENV().planDraft;S=null;A.nfResult=null;opGo('op-pre')}
 /* 画面一覧から、途中の画面へ直接飛ぶときの準備（仮データの運航を自動で整える。設計確認用） */
 function opPrep(id){
   const E=ENV();
@@ -92,8 +92,8 @@ def('op-pre',{t:'飛行前点検',st:()=>A.op.name,back:false,
   goal:'対象機体・操縦者と、必要な点検結果を確認する。点検が済むまで、離陸待機へは進めない。',
   doc:'35b §3（飛行前点検の設計整理10項目。実機点検は11項目）／13c（飛行前日常点検が未実施・不合格なら、離陸待機へ進めない＝アプリの物理的な前提）／34g §2（対象機体を機種と登録記号で明示）／34d（通報内容から［飛行前点検へ］で接続。DIPS対象外も同じ点検以降へ合流できる）。',state:'spec',
   tmp:['旧アプリの11項目を復元。8項目に簡略化していた履歴を訂正。装着BATを先に確認し、サイクル数は任意。BAT管理OFFは32eに従い個体選択を強制しない','戻る・中止の具体UIは未確定。「飛行0回の中止」と「実績がある運航の終了」を区別する（35b §3項目7）','入力途中は端末に保護し、この画面だけで正式なDrive記録は作らない（35b §3項目8）'],
-  ask:['飛行前点検で「すべて確認済み」にする近道を用意するか（点検記録の意味・安全性が変わる）','点検担当の変更UIの最終形（操縦者と同じなら再入力しない）'],
-  ui:['項目の並び、チェックの形、進み具合の見せ方は標準案'],
+  ask:['飛行前点検で「すべて確認済み」にする近道を用意するか（点検記録の意味・安全性が変わる）'],
+  ui:['項目の並び、チェックの形、進み具合の見せ方は標準案','点検担当の変更欄は必要な場合だけ開く。既定の実施者は31cを維持する'],
   mock:()=>'<p class="note" style="margin:0 0 6px">点検項目を1つずつ押す代わりに、全部を確認済みにして、次の画面を確かめます。</p><button class="btn sm" data-act="op-pre-all">全部確認済みにする</button>',
   body:()=>{
     const op=A.op,a=opAc();const pre=op.pre[a.id]||(op.pre[a.id]={});const done=preReady();
@@ -108,7 +108,7 @@ def('op-standby',{t:'離陸待機',st:()=>A.op.name,back:false,
   goal:'次の離陸を記録する準備を整える（BAT管理ONの機体は、使うBATを選ぶ）。',
   doc:'35b §4（離陸待機の10項目：大きな離陸ボタン、対象機体・運航文脈の表示）／13c（離陸前の総合確認：警告は促すが、実際の離陸の記録は拒否しない）／32g・32h §8（BAT選択は対象機体に使用許可されたBATだけ）。',state:'spec',
   tmp:['旧アプリ基準でBATは飛行前点検の先頭で選択。ここは点検済みBAT・離陸場所・対象機体を表示する。確認表は補助として折り畳む','離陸前の確認の並び・表現は仮。アプリは法令上の離陸可否を保証しない（13c）','ボタン配置・再準備の見せ方は未確定（35b §4項目10）'],
-  ask:['離陸前に警告があるとき、離陸へ進めないようにするか、確認のうえ進めるようにするか（安全性）'],
+  ask:[],
   ui:['BATの選択を離陸待機の画面に含めるか分けるか、警告の出し方は標準案'],
   body:()=>{
     const op=A.op;const R=readiness();

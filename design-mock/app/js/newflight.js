@@ -41,7 +41,7 @@ const NFS={
   goal:'保険と連絡先を、登録済みの内容で自動入力して確認する（変えたいときだけ開く）。未登録ならその場で登録できる。',
   reuse:['保険の登録','連絡先（自アカウントの情報。初回登録した本人情報から自動で入る）','操縦者を選んだときの人物情報'],
   tmp:['毎回変わらない情報を1画面にまとめる案。DIPSの順序（保険は途中、連絡先は最後）からは動かしている','連絡先は、初回登録した本人情報（氏名・住所・電話・メール）から自動で入る。操縦者を選んだときは、その人物の登録情報を使う（34a §9.5）','人物情報のどの列をDIPSのどの欄に対応させるかの最終形は未確定（PENDING-S2-IDENTITY）'],
-  ask:['保険を、登録済みの内容からどこまで自動で埋めるか（そのまま通報の記録になる値）'],
+  ask:[],
   ui:['この画面を独立させるか、確認画面にまとめるかは標準案']},
  review:{t:'内容確認',dips:[1],
   goal:'入力した内容を確認し、計画名称を確認・修正する。足りない項目を見つける。',
@@ -419,9 +419,9 @@ function needSheetHtml(){
 /* ---------- 通報後の画面（送信・Manual・結果） ---------- */
 const planLink=()=>{const E=ENV();return E.plans.find(p=>p.id===(A.nfResult&&A.nfResult.planId))};
 function commitPlan(dips){
-  const E=ENV();const snap=clone(S);snap.masters=recordMasters(S.aircraft,S.pilots);snap.permitRecord=clone(E.permits.find(p=>p.id===S.permit)||null);
+  const E=ENV();const snap=clone(S);snap.masters=recordMasters(S.aircraft,[...S.pilots,E.meId]);snap.permitRecord=clone(E.permits.find(p=>p.id===S.permit)||null);
   const pl={id:uid('pl'),name:S.planName,snap,start:startDT(),place:S.to||S.from||'（場所未入力）',ac:S.aircraft.slice(),pl:S.pilots.slice(),rep:E.meId,dips,kml:A.online?'saved':'pending'};
-  E.plans.unshift(pl);return pl;
+  E.plans.unshift(pl);delete E.planDraft;return pl;
 }
 def('nf-send',{t:'DIPSへ通報する内容の確認',st:'アプリからDIPSへ送信する',env:false,back:false,
   goal:'通報する内容を確認し、［通報する］で正常受付を疑似実行する。右側では重複・結果不明・エラーも確認できる。',
@@ -446,7 +446,7 @@ def('nf-manual',{t:'DIPS Webで通報する',st:'DIPSの入力順に確認しな
     const how={copy:'コピーして貼る',pick:'DIPSの一覧から選ぶ',chk:'チェックを入れる',form:'欄に入力する',num:'人数を入れる',auto:'自動計算（照合のみ）',btn:'ボタンから選ぶ'};
     return (off?'<div class="msg warn"><b>オフラインです。</b>この画面の表示とコピーは使えます。DIPS Webを開いて通報するには、通信が必要です。通報の内容は、この端末に残っています。</div>':'')
      +'<div class="msg info">上から順にDIPS Webへ入力します。並びはDIPSの画面と同じです。</div>'
-     +DIPS_ITEMS.map(x=>'<div class="rev"><div class="k">'+x.n+'. '+esc(x.name)+'<br><span class="rtag">'+how[kind[x.n]]+'</span></div><div class="v">'+valueOf(x.n)+'</div><div class="e">'+(kind[x.n]==='copy'?'<button class="chip" data-act="stub" data-t="コピーしました" data-m="この項目の値をコピーしました。DIPS Webの入力欄に貼り付けてください。">コピー</button>':'')+'</div></div>').join('')
+     +DIPS_ITEMS.map(x=>'<div class="rev"><div class="k">'+x.n+'. '+esc(x.name)+'<br><span class="rtag">'+how[kind[x.n]]+'</span></div><div class="v">'+valueOf(x.n)+'</div><div class="e">'+(kind[x.n]==='copy'?'<button class="chip" data-act="nf-copy" data-n="'+x.n+'">コピー</button>':'')+'</div></div>').join('')
      +'<div class="rev"><div class="k">地図（飛行範囲）</div><div class="v">'+esc(geomSummary(S))+'<div class="mapwrap" style="margin-top:6px">'+mapSvg(S,'mini')+'</div><span class="note">DIPS Webの地図に同じ形を作図して照合します（コピーでは代替できません）。</span></div><div class="e"></div></div>';
   },
   foot:()=>'<button class="btn" data-act="back">戻る</button><button class="btn" data-act="nf-open-dips"'+(A.online?'':' disabled')+'>DIPS Webを開く</button><button class="btn primary" data-act="nf-manual-done">手動通報した</button>'
@@ -549,7 +549,7 @@ const NF_RET={
   insurance:()=>{const i=ENV().insurance;S.ins={mode:'auto',company:i.company,product:i.product,pUnl:i.pUnl,pAmt:i.pAmt,oUnl:i.oUnl,oAmt:i.oAmt,ability:''}}
 };
 Object.assign(ACTS,{
-  'nf-new':()=>{if(nfMissing().length){nav('nf-need');return}S=blankNF(ENV());S.cur='start';nav('nf')},
+  'nf-new':()=>{if(ENV().planDraft){openSheet(()=>'<h3>入力途中の飛行計画があります</h3><p>保存したところから再開できます。</p><div class="row"><button class="btn primary" data-act="nf-resume-draft">続きを入力する</button><button class="btn" data-act="nf-discard-draft">下書きを取り消す…</button><button class="btn" data-act="close">閉じる</button></div>');return}if(nfMissing().length){nav('nf-need');return}S=blankNF(ENV());S.cur='start';nav('nf')},
   'nf-need-set':t=>{const m=nfMissing();if(!m.length){ACTS['nf-need-go']();return}const target=m.find(x=>x.type===t?.dataset.t)||m[0];const o={ret:{label:'新規飛行',apply:()=>{}}};if(target.type==='person')o.roles=['操縦者'];openReg(target.type,o)},
   'nf-need-go':()=>{S=blankNF(ENV());S.cur='start';rep('nf')},
   'nf-back':()=>{if(S.cur==='start')back();else nfStep(-1)},
@@ -596,7 +596,10 @@ Object.assign(ACTS,{
     render()},
   'jump':t=>{if(A.route==='nf-send'){back();}nfGo(t.dataset.s)},
   'rv':t=>{S.reviewView=t.dataset.v;render()},
-  'nf-draft':()=>openStub('下書きとして保存','入力途中の内容は、この端末に残っています。あとから、続きの入力ができます。'),
+  'nf-draft':()=>{ENV().planDraft=clone(S);root('home');toast('下書きを保存しました。［新規飛行］から続けられます')},
+  'nf-resume-draft':()=>{S=clone(ENV().planDraft);nav('nf')},
+  'nf-discard-draft':()=>openSheet(()=>'<h3>下書きを取り消しますか</h3><p>この飛行計画の入力内容を取り消します。通報済みの計画や飛行記録は消えません。</p><div class="row"><button class="btn" data-act="close">戻る</button><button class="btn danger" data-act="nf-discard-draft-ok">下書きを取り消す</button></div>'),
+  'nf-discard-draft-ok':()=>{delete ENV().planDraft;S=null;A.modal=null;ACTS['nf-new']()},
   'nf-send-go':()=>{
     if(!A.online){toast('オフラインのため送信できません。通報の内容は、この端末に残っています。通信できる場所で、もう一度送信してください');return}
     if(!A.apiOk){toast('いまは、アプリからDIPSへ送信できません。［DIPS Webで通報する］を選んでください');return}
@@ -631,6 +634,11 @@ Object.assign(ACTS,{
     rep('nf-accepted');
   },
   'nf-manual-go':()=>{A.ui.mconf=null;A.ui.mnum='';nav('nf-manual')},
+  'nf-copy':async t=>{
+    const text=t.closest('.rev').querySelector('.v').innerText.trim();
+    try{await navigator.clipboard.writeText(text);toast('コピーしました。DIPS Webの入力欄に貼り付けてください')}
+    catch{openSheet(()=>'<h3>コピーする内容</h3><p>自動でコピーできませんでした。下の内容を選択してコピーしてください。</p><textarea class="in" readonly>'+esc(text)+'</textarea><button class="btn" data-act="close">閉じる</button>')}
+  },
   'nf-open-dips':()=>openSheet(()=>'<h3>DIPS Webを開く</h3><p>DIPS Webを別のタブで開き、この画面と見比べながら入力します。</p><div class="row"><button class="btn" data-act="close">閉じる</button></div>'),
   'nf-manual-done':()=>{A.ui.mconf=null;nav('nf-manual-confirm')},
   'nf-mconf':t=>{A.ui.mconf=t.dataset.v;render()},

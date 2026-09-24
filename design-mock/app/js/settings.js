@@ -6,12 +6,15 @@
    =================================================================== */
 const li=(ico,title,sub,right,act,attrs)=>'<button class="li" data-act="'+act+'" '+(attrs||'')+'><span class="ico">'+ico+'</span><span class="tx"><b>'+title+'</b><small>'+sub+'</small></span>'+(right||'')+'<span class="go">›</span></button>';
 const cnt=(n,unit,warnZero)=>n?'<i class="chip ok">'+n+unit+'</i>':(warnZero?'<i class="chip warn">未登録</i>':'<i class="chip">なし</i>');
-function unsynced(){const E=ENV();if(!E)return 0;return E.flights.filter(f=>!f.synced).length+E.flights.filter(f=>f.kml==='pending').length+E.plans.filter(p=>p.kml==='pending').length}
+const pendingPdfs=f=>['a4','map'].filter(k=>f.outputPending?.[k]);
+const pdfLabel=k=>k==='a4'?'A4運航記録PDF':'地図付きPDF';
+function driveSaveMessage(){return !A.online?'通信できません。通信できる場所で、もう一度保存してください。':A.gAccess==='view'?'Google Driveが閲覧のみのため保存できません。管理者に編集権限を確認してください。':A.gAccess==='none'?'Google Driveの保存場所にアクセスできません。管理者に共有を確認してください。':''}
+function unsynced(){const E=ENV();if(!E)return 0;return E.flights.filter(f=>!f.synced).length+E.flights.filter(f=>f.kml==='pending').length+E.plans.filter(p=>p.kml==='pending').length+E.flights.reduce((n,f)=>n+pendingPdfs(f).length,0)}
 
 def('set',{t:'各種設定・管理',st:()=>{const E=ENV();return E?envLabel(E)+'で使用中':''},
   goal:'使っている場所（個人・会社・団体）の、自分の情報・人員・機体・BAT・許可承認・保険・連絡先・現場・DIPSのログイン情報などを、必要になる前に登録しておく入口。ホームへ入る前に一括で登録させない。',
   doc:'34a §9.3（機体・許可承認・保険の事前登録はここから。ホーム前に求めるのは、はじめの登録の本人情報とDIPSのログイン情報だけ）／§9.4（会社・団体の追加・切替もここから）／34b §1（ホーム4入口の1つ。内部の分類は未確定）／34g §3・§4（機体管理の入口の流れはCURRENT-PROPOSAL。各種設定・管理は、いま使っている場所を対象にする）。人員・BAT・場所・環境などの他の管理画面は、個別の画面設計がない（34f PENDING-D-SETTINGS-SCREENS）。',state:'proposal',
-  tmp:['この一覧の分類・並び順・名称は案（PENDING-S5-HOME-DETAIL）','「DIPSのログイン情報」を設定のどこに置くか（この一覧の1項目か、DIPS関連の中か）は未決。2026-09-22のオーナー指示で候補に加えた（PENDING-S5-DIPS-LOGIN-STORAGE）','左側の案内文（「飛行の途中でその場で登録することもできます」）は、説明を最小にするため置いていない。要るかどうかは未決','「保存状態」は、以前の「保存・同期」を平易にした案（PENDING-U-WORDING）','許可・承認／保険／連絡先を設定のどこに置くかは未確定（PENDING-S6-DRIVE-PLACEMENT）','誰がどの項目を変更できるかは未確定（PENDING-D-AC-PERMISSION／PENDING-S2-ACCESS-DETAIL）。このモックでは制限していない'],
+  tmp:['この一覧の分類・並び順・名称は案（PENDING-S5-HOME-DETAIL）','「DIPSのログイン情報」を設定のどこに置くか（この一覧の1項目か、DIPS関連の中か）は未決。2026-09-22のオーナー指示で候補に加えた（PENDING-S5-DIPS-LOGIN-STORAGE）','左側の案内文（「飛行の途中でその場で登録することもできます」）は、説明を最小にするため置いていない。要るかどうかは未決','「保存状態」は、以前の「保存・同期」を平易にした案（PENDING-U-WORDING）','許可・承認／保険／連絡先を設定のどこに置くかは未確定（PENDING-S6-DRIVE-PLACEMENT）','誰がどの項目を変更できるかは未確定（PENDING-D-AC-PERMISSION／PENDING-S2-ACCESS-DETAIL）。このモックでは31bの確定済み管理者境界とGoogle書込可否だけを確認し、全機能の許否は決めない'],
   ask:[],
   ui:['設定の分類と並び、未登録のものの目立たせ方は標準案'],
   body:()=>{
@@ -158,7 +161,7 @@ def('set-sync',{t:'保存状態',st:'Google Driveへの保存の状況',
   tmp:['この画面自体が案。オフライン・未保存・エラーの共通の見せ方は未設計','設定名「保存状態」の最終形はPENDING-U-WORDING','通信の状態（オンライン／オフライン）は、右側の切替（通信）で選ぶ'],ask:[],ui:['未保存の状態を各画面のどこに出すかは標準案'],
   body:()=>{
     const E=ENV();const n=unsynced();
-    return '<div class="sec"><h3>まだGoogle Driveに保存されていないもの</h3>'+(n?'<ul style="margin:0;padding-left:1.2em;font-size:13px">'+E.flights.filter(f=>!f.synced).map(f=>'<li>飛行記録「'+esc(f.label)+'」: この端末には保存されています。まだGoogle Driveには保存されていません。</li>').join('')+E.flights.filter(f=>f.kml==='pending').map(f=>'<li>KML「'+esc(f.label)+'」: まだGoogle Driveに保存されていません。</li>').join('')+E.plans.filter(p=>p.kml==='pending').map(p=>'<li>KML「'+esc(p.name)+'」: まだGoogle Driveに保存されていません。</li>').join('')+'</ul><button class="btn" style="margin-top:8px" data-act="sync-now"'+(A.online?'':' disabled')+'>もう一度保存する</button>'+(A.online?'':'<p class="note">いまは通信できません。通信が戻ったら、自動で保存します。</p>'):'<div class="msg ok">まだ保存されていないものは、ありません。</div>')+'</div>'
+    return '<div class="sec"><h3>まだGoogle Driveに保存されていないもの</h3>'+(n?'<ul style="margin:0;padding-left:1.2em;font-size:13px">'+E.flights.filter(f=>!f.synced).map(f=>'<li>飛行記録「'+esc(f.label)+'」: この端末には保存されています。まだGoogle Driveには保存されていません。</li>').join('')+E.flights.filter(f=>f.kml==='pending').map(f=>'<li>KML「'+esc(f.label)+'」: まだGoogle Driveに保存されていません。</li>').join('')+E.flights.flatMap(f=>pendingPdfs(f).map(k=>'<li>'+pdfLabel(k)+'「'+esc(f.label)+'」: この端末で作成済み。Google Driveには未保存です。</li>')).join('')+E.plans.filter(p=>p.kml==='pending').map(p=>'<li>KML「'+esc(p.name)+'」: まだGoogle Driveに保存されていません。</li>').join('')+'</ul><button class="btn" style="margin-top:8px" data-act="sync-now"'+(A.online&&A.gAccess==='edit'?'':' disabled')+'>もう一度保存する</button>'+(driveSaveMessage()?'<p class="note">'+driveSaveMessage()+'</p>':''):'<div class="msg ok">まだ保存されていないものは、ありません。</div>')+'</div>'
 ;
   }
 });
@@ -170,9 +173,9 @@ Object.assign(ACTS,{
     if(!canWrite())return;
     openSheet(()=>'<h3>状態確認を更新</h3><div class="pills">'+BAT_CHECKS.map(c=>'<button class="pill" data-act="bat-check-set" data-v="'+esc(c)+'">'+esc(c)+'</button>').join('')+'</div><div class="row"><button class="btn" data-act="close">閉じる</button></div>');
   },
-  'bat-check-set':t=>{const b=batOf(A.ui.batId);b.check=t.dataset.v;b.hist.unshift({d:slash(TODAY),ac:b.lastAc,min:0,chk:b.check+'（手入力）'});A.modal=null;render();toast('状態確認を更新しました。履歴に残ります')},
+  'bat-check-set':t=>{if(!canWrite())return;const b=batOf(A.ui.batId);b.check=t.dataset.v;b.hist.unshift({d:slash(TODAY),ac:b.lastAc,min:0,chk:b.check+'（手入力）'});A.modal=null;render();toast('状態確認を更新しました。履歴に残ります')},
   'api':t=>{A.apiOk=t.dataset.v==='1';render()},
   'dips-open':()=>{A.dipsRet=null;nav('set-dipscred')},
   'online':t=>{A.online=t.dataset.v==='1';render()},
-  'sync-now':()=>{const E=ENV();E.flights.forEach(f=>{f.synced=true;if(f.kml==='pending')f.kml='saved'});E.plans.forEach(p=>{if(p.kml==='pending')p.kml='saved'});render();toast('Google Driveに保存しました')}
+  'sync-now':()=>{if(!canWrite())return;if(!A.online){toast(driveSaveMessage());return}const E=ENV();E.flights.forEach(f=>{f.synced=true;if(f.kml==='pending')f.kml='saved';f.outputPending={}});E.plans.forEach(p=>{if(p.kml==='pending')p.kml='saved'});render();toast('Google Driveに保存しました')}
 });

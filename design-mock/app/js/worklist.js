@@ -21,7 +21,7 @@ def('list',{t:'飛行リスト',st:'これから扱う、通報済みの計画',
     if(f==='rep')L=L.filter(p=>p.rep===E.meId);
     if(f==='dup')L=L.filter(p=>p.dips==='dup');
     const chips='<div class="filters">'+PL_FILTERS.map(x=>'<button class="pill'+(f===x[0]?' sel':'')+'" data-act="pl-filter" data-v="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>';
-    const cards=L.map(p=>'<button class="card" style="width:100%;margin-bottom:8px" data-act="plan-open" data-id="'+p.id+'"><b>'+esc(fmtDT(p.start))+'</b><span>📍 '+esc(p.place)+'</span><span>✈ '+p.ac.map(id=>esc(acName(id))).join('・')+'</span><span>👤 操縦者: '+p.pl.map(id=>esc(plName(id))).join('・')+'　／　通報者: '+esc(plName(p.rep))+'</span><span class="chips"><i class="chip '+(p.dips==='dup'?'warn':'ok')+'">'+dipsLabel(p)+'</i>'+(p.kml==='pending'?'<i class="chip warn">KMLは未保存</i>':'')+'</span></button>').join('');
+    const cards=L.map(p=>'<button class="card" style="width:100%;margin-bottom:8px" data-act="plan-open" data-id="'+p.id+'"><b>'+esc(fmtDT(p.start))+'</b><span>📍 '+esc(p.place)+'</span><span>✈ '+p.ac.map(id=>esc(savedAcName(p,id))).join('・')+'</span><span>👤 操縦者: '+p.pl.map(id=>esc(savedPerson(p,id))).join('・')+'　／　通報者: '+esc(savedPerson(p,p.rep))+'</span><span class="chips"><i class="chip '+(p.dips==='dup'?'warn':'ok')+'">'+dipsLabel(p)+'</i>'+(p.kml==='pending'?'<i class="chip warn">KMLは未保存</i>':'')+'</span></button>').join('');
     return '<p class="lead">通報が正常に受け付けられ、これから実飛行（または中止など）を扱う計画です。過去に完了した飛行は［飛行履歴・出力］にあります。</p>'+(total?chips:'')
      +(cards||(total?'<div class="empty">この条件に合う計画はありません</div>':'<div class="empty"><b>通報済みの計画はまだありません</b><br>［新規飛行］で計画を作って通報すると、ここに載ります。<br><button class="btn sm" style="margin-top:8px" data-act="nf-new">新規飛行へ</button></div>'))
      +'<p class="note">'+(A.online?'みんなで共有している飛行リストを表示しています。':'オフラインです。この端末に取得済みの内容を表示しています。最新でないことがあります。')+'</p>';
@@ -39,7 +39,7 @@ def('plan',{t:'DIPS通報内容',st:()=>{const p=planOf(A.ui.planId);return p?p.
     const s=p.snap;
     return (p.dips==='dup'?'<div class="msg warn">他の計画と重複しています。重複の調整は、この画面ではまだできません。DIPS Webで確認してください。</div>':'')
      +'<div class="msg info">これは、DIPSへ<b>通報した内容</b>です。通報した内容は、あとから黙って書き換えません。日時・場所を変えるときは、DIPS側の変更／再通報を伴う別の手続きになります。</div>'
-     +'<div class="sec"><h3>通報の情報</h3><table class="kv"><tr><td>通報者</td><td>'+esc(plName(p.rep))+'</td></tr><tr><td>操縦者</td><td>'+p.pl.map(id=>esc(plName(id))).join('、')+'</td></tr><tr><td>DIPS状態</td><td>'+esc(dipsLabel(p))+'</td></tr><tr><td>KML</td><td>'+(p.kml==='saved'?'保存済み':'まだGoogle Driveに保存されていません')+'</td></tr></table></div>'
+     +'<div class="sec"><h3>通報の情報</h3><table class="kv"><tr><td>通報者</td><td>'+esc(savedPerson(p,p.rep))+'</td></tr><tr><td>操縦者</td><td>'+p.pl.map(id=>esc(savedPerson(p,id))).join('、')+'</td></tr><tr><td>DIPS状態</td><td>'+esc(dipsLabel(p))+'</td></tr><tr><td>KML</td><td>'+(p.kml==='saved'?'保存済み':'まだGoogle Driveに保存されていません')+'</td></tr></table></div>'
      +'<div class="sec"><h3>DIPSに通報した内容</h3>'+DIPS_ITEMS.map(x=>'<div class="rev"><div class="k">'+esc(x.name)+'</div><div class="v">'+valueOf(x.n,s)+'</div></div>').join('')+'<div class="rev"><div class="k">飛行範囲（地図）</div><div class="v">'+esc(geomSummary(s))+'<div class="mapwrap" style="margin-top:6px">'+mapSvg(s,'mini')+'</div></div></div></div>'
      +'<p class="note"><button class="chip" data-act="stub" data-t="日時・場所の変更（別処理）" data-m="通報した内容の変更は、DIPS側の変更や再通報を伴う、別の手続きになります。この手続きは、準備中です。">日時・場所を変えたい場合</button> '+tmpChip+'</p>';
   },

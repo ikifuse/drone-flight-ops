@@ -32,8 +32,9 @@ function stampInspection(kind,id){
 function finalRecordsReady(){
   return A.op.legs.length>0&&A.op.legs.every(l=>l.confirmed&&l.place.trim()&&Number.isFinite(l.min)&&l.min>0);
 }
-function savedAc(f,id){return f.masters?.aircraft[id]||acOf(id)}
-function savedPerson(f,id){return f.masters?.people[id]?.name||plName(id)}
+function savedAc(f,id){return (f.masters||f.snap?.masters)?.aircraft[id]||acOf(id)}
+function savedAcName(f,id){return savedAc(f,id)?.name||'登録情報なし'}
+function savedPerson(f,id){return (f.masters||f.snap?.masters)?.people[id]?.name||plName(id)}
 
 /* 固定機体情報は設定から後補完する。現場の機体選択・交代では要求しない。 */
 const AIRCRAFT_DETAILS=[['serial_number','製造番号'],['manufacturer','メーカー'],['aircraft_type','機体の種類'],['management_start_date','管理開始日','date'],['prior_minutes','取得前の飛行時間（分）','number'],['prior_count','取得前の飛行回数','number']];

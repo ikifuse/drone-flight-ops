@@ -18,7 +18,7 @@ const REG_META={
   insurance:{doc:'25b／26（DIPSの保険に関する情報：会社名・商品名・対人／対物の無制限／金額）。設定のどこに置くかは未確定（PENDING-S6-DRIVE-PLACEMENT）。',state:'tmp',
     tmp:['環境に1つだけ持つ形は仮（機体ごと・複数契約もあり得る）','「賠償能力」は保険加入と同一視できない項目のため、登録には含めない'],ask:['保険は使う場所に1つか、複数持てるか'],ui:['入力欄の並びは標準案']},
   contact:{doc:'25b／31c（DIPSの連絡先：自アカウント・申請書記載・操縦者から選ぶ）。設定のどこに置くかは未確定。',state:'tmp',
-    tmp:['この登録は「自アカウントの情報」の既定値になる想定（仮）'],ask:['連絡先は使う場所に1つか、人ごとに持つか'],ui:['入力欄の並びは標準案']},
+    tmp:['この登録は「自アカウントの情報」の既定値になる想定（仮）'],ask:['環境の連絡先と本人の連絡先が異なるとき、どちらを新規飛行の既定にするか（PENDING-WEB-CONTACT-SOURCE）'],ui:['入力欄の並びは標準案']},
   preset:{doc:'12c（場所・飛行範囲プリセット。新規計画へ値を複製する規則）。設定画面の体系は未設計（PENDING-D-SETTINGS-SCREENS）。',state:'tmp',
     tmp:['場所（Location）と範囲プリセットを1画面で扱う簡略版','作図の操作は仮（DIPS iPhone実機の作図操作は未確認）'],ask:[],ui:['現場プリセットを、飛行範囲の画面から保存する形にするか、設定からも作れるようにするかは標準案']},
   bat:{doc:'32g（現場入力4項目）／32b（中古BATの取得時確認）／34a §3（BAT等も、選択時にその場で新規登録する案）。',state:'proposal',
@@ -153,6 +153,7 @@ const SAVE={
     Object.assign(obj,{id:uid('a'),dips:null,dead:false});E.aircraft.push(obj);return obj.id;
   },
   person(E,d,id){
+    if(!adminChangeAllowed(E,id,d.roles,E.people.find(p=>p.id===id)?.active!==false))return null;
     if(!d.name.trim()){toast('氏名を入れてください');return null}
     const obj={name:d.name.trim(),kana:d.kana,roles:d.roles.slice(),pilot:d.roles.includes('操縦者'),lic:d.lic,licNo:d.licNo,account:personalSelfAccount(E,id)||d.account,phone:d.phone,addr:d.addr||'',email:d.email||''};
     if(id){Object.assign(E.people.find(p=>p.id===id),obj);return id}
@@ -189,6 +190,18 @@ const SAVE={
     Object.assign(obj,{id:uid('b'),min:0,uses:0,lastDays:null,lastAc:null,hist:[{d:slash(TODAY),ac:null,min:0,cycle:obj.cycle,note:d.note,chk:d.check+'（取得時）'}]});E.bats.push(obj);return obj.id;
   }
 };
+
+// 31b §3 の確定済み境界だけを適用。人員管理全体の権限表は決めない。
+function adminChangeAllowed(E,id,roles,active=true){
+  const previous=E.people.find(p=>p.id===id);
+  const was=previous?.active!==false&&previous?.roles.includes('管理者');
+  const next=active&&roles.includes('管理者');
+  if(!!was===!!next)return true;
+  const actor=E.people.find(p=>p.id===E.meId);
+  if(!actor||actor.active===false||!actor.roles.includes('管理者')){toast('管理者の追加・解除は、現在の管理者が行ってください');return false}
+  if(was&&!next&&!E.people.some(p=>p.id!==id&&p.active!==false&&p.roles.includes('管理者'))){toast('最後の管理者は解除できません。先に別の管理者を登録してください');return false}
+  return true;
+}
 
 /* ---------- 画面の登録 ---------- */
 Object.keys(REG_TITLE).forEach(t=>{
@@ -232,6 +245,6 @@ Object.assign(ACTS,{
     render();toast('自分の情報を入れました');
   },
   'person-leave':()=>openSheet(()=>'<h3>離任にしますか</h3><p>離任は、この人を、<b>この会社・団体（または個人）を離れた人</b>にすることです。人員を消すわけではなく、過去の飛行・点検・記録は残ります。これからの飛行の候補からは外れます。</p><p class="note">アプリで離任にしても、Google Driveの共有は、そのままです。共有が残っていると、Google Driveから見られることがあります。共有をやめるときは、Google Driveで設定してください。</p><div class="row"><button class="btn" data-act="close">やめる</button><button class="btn danger" data-act="person-leave-ok">離任にする</button></div>'),
-  'person-leave-ok':()=>{const E=ENV();const p=E.people.find(x=>x.id===A.reg.id);if(p){p.active=false;p.left=slash(TODAY)}A.modal=null;A.reg=null;back();toast('離任にしました。過去の記録は残ります')},
-  'person-rejoin':()=>{const E=ENV();const p=E.people.find(x=>x.id===A.reg.id);if(p){p.active=true;p.left=null}A.reg=null;back();toast('再び参加にしました。役割は、あらためて決めてください（以前の役割は自動では戻りません）')}
+  'person-leave-ok':()=>{if(!canWrite())return;const E=ENV();const p=E.people.find(x=>x.id===A.reg.id);if(p){if(!adminChangeAllowed(E,p.id,p.roles,false))return;p.active=false;p.left=slash(TODAY)}A.modal=null;A.reg=null;back();toast('離任にしました。過去の記録は残ります')},
+  'person-rejoin':()=>{if(!canWrite())return;const E=ENV();const p=E.people.find(x=>x.id===A.reg.id);if(p){p.active=true;p.left=null;p.roles=[];p.pilot=false}A.reg=null;back();toast('再び参加にしました。役割は、あらためて決めてください（以前の役割は自動では戻りません）')}
 });
