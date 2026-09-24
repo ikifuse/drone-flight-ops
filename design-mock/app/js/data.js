@@ -31,13 +31,17 @@ const FAKE_PLACES=['○○駅前','○○公園','○○川の河川敷','工場
 
 /* ---------- 新規飛行の状態の初期値（仮データの計画にも使う） ---------- */
 function nowStart(){const d=new Date(Date.now()+10*60000);d.setMinutes(Math.ceil(d.getMinutes()/5)*5,0,0);return d}
-function blankNF(env){
+function blankNF(env,selectSelf=true){
   const st=nowStart();const n=new Date();const i=env&&env.insurance,c=env&&env.contact;
+  // モック内の認証済みアカウント → 本人Person → 環境内操縦者役割を照合する。
+  // Personを新設したり役割を付与したりせず、新規下書きの初期値だけに使う（31c §6）。
+  const account=A&&A.account&&(env?.gaccount||A.account.email);
+  const me=selectSelf&&env?.kind==='personal'&&account&&env.people.find(p=>p.id===env.meId&&p.account===account&&p.pilot&&p.active!==false);
   return {
     cur:'start',layout:'dips',flow:['use','content','area','time','master'].map(id=>({id,skip:false,merge:false})),
     start:null,noDips:false,
     planName:'FlightPlan-'+n.getFullYear()+pad(n.getMonth()+1)+pad(n.getDate())+pad(n.getHours())+pad(n.getMinutes()),
-    aircraft:[],pilots:[],permit:null,
+    aircraft:[],pilots:me?[me.id]:[],permit:null,
     biz:[],non:[],otherBiz:'',otherNon:'',air:[],met:[],
     tsu:[true,false,false,false],tether:'no',assist:0,
     geom:{kind:null,pts:[],r:0,width:10,done:false,editing:false},layer:false,search:'',savedRoute:'',from:'',to:'',
@@ -48,12 +52,12 @@ function blankNF(env){
     /* 連絡先は、登録済みの連絡先 → 登録済みの本人情報 の順に自動で入れる。
        一度登録した人物情報を、飛行計画のたびに入れ直させない（34a §9.5／25b: DIPSも自アカウント情報・操縦者から自動入力できる） */
     contact:Object.assign({src:'self',pilotId:'',name:'',country:'日本/Japan',pref:'',addr:'',cc:'日本/Japan(81)',phone:'',email:'',other:''},selfContact(env)||{}),
-    auto:{},reviewView:'dips',cal:{y:st.getFullYear(),m:st.getMonth()}
+    auto:me?{pilots:'登録済みの本人'}:{},reviewView:'dips',cal:{y:st.getFullYear(),m:st.getMonth()}
   };
 }
 const at=(days,h,m)=>{const d=addDays(TODAY,days);d.setHours(h,m||0,0,0);return d};
 function snapOf(env,o){
-  const s=blankNF(env);
+  const s=blankNF(env,false);
   s.aircraft=o.ac.slice();s.pilots=o.pl.slice();s.permit=o.pm;s.biz=(o.biz||[]).slice();s.non=(o.non||[]).slice();s.air=o.air.slice();s.met=o.met.slice();
   s.geom={kind:o.geo.kind,pts:o.geo.pts.map(p=>p.slice()),r:o.geo.r,width:o.geo.width||10,done:true,editing:false};
   s.from=o.from;s.to=o.to;s.durH=o.dur[0];s.durM=o.dur[1];s.alt=o.alt;s.planName=o.name;

@@ -1,6 +1,6 @@
 # 34f. 画面体系と遷移の俯瞰・設計の到達範囲
 
-最終更新: 2026-09-23\
+最終更新: 2026-09-24\
 状態: 俯瞰の索引（既存の各画面仕様を並べたもの）。新しい画面仕様・業務ルールは決めない。未設計領域の`PENDING`と、進め方の`NEW-PROPOSAL`を含む\
 主責務: アプリ全体の画面の並びと画面間の行き先、各画面の設計がどこまで進んでいるか、まだ設計されていない領域。各画面の中身と、画面ごとの遷移の正本は各画面仕様（項目6）\
 入口: [Presentation設計の入口](README.md)
@@ -46,6 +46,7 @@ flowchart TD
   FINAL -->|"失敗：下書きを保持して再試行"| FINAL
   FINAL -->|"成功"| AFTER["運航完了：飛行記録・日常点検保存済み"]
   HIST --> DETAIL["飛行の詳細"] --> OUT["出力：KML／A4運航記録PDF／地図付きPDF"]
+  DETAIL -->|"最下部：ホームに戻る"| HOME
 ```
 
 図の各行き先の根拠は§3の正本。Manualで通報した計画が飛行リストへ入る条件は、API経路と同じとは決まっていない（PENDING-S5-MANUAL-LIST、[34c §5](34c_shared-flight-worklist.md#5-未確定と適用限界)）。図の「離陸」と「着陸」は、それぞれ離陸待機・飛行中の画面内の打刻で、独立した画面ではない（[35b §2](../operation-recording/35b_normal-operation-and-final-save.md#2-現在の論理画面順)）。
@@ -148,3 +149,12 @@ flowchart TD
 **監査で残した境界**: 総重量／航続可能時間の厳密な外部対応、APIの安全確認6項目・認証区分・技能証明と契約版の対応、複数日／複数機体の通報単位は25a・25d・26の確認範囲を超えて確定しない。Locationの管理者メモ、保険期間・適用範囲、機体モデルの詳細能力等のDomain属性を、今回の通常運航の常設必須入力へ一括展開しない。既存マスター・原本・後補完・任意管理と画面詳細の境界を維持する。
 
 PENDING-S2-ACTOR-SCHEMA/UI、PENDING-WEB-CONTACT-SOURCE、VERIFY-WEB-CONTACT-KANA、VERIFY-S4-API-CONTRACT、PENDING-S6-OPERATION-SCHEMA、PENDING-S6-A4-DETAIL、PENDING-S7C-KML-*、PENDING-S7D-MAPPDF-DETAIL、整備実物のVERIFYを解消しない。実装開始許可ではなく、C1は未着手。回帰証拠は[入力監査テスト](../../../design-mock/app/tests/t8_input_audit.js)と[実操作テスト](../../../design-mock/app/tests/browser-flow.cjs)。
+
+
+## 9. 個人操縦者の初期値と履歴詳細の出口（2026-09-24）
+
+**Responsibility Check（6観点）**: 主要責務は操縦者の初期値が31c、人物・アカウント境界が31a、初回・通常利用への参照接続が34a、履歴詳細の遷移が34eに一致する。各変更は配置先と同じライフサイクルを持ち、別の外部依存・セキュリティ境界・実装Phaseを導入せず、将来の変更もそれぞれの既存責務内で扱える。2点を一つの詳細正本へ混在させず、既存正本へ配置し、本書は到達範囲だけを記録する。外部通信・保存・復旧方式・権限を変えず、会社・複数人の選択と記録の分離を維持する。
+
+**CURRENT-ACCEPTED**: オーナーの2点限定指示による判断は[31c §6](../identity-and-access/31c_operational-actors.md#6-個人環境の本人操縦者を新規飛行の初期値にする2026-09-24)と[34e §5](34e_history-and-output.md#5-確認出力作業を終える出口2026-09-24)。個人でも空から毎回操縦者を選ばせた旧モックはHISTORICAL。Googleアカウント選択・人物役割分離・初回必須・C1凍結を維持する。既存ADR-0016・0025を参照し、新ADR・Accepted本文の変更はない。
+
+**EVIDENCE/EXAMPLE**: 動くモックの回帰テストは[新規飛行](../../../design-mock/app/tests/t3_new_flight.js)、[履歴](../../../design-mock/app/tests/t5_history_screens.js)、[実クリック](../../../design-mock/app/tests/browser-flow.cjs)。最新の実行結果・検証限界は[モックREADME](../../../design-mock/app/README.md)に記録する。本人初期値とホームへの出口以外のPENDING／VERIFYは維持する。

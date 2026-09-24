@@ -1,6 +1,6 @@
 # 未確認事項と将来の設計判断論点
 
-最終更新: 2026-09-23
+最終更新: 2026-09-24
 プロジェクト: `drone-flight-ops`
 
 
@@ -133,7 +133,7 @@
 |---|---|
 | PENDING-S2-IDENTITY / PENDING-S2-ENVIRONMENT-UI / VERIFY-S2-IDENTITY-EVIDENCE | [31a](architecture/identity-and-access/31a_person-account-and-environment.md)：組織・環境・ID・資格列・起動／復帰／失効時の切替詳細・試作確認（ホームの環境ボタンとシートは34a §9.6で確定） |
 | PENDING-S2-ACCESS-DETAIL / VERIFY-S2-ACCESS-EVIDENCE | [31b](architecture/identity-and-access/31b_roles-and-access-control.md)：未定義の複合役割・機能詳細と実共有確認 |
-| PENDING-S2-ACTOR-SCHEMA/UI / VERIFY-S2-ACTOR-EVIDENCE・代理通報範囲 | [31c](architecture/identity-and-access/31c_operational-actors.md)：担当の保持先・別人点検UI・観測証拠。基準C1 schema未確定へ接続 |
+| PENDING-S2-ACTOR-SCHEMA/UI / VERIFY-S2-ACTOR-EVIDENCE・代理通報範囲 | [31c](architecture/identity-and-access/31c_operational-actors.md)：担当の保持先・別人点検UI・観測証拠。基準C1 schema未確定へ接続。個人の登録済み本人操縦者の初期選択は31c §6でCURRENT-ACCEPTED（2026-09-24） |
 | PENDING-S2-MEMBERSHIP / PENDING-S2-OWNERSHIP | [31d](architecture/identity-and-access/31d_membership-lifecycle.md)：離任実行権限・UI・offline・履歴列・再所属形式・会社所有 |
 
 ## 6. 99.2再移植Step 3の未確定と確認境界
@@ -231,7 +231,7 @@ Step 7a・7c節が挙げる未移植のうち、PDFの役割分離・生成方�
 | ID | 詳細正本 |
 |---|---|
 | PENDING-S7D-MAPPDF-DETAIL / VERIFY-S7D-MAPPDF-REGEN / PENDING-S7D-MAPPDF-SCOPE | [27f §4](architecture/output/27f_derived-pdf-roles-and-map-pdf.md#4-地図付きpdfの配置の方向と未確定)：詳細レイアウト・命名・生成画面、同じ正本・Geometryから再生成できる範囲の実物確認、旧「地図付き飛行計画書」との関係 |
-| PENDING-S7D-HISTORY-DETAIL / PENDING-S7D-HISTORY-OUTPUT-UNIT / PENDING-S7D-HISTORY-KML | [34e §3](architecture/presentation/34e_history-and-output.md#3-未確定確認待ちと適用限界)：履歴画面の詳細と出力選択方式、複数シートにまたがる飛行の出力単位、履歴からのKML取得 |
+| PENDING-S7D-HISTORY-DETAIL / PENDING-S7D-HISTORY-OUTPUT-UNIT / PENDING-S7D-HISTORY-KML | [34e §3](architecture/presentation/34e_history-and-output.md#3-未確定確認待ちと適用限界)：履歴画面の詳細と出力選択方式（詳細最下部のホーム出口は34e §5で2026-09-24に確定）、複数シートにまたがる飛行の出力単位、履歴からのKML取得 |
 
 A4運航記録PDFと地図付きPDFの役割分離、PDFを必要な時だけ生成する方針、［飛行履歴・出力］から対象の飛行を選んで出力へ進む導線はCURRENT-ACCEPTED（[27f](architecture/output/27f_derived-pdf-roles-and-map-pdf.md)・[34e](architecture/presentation/34e_history-and-output.md)、判断の要約は[ADR-0025](decisions/ADR-0025-derived-pdf-roles-and-on-demand-generation.md) Proposed）。出力選択の方式（［A4運航記録PDF］［地図付きPDF］［両方作成］）は99.2が第一候補とするCURRENT-PROPOSAL。既存のPENDING-S5-HOME-DETAIL（各種設定・管理の分類等）、PENDING-S6-A4-DETAIL、VERIFY-S6-A4-PRINTは解消していない。
 

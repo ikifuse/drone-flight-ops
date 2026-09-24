@@ -174,3 +174,44 @@ suite('DIPS iPhone基準候補',H=>{
    return kind==='clean'?show&&A().route==='op-pre':!show&&!A().op&&JSON.stringify(S())===before;
  });
 });
+
+
+suite('個人の本人操縦者の初期値',H=>{
+ const {T,act,S,A,E,q}=H;
+ const start=()=>{act('nf-new');act('start-new')};
+ T('個人・登録済み本人は自動選択。選択画面を開かず次へ進める',()=>{
+  H.hash('scn=personal');start();
+  const ok=S().pilots.join()===E().meId&&q('[data-dips-item="5"]').textContent.includes('操縦者を変更する')&&!A().modal;
+  act('nf-next');return ok&&S().cur==='area'&&!window.issues().some(x=>x.text==='操縦者が選ばれていません');
+ });
+ T('別人に変更でき、再描画・前後移動で本人へ戻さない',()=>{
+  window.nfGo('dips');act('dips-picker','[data-n="5"]');act('dips-pick','[data-id="'+E().meId+'"]');act('dips-pick','[data-id=p2]');act('dips-pick-done');
+  act('nf-next');act('nf-back');H.APP().render();return S().pilots.join()==='p2'&&!S().auto.pilots;
+ });
+ T('次の新規飛行でも本人を自動選択し、毎回の明示選択を要求しない',()=>{
+  H.APP().root('home');start();return S().pilots.join()===E().meId&&!A().modal;
+ });
+ for(const condition of ['未登録','無効','本人不明','アカウント不一致','未ログイン'])T('本人を自動選択しない: '+condition,()=>{
+  H.hash('scn=personal');const me=E().people.find(p=>p.id===E().meId);
+  if(condition==='未登録'){me.pilot=false;me.roles=['管理者']}
+  if(condition==='無効')me.active=false;
+  if(condition==='本人不明')E().meId=null;
+  if(condition==='アカウント不一致')me.account='other@example.invalid';
+  if(condition==='未ログイン')A().account=null;
+  start();const ok=S().pilots.length===0;
+  act('dips-picker','[data-n="5"]');act('dips-pick','[data-id=p2]');act('dips-pick-done');
+  return ok&&S().pilots.join()==='p2'&&(condition!=='未登録'||!me.pilot);
+ });
+ for(const kind of ['company','school'])T('会社・団体は本人が操縦者でも自動選択せず別人を選べる: '+kind,()=>{
+  H.hash('scn=company');E().kind=kind;start();const ok=S().pilots.length===0;
+  act('dips-picker','[data-n="5"]');act('dips-pick','[data-id=q2]');act('dips-pick-done');return ok&&S().pilots.join()==='q2'&&E().meId==='q1';
+ });
+ T('個人の事務担当は操縦者役割を付与されず、実操縦者を選べる',()=>{
+  H.hash('scn=personal');const me=E().people.find(p=>p.id===E().meId);me.pilot=false;me.roles=['管理者'];start();
+  act('dips-picker','[data-n="5"]');act('dips-pick','[data-id=p2]');act('dips-pick-done');return !me.pilot&&S().pilots.join()==='p2'&&E().meId!==S().pilots[0];
+ });
+ T('比較レイアウトでも初期選択を表示し、別人に変更できる',()=>{
+  H.hash('scn=personal');start();act('nf-layout','[data-v=app]');act('start-new');
+  const ok=!!q('[data-act=pick-pl][data-id=p1].sel');act('pick-pl','[data-id=p1]');act('pick-pl','[data-id=p2]');return ok&&S().pilots.join()==='p2';
+ });
+});

@@ -15,6 +15,19 @@ suite('履歴・出力',H=>{
   });
   T('条件に合う飛行がないとき',()=>{set('[data-bind="#hq"]','存在しない','input');const ok=txt().includes('この条件に合う飛行はありません');set('[data-bind="#hq"]','','input');return ok});
   T('飛行を選ぶ→詳細（記録・出力の選び方・KML）。PDFは自動では作らない',()=>{act('hist-open');return route()==='hist-detail'&&txt().includes('飛行の記録')&&txt().includes('A4運航記録PDF')&&txt().includes('地図付きPDF')&&txt().includes('KML（My Maps用）')&&txt().includes('自動では作りません')});
+  T('詳細最下部のホームに戻るはKML領域の下にある',()=>{
+    const button=q('#body > :last-child [data-act=root][data-s=home]');
+    return button?.textContent==='ホームに戻る'&&button.parentElement.previousElementSibling.textContent.includes('KML（My Maps用）');
+  });
+  T('詳細上部の戻るは直前の検索画面へ戻り、検索条件を保持する',()=>{
+    A().ui.hq='河川敷';q('.hd [data-act=back]').click();
+    const ok=route()==='hist'&&A().ui.hq==='河川敷';A().ui.hq='';H.APP().render();act('hist-open');return ok;
+  });
+  T('詳細最下部のホームに戻るは完了画面を挟まずホームへ移動する',()=>{
+    const before=JSON.stringify(E().flights);act('root','[data-s=home]');
+    const ok=route()==='home'&&A().stack.length===0&&JSON.stringify(E().flights)===before;
+    act('go','[data-s=hist]');act('hist-open');return ok;
+  });
   T('通報した内容を見る（22項目）',()=>{act('hist-dips');const n=qa('.sheet .rev').length;act('close');return n===22?true:'n='+n});
   T('A4だけ作る→PDFの画面（見本・Google Driveに保存）',()=>{act('out-make');return route()==='out-pdf'&&!!q('.paper.a4')&&!q('.mapdoc')&&txt().includes('Google Driveの「出力」フォルダーに保存しました')&&E().flights[0].outs.a4===true&&E().flights[0].outs.map===false});
   T('地図付きも選んで両方作る（地図を左上・通報項目を右と下）',()=>{act('back');const a=txt().includes('作成済み');act('out-both');act('out-make');return a&&route()==='out-pdf'&&!!q('.mapdoc')&&!!q('.paper.a4')&&E().flights[0].outs.map===true});

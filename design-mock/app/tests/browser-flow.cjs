@@ -57,13 +57,37 @@ const assert=require('node:assert/strict');
   st=await state();assert.equal(st.env.flights.length,1);assert.equal(st.env.flights[0].legs.length,3);assert.equal(st.env.flights[0].dailySaved,true);assert.equal(st.done.dips,'clean');
   assert.match(await p.locator('.phone').innerText(),/運航完了/);assert.match(await p.locator('.phone').innerText(),/日常点検/);
   const personal=st.env.id;
-  await click('root','[data-s=home]');await click('env');await click('ob-co-new');await click('gauth-done');await fill('&name','確認株式会社');await click('cr-name-next');
+  await click('root','[data-s=home]');
+  await click('go','[data-s=hist]');await click('hist-open');
+  const exit=p.locator('#body > :last-child [data-act=root][data-s=home]');
+  assert.equal(await exit.innerText(),'ホームに戻る');
+  assert.equal(await exit.evaluate(e=>e.parentElement.previousElementSibling.textContent.includes('KML（My Maps用）')),true);
+  await p.locator('.hd [data-act=back]').click();await expectRoute('hist');
+  await click('hist-open');await click('root','[data-s=home]');await expectRoute('home');
+  await click('go','[data-s=set]');await click('go','[data-s=set-me]');await click('me-pilot');await click('me-save');await click('back');
+  // 同じ個人環境で本人を一度操縦者登録。その後は毎回の選択なしで進める。
+  for(let i=0;i<2;i++){
+    await click('nf-new');await click('start-new');const current=await state();
+    assert.deepEqual(current.plan.pilots,[current.env.meId]);
+    assert.match(await p.locator('[data-dips-item="5"]').innerText(),/操縦者を変更する/);
+    await click('nf-next');await click('nf-back');
+    if(i===0){
+      const other=current.env.people.find(x=>x.pilot&&x.id!==current.env.meId);
+      await click('dips-picker','[data-n="5"]');await click('dips-pick','[data-id="'+current.env.meId+'"]');await click('dips-pick','[data-id="'+other.id+'"]');await click('dips-pick-done');
+      await click('nf-next');await click('nf-back');assert.deepEqual((await state()).plan.pilots,[other.id]);
+    }
+    await click('nf-back');await click('nf-back');await expectRoute('home');
+  }
+  await click('env');await click('ob-co-new');await click('gauth-done');await fill('&name','確認株式会社');await click('cr-name-next');
   await expectRoute('home');assert.match(await p.locator('.hd2').innerText(),/確認株式会社で使用中/);
   let joined;
   for(let i=0;i<2;i++){
     await click('env');await click('ob-co-join');await click('gauth-done');await click('ob-join-pick','[data-id=j1]');await click('ob-join-go');await click('ob-join-me','[data-id=q1]');await click('ob-join-done');
     await expectRoute('home');const current=await state();if(i)assert.equal(current.env.id,joined);else joined=current.env.id;
   }
+  await click('nf-new');await click('start-new');assert.deepEqual((await state()).plan.pilots,[]);
+  await click('dips-picker','[data-n="5"]');await click('dips-pick','[data-id=q2]');await click('dips-pick-done');assert.deepEqual((await state()).plan.pilots,['q2']);
+  await click('nf-back');await click('nf-back');
   await click('env');await click('env-pick','[data-id="'+personal+'"]');assert.equal((await state()).env.flights.length,1);
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
   console.log(JSON.stringify({width,complete:true,legs:st.env.flights[0].legs.length,company:true}));await p.close();

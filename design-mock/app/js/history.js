@@ -58,7 +58,8 @@ def('hist-detail',{t:()=>{const f=flightOf(A.ui.hSel);return f?f.label:'飛行�
      +tgl('out-tog','data-k="map"','地図付きPDF（通報内容＋地図）',sel.map&&!nd,nd,f.outs.map?'<i class="chip ok">作成済み</i>':'')
      +'<div class="row"><button class="btn sm" data-act="out-both">両方選ぶ</button><button class="btn primary sm" data-act="out-make"'+((sel.a4||(sel.map&&!nd))?'':' disabled')+'>選んだPDFを作る</button></div>'
      +'<p class="note">PDFは、飛行が終わったときに自動では作りません。印刷・提出・保存が必要なときだけ作ります（不要なファイルが増えないように）。A4の飛行記録は、最後の保存で自動的に出来上がっており、Google Sheetsの標準の印刷・PDF化もできます。'+(nd?' 通報しない飛行は、通報内容がないため地図付きPDFは作りません。':'')+'</p></div>'
-     +'<div class="sec"><h3>KML（My Maps用）</h3><table class="kv"><tr><td>状態</td><td>'+(nd?'<i class="chip">この飛行にはありません</i>':f.kml==='saved'?'<i class="chip ok">'+KML_TXT.saved+'</i>':'<i class="chip warn">'+KML_TXT.pending+'</i>')+'</td></tr></table><p class="note">KMLは、通報したときに作成し、Google Driveに保存しています。飛行のあとに作り直しません。</p><div class="row"><button class="btn sm" data-act="out-kml-open">KMLについて見る</button></div></div>';
+     +'<div class="sec"><h3>KML（My Maps用）</h3><table class="kv"><tr><td>状態</td><td>'+(nd?'<i class="chip">この飛行にはありません</i>':f.kml==='saved'?'<i class="chip ok">'+KML_TXT.saved+'</i>':'<i class="chip warn">'+KML_TXT.pending+'</i>')+'</td></tr></table><p class="note">KMLは、通報したときに作成し、Google Driveに保存しています。飛行のあとに作り直しません。</p><div class="row"><button class="btn sm" data-act="out-kml-open">KMLについて見る</button></div></div>'
+     +'<div class="row"><button class="btn" data-act="root" data-s="home">ホームに戻る</button></div>';
   }
 });
 

@@ -17,7 +17,7 @@ function dipsField(n){
   const duration=(h,m)=>'<div class="row">'+sel(h,durHOpts,S[h],'data-rerender="1"')+sel(m,minOpts,S[m],'data-rerender="1"')+'</div>';
   switch(n){
     case 1:return dipsInput('planName','text','飛行計画名称');
-    case 2:case 4:case 5:return '<button class="btn select-open" data-act="dips-picker" data-n="'+n+'">登録済み一覧から選ぶ</button><div class="selected-summary">'+valueOf(n)+'</div>';
+    case 2:case 4:case 5:return '<button class="btn select-open" data-act="dips-picker" data-n="'+n+'">' +(n===5&&S.pilots.length?'操縦者を変更する':'登録済み一覧から選ぶ')+'</button><div class="selected-summary">'+valueOf(n)+(n===5?' '+autoChip('pilots'):'')+'</div>';
     case 3:return '<select class="in" data-bind="savedRoute"><option value="">なし</option></select>';
     case 6:return '<div class="grp">業務</div>'+choice('tog-purpose',BIZ,v=>S.biz.includes(v),v=>'data-g="biz" data-v="'+esc(v)+'"')+(S.biz.includes('その他')?dipsInput('otherBiz','text','その他の内容'):'')+'<div class="grp">業務以外</div>'+choice('tog-purpose',NON,v=>S.non.includes(v),v=>'data-g="non" data-v="'+esc(v)+'"')+(S.non.includes('その他')?dipsInput('otherNon','text','その他の内容'):'');
     case 7:return choice('tog-air',AIR,v=>S.air.includes(v));
@@ -57,5 +57,5 @@ function dipsPickerHtml(){
 Object.assign(ACTS,{
   'dips-picker':t=>{const n=Number(t.dataset.n);A.ui.dipsPick={n,selected:n===2?S.permit:(n===4?S.aircraft:S.pilots).slice()};openSheet(dipsPickerHtml,'selector')},
   'dips-pick':t=>{const d=A.ui.dipsPick,id=t.dataset.id;if(d.n===2)d.selected=id;else{const i=d.selected.indexOf(id);if(i<0)d.selected.push(id);else d.selected.splice(i,1)}render()},
-  'dips-pick-done':()=>{const d=A.ui.dipsPick;S[d.n===2?'permit':d.n===4?'aircraft':'pilots']=d.selected;A.modal=null;A.ui.dipsPick=null;render()}
+  'dips-pick-done':()=>{const d=A.ui.dipsPick;const key=d.n===2?'permit':d.n===4?'aircraft':'pilots';S[key]=d.selected;delete S.auto[key];A.modal=null;A.ui.dipsPick=null;render()}
 });
