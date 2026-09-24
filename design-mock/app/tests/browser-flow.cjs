@@ -27,7 +27,7 @@ const assert=require('node:assert/strict');
   await fill('@d.mark','JU000000009901');await fill('@d.name','確認機');
   await click('reg-set','[data-k=batOn][data-v=true]');await fill('@d.newGroup','共用BAT');await click('reg-save');
   await expectRoute('nf-need');assert.equal((await state()).env.aircraft.length,1);
-  await click('nf-need-set');await expectRoute('reg-person');await fill('@d.name','操縦担当');await click('reg-save');
+  await click('nf-need-set');await expectRoute('reg-person');assert.equal(await p.locator('.phone [data-bind="@d.account"]').count(),1);await fill('@d.name','操縦担当');await click('reg-save');
   await expectRoute('nf-need');await click('nf-need-go');await click('start-new');
   for(const n of [2,4,5]){await click('dips-picker','[data-n="'+n+'"]');const item=p.locator('.phone [data-act=dips-pick]'+(n===2?'[data-id=none]':':not([disabled])')).first();if(!(await item.getAttribute('class')).includes('sel'))await item.click();await click('dips-pick-done')}
   await click('tog-purpose','[data-v=空撮]');await click('tog-air','[data-v="上記空域の飛行は行わない"]');await click('tog-met','[data-v="上記方法の飛行は行わない"]');
@@ -64,7 +64,16 @@ const assert=require('node:assert/strict');
   assert.equal(await exit.evaluate(e=>e.parentElement.previousElementSibling.textContent.includes('KML（My Maps用）')),true);
   await p.locator('.hd [data-act=back]').click();await expectRoute('hist');
   await click('hist-open');await click('root','[data-s=home]');await expectRoute('home');
-  await click('go','[data-s=set]');await click('go','[data-s=set-me]');await click('me-pilot');await click('me-save');await click('back');
+  await click('go','[data-s=set]');await click('go','[data-s=set-members]');
+  const selfBefore=(await state()).env;const selfId=selfBefore.meId;
+  await click('reg-open','[data-t=person]:not([data-id])');await click('reg-self');
+  assert.equal(await p.locator('.phone [data-bind="@d.account"]').count(),0);await click('reg-save');
+  assert.equal((await state()).env.people.length,selfBefore.people.length);
+  await click('reg-open','[data-t=person][data-id="'+selfId+'"]');
+  assert.equal(await p.locator('.phone [data-bind="@d.account"]').count(),0);await click('reg-save');
+  let selfState=await state();assert.equal(selfState.env.people.find(x=>x.id===selfId).account,selfState.account.email);
+  assert.equal(selfState.env.people.find(x=>x.id===selfId).pilot,false);
+  await click('back');await click('go','[data-s=set-me]');await click('me-pilot');await click('me-save');await click('back');
   // 同じ個人環境で本人を一度操縦者登録。その後は毎回の選択なしで進める。
   for(let i=0;i<2;i++){
     await click('nf-new');await click('start-new');const current=await state();
@@ -85,6 +94,11 @@ const assert=require('node:assert/strict');
     await click('env');await click('ob-co-join');await click('gauth-done');await click('ob-join-pick','[data-id=j1]');await click('ob-join-go');await click('ob-join-me','[data-id=q1]');await click('ob-join-done');
     await expectRoute('home');const current=await state();if(i)assert.equal(current.env.id,joined);else joined=current.env.id;
   }
+  await click('go','[data-s=set]');await click('go','[data-s=set-members]');
+  await click('reg-open','[data-t=person][data-id=q1]');assert.equal(await p.locator('.phone [data-bind="@d.account"]').count(),1);
+  const companyAccount=await p.locator('.phone [data-bind="@d.account"]').inputValue();await click('reg-save');
+  assert.equal((await state()).env.people.find(x=>x.id==='q1').account,companyAccount);
+  await click('back');await click('back');
   await click('nf-new');await click('start-new');assert.deepEqual((await state()).plan.pilots,[]);
   await click('dips-picker','[data-n="5"]');await click('dips-pick','[data-id=q2]');await click('dips-pick-done');assert.deepEqual((await state()).plan.pilots,['q2']);
   await click('nf-back');await click('nf-back');

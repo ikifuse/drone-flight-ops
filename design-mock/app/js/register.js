@@ -11,7 +11,7 @@ const REG_TITLE={aircraft:'機体',person:'人員',permit:'許可・承認',insu
 const REG_META={
   aircraft:{doc:'34g §3.2（機体の追加・変更）／32h §6（新しい機体を追加する流れ）。機種・登録記号・BAT管理のON／OFF・使用するBAT共用グループが機体設定の候補。',state:'proposal',
     tmp:['項目の最終形は未確定（機体設定の項目は「等」）','BAT管理の既定値は未確定（PENDING-D-BAT-SWITCH）','BAT共用グループの名称・作り方は未確定（PENDING-D-AC-GROUP-NAMING）','機体管理を誰が行えるかは未確定（PENDING-D-AC-PERMISSION）'],ask:['機体の登録時に、BAT管理のON／OFFを決めさせるか（その機体でBATの記録を残すかどうかが変わる）'],ui:['BAT共用グループの設定を、この画面に含めるか別画面にするかは標準案']},
-  person:{doc:'31a §2・§3（人物・所属・役割・資格を分ける。アカウントを持たない補助者も人物として登録できる）／31d（離任は人物の削除ではなく、この環境との所属の終了）。',state:'accepted',
+  person:{doc:'34i（人員登録・本人編集のアカウント欄）／31a §6（個人本人の既知アカウントの自動紐付け）／31a §2・§3（人物・所属・役割・資格を分ける。アカウントを持たない補助者も人物として登録できる）／31d（離任は人物の削除ではなく、この環境との所属の終了）。',state:'accepted',
     tmp:['入力項目の列・画面構成は未確定（PENDING-S2-IDENTITY／PENDING-S2-MEMBERSHIP）','技能証明は「未発行のまま」保持できる','離任の画面・実行できる人は未確定（PENDING-S2-MEMBERSHIP）'],ask:['新規飛行の途中で登録するときに、最低限どの項目を登録させるか（氏名と資格だけ、など）'],ui:['入力欄の並びと、変更のときの見せ方は標準案']},
   permit:{doc:'25b／26（DIPSの飛行許可番号・発行日・期間・カテゴリー）。許可承認を設定のどこに置くか・どの責任領域に保存するかは未確定（PENDING-S6-DRIVE-PLACEMENT）。',state:'tmp',
     tmp:['設定の分類（許可承認・保険・連絡先を1つにまとめる）は仮','許可の適用範囲（DID・夜間など）と機体の対応を持たせるのは、照合ヒントを見せるための仮の対応'],ask:['許可承認は、機体ごと・操縦者ごと・使う場所ごとのどれで持つか'],ui:['1画面に収める並べ方は標準案']},
@@ -58,7 +58,7 @@ function regInit(t,o){
   switch(t){
    case 'aircraft':return ex?{name:ex.name,model:MODELS.includes(ex.model)?ex.model:'その他（手入力）',modelOther:MODELS.includes(ex.model)?'':ex.model,mark:ex.mark,cert:ex.cert||'なし',expiry:dstr(ex.expiry),batOn:!!ex.batOn,group:ex.group||'',newGroup:''}
      :{name:'',model:'EVO Lite+',modelOther:'',mark:'',cert:'なし',expiry:'',batOn:false,group:'',newGroup:''};
-   case 'person':return ex?{name:ex.name,kana:ex.kana||'',roles:ex.roles.slice(),lic:ex.lic||'未発行',licNo:ex.licNo||'',account:ex.account||'',phone:ex.phone||'',addr:ex.addr||'',email:ex.email||''}
+   case 'person':return ex?{name:ex.name,kana:ex.kana||'',roles:ex.roles.slice(),lic:ex.lic||'未発行',licNo:ex.licNo||'',account:personalSelfAccount(E,ex.id)||ex.account||'',phone:ex.phone||'',addr:ex.addr||'',email:ex.email||''}
      :{name:o.name||'',kana:'',roles:(o.roles||[]).slice(),lic:'未発行',licNo:'',account:'',phone:'',addr:'',email:''};
    case 'permit':return ex?{no:ex.no,label:ex.label,issued:dstr(ex.issued),from:dstr(ex.from),to:dstr(ex.to),cat:ex.cat,cover:ex.cover.slice(),aircraft:ex.aircraft.slice()}
      :{no:'',label:'',issued:'',from:'',to:'',cat:'II',cover:[],aircraft:(o.aircraft||[]).slice()};
@@ -88,12 +88,13 @@ function formAircraft(){
 function formPerson(){
   const d=A.reg.d;const isPilot=d.roles.includes('操縦者');const E=ENV();
   const ex=A.reg.id?E.people.find(p=>p.id===A.reg.id):null;
+  const self=E.kind==='personal'&&!!E.meId&&A.reg.id===E.meId;
   return '<div class="sec"><h3>名前など</h3>'+fRow('氏名',fIn('name',d.name,'例：山田 太郎'))+fRow('フリガナ',fIn('kana',d.kana,'例：ヤマダ タロウ（任意）'))+fRow('電話',fIn('phone',d.phone,'例：090-1234-5678（任意）'))+fRow('住所',fIn('addr',d.addr,'あとから入力できます'))+fRow('連絡用メール',fIn('email',d.email,'あとから入力できます'))
-   +'<div class="row"><button class="btn sm" data-act="reg-self">自分の情報を使う</button><span class="note">操縦者になるかどうかは、下の役割で選びます。</span></div></div>'
+   +(self?'':'<div class="row"><button class="btn sm" data-act="reg-self">'+(E.kind==='personal'&&!A.reg.id?'自分を登録する':'自分の情報を使う')+'</button></div>')+'<p class="note">操縦者になるかどうかは、下の役割で選びます。</p></div>'
    +'<div class="sec"><h3>役割 <small>複数選べます</small></h3>'+fPills('roles',ROLES,d.roles)
    +'<p class="note">役割は、ここでの立場です。飛行ごとの担当（操縦者・通報者・記録者）とは別です。</p></div>'
    +(isPilot?'<div class="sec"><h3>技能証明</h3>'+fRow('種別',fSel('lic',LICS,d.lic))+fRow('証明番号',fIn('licNo',d.licNo,'未発行なら空のまま'))+'<p class="note">まだ発行されていないときは、番号を空のままにしてください。</p></div>':'')
-   +'<div class="sec"><h3>Googleアカウント <small>任意</small></h3>'+fRow('メール',fIn('account',d.account,'例：name@example.com'))+'</div>'
+   +(self?'':'<div class="sec"><h3>Googleアカウント <small>任意</small></h3>'+fRow('メール',fIn('account',d.account,'例：name@example.com'))+'</div>')
    +(ex?'<div class="sec"><h3>参加の状態</h3>'+(ex.active!==false?'<p class="lead" style="margin:0 0 8px">参加しています。</p><button class="btn danger sm" data-act="person-leave">離任にする…</button>':'<p class="lead" style="margin:0 0 8px">離任しています（過去の記録は残っています）。</p><button class="btn sm" data-act="person-rejoin">再び参加にする</button>')+'</div>':'');
 }
 function formPermit(){
@@ -153,7 +154,7 @@ const SAVE={
   },
   person(E,d,id){
     if(!d.name.trim()){toast('氏名を入れてください');return null}
-    const obj={name:d.name.trim(),kana:d.kana,roles:d.roles.slice(),pilot:d.roles.includes('操縦者'),lic:d.lic,licNo:d.licNo,account:d.account,phone:d.phone,addr:d.addr||'',email:d.email||''};
+    const obj={name:d.name.trim(),kana:d.kana,roles:d.roles.slice(),pilot:d.roles.includes('操縦者'),lic:d.lic,licNo:d.licNo,account:personalSelfAccount(E,id)||d.account,phone:d.phone,addr:d.addr||'',email:d.email||''};
     if(id){Object.assign(E.people.find(p=>p.id===id),obj);return id}
     const p=newPerson(obj.name,obj.roles,obj);E.people.push(p);return p.id;
   },
@@ -220,7 +221,16 @@ Object.assign(ACTS,{
     render();
   },
   'reg-tog':t=>{const d=A.reg.d;const k=t.dataset.k,v=t.dataset.v;const i=d[k].indexOf(v);if(i>=0)d[k].splice(i,1);else d[k].push(v);render()},
-  'reg-self':()=>{const d=A.reg.d;const E=ENV();const me=E.people.find(p=>p.id===E.meId);d.name=me?me.name:'';['kana','phone','addr','email'].forEach(k=>{if(me&&me[k])d[k]=me[k]});render();toast('自分の情報を入れました')},
+  'reg-self':()=>{
+    const E=ENV();const me=E.people.find(p=>p.id===E.meId);const d=A.reg.d;
+    if(E.kind==='personal'&&!A.reg.id&&me){
+      // 本人を重複作成せず、同じPersonを登録対象にする。役割は既存値と呼出元の既定値を維持。
+      A.reg.id=me.id;A.reg.d=regInit('person',{id:me.id});A.reg.d.roles=[...new Set([...me.roles,...d.roles])];
+    }else{
+      d.name=me?me.name:'';['kana','phone','addr','email'].forEach(k=>{if(me&&me[k])d[k]=me[k]});
+    }
+    render();toast('自分の情報を入れました');
+  },
   'person-leave':()=>openSheet(()=>'<h3>離任にしますか</h3><p>離任は、この人を、<b>この会社・団体（または個人）を離れた人</b>にすることです。人員を消すわけではなく、過去の飛行・点検・記録は残ります。これからの飛行の候補からは外れます。</p><p class="note">アプリで離任にしても、Google Driveの共有は、そのままです。共有が残っていると、Google Driveから見られることがあります。共有をやめるときは、Google Driveで設定してください。</p><div class="row"><button class="btn" data-act="close">やめる</button><button class="btn danger" data-act="person-leave-ok">離任にする</button></div>'),
   'person-leave-ok':()=>{const E=ENV();const p=E.people.find(x=>x.id===A.reg.id);if(p){p.active=false;p.left=slash(TODAY)}A.modal=null;A.reg=null;back();toast('離任にしました。過去の記録は残ります')},
   'person-rejoin':()=>{const E=ENV();const p=E.people.find(x=>x.id===A.reg.id);if(p){p.active=true;p.left=null}A.reg=null;back();toast('再び参加にしました。役割は、あらためて決めてください（以前の役割は自動では戻りません）')}

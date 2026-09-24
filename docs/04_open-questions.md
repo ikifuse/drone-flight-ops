@@ -305,3 +305,6 @@ BAT管理を機体単位の任意にすること、保存を共用機体系ご�
 初回二択入口はHISTORICAL。ホームの［〜で使用中］ボタンと環境シートは単一環境でも有効と確定した（[34a §9.6](architecture/presentation/34a_setup-and-environment-entry.md#96-複数環境と切替)）。PENDING-S2-ENVIRONMENT-UIは削除せず、通常起動時の選択・復帰、未保存作業、offline・権限失効時の詳細へ限定する。
 
 機体・操縦者の不足登録から同じ作業へ戻れることは、飛行開始時の全必須条件を確定しない（PENDING-S5-INITIAL-REQUIRED）。運航完了と保存済み表示まで接続しても、PENDING-S6-OPERATION-UIの詳細復旧・部分成功UI、本番schema・保存列・KML配置／命名・PDF詳細は維持する。DIPS／Driveの実API、credential暗号化・token、PENDING-S2-OWNERSHIP、PENDING-S5-ROOT-DISCOVERY、会社参加方式、VERIFY-WEB-CONTACT-KANA、VERIFY-S4-API-CONTRACT、VERIFY-S5-GOOGLE-CONTRACTを解消しない。主フローの実物証拠と採用範囲は[34f §7](architecture/presentation/34f_screen-map-and-design-coverage.md#7-動くモックと正式docsの同期監査2026-09-23)。
+
+
+**2026-09-24の人員画面追補**: 個人本人のGoogleアカウント再入力の省略・既知アカウントの自動紐付けのみを[31a §6](architecture/identity-and-access/31a_person-account-and-environment.md#6-個人本人の既知googleアカウントを再入力させない2026-09-24)・[34i](architecture/presentation/34i_person-registration-and-account-linking.md)でCURRENT-ACCEPTEDとして記録した。PENDING-S2-IDENTITY／MEMBERSHIP／ACCESS-DETAIL、PENDING-D-SETTINGS-SCREENSの物理schema・権限・人員管理画面の残りは維持する。初回Googleアカウント選択は変更しない。初回の人物登録だけで操縦者役割も付与するかという既存の未決は今回解消せず、Google認証だけで役割を付与しない境界を維持する。

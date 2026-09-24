@@ -31,11 +31,16 @@ const FAKE_PLACES=['○○駅前','○○公園','○○川の河川敷','工場
 
 /* ---------- 新規飛行の状態の初期値（仮データの計画にも使う） ---------- */
 function nowStart(){const d=new Date(Date.now()+10*60000);d.setMinutes(Math.ceil(d.getMinutes()/5)*5,0,0);return d}
+// 個人環境の本人に対応する、認証済みのアカウント。人物や役割は生成しない（31a §6）。
+function personalSelfAccount(env,personId){
+  return env?.kind==='personal'&&personId&&personId===env.meId&&A?.account
+    ?(env.gaccount||A.account.email||''):'';
+}
 function blankNF(env,selectSelf=true){
   const st=nowStart();const n=new Date();const i=env&&env.insurance,c=env&&env.contact;
   // モック内の認証済みアカウント → 本人Person → 環境内操縦者役割を照合する。
   // Personを新設したり役割を付与したりせず、新規下書きの初期値だけに使う（31c §6）。
-  const account=A&&A.account&&(env?.gaccount||A.account.email);
+  const account=personalSelfAccount(env,env?.meId);
   const me=selectSelf&&env?.kind==='personal'&&account&&env.people.find(p=>p.id===env.meId&&p.account===account&&p.pilot&&p.active!==false);
   return {
     cur:'start',layout:'dips',flow:['use','content','area','time','master'].map(id=>({id,skip:false,merge:false})),

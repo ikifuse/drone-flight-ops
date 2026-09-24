@@ -350,3 +350,8 @@ CURRENT-ACCEPTED（今回のオーナー指示による動くモックとの同�
 設定が揃うと飛行計画へ進む。既存モックの［このまま進む］から計画内で補う経路も維持する。接続済みであることを理由に、飛行開始時の必須範囲（PENDING-S5-INITIAL-REQUIRED）を新たに確定しない。本人・人員・機体・連絡先・DIPS登録状態・環境・BATは同一セッションで再利用する。本番の永続保存・再起動復旧を検証した意味ではない。
 
 証拠は `design-mock/app/js/{onboarding,newflight,register}.js` の `init-reg`、`nf-need-set`、`finishReg` と、[実操作テスト](../../../design-mock/app/tests/browser-flow.cjs)。DIPS不足補完は[25b §1.1](../dips-flight-plan/25b_manual-web-mapping.md#11-通報時に不足している登録情報を補う受け皿2026-09-23)、主フローの検証範囲は[34f](34f_screen-map-and-design-coverage.md)へ接続する。
+
+
+### 9.9 個人本人の登録・編集でGoogleアカウントを再入力しない（2026-09-24）
+
+CURRENT-ACCEPTED（同日のオーナー追加指示）。初回Googleアカウント選択の導線は変えず、その後の個人本人の人員登録・編集と［自分の情報］では、既知のログイン中アカウントを本人へ自動紐付けする。アカウントのメール入力欄は表示しない。紐付けの概念・例外は[31a §6](../identity-and-access/31a_person-account-and-environment.md#6-個人本人の既知googleアカウントを再入力させない2026-09-24)、人員フォームと本人情報編集の限定仕様は[34i](34i_person-registration-and-account-linking.md)。会社・団体のアカウント利用、初回の必須範囲、未登録者への操縦者役割付与のPENDINGは変更しない。

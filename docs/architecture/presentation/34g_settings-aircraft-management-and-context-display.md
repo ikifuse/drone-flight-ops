@@ -1,6 +1,6 @@
 # 34g. 各種設定・管理の機体管理と、現在の運用環境・対象機体の表示責任
 
-最終更新: 2026-09-23\
+最終更新: 2026-09-24\
 状態: 現在の運用環境と対象機体が別の情報であること、環境の表示・切替、4入口、Googleアカウントの扱いは既存の設計ベースライン（CURRENT-ACCEPTED）への接続。機体管理の入口の流れ、対象機体を確認できる方向、各種設定・管理が現在の環境を対象にすることは現在案（CURRENT-PROPOSAL）。画面の配置・レイアウトは未確定（`PENDING`）\
 主責務: ［各種設定・管理］から機体管理へ進む画面の流れと責任、現在の運用環境の表示と対象機体の表示の責任の区別。関係の意味は[32h](../asset-management/32h_registered-aircraft-and-battery-group-relations.md)、環境の表示条件は[31a §4](../identity-and-access/31a_person-account-and-environment.md#4-会社利用と環境切替へ詰めた内容)・[34a §5](34a_setup-and-environment-entry.md#5-通常起動と環境選択の10項目)、対象機体を扱う各画面は[35b](../operation-recording/35b_normal-operation-and-final-save.md)\
 由来: オーナーの2026-09-20の検討内容（会話。ファイルではない）\
@@ -102,7 +102,7 @@ flowchart TD
 | 9 | 権限・online/offline差 | 31b・PENDING-D-AC-PERMISSION。offlineでの登録は未確定 |
 | 10 | 未確定 | 追加・変更それぞれのレイアウト、BAT共用グループ設定画面（PENDING-D-AC-SCREENS）、BAT管理ON／OFFの変更画面と履歴の扱い（PENDING-D-BAT-SWITCH） |
 
-**PENDING-D-AC-SCREENS**: 機体追加・機体変更・BAT共用グループ設定の各画面の具体レイアウトと、機体一覧の列・並び。各種設定・管理の他の分類（人員・BAT・場所・環境等）は、[34f](34f_screen-map-and-design-coverage.md)のPENDING-D-SETTINGS-SCREENSのまま未設計。
+**PENDING-D-AC-SCREENS**: 機体追加・機体変更・BAT共用グループ設定の各画面の具体レイアウトと、機体一覧の列・並び。人員登録・本人編集のアカウント欄は[34i](34i_person-registration-and-account-linking.md)の限定仕様を参照する。各種設定・管理の他の分類・残りの詳細（人員・BAT・場所・環境等）は、[34f](34f_screen-map-and-design-coverage.md)のPENDING-D-SETTINGS-SCREENSのまま未設計。
 
 ## 4. 各種設定・管理が対象にする運用環境
 

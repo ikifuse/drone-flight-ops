@@ -1,6 +1,6 @@
 # アーキテクチャ設計目次
 
-最終更新: 2026-09-23\
+最終更新: 2026-09-24\
 状態: Phase B設計凍結 / C0 Shell構築完了・C1設計準備完了 / C1未着手（C0受入確認・オーナーGO待ち）
 
 ## 1. 本目次の役割と読み順
@@ -53,6 +53,7 @@
 | 画面仕様の記録10項目 | [30](presentation/30_screen-specification-standard.md) | 個別画面は規約を適用し本文を複製しない |
 | 内部設計用語と利用者表示文言の分離（規約）／利用者向け表示名の対応表／設計確認用モックの左右の役割と未決事項の扱い | [30 §4](presentation/30_screen-specification-standard.md#4-内部設計用語と利用者表示文言の分離)（規約）／[30 §5](presentation/30_screen-specification-standard.md#5-設計確認用モックの左右の役割と未決事項の扱い)（モックの左右の役割）／[34h](presentation/34h_user-facing-wording-and-terminology.md)（対応表・文言の型・§9置き場所の表） | 各画面文書は規約を適用。内部の概念・責務分離は31a・31bのまま。19は失敗表示の型を参照 |
 | 初回導線（直接はじめの登録）・ホームの環境ボタン／シート・作成／参加・root再発見・通常起動・DIPSログイン情報の登録方針（保存方式は未決） | [34a](presentation/34a_setup-and-environment-entry.md)（§8はDIPSログイン情報。秘密情報の境界は[16 §10](16_security.md#10-利用者自身のdipsログイン情報2026-09-22方針のみ)） | 人物・環境・権限は31a〜31d。表示名は34h。物理方式は未確定 |
+| 人員登録・本人編集のアカウント欄と保存への引継ぎ | [34i](presentation/34i_person-registration-and-account-linking.md) | 紐付けの概念は31a、役割は31c、初回導線は34a。人員画面全体の未決は維持 |
 | ホーム4入口・画面→保存責任の接続 | [34b](presentation/34b_home-and-navigation.md) | 各領域は到達先。Drive全体構造の追加正本を作らない |
 | 共有飛行リスト・カード5系統・対象選択 | [34c](presentation/34c_shared-flight-worklist.md) | 24aは提出履歴保存。画面カードへ列全体を複製しない |
 | API正常受付時の掲載・後で飛行する・通報内容確認 | [34d](presentation/34d_dips-accepted-and-plan-content.md) | 13bはFSM、33bは通信安全、取消／重複調整の詳細は対象外 |

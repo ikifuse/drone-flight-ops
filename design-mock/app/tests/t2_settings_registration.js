@@ -125,3 +125,60 @@ suite('表示値検査とパスワードの回帰',H=>{
     H.act('dips-show');return H.q(sel).type==='password';
   });
 });
+
+suite('個人本人のGoogleアカウント再入力を省く',H=>{
+ const {T,act,set,q,A,E,S}=H;
+ const accountField=()=>q('.phone [data-bind="@d.account"]');
+ const me=()=>E().people.find(p=>p.id===E().meId);
+ const members=()=>{act('go','[data-s=set]');act('go','[data-s=set-members]')};
+ T('個人の本人登録は既知アカウントを初期化し入力欄を出さない',()=>{
+  H.hash('scn=empty');me().account='';members();act('reg-open','[data-t=person]:not([data-id])');
+  act('reg-self');return A().reg.id===E().meId&&A().reg.d.account===A().account.email&&!accountField()&&!A().reg.d.roles.includes('操縦者');
+ });
+ T('本人登録を保存しても同じPersonへの対応を維持し、人物を重複作成しない',()=>{
+  const id=E().meId,n=E().people.length;set('[data-bind="@d.name"]','本人担当');act('reg-save');
+  return E().meId===id&&E().people.length===n&&me().account===A().account.email&&!me().pilot;
+ });
+ T('個人の本人編集も入力欄なしで既知アカウントを保存する',()=>{
+  me().account='';act('reg-open','[data-t=person][data-id="'+E().meId+'"]');
+  const ok=!accountField()&&A().reg.d.account===A().account.email;set('[data-bind="@d.phone"]','09000000000');act('reg-save');
+  return ok&&me().account===A().account.email&&!me().pilot;
+ });
+ T('本人の連絡用メールはGoogleアカウントと別で、空欄のまま保存できる',()=>{
+  act('reg-open','[data-t=person][data-id="'+E().meId+'"]');set('[data-bind="@d.email"]','');act('reg-save');return me().email===''&&me().account===A().account.email;
+ });
+ T('本人編集の取消では下書きの自動紐付けを保存しない',()=>{
+  me().account='';act('reg-open','[data-t=person][data-id="'+E().meId+'"]');const ok=A().reg.d.account===A().account.email;act('reg-cancel');return ok&&me().account==='';
+ });
+ T('自分の情報の編集でもアカウント再入力なしで保存できる',()=>{
+  H.APP().root('home');act('go','[data-s=set]');act('go','[data-s=set-me]');
+  const ok=A().init.account===A().account.email&&!q('.phone [data-bind="%account"]');act('me-save');return ok&&me().account===A().account.email&&!me().pilot;
+ });
+ T('個人の他の人員は任意欄を残し、アカウントなしの補助者を保存できる',()=>{
+  act('go','[data-s=set-members]');act('reg-open','[data-t=person]:not([data-id])');
+  const ok=!!accountField()&&accountField().value==='';set('[data-bind="@d.name"]','補助担当');act('reg-tog','[data-k=roles][data-v=補助者]');act('reg-save');
+  const p=E().people.find(p=>p.name==='補助担当');return ok&&p.id!==E().meId&&p.account===''&&!p.pilot;
+ });
+ T('他の人員の編集でも任意欄を残し、Googleアカウントなしで保存できる',()=>{
+  const p=E().people.find(p=>p.name==='補助担当');act('reg-open','[data-t=person][data-id="'+p.id+'"]');
+  const ok=!!accountField();act('reg-save');return ok&&p.account==='';
+ });
+ for(const kind of ['company','school'])T('会社・団体の本人編集と人員新規登録では任意欄を維持: '+kind,()=>{
+  H.hash('scn=company');E().kind=kind;me().account='member@example.com';members();act('reg-open','[data-t=person][data-id="'+E().meId+'"]');
+  if(!accountField())return false;set('[data-bind="@d.account"]','');act('reg-save');if(me().account!=='')return false;
+  act('reg-open','[data-t=person]:not([data-id])');if(!accountField())return false;
+  set('[data-bind="@d.name"]','点検担当');act('reg-tog','[data-k=roles][data-v=点検者]');act('reg-save');
+  return E().people.find(p=>p.name==='点検担当')?.account==='';
+ });
+ T('本人の人員編集後も新規飛行の本人操縦者自動選択を維持する',()=>{
+  H.hash('scn=personal');me().account='';members();act('reg-open','[data-t=person][data-id="'+E().meId+'"]');act('reg-save');
+  H.APP().root('home');act('nf-new');act('start-new');return S().pilots.join()===E().meId;
+ });
+ T('新規飛行の途中の本人登録は同じPersonへ戻し、次回も自動選択する',()=>{
+  H.hash('scn=personal');me().roles=['管理者'];me().pilot=false;
+  act('nf-new');act('start-new');act('dips-picker','[data-n="5"]');act('nf-reg','[data-t=person]');
+  const n=E().people.length;act('reg-self');if(accountField())return false;act('reg-save');
+  const ok=E().people.length===n&&S().pilots.includes(E().meId)&&me().account===A().account.email;
+  H.APP().root('home');act('nf-new');act('start-new');return ok&&S().pilots.join()===E().meId;
+ });
+});

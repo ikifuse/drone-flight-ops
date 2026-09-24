@@ -68,3 +68,16 @@ Chromeの412／430／1320pxで各30状態を描画・撮影し、横はみ出し
 - `npm run typecheck`・`npm run lint`・`npm run build`、`python3 scripts/check_docs.py`・`git diff --check`を実行。C1・本番ソースの変更はない。
 
 これはメモリー内の設計モックの検証であり、スマートフォン実機・Safari・本番Google認証・外部API・永続保存の検証ではない。
+
+## 個人本人のアカウント再入力省略（2026-09-24）
+
+個人環境の本人登録・編集では、既知のログイン中Googleアカウントを編集下書きへ自動紐付けし、保存後も対応を維持する。Googleアカウント入力欄は表示しない。［自分を登録する］は既存の本人Personを対象にし、重複作成しない。連絡用メールは別項目のまま。本人以外・会社／団体の人員は任意欄を維持し、空欄でも保存できる。認証から役割を付与せず、登録済み本人操縦者の新規飛行初期選択を維持する。
+
+Responsibility Checkの結果、概念・紐付けは[31a §6](../../docs/architecture/identity-and-access/31a_person-account-and-environment.md#6-個人本人の既知googleアカウントを再入力させない2026-09-24)、役割との境界は31c §6、本人情報の入口は34a §9.9、人員フォームの限定仕様は[34i](../../docs/architecture/presentation/34i_person-registration-and-account-linking.md)へ配置した。34iに6観点とADR不要の判断を記録し、目次・README・34f・34g・open-questionsを同期した。既存PENDINGとADRの承認状態は維持する。
+
+- `tests/index.html`: 既存266件＋追加12件＝278件合格、失敗0、JSエラー0、左側UI禁止語違反0（1223回検査）。本人登録・編集・保存・取消、連絡用メールとの分離、他人・会社／団体の任意欄と空欄保存、本人操縦者の初期選択を検査した。
+- `tests/browser-flow.cjs`: Chrome 412／430／1320pxで462操作、JSエラー0・外部通信0。本人の登録・編集で欄が消え、同じPersonへ紐付くこと、会社の任意欄と既存の運航・履歴出口を確認した。
+- 本人編集・会社人員登録を3幅で計6枚撮影・目視確認。横はみ出し0、JSエラー0、外部通信0。
+- `npm run typecheck`・`npm run lint`・`npm run build`合格。Docs検査のリンク・アンカー・表・到達性エラー0。メール候補2件は既存placeholderとテスト用example.com値として確認。`git diff --check`合格。
+
+C1・本番コードは変更していない。上記はメモリー内のモック検証であり、実機・Safari・本番認証・永続保存は未検証。

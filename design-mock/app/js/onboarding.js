@@ -109,11 +109,11 @@ const DIPS_MEMO={
 /* ---------- 自分の情報（各種設定・管理から） ---------- */
 def('set-me',{t:'自分の情報',st:'',
   goal:'初回に登録した自分の情報を、あとから確かめて直す。DIPSの飛行計画の連絡先として使う。',
-  doc:'34a §9.2・§9.5（初回登録と同じ項目をここから変更できる）／31a §2・31c（人物とGoogleアカウントは別。Google認証だけで操縦者役割を付与しない。登録済みの個人本人の初期選択は31c §6）。',state:'proposal',
+  doc:'34a §9.2・§9.5（初回登録と同じ項目をここから変更できる）／31a §2・31c（人物とGoogleアカウントは別。Google認証だけで操縦者役割を付与しない。個人本人のアカウント再入力は省く（31a §6・34i）。登録済みの個人本人の初期選択は31c §6）。',state:'proposal',
   tmp:['項目は初回登録（はじめの登録）と同じにしている。最終の列は未確定（PENDING-S2-IDENTITY）'],
   ask:['操縦者としての登録を、この画面で行うか、人員・役割の画面で行うか（人物と役割を分ける設計のため、どちらでも成り立つ）'],
   ui:['初回登録と同じ並びにして、どこを直せばよいか迷わないようにしている'],
-  enter:()=>{const E=ENV();const me=E.people.find(p=>p.id===E.meId)||{};A.init={name:me.name||'',kana:me.kana||'',addr:me.addr||'',phone:me.phone||'',email:me.email||'',isPilot:!!me.pilot}},
+  enter:()=>{const E=ENV();const me=E.people.find(p=>p.id===E.meId)||{};A.init={name:me.name||'',kana:me.kana||'',addr:me.addr||'',phone:me.phone||'',email:me.email||'',account:personalSelfAccount(E,E.meId)||me.account||'',isPilot:!!me.pilot}},
   body:()=>{const i=A.init||(A.init={name:'',kana:'',addr:'',phone:'',email:'',isPilot:false});
     return '<div class="fld"><label>氏名</label><input class="in" data-bind="%name" value="'+esc(i.name)+'" placeholder="例：山田 太郎"></div>'
      +'<div class="fld"><label>フリガナ</label><input class="in" data-bind="%kana" value="'+esc(i.kana)+'" placeholder="例：ヤマダ タロウ"></div>'
@@ -257,6 +257,7 @@ Object.assign(ACTS,{
     const E=ENV();const me=E.people.find(p=>p.id===E.meId);const i=A.init;
     if(!i.name.trim()){toast('氏名を入れてください');return}
     if(me){me.name=i.name.trim();me.kana=i.kana.trim();me.addr=i.addr.trim();me.phone=i.phone.trim();me.email=i.email.trim();
+      const account=personalSelfAccount(E,me.id);if(account)me.account=account;
       if(i.isPilot&&!me.roles.includes('操縦者'))me.roles.push('操縦者');if(!i.isPilot)me.roles=me.roles.filter(r=>r!=='操縦者');me.pilot=me.roles.includes('操縦者')}
     A.init=null;back();toast('自分の情報を保存しました');
   },
