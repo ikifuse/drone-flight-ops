@@ -1,6 +1,6 @@
 # 23. Phase C 実装ロードマップとマイルストーン（23_implementation-roadmap.md）
 
-最終更新: 2026-09-20
+最終更新: 2026-09-25
 プロジェクト: `drone-flight-ops`
 フェーズ: Phase B設計凍結（ADR-0001〜0007承認済、追加部分置換ADR-0008/0009）/ C0構築完了・C1設計準備完了・C1未着手
 
@@ -61,7 +61,7 @@ Step 3の§4と§6の取得確認・点検整備Actor部分は[asset-management]
 
 Step 4では[DIPS接続基盤](dips-infrastructure/README.md)と[16](16_security.md)へ§7の限定部分を移した。接続方針は到達済みだが、実行基盤・VPC経路・認証契約・credentialは未確定／確認待ちで、実装や本番設定を開始しない。
 
-Step 5では[presentation](presentation/README.md)へ§3と§7の正常受付後・共有リスト限定部分を移した。初回必須範囲、root再発見、詳細UI・共有反映等は未確定であり、画面仕様の記録をゲート通過・実装開始と扱わない。
+Step 5では[presentation](presentation/README.md)へ§3と§7の正常受付後・共有リスト限定部分を移した。飛行開始時の必須範囲（初回の「はじめの登録」の必須2項目は2026-09-23に34a §9.3で確定済み）、root再発見、詳細UI・共有反映等は未確定であり、画面仕様の記録をゲート通過・実装開始と扱わない。
 
 Step 7aでは[25e](dips-flight-plan/25e_common-source-and-submission-boundaries.md)と[26 §1.3](26_dips-web-ui-verification.md#13-証拠系列と回収範囲)へ、実画面の証拠系列・共通の源・Manual／API経路・DIPS対象外の因果を移した。C1の`FlightAreaGeometry`・`DipsSubmission`型はこの因果に接続するが、計画Draftの`geometry`と旧`geometry_snapshot`の統合（PENDING-C1-SCHEMA）、作図操作の未回収、`flyRoute`表現のVERIFY、DIPS対象外の定義（PENDING-S7A-NON-DIPS-SCOPE）は未確定であり、ゲートを通過したとも実装開始とも扱わない。
 
@@ -78,6 +78,8 @@ Step 7eでは[38a](sync-and-cache/38a_shared-source-and-device-cache.md)・[38b]
 2026-09-20の運用環境・登録機体・BAT共用グループの関係（[32h](asset-management/32h_registered-aircraft-and-battery-group-relations.md)・[34g](presentation/34g_settings-aircraft-management-and-context-display.md)）では、機体・BATを現在の運用環境に属するデータとして扱う既存の原則を、02の登録機体と実機・BAT共用グループの関係、［各種設定・管理］の機体管理、対象機体の表示責任へ接続した。C1の型（Aircraftの環境への帰属、関係の保持場所。PENDING-C1-SCHEMA）、C3のBAT選択候補、C4の02・03の同期は、02の物理構成・名称・例外・権限・画面（PENDING-D-AC-*）が未確定であり、着手条件を満たしたとは扱わない。
 
 Step 8では、§11の現状差分8項目・旧案の残存・回収12項目の所在・原本の全行の使用状況を[Step 8監査](../migration/99-2-step-8-diff-audit.md)で確かめた。§0〜§11の再移植と差分監査は完了したが、これは設計文書の移管・照合の完了であり、上記の各PENDING／VERIFYの解決でも、C0受入確認・オーナーGO（PENDING-C0-ACCEPTANCE）の代替でもない。C1以降は、開始ゲートと該当型のPENDING照合を通すまで着手しない。
+
+**C1開始条件と該当型固定前の照合の区別（2026-09-25）**: C1全体の開始条件は、PENDING-C0-ACCEPTANCEとオーナーの明示的な「実装開始」である。後続Phaseの画面・認証・外部通信・帳票詳細のPENDINGが残っていることを、C1全体を開始できない理由へ昇格させない。一方、C1で固定するDomain型・DB schemaが依存する未確定（PENDING-C1-SCHEMA、PENDING-S2-IDENTITY、PENDING-S2-MEMBERSHIPの物理schema部分、PENDING-S2-ACTOR-SCHEMA/UIの保持先部分、PENDING-S6-OPERATION-SCHEMA、PENDING-S7B-FLIGHT-KEY等）は、その型を固定する前に照合する技術設計課題として残す。区分の索引は[04](../04_open-questions.md#c1開始条件該当型固定前のschema課題後続pendingの区別2026-09-25)に置き、本書では複製しない。
 
 以下のC0〜C9は実装配分を保持し、C7のStep 4接続先指定も維持する。Step 6の通常運航・A4は[35a〜35d](operation-recording/README.md)、整備媒体は[36](maintenance-storage/README.md)、Drive責任は[37](drive-structure/README.md)。§11の差分監査はStep 8で実施した（[監査記録](../migration/99-2-step-8-diff-audit.md)）。対象領域のゲートを通過する前に、列挙された型やシート方針をそのまま実装開始の許可として使わない。
 

@@ -1,6 +1,6 @@
 # 未確認事項と将来の設計判断論点
 
-最終更新: 2026-09-24
+最終更新: 2026-09-25
 プロジェクト: `drone-flight-ops`
 
 
@@ -134,7 +134,8 @@
 | PENDING-S2-IDENTITY / PENDING-S2-ENVIRONMENT-UI / VERIFY-S2-IDENTITY-EVIDENCE | [31a](architecture/identity-and-access/31a_person-account-and-environment.md)：組織・環境・ID・資格列・起動／復帰／失効時の切替詳細・試作確認（ホームの環境ボタンとシートは34a §9.6で確定） |
 | PENDING-S2-ACCESS-DETAIL / VERIFY-S2-ACCESS-EVIDENCE | [31b](architecture/identity-and-access/31b_roles-and-access-control.md)：未定義の複合役割・機能詳細と実共有確認 |
 | PENDING-S2-ACTOR-SCHEMA/UI / VERIFY-S2-ACTOR-EVIDENCE・代理通報範囲 | [31c](architecture/identity-and-access/31c_operational-actors.md)：担当の保持先・別人点検UI・観測証拠。基準C1 schema未確定へ接続。個人の登録済み本人操縦者の初期選択は31c §6でCURRENT-ACCEPTED（2026-09-24） |
-| PENDING-S2-MEMBERSHIP / PENDING-S2-OWNERSHIP | [31d](architecture/identity-and-access/31d_membership-lifecycle.md)：離任実行権限・UI・offline・履歴列・再所属形式・会社所有 |
+| PENDING-S2-MEMBERSHIP | [31d §3](architecture/identity-and-access/31d_membership-lifecycle.md#3-再所属とgoogle共有を別に扱う)：①離任の操作面（離任UI、実行できる役割、offline反映）と、②所属の物理schema（履歴列、再有効化、Person／UserAccount／Environmentとの対応ID・基数）。①は後続の画面・権限の判断、②はC1の該当型固定前の技術設計であり、1つの質問にまとめない。離任＝所属終了・過去記録の保持・同じPersonでの再所属・旧役割を自動復活させないことは到達済み |
+| PENDING-S2-OWNERSHIP | [31d §4](architecture/identity-and-access/31d_membership-lifecycle.md#4-組織所有と事業継続の未確定境界)：会社環境のMy Drive／Shared Driveの物理方式と、会社アカウント廃止・Workspace／ドメイン移行・Shared Drive移行・合併・事業譲渡等の事業継続時の承継。会社データを会社で使うアカウント側へ置くこと、一般参加者の離任・アプリ管理者の交代が所有者交代でないことは到達済み |
 
 ## 6. 99.2再移植Step 3の未確定と確認境界
 
@@ -161,9 +162,12 @@
 
 | 対象 | 詳細正本 |
 |---|---|
-| PENDING-S5-ROOT-DISCOVERY / INITIAL-REQUIRED | [34a](architecture/presentation/34a_setup-and-environment-entry.md)：root再発見方式、参加・中断復旧、必須範囲。2026-09-23に、**初回は全員が個人環境から始め、氏名とGoogleアカウントの2つだけを必須として1画面（はじめの登録）で登録し、フリガナ・住所・電話番号・メールアドレス・DIPSログインID・パスワードは任意のまま同じ画面に置いてホームへ入る**ことを、同日中の改訂を経て確定した（[§9](architecture/presentation/34a_setup-and-environment-entry.md#9-初回は個人環境から始め初回登録を1画面にまとめる2026-09-23)・[ADR-0030](decisions/ADR-0030-personal-first-onboarding-and-single-screen-initial-registration.md)）。**はじめの登録の必須項目はこれで確定し、PENDINGから外れた。** INITIAL-REQUIREDの残りは、**飛行を始めるときに何を必須にするか**（最低1機案を含む）だけである。機体・許可承認・保険の事前登録は［各種設定・管理］から。任意にした項目が通報時に不足していたら、不足分だけ補い、人物の連絡先は対象Personの人物情報へ、DIPSの認証情報はDIPSのログイン情報へ保存して元の飛行計画へ戻す（[25b §1.1](architecture/dips-flight-plan/25b_manual-web-mapping.md#11-通報時に不足している登録情報を補う受け皿2026-09-23)・[34a §8.3](architecture/presentation/34a_setup-and-environment-entry.md#83-未登録のまま通報が必要になったとき通常の経路ではなく受け皿)） |
-| PENDING-S5-DIPS-LOGIN-STORAGE | [34a §8](architecture/presentation/34a_setup-and-environment-entry.md#8-dipsログイン情報の登録と初回設定の候補2026-09-22)・[§9.3](architecture/presentation/34a_setup-and-environment-entry.md#93-初回登録は1画面にまとめる)・[16 §10](architecture/16_security.md#10-利用者自身のdipsログイン情報2026-09-22方針のみ)：DIPSログインID・パスワードの保存先・暗号化方式・端末ごと／共有・Google Drive／Sheetsでの持ち方・複数人利用時の閲覧・自動ログインに使うか・API認証との関係・DIPS公式ログイン画面への自動入力の可否・トークンの具体実装。**方針は「アプリに登録・保存する」「初回登録で登録する」（オーナーの指示）で、AIの判断で変えない**。詳細は未決 |
-| PENDING-S2-OWNERSHIP（会社・団体環境の所有） | [31d §4](architecture/identity-and-access/31d_membership-lifecycle.md#4-組織所有と事業継続の未確定境界)・[34a §9.4](architecture/presentation/34a_setup-and-environment-entry.md#94-会社団体はホームからその会社で使うgoogleアカウントで追加する)：2026-09-23に、会社・団体環境は**その会社で使うGoogle／Workspaceアカウント側の保存領域へ作る**ことを確定した。**My DriveかShared Driveか、所有権の継承方式、法人での所有主体は未決のまま** |
+| PENDING-S5-ROOT-DISCOVERY | [34a §2](architecture/presentation/34a_setup-and-environment-entry.md#2-再起動とroot重複防止)：再ログイン・再インストール・端末変更等で、同じ環境／rootをどう再発見するか。会社の既存環境をどう見つけて参加するか（下記の参加手段）とは別の論点 |
+| 会社既存環境の参加手段（ID未付与の既存PENDING） | [34a §7.5・§9.4](architecture/presentation/34a_setup-and-environment-entry.md#75-未確定)：既存の会社・団体環境をどう特定・発見するか（Drive共有からの検出・招待コード・リンク等）。C1開始を止めない後続の未決。初回を個人環境とし、会社・団体をホームから新規作成／既存参加の別処理で追加し、参加では新rootを作らないことはCURRENT-ACCEPTED |
+| 認証中断・権限拒否・部分生成・offline・アクセス喪失からの復帰 | [34a §4項目7・9](architecture/presentation/34a_setup-and-environment-entry.md#4-初回セットアップ画面の10項目)（PENDING-S5-ENTRY-SCREENS）、通常起動時・offline・失効時の選択と復帰は[31a §4](architecture/identity-and-access/31a_person-account-and-environment.md#4-会社利用と環境切替へ詰めた内容)（PENDING-S2-ENVIRONMENT-UI）。後続の接続・復帰処理の未決 |
+| PENDING-S5-INITIAL-REQUIRED | [34a §3](architecture/presentation/34a_setup-and-environment-entry.md#3-初回必須登録を見直した経緯)：**飛行を始める時点で**機体・BAT等をどこまで必須にするか（最低1機案を含む）だけ。2026-09-23に、**初回は全員が個人環境から始め、氏名とGoogleアカウントの2つだけを必須として1画面（はじめの登録）で登録し、フリガナ・住所・電話番号・メールアドレス・DIPSログインID・パスワードは任意のまま同じ画面に置いてホームへ入る**ことを、同日中の改訂を経て確定した（[§9](architecture/presentation/34a_setup-and-environment-entry.md#9-初回は個人環境から始め初回登録を1画面にまとめる2026-09-23)・[ADR-0030](decisions/ADR-0030-personal-first-onboarding-and-single-screen-initial-registration.md)）。**はじめの登録の必須項目はこれで確定し、PENDINGから外れた。** INITIAL-REQUIREDの残りは、**飛行を始めるときに何を必須にするか**（最低1機案を含む）だけである。機体・許可承認・保険の事前登録は［各種設定・管理］から。任意にした項目が通報時に不足していたら、不足分だけ補い、人物の連絡先は対象Personの人物情報へ、DIPSの認証情報はDIPSのログイン情報へ保存して元の飛行計画へ戻す（[25b §1.1](architecture/dips-flight-plan/25b_manual-web-mapping.md#11-通報時に不足している登録情報を補う受け皿2026-09-23)・[34a §8.3](architecture/presentation/34a_setup-and-environment-entry.md#83-未登録のまま通報が必要になったとき通常の経路ではなく受け皿)） |
+| PENDING-S5-DIPS-LOGIN-STORAGE | [34a §8](architecture/presentation/34a_setup-and-environment-entry.md#8-dipsログイン情報の登録と初回設定の候補2026-09-22)・[§9.3](architecture/presentation/34a_setup-and-environment-entry.md#93-初回登録は1画面にまとめる)・[16 §10](architecture/16_security.md#10-利用者自身のdipsログイン情報2026-09-22方針のみ)：DIPSログインID・パスワードの保存先・暗号化方式・端末ごと／共有・Google Drive／Sheetsでの持ち方・複数人利用時の閲覧・自動ログインに使うか・API認証との関係・DIPS公式ログイン画面への自動入力の可否。**方針は「アプリに登録・保存できる」「初回のはじめの登録でも任意で登録できる」（オーナーの指示。CURRENT-ACCEPTED）で、AIの判断で変えない**。保存方式の詳細は未決。DIPS APIの正式認証仕様はVERIFY-S4-API-CONTRACT、Token／Session保持はPENDING-S4-SESSION（いずれも[16 §9](architecture/16_security.md#9-step-4の認証確認と保持方式の未確定)）で、本IDへ混ぜない |
+| PENDING-S2-OWNERSHIP（会社・団体環境の所有） | [31d §4](architecture/identity-and-access/31d_membership-lifecycle.md#4-組織所有と事業継続の未確定境界)・[34a §9.4](architecture/presentation/34a_setup-and-environment-entry.md#94-会社団体はホームからその会社で使うgoogleアカウントで追加する)：2026-09-23に、会社・団体環境は**その会社で使うGoogle／Workspaceアカウント側の保存領域へ作る**ことを確定した（参加者個人の私用Driveを会社データの正本にしない）。**未決はMy DriveかShared Driveかという物理方式と、会社アカウント廃止・Workspace／ドメイン移行・Shared Drive移行・合併・事業譲渡等の事業継続時の承継**。一般参加者の離任（31d §1）・アプリ管理者の交代（31b §3）はこの所有者交代に含めない |
 | PENDING-WEB-CONTACT-SOURCE / VERIFY-WEB-CONTACT-KANA | [25b §1.1](architecture/dips-flight-plan/25b_manual-web-mapping.md#11-通報時に不足している登録情報を補う受け皿2026-09-23)：環境に登録された連絡先と人物情報の重複・優先関係（どちらを正とするか）は未決。フリガナがDIPS側で必要かは未確認のため、DIPSの必須としては扱わず、人物基本情報として同じ受け皿で補う。Manual経路（DIPS Webで通報する）側で不足をどう扱うかも未決 |
 | PENDING-S5-ENTRY-SCREENS | [34a §7.5・§9](architecture/presentation/34a_setup-and-environment-entry.md#75-未確定)：現行のはじめの登録・会社追加／参加・通常起動の選択の未記載10項目詳細。二択入口・独立したGoogle選択／Drive許可画面はHISTORICALで、復活させる意味ではない。初回順・必須2項目・ホームの環境シートは確定済み。root再発見・再認証の詳細はPENDING-S5-ROOT-DISCOVERYに残す |
 | PENDING-U-WORDING | [34h §8](architecture/presentation/34h_user-facing-wording-and-terminology.md#8-未確定と確定してはならないこと)：利用者向けの表示名・文言の最終形（オーナー指示の例と、[§10](architecture/presentation/34h_user-facing-wording-and-terminology.md#10-dipsログイン情報の表示案2026-09-22)のDIPSログイン情報の表示を含め案）。「保存・同期」の言い換え、「離任」の表記、BATを共用する機体のグループの名称など |
@@ -294,7 +298,7 @@ BAT管理を機体単位の任意にすること、保存を共用機体系ご�
 
 - **PENDING-D-NEW-FLIGHT-SCREENS**: [25b §7](architecture/dips-flight-plan/25b_manual-web-mapping.md#7-スマートフォンの標準候補と比較案2026-09-22)のDIPS公式22項目順を標準候補にした。独自まとめ案・selectorの形・地図の入口と詳細操作は比較中。新規のDIPS実画面調査ではない。
 - **PENDING-S7B-DUPLICATE-ADJUST**: 結果画面とリストで通常運航への接続を止めたが、調整後の再開条件・解除方法・状態名は未決（34d §7）。
-- **PENDING-S6-OPERATION-UI**: [35b §12](architecture/operation-recording/35b_normal-operation-and-final-save.md#12-旧現場uiを継承した設計候補2026-09-22)の旧UI継承、操作ゼロ、BAT交換2項目、保存失敗再試行はモックの候補。製品の詳細UI・永続復旧・実通信の保証を確定していない。
+- **PENDING-S6-OPERATION-UI**: [35b §12](architecture/operation-recording/35b_normal-operation-and-final-save.md#12-旧現場uiを継承した設計候補2026-09-22)の旧UI継承、操作ゼロ、BAT交換2項目、保存失敗再試行、実機確認を申告した後だけ［全て正常］を使える点検候補（未確認を一括で正常にする仕様ではない）はモックの候補。製品の詳細UI・永続復旧・実通信の保証を確定していない。
 - **PENDING-S5-DIPS-LOGIN-STORAGE**: 保存できる方針は維持。保存先・暗号化・端末／共有・Drive／Sheets・閲覧者・自動ログイン・API認証・削除無効化は未決（34a §8）。
 - **PENDING-U-WORDING**: 空欄表示とサンプル漏れを訂正したが、個々の製品用語を確定しない（34h §10）。
 
@@ -308,3 +312,18 @@ BAT管理を機体単位の任意にすること、保存を共用機体系ご�
 
 
 **2026-09-24の人員画面追補**: 個人本人のGoogleアカウント再入力の省略・既知アカウントの自動紐付けのみを[31a §6](architecture/identity-and-access/31a_person-account-and-environment.md#6-個人本人の既知googleアカウントを再入力させない2026-09-24)・[34i](architecture/presentation/34i_person-registration-and-account-linking.md)でCURRENT-ACCEPTEDとして記録した。PENDING-S2-IDENTITY／MEMBERSHIP／ACCESS-DETAIL、PENDING-D-SETTINGS-SCREENSの物理schema・権限・人員管理画面の残りは維持する。初回Googleアカウント選択は変更しない。初回の人物登録だけで操縦者役割も付与するかという既存の未決は今回解消せず、Google認証だけで役割を付与しない境界を維持する。
+
+## C1開始条件・該当型固定前のschema課題・後続PENDINGの区別（2026-09-25）
+
+2026-09-25の監査で、会社参加・会社データ所有・権限と離任・DIPS認証情報・Manual確認と再開・飛行開始時の必須と点検・連絡先と保険・帳票PDFの各論点を正式Docsと照合した。粗い見出しを新しいPENDINGとして追加せず、既存の正式ID（ID未付与の既存PENDINGを含む）を以下の区分で案内する。定義・因果は各正本に置き、本表は複製しない。
+
+| 区分 | 該当 | 意味 |
+|---|---|---|
+| C1全体の開始条件 | PENDING-C0-ACCEPTANCE（§3）と、オーナーの明示的な「実装開始」 | これ以外の後続PENDINGが残っていることを理由に、C1全体の開始を止めない。今回の照合範囲で、C1全体の開始前に回答が必要なオーナー質問は0件 |
+| C1の該当型を固定する前の技術設計（schema整合） | PENDING-C1-SCHEMA、PENDING-DOMAIN-SEMANTIC-KEYS（§3）、PENDING-S2-IDENTITY（Person／UserAccount／Environmentの対応ID）、PENDING-S2-MEMBERSHIPの物理schema部分（所属履歴・再有効化・基数。[31d §3](architecture/identity-and-access/31d_membership-lifecycle.md#3-再所属とgoogle共有を別に扱う)）、PENDING-S2-ACTOR-SCHEMA/UIの保持先部分（Flight単位の実操縦者、Recorder・点検実施者の参照。[31c §2](architecture/identity-and-access/31c_operational-actors.md#2-現場役割の現在到達点)・[12e §8](architecture/domain-model/12e_operation-inspection-maintenance.md#8-実績と点検の未定義参照pending-c1-schema)）、PENDING-S6-OPERATION-SCHEMA（[35a §5](architecture/operation-recording/35a_flexible-flight-and-details.md#5-未確定と検証境界)）、PENDING-S7B-FLIGHT-KEY（[24b §5](architecture/dips-submission/24b_dips-plan-records-and-worklist-lifecycle.md#5-未確定確認待ちと再検討条件)） | 対象のDomain型・DB schemaを固定する前にAI側が技術設計として照合する。オーナーの業務判断と混同しない。C1の他の型の着手を一律に止める意味ではない |
+| 後続Phaseの判断・詳細（C1を止めない） | 会社既存環境の参加手段、PENDING-S5-ROOT-DISCOVERY、PENDING-S5-ENTRY-SCREENS／PENDING-S2-ENVIRONMENT-UIの復帰詳細、PENDING-S2-OWNERSHIP、PENDING-S2-ACCESS-DETAIL、PENDING-D-AC-PERMISSION、PENDING-S2-MEMBERSHIPの操作面（離任UI・実行できる役割・offline）、PENDING-S5-DIPS-LOGIN-STORAGE、PENDING-S4-SESSION、PENDING-S7B-DUPLICATE-ADJUST、PENDING-S7B-CLEANUP-CONDITION、PENDING-S5-MANUAL-LIST、PENDING-S5-INITIAL-REQUIRED（飛行開始時の必須範囲のみ）、PENDING-S6-OPERATION-UI、PENDING-WEB-CONTACT-SOURCE、25b §1.1のManual経路の不足処理、PENDING-S7D-HISTORY-OUTPUT-UNIT、PENDING-S7D-MAPPDF-SCOPE、PENDING-S7D-MAPPDF-DETAIL、PENDING-S7D-HISTORY-DETAIL | 画面・権限・認証・外部通信・帳票詳細の未決。該当Phaseの実装前に各正本で決める。C1開始条件へ昇格させない |
+| 外部・実物の確認待ち | VERIFY-S5-GOOGLE-CONTRACT、VERIFY-S4-API-CONTRACT（照合APIの利用条件を含む）、VERIFY-WEB-CONTACT-KANA、VERIFY-S7D-MAPPDF-REGEN | 設計判断ではなく、公式仕様・実環境・実物で確認する |
+
+**保険**: [12d §2](architecture/domain-model/12d_flight-plan-and-dips.md#2-insurancepolicy保険台帳マスター)の`InsurancePolicy`は組織・複数機材で再利用する独立マスターで、複数の契約を保持できる。FlightPlanは`insurance_policy_id`で適用保険を参照し、今回値をoverrideできる。「1計画へ複数の保険契約を同時に適用する」必要を扱う既存PENDINGは正式Docsに存在しないため、新しいPENDINGを作らない。
+
+到達済みの内容（初回は個人環境、会社・団体の新規作成と既存参加の分離、三層権限、離任＝所属終了、DIPSログイン情報を保存できる方針、Manual確認2方式と結果不明時の自動再POST禁止、初回登録の必須2項目、A4の機体別保存・固定7明細・次空き連番等）は各正本のCURRENT-ACCEPTEDのままで、本表によってPENDINGへ戻さない。
