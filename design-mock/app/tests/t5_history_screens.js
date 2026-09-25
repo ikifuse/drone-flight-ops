@@ -103,7 +103,9 @@ suite('全画面の表示',H=>{
   T('保存後の画面（オンライン・オフライン）',()=>{
     H.hash('scn=personal');window.gotoScreen('op-final');H.APP().ACTS['op-finalize']();H.scan('保存後 オンライン');const a=route()==='op-done';
     H.hash('scn=personal&online=0');window.gotoScreen('op-final');H.APP().ACTS['op-finalize']();H.scan('保存後 オフライン');
-    return a&&route()==='op-final'&&!!A().op&&H.txt().includes('保存できませんでした');
+    const b=route()==='op-done'&&!A().op&&H.txt().includes('この端末に保存しました');
+    H.hash('scn=personal');window.gotoScreen('op-final');A().ui.opSaveFail=true;H.APP().ACTS['op-finalize']();H.scan('保存に失敗');
+    return a&&b&&route()==='op-final'&&!!A().op&&H.txt().includes('保存できませんでした');
   });
   T('参加の確認（共有の状態3種）と、登録時の許可拒否の画面',()=>{
     H.hash('');window.gotoScreen('join2');for(const v of ['edit','view','none']){A().gAccess=v;H.APP().render();H.scan('参加 '+v)}A().gAccess='edit';

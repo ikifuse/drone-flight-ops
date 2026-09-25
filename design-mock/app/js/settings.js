@@ -177,5 +177,5 @@ Object.assign(ACTS,{
   'api':t=>{A.apiOk=t.dataset.v==='1';render()},
   'dips-open':()=>{A.dipsRet=null;nav('set-dipscred')},
   'online':t=>{A.online=t.dataset.v==='1';render()},
-  'sync-now':()=>{if(!canWrite())return;if(!A.online){toast(driveSaveMessage());return}const E=ENV();E.flights.forEach(f=>{f.synced=true;if(f.kml==='pending')f.kml='saved';f.outputPending={}});E.plans.forEach(p=>{if(p.kml==='pending')p.kml='saved'});render();toast('Google Driveに保存しました')}
+  'sync-now':()=>{if(!canWrite())return;if(!A.online){toast(driveSaveMessage());return}const E=ENV();E.flights.forEach(f=>{if(!f.synced)assignA4(f,E);f.synced=true;if(f.kml==='pending')f.kml='saved';f.outputPending={}});E.plans.forEach(p=>{if(p.kml==='pending')p.kml='saved'});render();toast('Google Driveに保存しました')}
 });

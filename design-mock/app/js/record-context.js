@@ -36,6 +36,27 @@ function savedAc(f,id){return (f.masters||f.snap?.masters)?.aircraft[id]||acOf(i
 function savedAcName(f,id){return savedAc(f,id)?.name||'登録情報なし'}
 function savedPerson(f,id){return (f.masters||f.snap?.masters)?.people[id]?.name||plName(id)}
 
+/* A4の正式保存先（35c §3・§3.2。CURRENT-ACCEPTED）: 機体個体ごとの飛行記録ファイルの中に、
+   その日の最初を YY.M.D、同じ日の次を _2、_3 …（既存シートを確かめて次の空き名）とする物理シートを作る。
+   1シートは固定7明細。8明細目以降は同じ機体の次の空き名へ。機体交代では交代後の機体のファイルへ移る。
+   名前は既存シートを確かめて決めるため、Google Driveへ実際に保存するときに1回だけ割り当て、再送では割り当て直さない（35d）。
+   モック上の仮表現であり、C1 schema・保存契約（PENDING-S6-FINAL-SAVE-CONTRACT）・日付境界（PENDING-S6-A4-DETAIL）・
+   場所を変えたときの区切り（35c §3）を決めたものではない。 */
+function a4Base(d){d=new Date(d);return pad(d.getFullYear()%100)+'.'+(d.getMonth()+1)+'.'+d.getDate()}
+function assignA4(f,E){
+  E=E||ENV();if(f.a4)return f.a4;
+  f.a4=f.ac.map(id=>{
+    const ac=E.aircraft.find(x=>x.id===id)||{};const used=ac.a4Sheets||(ac.a4Sheets=[]);
+    const pages=Math.max(1,Math.ceil(f.legs.filter(l=>(l.ac||f.ac[0])===id).length/7));const base=a4Base(f.date);
+    return {ac:id,sheets:Array.from({length:pages},()=>{let name=base,i=2;while(used.includes(name))name=base+'_'+(i++);used.push(name);return name})};
+  });
+  return f.a4;
+}
+function a4Where(f){
+  if(!f.a4)return 'Google Driveに保存するときに、機体ごとの飛行記録ファイルへ、日付の名前のシートとして作ります。';
+  return f.a4.map(x=>esc(savedAcName(f,x.ac))+'の飛行記録ファイル：シート'+x.sheets.map(s=>'「'+esc(s)+'」').join('')).join('<br>');
+}
+
 /* 固定機体情報は設定から後補完する。現場の機体選択・交代では要求しない。 */
 const AIRCRAFT_DETAILS=[['serial_number','製造番号'],['manufacturer','メーカー'],['aircraft_type','機体の種類'],['management_start_date','管理開始日','date'],['prior_minutes','取得前の飛行時間（分）','number'],['prior_count','取得前の飛行回数','number']];
 function aircraftDetails(){

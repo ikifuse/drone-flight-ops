@@ -133,6 +133,7 @@ function seedPersonal(env){
    F('河川敷Aの空撮',14,['a1'],[P1],[['BAT 1','10:02','10:31',29,'河川敷A'],['BAT 2','10:50','11:22',32,'河川敷A','風がやや強い']],{pm:'m1',biz:['空撮'],air:[AIR[3]],met:[MET[6]],geo:GEO.river,from:'事務所',to:'河川敷A',startAt:at(-14,10,0)},'saved'),
    F('公園Bの点検（夜間なし）',30,['a2'],['p2'],[['BAT 4','14:05','14:58',53,'公園B']],{pm:'m1',biz:['インフラ点検・保守'],air:[AIR[2]],met:[MET[1]],geo:GEO.park,from:'事務所',to:'公園B',dur:[1,0],alt:20,startAt:at(-30,14,0)},'saved'),
    F('練習飛行（通報なし）',45,['a1'],[P1],[['BAT 3','16:10','16:25',15,'広場']],{pm:'none',non:['趣味'],air:[AIR[3]],met:[MET[6]],geo:GEO.line,from:'自宅',to:'広場',dur:[0,15],alt:10,noDips:true,startAt:at(-45,16,0)},'none'));
+  env.flights.forEach(f=>assignA4(f,env));
 }
 function seedCompany(env){
   const me=env.people.find(p=>p.id===env.meId);
@@ -160,6 +161,7 @@ function seedCompany(env){
    P('工場敷地の測量',3,9,['c1'],[P1],P1,'dup',{to:'工場敷地',biz:['測量']}));
   env.flights.push({id:uid('h'),label:'工場屋根の点検',date:addDays(TODAY,-20),ac:['c1'],pl:[P1],legs:legsOf([['BAT 1','09:40','10:22',42,'工場'],['BAT 2','10:40','11:15',35,'工場']]),kml:'saved',synced:true,outs:{a4:false,map:false},
     snap:v({name:'工場屋根の点検',ac:['c1'],pl:[P1],pm:'n1',biz:['インフラ点検・保守'],air:[AIR[2]],met:[MET[6]],geo:GEO.park,from:'本社',to:'工場',dur:[1,30],alt:25,startAt:at(-20,9,30)})});
+  env.flights.forEach(f=>assignA4(f,env));
 }
 function seedSample(env){
   if(env.plans.length||env.aircraft.length){mtoast('すでに登録があるため、仮データは追加しません');return false}

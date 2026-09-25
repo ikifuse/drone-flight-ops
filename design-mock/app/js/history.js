@@ -50,7 +50,7 @@ def('hist-detail',{t:()=>{const f=flightOf(A.ui.hSel);return f?f.label:'飛行�
   body:()=>{
     const f=flightOf(A.ui.hSel);if(!f)return '<div class="empty">飛行が見つかりません</div>';
     const s=f.snap;const nd=!!s.noDips;const sel=A.ui.outSel;
-    return '<div class="sec"><h3>この飛行</h3><table class="kv"><tr><td>日付</td><td>'+slash(f.date)+'</td></tr><tr><td>場所</td><td>'+esc(fPlace(f))+'</td></tr><tr><td>目的</td><td>'+esc(fPurpose(f).join('・')||'—')+'</td></tr><tr><td>機体</td><td>'+f.ac.map(id=>{const a=savedAc(f,id);return esc(a?a.name+'（'+a.mark+'）':id)}).join('<br>')+'</td></tr><tr><td>操縦者</td><td>'+f.pl.map(id=>esc(savedPerson(f,id))).join('、')+'</td></tr><tr><td>飛行</td><td>'+f.legs.length+'回・合計'+fMin(f)+'分</td></tr><tr><td>保存</td><td>'+(f.synced?'Google Driveに保存済み':'<i class="chip warn">未保存</i> この端末には保存されています')+'</td></tr></table></div>'
+    return '<div class="sec"><h3>この飛行</h3><table class="kv"><tr><td>日付</td><td>'+slash(f.date)+'</td></tr><tr><td>場所</td><td>'+esc(fPlace(f))+'</td></tr><tr><td>目的</td><td>'+esc(fPurpose(f).join('・')||'—')+'</td></tr><tr><td>機体</td><td>'+f.ac.map(id=>{const a=savedAc(f,id);return esc(a?a.name+'（'+a.mark+'）':id)}).join('<br>')+'</td></tr><tr><td>操縦者</td><td>'+f.pl.map(id=>esc(savedPerson(f,id))).join('、')+'</td></tr><tr><td>飛行</td><td>'+f.legs.length+'回・合計'+fMin(f)+'分</td></tr><tr><td>保存</td><td>'+(f.synced?'Google Driveに保存済み':'<i class="chip warn">未保存</i> この端末には保存されています')+'</td></tr><tr><td>A4の飛行記録</td><td>'+a4Where(f)+'</td></tr></table></div>'
      +'<div class="sec"><h3>飛行の記録</h3><table class="kv grid"><tr><th>#</th><th>機体</th><th>BAT</th><th>離陸→着陸</th><th>時間</th></tr>'+f.legs.map((l,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(savedAcName(f,l.ac||f.ac[0]))+'</td><td>'+esc(l.bat)+'</td><td>'+esc(l.off)+'→'+esc(l.on)+'</td><td>'+l.min+'分</td></tr>').join('')+'</table>'+(f.notes?'<p class="note">記事・不具合・処置: '+esc(f.notes)+'</p>':'')
      +(nd?'':'<div class="row"><button class="btn sm" data-act="hist-dips">通報した内容を見る</button></div>')+'</div>'
      +'<div class="sec"><h3>出力 <small>必要なものだけ作ります</small></h3>'
@@ -124,7 +124,8 @@ def('out-kml',{t:'出力：KML',st:()=>{const f=flightOf(A.ui.hSel);return f?f.l
 Object.assign(ACTS,{
   'hist-q':t=>{A.ui.hq=t.value;const r=$('#hres');if(r)r.innerHTML=histCards()},
   'hist-open':t=>{A.ui.hSel=t.dataset.id;A.ui.outSel={a4:true,map:false};nav('hist-detail')},
-  'hist-dips':()=>{const f=flightOf(A.ui.hSel);openSheet(()=>'<h3>通報した内容</h3>'+DIPS_ITEMS.map(x=>'<div class="rev"><div class="k">'+esc(x.name)+'</div><div class="v">'+valueOf(x.n,f.snap)+'</div></div>').join('')+'<div class="row"><button class="btn" data-act="close">閉じる</button></div>')},
+  /* 通報者は通報時に記録した人（31c §3）。いまの人員の登録を変えても書き換えない */
+  'hist-dips':()=>{const f=flightOf(A.ui.hSel);const sub=f.submission;openSheet(()=>'<h3>通報した内容</h3>'+(sub&&sub.rep?'<table class="kv"><tr><td>通報者</td><td>'+esc(savedPerson(sub,sub.rep))+'</td></tr></table>':'')+DIPS_ITEMS.map(x=>'<div class="rev"><div class="k">'+esc(x.name)+'</div><div class="v">'+valueOf(x.n,f.snap)+'</div></div>').join('')+'<div class="row"><button class="btn" data-act="close">閉じる</button></div>')},
   'out-tog':t=>{const k=t.dataset.k;const f=flightOf(A.ui.hSel);if(k==='map'&&f.snap.noDips){toast('通報しない飛行は、地図付きPDFを作りません');return}A.ui.outSel[k]=!A.ui.outSel[k];render()},
   'out-both':()=>{const f=flightOf(A.ui.hSel);A.ui.outSel={a4:true,map:!f.snap.noDips};render()},
   'out-make':()=>{

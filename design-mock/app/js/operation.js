@@ -94,7 +94,7 @@ def('op-pre',{t:'飛行前点検',st:()=>A.op.name,back:false,
   tmp:['旧アプリの11項目を復元。8項目に簡略化していた履歴を訂正。装着BATを先に確認し、サイクル数は任意。BAT管理OFFは32eに従い個体選択を強制しない','戻る・中止の具体UIは未確定。「飛行0回の中止」と「実績がある運航の終了」を区別する（35b §3項目7）','入力途中は端末に保護し、この画面だけで正式なDrive記録は作らない（35b §3項目8）'],
   ask:['飛行前点検で、11項目を実機で確認したと申告した後にだけ［全て正常］を使える候補を採るか（点検記録の意味・安全性が変わる。未確認のまま一括で正常にする近道ではない。PENDING-S6-OPERATION-UI）'],
   ui:['項目の並び、チェックの形、進み具合の見せ方は標準案','点検担当の変更欄は必要な場合だけ開く。既定の実施者は31cを維持する'],
-  mock:()=>'<p class="note" style="margin:0 0 6px">点検項目を1つずつ押す代わりに、全部を確認済みにして、次の画面を確かめます。</p><button class="btn sm" data-act="op-pre-all">全部確認済みにする</button>',
+  mock:()=>'<p class="note" style="margin:0 0 6px">設計確認のための近道です（アプリの機能ではありません）。点検項目を1つずつ押す代わりに、全部を確認済みにして、次の画面を確かめます。アプリの［全て正常］は、実機で確認したと申告した後だけ使える候補で、未確認の項目を正常にする操作ではありません（35b §12）。</p><button class="btn sm" data-act="op-pre-all">全部確認済みにする</button>',
   body:()=>{
     const op=A.op,a=opAc();const pre=op.pre[a.id]||(op.pre[a.id]={});const done=preReady();
     return opTarget()+operationActors()+inspectionContext('pre',a.id)+batPicker()+'<p>装着・電源投入後、実機を見て11項目を確認してください。</p><div class="sec"><h3>点検項目 '+tmpChip+'</h3>'+PRE_ITEMS.map((x,i)=>tgl('op-pre-tog','data-i="'+i+'"',x,!!pre[i])).join('')
@@ -186,7 +186,7 @@ def('op-post',{t:'飛行後点検',st:()=>A.op.name,back:false,
   tmp:['使用機体ごとの画面構成は未確定（35b §9項目10）。ここでは機体ごとに並べている','旧アプリの機体全般／プロペラ・フレーム／発熱／その他の4項目を継承。全て正常は全機体の実機確認を明示した後だけ。異常はチェックを外して記事へ記録'],
   ask:[],
   ui:['複数機体を使ったときの飛行後点検を、機体ごとの画面にするか1画面にするかは標準案。実際に飛ばした全機体を点検する決まりは変えない'],
-  mock:()=>'<p class="note" style="margin:0 0 6px">点検項目を1つずつ押す代わりに、全部を確認済みにして、次の画面を確かめます。</p><button class="btn sm" data-act="op-post-all">全部確認済みにする</button>',
+  mock:()=>'<p class="note" style="margin:0 0 6px">設計確認のための近道です（アプリの機能ではありません）。点検項目を1つずつ押す代わりに、全部を確認済みにして、次の画面を確かめます。アプリの［全て正常］は、実機で確認したと申告した後だけ使える候補で、未確認の項目を正常にする操作ではありません（35b §12）。</p><button class="btn sm" data-act="op-post-all">全部確認済みにする</button>',
   body:()=>{
     const op=A.op;
     return flownAcs().map(id=>{const a=acOf(id);const p=op.post[id]||(op.post[id]={});return '<div class="sec"><h3>'+esc(a.name)+' <small class="mono">'+esc(a.mark)+'</small></h3>'+inspectionContext('post',id)+POST_ITEMS.map((x,i)=>tgl('op-post-tog','data-a="'+id+'" data-i="'+i+'"',x,!!p[i])).join('')+'</div>'}).join('')
@@ -198,28 +198,28 @@ def('op-post',{t:'飛行後点検',st:()=>A.op.name,back:false,
 def('op-final',{t:'最終送信・保存',st:()=>A.op.name,back:false,
   goal:'運航全体の確定対象を保存し、未同期と反映済みを区別する。',
   doc:'35b §10（最終送信・保存の10項目）／35d（保存の対象・時点・再送を別運航にしない）／27e §4（未同期のKMLは、最後の送信のときにも再送する）。通信失敗や戻る操作で、完了データを消さない。',state:'spec',
-  tmp:['完了・部分失敗の表示、戻り先、再送・確認のUIは未確定（35b §10項目10）','KMLの再送を最終保存の一部とするか、同じ操作で起動する独立した再送とするかは未確定（PENDING-S7C-KML-FINAL-SEND）'],
-  mock:()=>mockSeg('op-save-fail',A.ui.opSaveFail?1:0,[[0,'保存成功'],[1,'通信失敗']]),
+  tmp:['オフラインのときは、確定した記録をこの端末に保存して運航完了へ進む（35d・38b §2・35b §10項目9。Google Driveへは後で同じ運航として保存する）。通信中の保存失敗は完了へ進まず、同じ運航を再試行する（35b §13）。2つの表示は34h §5で分ける','完了・部分失敗の表示、戻り先、再送・確認のUIは未確定（35b §10項目10）','再送で別シート・別の履歴行・累計の二重加算を作らない方式は未確定（PENDING-S6-FINAL-SAVE-CONTRACT）。モックは同じ記録を保存済みにするだけ','KMLの再送を最終保存の一部とするか、同じ操作で起動する独立した再送とするかは未確定（PENDING-S7C-KML-FINAL-SEND）'],
+  mock:()=>'<p class="note" style="margin:0 0 6px">通信できる状態で、保存が失敗した場合を確かめます。オフラインは上の「通信」の切替で選びます。</p>'+mockSeg('op-save-fail',A.ui.opSaveFail?1:0,[[0,'保存成功'],[1,'保存に失敗']]),
   ask:[],
   ui:['保存に失敗したときの見せ方と、保存後の戻り先は標準案。入力内容を失わない決まりは変えない'],
   body:()=>{
     const op=A.op;const kmlPend=op.kml==='pending';
     return '<div class="sec"><h3>確定する内容</h3><table class="kv"><tr><td>運航</td><td>'+esc(op.name)+'</td></tr><tr><td>機体</td><td>'+flownAcs().map(id=>esc(acLabel(id))).join('<br>')+'</td></tr><tr><td>操縦者</td><td>'+esc(plName(op.pilot))+'</td></tr><tr><td>日常点検（飛行前・飛行後）</td><td>済み</td></tr><tr><td>飛行</td><td>'+op.legs.length+'回・合計'+op.legs.reduce((s,l)=>s+l.min,0)+'分</td></tr></table>'+legTable(op.legs)+(op.notes.trim()?'<p class="note">記事・不具合・処置: '+esc(op.notes)+'</p>':'')+'</div>'
      +(kmlPend?'<div class="msg warn">まだGoogle Driveに保存されていないKMLがあります。'+(A.online?'この操作で、あわせて保存します。':'いまはオフラインのため保存できません。通信が戻ったら、自動で保存します。')+'</div>':'')
-     +(op.saveError?'<div class="msg ng">保存できませんでした。下書きはこの端末に残っています。通信回復後、もう一度保存してください。</div>':'')
-     +(A.online?'<div class="msg info">［保存する］で、飛行記録・BATの使用履歴・機体の飛行時間の合計を、Google Driveに保存します。</div>':'<div class="msg warn"><b>オフラインです。</b>いまはGoogle Driveに保存できません。この端末には保存されている下書きを残し、通信が戻ったら［保存する］で再度保存できます。</div>');
+     +(op.saveError&&A.online?'<div class="msg ng">Google Driveに保存できませんでした。入力内容はこの端末に残っています。もう一度［保存する］を押してください。</div>':'')
+     +(A.online?'<div class="msg info">［保存する］で、飛行記録・BATの使用履歴・機体の飛行時間の合計を、Google Driveに保存します。A4の飛行記録は、機体ごとの飛行記録ファイルに日付の名前のシートとして出来上がります。</div>':'<div class="msg warn"><b>オフラインです。</b>［保存する］で、この端末に保存して運航を終えます。Google Driveには、通信が戻ったら保存します。</div>');
   },
   foot:()=>'<button class="btn" data-act="op-to-post">戻る</button><button class="btn primary" data-act="op-finalize">保存する</button>'
 });
 def('op-done',{t:'運航完了',st:()=>A.opDone?A.opDone.name:'',back:false,
-  goal:'保存の結果（反映済みか未同期か）を示し、次の行き先を選ぶ。',
-  doc:'35b §10項目6（成功後の帰着画面・再送UIの詳細は未確定）／35d／34f §2（保存後の戻り先は未確定）。',state:'none',
-  tmp:['保存後の戻り先は未確定。ここでは3つの行き先を並べて、選び方を試せるようにしている（仮）'],
+  goal:'保存の結果（Google Driveに保存済みか、この端末だけに保存か）と、A4の飛行記録の保存先を示し、次の行き先を選ぶ。',
+  doc:'35b §13（運航完了までの接続。CURRENT-ACCEPTED）／35c §3（A4は機体ごとの飛行記録ファイルに、日付YY.M.Dと同日の次の空き連番のシートとして出来上がる。7明細ごと・機体交代で保存先を切り替える）／35d・38b §2（オフラインでは端末に保存し、後で同じ運航として保存）。成功後の帰着画面・再送UIの詳細は35b §10項目6で未確定。',state:'accepted',
+  tmp:['保存後の戻り先は未確定。ここでは2つの行き先を並べて、選び方を試せるようにしている（仮）','シート名の割当は、Google Driveへ実際に保存するときに1回だけ行い、再送で割り当て直さないモック上の表現。割当・重複防止の方式はPENDING-S6-FINAL-SAVE-CONTRACT、日付をまたぐ場合・場所を変えたときの区切りはPENDING-S6-A4-DETAIL／35c §3で未確定。C1 schemaの確定ではない'],
   ask:[],
   ui:['保存後にホームへ戻すか、履歴で結果を見せるかは標準案'],
   body:()=>{const d=A.opDone;
-    return (d.synced?'<div class="msg ok big">✓ 運航完了・保存しました</div><div class="msg ok">飛行記録・BATの使用履歴・機体の飛行時間の合計を、Google Driveに保存しました。</div>':'<div class="msg warn big">この端末に保存しました</div><div class="msg warn">まだGoogle Driveには保存されていません。通信が戻ったら、自動で保存します。</div>')
-     +'<div class="sec"><h3>保存結果</h3><table class="kv"><tr><td>飛行計画</td><td>'+({clean:'通報済み',manual:'通報確認済み',none:'通報しない飛行'}[d.dips]||'記録を確認してください')+'</td></tr><tr><td>飛行記録</td><td>'+(d.synced?'保存済み':'未同期')+'</td></tr><tr><td>日常点検</td><td>'+(d.dailySaved?'保存済み':'記録を確認してください')+'</td></tr></table></div>'
+    return (d.synced?'<div class="msg ok big">✓ 運航完了・保存しました</div><div class="msg ok">飛行記録・BATの使用履歴・機体の飛行時間の合計を、Google Driveに保存しました。</div>':'<div class="msg warn big">✓ 運航完了・この端末に保存しました</div><div class="msg warn">まだGoogle Driveには保存されていません。通信が戻ったら保存します。［各種設定・管理］の［保存状態］からも保存できます。</div>')
+     +'<div class="sec"><h3>保存結果</h3><table class="kv"><tr><td>飛行計画</td><td>'+({clean:'通報済み',manual:'通報確認済み',none:'通報しない飛行'}[d.dips]||'記録を確認してください')+'</td></tr><tr><td>飛行記録</td><td>'+(d.synced?'保存済み':'この端末に保存済み。Google Driveには未保存')+'</td></tr><tr><td>日常点検</td><td>'+(d.dailySaved?'保存済み':'記録を確認してください')+'</td></tr><tr><td>A4の飛行記録</td><td>'+(flightOf(d.fid)?a4Where(flightOf(d.fid)):'記録を確認してください')+'</td></tr></table></div>'
      +'<div class="sec"><h3>この飛行</h3><table class="kv"><tr><td>飛行</td><td>'+esc(d.name)+'</td></tr><tr><td>飛行回数</td><td>'+d.n+'回</td></tr><tr><td>KML</td><td>'+({saved:'保存済み',pending:'まだGoogle Driveに保存されていません',none:'なし（通報しない飛行）'})[d.kml]+'</td></tr><tr><td>PDF</td><td>自動では作りません。必要なときに［飛行履歴・出力］から作ります。</td></tr></table></div>'
      +'<div class="msg info">A4の飛行記録は、この保存で自動的に出来上がります。印刷やPDFが必要なときは、［飛行履歴・出力］から作れます。</div>';
   },
@@ -228,7 +228,9 @@ def('op-done',{t:'運航完了',st:()=>A.opDone?A.opDone.name:'',back:false,
 
 function finalizeOp(){
   const E=ENV(),op=A.op;
-  if(!A.online||A.ui.opSaveFail){op.saveError=true;render();return}
+  /* 通信できないとき（オフライン）は、確定した記録をこの端末に保存して運航を完了し、Google Driveへはあとで保存する（35d・38b §2）。
+     通信中の保存失敗（右側の切替）は完了へ進まず、同じ運航をもう一度保存する（35b §13）。34h §5の2つの表示を混ぜない。 */
+  if(A.online&&A.ui.opSaveFail){op.saveError=true;render();return}
   const kml=op.noDips?'none':(op.kml==='pending'&&A.online?'saved':(op.kml||'saved'));
   const fl={id:uid('h'),label:op.name,date:new Date(op.legs[0].offAt||Date.now()),ac:flownAcs(),pre:clone(op.pre),post:clone(op.post),preNotes:clone(op.preNotes),pl:[...new Set(op.legs.map(l=>l.pilot||op.pilot))],legs:op.legs.map(l=>Object.assign({},clone(l),{pilot:l.pilot||op.pilot,recorder:l.recorder||l.pilot||op.pilot,bat:l.bat||'—'})),kml,dips:op.dips,dailySaved:true,submission:clone(op.submission),synced:A.online,outs:{a4:false,map:false},snap:op.snap,notes:op.notes};
   fl.inspections=clone(op.inspections);
@@ -239,6 +241,7 @@ function finalizeOp(){
   }));
   fl.masters=recordMasters(fl.ac,[...fl.pl,...fl.legs.map(l=>l.recorder),...Object.values(fl.inspections.pre).map(c=>c.person),...Object.values(fl.inspections.post).map(c=>c.person)]);
   fl.ac.forEach(id=>{const a=acOf(id),legs=fl.legs.filter(l=>l.ac===id);a.managedMinutes=(a.managedMinutes||0)+legs.reduce((sum,l)=>sum+l.min,0);a.managedCount=(a.managedCount||0)+legs.length});
+  if(A.online)assignA4(fl,E);
   E.flights.unshift(fl);
   if(op.planId)E.plans=E.plans.filter(p=>p.id!==op.planId);
   op.legs.forEach(l=>{
@@ -247,7 +250,7 @@ function finalizeOp(){
     if(l.batInfo){if(l.batInfo.check)b.check=l.batInfo.check;if(l.batInfo.cycle!==''&&l.batInfo.cycle!=null){b.cycle=Number(l.batInfo.cycle);b.cycleAt='今日'}if(l.batInfo.note)b.note=l.batInfo.note}
     b.hist.unshift({d:slash(new Date(l.offAt||Date.now())),ac:l.ac,min:l.min,chk:l.batInfo?.check||'',cycle:l.batInfo?.cycle===''?null:l.batInfo?.cycle,note:l.batInfo?.note||''});
   });
-  A.ui.lastFlight=fl.id;A.opDone={fid:fl.id,name:op.name,n:op.legs.length,synced:A.online,kml,dips:op.dips,dailySaved:true};
+  A.ui.lastFlight=fl.id;A.opDone={fid:fl.id,name:op.name,n:op.legs.length,synced:fl.synced,kml,dips:op.dips,dailySaved:true};
   A.op=null;opGo('op-done');
 }
 

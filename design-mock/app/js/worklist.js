@@ -30,14 +30,15 @@ def('list',{t:'飛行リスト',st:'これから扱う、通報済みの計画',
 def('plan',{t:'DIPS通報内容',st:()=>{const p=planOf(A.ui.planId);return p?p.name:''},
   goal:'選んだ計画のDIPS通報内容を確認して、飛行前点検、または中止側の操作へ進む。',
   doc:'34d §4（DIPS通報内容画面の10項目）／34c §4（通報内容へ直接進む。ローカルだけを変える大きな［編集］ボタンは置かない）／24b §3（取消・整理の意味）。',state:'spec',
-  tmp:['全表示項目はここで新規定義しない（既存の計画・提出記録を参照）。ここではDIPSの22項目と地図を、通報した内容として表示','日時・場所などの変更は、DIPS側の変更／再通報を伴う別処理（後続）。入口の見せ方は仮','中止／削除の確認画面・戻り方は未確定。DIPS取消は制度上可能な範囲で行う（24b §3）','重複ありの調整は未設計（PENDING-S7B-DUPLICATE-ADJUST）','飛行の中止・計画の削除をしたときに、記録として何を残すかと、DIPS側の取消との対応は、後続の設計で未整理（34f）'],
-  ask:[],
+  tmp:['全表示項目はここで新規定義しない（既存の計画・提出記録を参照）。ここではDIPSの22項目と地図を、通報した内容として表示','日時・場所などの変更は、DIPS側の変更／再通報を伴う別処理（後続）。入口の見せ方は仮','中止／削除の確認画面・戻り方は未確定。DIPS取消は制度上可能な範囲で行う（24b §3）','重複ありの調整は未設計（PENDING-S7B-DUPLICATE-ADJUST）','DIPS Webで通報し、受付番号または一覧照合で確認した計画（通報確認済み）には、34d §7により［飛行前点検へ］を出さない。Manualの登録確認だけでは他の計画との重複なしを示せないため。飛行リストへ載せる条件そのものもAPI経路と同じとは決まっていない（PENDING-S5-MANUAL-LIST）','飛行の中止・計画の削除をしたときに、記録として何を残すかと、DIPS側の取消との対応は、後続の設計で未整理（34f）'],
+  ask:['DIPS Webで通報・確認した計画を、どの確認を記録すれば飛行前点検へ進めてよいか（例: DIPS Webの一覧で他の計画と重複していないことも確認した、と記録すれば進める）。いまのモックでは進めないため、DIPS Webで通報した飛行を運航記録まで確かめられない（業務処理・安全性に関わる。PENDING-S5-MANUAL-LIST／PENDING-S7B-DUPLICATE-ADJUST）'],
   ui:['中止・削除は画面の下にまとめ、主操作から離して置いている（誤操作を避けるため）','通報内容は全項目を出している。要約にするかどうかも見せ方の調整'],
   chips:()=>{const p=planOf(A.ui.planId);return p?'<i class="chip '+(p.dips==='dup'?'warn':'ok')+'">'+dipsLabel(p)+'</i>':''},
   body:()=>{
     const p=planOf(A.ui.planId);if(!p)return '<div class="empty">計画が見つかりません</div>';
     const s=p.snap;
     return (p.dips==='dup'?'<div class="msg warn">他の計画と重複しています。重複の調整は、この画面ではまだできません。DIPS Webで確認してください。</div>':'')
+     +(p.dips==='manual'?'<div class="msg warn">DIPS Webで通報し、登録を確認した計画です。他の計画と重複していないかをこのアプリでは確かめられていないため、この画面から飛行前点検へは進めません。</div>':'')
      +'<div class="msg info">これは、DIPSへ<b>通報した内容</b>です。通報した内容は、あとから黙って書き換えません。日時・場所を変えるときは、DIPS側の変更／再通報を伴う別の手続きになります。</div>'
      +'<div class="sec"><h3>通報の情報</h3><table class="kv"><tr><td>通報者</td><td>'+esc(savedPerson(p,p.rep))+'</td></tr><tr><td>操縦者</td><td>'+p.pl.map(id=>esc(savedPerson(p,id))).join('、')+'</td></tr><tr><td>DIPS状態</td><td>'+esc(dipsLabel(p))+'</td></tr><tr><td>KML</td><td>'+(p.kml==='saved'?'保存済み':'まだGoogle Driveに保存されていません')+'</td></tr></table></div>'
      +'<div class="sec"><h3>DIPSに通報した内容</h3>'+DIPS_ITEMS.map(x=>'<div class="rev"><div class="k">'+esc(x.name)+'</div><div class="v">'+valueOf(x.n,s)+'</div></div>').join('')+'<div class="rev"><div class="k">飛行範囲（地図）</div><div class="v">'+esc(geomSummary(s))+'<div class="mapwrap" style="margin-top:6px">'+mapSvg(s,'mini')+'</div></div></div></div>'

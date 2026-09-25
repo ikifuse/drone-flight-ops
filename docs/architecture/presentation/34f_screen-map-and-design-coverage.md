@@ -173,3 +173,20 @@ PENDING-S2-ACTOR-SCHEMA/UI、PENDING-WEB-CONTACT-SOURCE、VERIFY-WEB-CONTACT-KAN
 物理schema・キー対応・再送契約・秘密情報保護方式は設計作業として残り、外部API・Google契約・実機・帳票実物のVERIFYは実証が必要である。これらをモックの成功で解消せず、技術選定や未検証事項をオーナーの好みの質問へ置換しない。[23の開始ゲート](../23_implementation-roadmap.md#12-保存出力を確かめてから依存実装へ進むゲート)とC0受入れ・明示的な実装開始許可は別に必要。主要フローを操作できることはC1着手可能の認定ではない。
 
 回帰証拠は[整合テスト](../../../design-mock/app/tests/t9_flow_consistency.js)と[実操作テスト](../../../design-mock/app/tests/browser-flow.cjs)。実行結果は[モックREADME](../../../design-mock/app/README.md)へ記録する。メモリー内の疑似状態に限り、本番認証・実送信・永続保存は実行していない。
+
+
+## 11. 未実装・未接続の監査と接続（2026-09-25）
+
+**対象と方法（EVIDENCE/EXAMPLE）**: `1bc1c81`を基準に、正式Docsから`design-mock/app`への対応を画面ごとに照合した。照合項目は、定義と状態ラベル、左側の有無、前後の接続、戻る・再開、入力の保持、保存後の反映、右側メモの一致である。全操作に処理があり、遷移先の欠落はなかった。印刷・個別共有・日時と場所の変更・背景地図は、実行しない案内のまま残す。
+
+**接続した既決事項**:
+
+- **オフラインでの最後の保存**: [35d](../operation-recording/35d_operation-finalization-and-write-boundary.md)・[38b §2](../sync-and-cache/38b_confirmation-and-sync-timing-separation.md#2-三つの時点に分けた因果)（CURRENT-ACCEPTED）に合わせ、通信できないときは確定した記録をこの端末に保存して運航完了とし、［保存状態］から同じ記録をGoogle Driveへ保存する。通信中の保存失敗は完了へ進まず、同じ運航を再試行する（35b §13）。表示は[34h §5](34h_user-facing-wording-and-terminology.md#5-保存同期の表示)の2種類を分ける。**HISTORICAL**: 従来のモックは両者を保存失敗として扱い、運航完了の「この端末に保存しました」表示へ到達しなかった。
+- **A4の保存先の表示**: [35c §3・§3.2](../operation-recording/35c_a4-operation-record.md#32-機体内の日付と次空き連番)（CURRENT-ACCEPTED）の機体ごとのファイル、`YY.M.D`と同日の次の空き連番、7明細ごとの区切り、機体交代での切替を、運航完了と履歴詳細に表示する。シート名はGoogle Driveへ実際に保存するときに1回だけ割り当て、再送では割り当て直さない。これはモック上の表現で、割当と重複防止の方式（PENDING-S6-FINAL-SAVE-CONTRACT）、日付境界（PENDING-S6-A4-DETAIL）、場所を変えたときの区切り（35c §3）、C1 schemaを確定しない。
+- **履歴の通報者**: 履歴の「通報した内容」に、通報時に記録した通報者を表示する（[31c §3](../identity-and-access/31c_operational-actors.md#3-さらに通報者と操縦者を分離した理由)）。人員の名前を変えても書き換えない。保存時の情報を持たない例示データの代替参照は§10のまま。
+- **DIPS Webで確認した計画**: [34d §7](34d_dips-accepted-and-plan-content.md#7-通常運航へ進めない結果のモック境界2026-09-22)により［飛行前点検へ］を出さない理由を、飛行リストの通報内容に表示する。
+- **状態表示**: 運航完了の設計メモを、35b §13のCURRENT-ACCEPTEDへ訂正した。点検の設計確認用の近道は、アプリの［全て正常］（実機確認の申告後だけ使える候補。PENDING-S6-OPERATION-UI）とは別だと明記した。
+
+**オーナー判断が必要な点（1件）**: DIPS Webで通報・確認した計画を、どの確認を記録すれば飛行前点検へ進めてよいか。現在は34d §7により進めないため、DIPS Webで通報した飛行を運航記録まで確かめられない。既存のPENDING-S5-MANUAL-LIST・PENDING-S7B-DUPLICATE-ADJUSTの範囲であり、新しいPENDINGは作らない。
+
+**変更しない範囲**: 新しい画面、新ADR、新PENDING、状態ラベルの昇格はない。既存の未決（入口の選択と復帰の詳細、会社既存環境の参加手段、権限表、出力単位、地図付きPDFの詳細等）は左側で確定しない。回帰証拠は[保存先の検査](../../../design-mock/app/tests/t10_save_destination.js)と[実操作テスト](../../../design-mock/app/tests/browser-flow.cjs)、実行結果は[モックREADME](../../../design-mock/app/README.md)。C1は未着手。

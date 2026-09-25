@@ -43,14 +43,17 @@ suite('飛行リスト・通常運航',H=>{
   });
   /* ---- オフライン保存・警告付き離陸・通報しない飛行 ---- */
   H.hash('scn=personal&online=0');
-  T('オフラインで保存→この端末に保存された。まだGoogle Driveに保存されていない旨',()=>{
+  /* 35d・38b §2: オフラインでは確定した記録を端末に保存して運航を完了し、Google Driveへは後で同じ運航として保存する */
+  T('オフラインで保存→この端末に保存して運航完了。Google Drive未保存の旨。A4のシート名はまだ割り当てない',()=>{
     act('go','[data-s=list]');act('plan-open');act('plan-to-op');
     act('op-bat-pick');act('op-bat-check','[data-v=異常なし]');act('op-pre-all');act('op-pre-done');act('op-takeoff');act('op-land');act('op-land-confirm');act('op-to-post');act('op-post-all');act('op-to-final');
-    const warn=txt().includes('オフラインです')&&txt().includes('この端末には保存され');act('op-finalize');
-    return warn&&route()==='op-final'&&txt().includes('下書きはこの端末に残っています')&&!!OP()&&E().flights.length===3;
+    const warn=txt().includes('オフラインです')&&txt().includes('この端末に保存して');act('op-finalize');const f=E().flights[0];
+    return warn&&route()==='op-done'&&!OP()&&E().flights.length===4&&!f.synced&&!f.a4&&txt().includes('この端末に保存しました')&&txt().includes('まだGoogle Driveには保存されていません')&&txt().includes('日付の名前のシート');
   });
-  T('通信が戻ると同じ下書きで再度保存でき、重複行を作らない',()=>{
-    const op=OP(),legs=op.legs.length;A().online=true;H.APP().render();act('op-finalize');return route()==='op-done'&&E().flights.length===4&&E().flights[0].legs.length===legs&&E().flights[0].synced;
+  T('通信が戻ると保存状態から同じ記録を保存し、重複行を作らない。シート名はこのとき1回だけ割り当てる',()=>{
+    const f=E().flights[0],legs=f.legs.length;A().online=true;act('root','[data-s=home]');act('go','[data-s=set]');act('go','[data-s=set-sync]');act('sync-now');
+    const a4=JSON.stringify(f.a4),gone=!q('[data-act=sync-now]');H.APP().ACTS['sync-now']();
+    return E().flights.length===4&&E().flights[0]===f&&f.legs.length===legs&&f.synced&&!!f.a4&&f.a4[0].sheets.length===1&&JSON.stringify(f.a4)===a4&&gone;
   });
   H.hash('scn=company');
   T('重複ありの計画はリストでも通常運航へ進めず、内容を保持する',()=>{

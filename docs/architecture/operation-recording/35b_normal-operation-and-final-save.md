@@ -1,6 +1,6 @@
 # 35b. 通常運航の画面と現場記録
 
-最終更新: 2026-09-23\
+最終更新: 2026-09-25\
 由来: 99.2 §5。画面仕様の記録は[30](../presentation/30_screen-specification-standard.md)の10項目を用いる。最終保存の対象と重複防止の因果は[35d](35d_operation-finalization-and-write-boundary.md)。
 
 ## 1. 旧現場フローを継承する理由と境界
@@ -180,6 +180,8 @@
 **最終確認と状態（EVIDENCE/EXAMPLE）**: モックの `op-post` で実際に飛ばした全機体を点検し、`op-final` で日常点検（飛行前・飛行後）と各飛行行を確認する。最終日常点検のための新しい独立画面や追加項目は作らない。［保存する］の疑似成功で `finalizeOp()` が飛行履歴へ各飛行行・点検・BAT使用履歴を反映し、`dailySaved` と保存済み状態を保持する。`op-done` は「運航完了」と、飛行計画の通報済み、KML保存済み、飛行記録保存済み、日常点検保存済みを確認できる。通報しない飛行では通報済み／KML保存済みと偽らず、その経路の状態を示す。
 
 **HISTORICAL**: 完了を単なる保存通知とし、通報・日常点検の結果が確認できなかったモック表示は上記へ置換した。保存失敗時は完了へ進まず下書き・各飛行行を保持し、同じ運航を再試行する。実Spreadsheetへの書込み・永続化・部分成功・サーバー側冪等性を検証した意味ではない。保存責任の正本[35d](35d_operation-finalization-and-write-boundary.md)、PENDING-S6-OPERATION-UIおよび記録schema等の未決を維持する。
+
+**通信できないときの最後の保存（2026-09-25のモック接続）**: 上記の「保存失敗時は完了へ進まない」は、通信中に保存が失敗した場合である。通信できない（オフライン）ときは、[35d](35d_operation-finalization-and-write-boundary.md)の既決どおり、確定した記録をこの端末に保存して運航完了とし、Google Driveへは通信が戻ってから同じ運航として保存する（§10項目9、[38b §2](../sync-and-cache/38b_confirmation-and-sync-timing-separation.md#2-三つの時点に分けた因果)）。モックでの接続範囲は[34f §11](../presentation/34f_screen-map-and-design-coverage.md#11-未実装未接続の監査と接続2026-09-25)。
 
 ## 14. 入力から最終記録への横断確認（2026-09-23）
 
