@@ -44,14 +44,14 @@ def('hist',{t:'飛行履歴・出力',st:'完了した過去の飛行を探す',
 def('hist-detail',{t:()=>{const f=flightOf(A.ui.hSel);return f?f.label:'飛行の詳細'},st:'飛行の詳細と、必要な出力',
   goal:'選んだ飛行の内容を確かめ、必要な出力（A4運航記録PDF・地図付きPDF・KML）だけを選んで作る。',
   doc:'34e §1（対象の飛行を選んだ後に、A4運航記録PDF・地図付きPDF・両方作成のように必要な出力を選ぶ方式は第一候補＝CURRENT-PROPOSAL）／27f §3（PDFは飛行完了時に自動で作らず、必要なときだけ生成する）／27e（KMLは通報時に作成・保存済み。ここで作り直さない）。',state:'proposal',
-  tmp:['出力を選ぶ方式は第一候補であり、確定した仕様ではない','出力後の表示・共有・保存先の確認の遷移は未確定（34e 項目6）','履歴からKMLを取得するときの、保存済みKMLへの案内・未同期・未生成の扱い、再生成の可否は未確定（PENDING-S7D-HISTORY-KML）','通報しない飛行は通報内容・KMLがないため、地図付きPDFとKMLは出さない（仮。PENDING-S7C-KML-UNIT-MAPPING）'],
+  tmp:['出力を選ぶ方式は第一候補であり、確定した仕様ではない','詳細に並べる項目（各飛行の操縦者／記録者、日常点検の実施者・日付・結果、A4の保存先など）は、保存した記録の値を見せる標準案。表示項目の全一覧は未確定（34e 項目3）','出力後の表示・共有・保存先の確認の遷移は未確定（34e 項目6）','履歴からKMLを取得するときの、保存済みKMLへの案内・未同期・未生成の扱い、再生成の可否は未確定（PENDING-S7D-HISTORY-KML）','通報しない飛行は通報内容・KMLがないため、地図付きPDFとKMLは出さない（仮。PENDING-S7C-KML-UNIT-MAPPING）'],
   ask:[],
   ui:['出力はチェックして作る形にし、作ったあとは同じ画面に結果を出している'],
   body:()=>{
     const f=flightOf(A.ui.hSel);if(!f)return '<div class="empty">飛行が見つかりません</div>';
     const s=f.snap;const nd=!!s.noDips;const sel=A.ui.outSel;
     return '<div class="sec"><h3>この飛行</h3><table class="kv"><tr><td>日付</td><td>'+slash(f.date)+'</td></tr><tr><td>場所</td><td>'+esc(fPlace(f))+'</td></tr><tr><td>目的</td><td>'+esc(fPurpose(f).join('・')||'—')+'</td></tr><tr><td>機体</td><td>'+f.ac.map(id=>{const a=savedAc(f,id);return esc(a?a.name+'（'+a.mark+'）':id)}).join('<br>')+'</td></tr><tr><td>操縦者</td><td>'+f.pl.map(id=>esc(savedPerson(f,id))).join('、')+'</td></tr><tr><td>飛行</td><td>'+f.legs.length+'回・合計'+fMin(f)+'分</td></tr><tr><td>保存</td><td>'+(f.synced?'Google Driveに保存済み':'<i class="chip warn">未保存</i> この端末には保存されています')+'</td></tr><tr><td>A4の飛行記録</td><td>'+a4Where(f)+'</td></tr></table></div>'
-     +'<div class="sec"><h3>飛行の記録</h3><table class="kv grid"><tr><th>#</th><th>機体</th><th>BAT</th><th>離陸→着陸</th><th>時間</th></tr>'+f.legs.map((l,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(savedAcName(f,l.ac||f.ac[0]))+'</td><td>'+esc(l.bat)+'</td><td>'+esc(l.off)+'→'+esc(l.on)+'</td><td>'+l.min+'分</td></tr>').join('')+'</table>'+(f.notes?'<p class="note">記事・不具合・処置: '+esc(f.notes)+'</p>':'')
+     +'<div class="sec"><h3>飛行の記録</h3><table class="kv grid"><tr><th>#</th><th>機体</th><th>操縦者／記録者</th><th>BAT</th><th>離陸→着陸</th><th>時間</th></tr>'+f.legs.map((l,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(savedAcName(f,l.ac||f.ac[0]))+'</td><td>'+esc(savedPerson(f,l.pilot||f.pl[0]))+'／'+esc(savedPerson(f,l.recorder||l.pilot||f.pl[0]))+'</td><td>'+esc(l.bat)+'</td><td>'+esc(l.off)+'→'+esc(l.on)+'</td><td>'+l.min+'分</td></tr>').join('')+'</table>'+inspectionSummary(f)+(f.notes?'<p class="note">記事・不具合・処置: '+esc(f.notes)+'</p>':'')
      +(nd?'':'<div class="row"><button class="btn sm" data-act="hist-dips">通報した内容を見る</button></div>')+'</div>'
      +'<div class="sec"><h3>出力 <small>必要なものだけ作ります</small></h3>'
      +tgl('out-tog','data-k="a4"','A4運航記録PDF',sel.a4,false,f.outs.a4?'<i class="chip ok">作成済み</i>':'')
@@ -62,6 +62,15 @@ def('hist-detail',{t:()=>{const f=flightOf(A.ui.hSel);return f?f.label:'飛行�
      +'<div class="row"><button class="btn" data-act="root" data-s="home">ホームに戻る</button></div>';
   }
 });
+
+/* 日常点検（飛行前・飛行後）を、保存した実施者・日時・結果で示す。いまの人員の登録で置き換えない */
+function inspectionSummary(f){
+  const row=(kind,id)=>{const c=f.inspections?.[kind]?.[id],r=f[kind]?.[id]||{},items=kind==='pre'?PRE_ITEMS:POST_ITEMS;
+    if(!c)return '<tr><td>'+(kind==='pre'?'飛行前':'飛行後')+'</td><td colspan="2">記録を確認してください</td></tr>';
+    const ng=items.filter((_,i)=>r[i]===false).length;
+    return '<tr><td>'+(kind==='pre'?'飛行前':'飛行後')+'</td><td>'+esc(savedPerson(f,c.person))+' ／ '+slash(c.at)+'</td><td>'+(ng?'<i class="chip warn">異常あり '+ng+'項目</i>':'異常なし')+'</td></tr>'};
+  return '<h3 style="margin-top:10px">日常点検</h3>'+f.ac.map(id=>'<p class="note" style="margin:6px 0 2px">'+esc(savedAcName(f,id))+'</p><table class="kv grid"><tr><th>点検</th><th>点検した人／日付</th><th>結果</th></tr>'+row('pre',id)+row('post',id)+'</table>').join('');
+}
 
 /* ---------- 出力の見本（PDF・KMLは実際には作らない） ---------- */
 function a4Preview(f){

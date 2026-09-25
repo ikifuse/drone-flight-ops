@@ -80,6 +80,7 @@ const assert=require('node:assert/strict');
   assert.equal(saved.a4.every(x=>x.sheets.length===1&&/^\d{2}\.\d{1,2}\.\d{1,2}(_\d+)?$/.test(x.sheets[0])),true);
   assert.equal((await state()).env.flights.length,1);await click('back');await click('back');await expectRoute('home');
   await click('go','[data-s=hist]');await click('hist-open');
+  assert.match(await p.locator('.phone').innerText(),/日常点検[\s\S]*飛行前[\s\S]*飛行後/);assert.match(await p.locator('.phone').innerText(),/操縦者／記録者/);
   assert.match(await p.locator('.phone').innerText(),new RegExp('A4の飛行記録[\\s\\S]*「'+saved.a4[0].sheets[0].replace(/\./g,'\\.')+'」'));
   const exit=p.locator('#body > :last-child [data-act=root][data-s=home]');
   assert.equal(await exit.innerText(),'ホームに戻る');
@@ -142,6 +143,21 @@ const assert=require('node:assert/strict');
   assert.equal(await p.locator('.phone [data-act=plan-to-op]').count(),0);
   assert.match(await p.locator('.phone').innerText(),/この画面から飛行前点検へは進めません/);
   await click('back');await click('back');await expectRoute('home');
+  // API疑似経路の結果不明（結果の種類だけ右側の試験条件で選ぶ）: 端末に残り、自動で再送しない。未登録を確かめてからだけ送信し直す（13b・33b）。
+  await click('nf-new');await click('start-new');
+  for(const n of [2,4]){await click('dips-picker','[data-n="'+n+'"]');const item=p.locator('.phone [data-act=dips-pick]'+(n===2?'[data-id=none]':':not([disabled])')).first();if(!(await item.getAttribute('class')).includes('sel'))await item.click();await click('dips-pick-done')}
+  await click('tog-purpose','[data-v=空撮]');await click('tog-air','[data-v="上記空域の飛行は行わない"]');await click('tog-met','[data-v="上記方法の飛行は行わない"]');
+  await fill('from','事務所');await fill('to','公園');await click('nf-next');await click('tool','[data-k=circle]');
+  await p.locator('#map').click({position:{x:120,y:110}});await p.locator('#map').click({position:{x:170,y:110}});
+  await click('nf-next');await click('nf-next');await click('nf-send-go');await expectRoute('nf-send');
+  const plansBefore=(await state()).env.plans.length;
+  await p.evaluate(()=>ACTS['nf-result']({dataset:{k:'unknown'}}));await expectRoute('nf-accepted');
+  assert.equal((await state()).env.plans.length,plansBefore);
+  await click('root','[data-s=home]');await click('nf-new');await click('nf-resume-unknown');await expectRoute('nf-accepted');
+  await click('nf-recon','[data-v=none]');await click('nf-recon-resend');await expectRoute('nf-send');
+  assert.equal((await state()).env.plans.length,plansBefore);
+  await click('nf-submit');await expectRoute('nf-accepted');assert.equal((await state()).env.plans.length,plansBefore+1);
+  assert.equal(await p.evaluate(()=>!ENV().unknownPlan),true);await click('nf-later');await expectRoute('home');
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
   console.log(JSON.stringify({width,complete:true,legs:st.env.flights[0].legs.length,company:true}));await p.close();
  }

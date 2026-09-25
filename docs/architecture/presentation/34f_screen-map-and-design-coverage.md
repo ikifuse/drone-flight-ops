@@ -190,3 +190,14 @@ PENDING-S2-ACTOR-SCHEMA/UI、PENDING-WEB-CONTACT-SOURCE、VERIFY-WEB-CONTACT-KAN
 **オーナー判断が必要な点（1件）**: DIPS Webで通報・確認した計画を、どの確認を記録すれば飛行前点検へ進めてよいか。現在は34d §7により進めないため、DIPS Webで通報した飛行を運航記録まで確かめられない。既存のPENDING-S5-MANUAL-LIST・PENDING-S7B-DUPLICATE-ADJUSTの範囲であり、新しいPENDINGは作らない。
 
 **変更しない範囲**: 新しい画面、新ADR、新PENDING、状態ラベルの昇格はない。既存の未決（入口の選択と復帰の詳細、会社既存環境の参加手段、権限表、出力単位、地図付きPDFの詳細等）は左側で確定しない。回帰証拠は[保存先の検査](../../../design-mock/app/tests/t10_save_destination.js)と[実操作テスト](../../../design-mock/app/tests/browser-flow.cjs)、実行結果は[モックREADME](../../../design-mock/app/README.md)。C1は未着手。
+
+## 12. 主要シナリオの通し確認（2026-09-25）
+
+**対象（EVIDENCE/EXAMPLE）**: 初回利用、会社利用、各種設定・管理、新規飛行、DIPS Webでの手動通報、アプリからの送信（疑似）、通常運航、保存・オフライン・再保存、飛行履歴・出力の9つの流れを、左側だけで端から端まで操作できるか確かめた。
+
+**接続した既決事項**:
+
+- **結果不明のあとの照合**: [13b](../state-machines/13b_dips-submission.md)の「照合が必要→利用者がDIPS画面で登録を確認／未登録を確認して再送」と、[33b](../dips-infrastructure/33b_api-availability-and-retry-boundaries.md)の「結果不明を保持し、未登録と確認できたときだけ再送」（CURRENT-ACCEPTED）を左側に置いた。結果不明の計画はこの端末に残り、［新規飛行］から確認の画面へ戻れる。新しい計画も作れる。登録を確認した計画は手動の確認と同じく通報確認済みとし、§11のとおり点検へは進めない。**HISTORICAL**: 従来は「DIPS Webで確認する」が手動通報の入力支援へ進み、確認を「手動通報した」として記録していた。ホームへ戻ると結果不明の計画も残らなかった。照合APIの利用条件と結果判定はVERIFY-S4-API-CONTRACTのまま。
+- **履歴詳細の担当と点検**: 各飛行の操縦者／記録者と、日常点検の実施者・日付・結果を、保存時の値で表示する（[31c §2](../identity-and-access/31c_operational-actors.md#2-現場役割の現在到達点)）。表示項目の全一覧は34e 項目3の未確定のまま。
+
+**変更しない範囲**: 新しい画面・PENDING・ADR・状態ラベルの昇格はない。再保存で飛行行・A4シート・BAT履歴・機体累計を二重にしないことは、モック上の疑似動作として確かめた。方式はPENDING-S6-FINAL-SAVE-CONTRACTのままである。回帰証拠は[シナリオの検査](../../../design-mock/app/tests/t11_scenarios.js)と[実操作テスト](../../../design-mock/app/tests/browser-flow.cjs)。C1は未着手。

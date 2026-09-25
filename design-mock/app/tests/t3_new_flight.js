@@ -99,13 +99,16 @@ suite('新規飛行',H=>{
     return route()==='nf-accepted'&&txt().includes('通報完了・重複なし')&&E().plans.length===n+1&&pl.dips==='clean'&&pl.kml==='saved'&&txt().includes('「出力」フォルダーに保存しました')&&!!q('[data-act=nf-later]')&&!!q('[data-act=nf-to-op]');
   });
   T('後で飛行する→ホーム（計画はリストに残る）',()=>{act('nf-later');return route()==='home'&&E().plans.length===1});
-  function toFinal(){act('nf-new');act('nf-layout','[data-v=app]');act('start-new');S().aircraft=[E().aircraft[0].id];S().pilots=[E().people.find(p=>p.pilot).id];S().permit='none';S().biz=['空撮'];S().air=['上記空域の飛行は行わない'];S().met=['上記方法の飛行は行わない'];S().geom={kind:'circle',pts:[[180,130]],r:60,width:10,done:true,editing:false};S().from='a';S().to='b';window.nfGo('final')}
+  /* 結果不明の通報が残っているときは、新規飛行でまず確認を促す（33b）。ここでは［新しい飛行計画を作る］で進む */
+  function newNf(){act('nf-new');if(q('[data-act=nf-new][data-skip]'))act('nf-new','[data-skip]')}
+  function toFinal(){newNf();act('nf-layout','[data-v=app]');act('start-new');S().aircraft=[E().aircraft[0].id];S().pilots=[E().people.find(p=>p.pilot).id];S().permit='none';S().biz=['空撮'];S().air=['上記空域の飛行は行わない'];S().met=['上記方法の飛行は行わない'];S().geom={kind:'circle',pts:[[180,130]],r:60,width:10,done:true,editing:false};S().from='a';S().to='b';window.nfGo('final')}
   T('重複あり→通報済み・重複あり（調整はまだできない旨）',()=>{toFinal();act('nf-send-go');act('nf-result','[data-k=dup]');return txt().includes('通報済み・重複あり')&&txt().includes('重複の調整は、この画面ではまだできません')&&E().plans[0].dips==='dup'});
   T('結果不明→通常の通報済みにしない。自動で再送しない。次の操作が分かる',()=>{
     const n=E().plans.length;H.APP().root('home');toFinal();act('nf-send-go');act('nf-result','[data-k=unknown]');
     const t=txt();return t.includes('結果不明')&&t.includes('自動で再送もしません')&&t.includes('DIPS Webの飛行計画一覧で、登録されているか確認する')&&E().plans.length===n;
   });
-  T('結果不明→「DIPS Webで確認する」へ',()=>{act('nf-manual-go');return route()==='nf-manual'});
+  /* 13b・33b: 結果不明のあとは、DIPS Webで確かめた結果（登録されていた／いなかった）を記録する。手動通報の入力支援へは送らない */
+  T('結果不明→DIPS Webで確かめた結果を選ぶ（登録されていた／いなかった）。手動通報の画面へは進まない',()=>!!q('.phone [data-act=nf-recon][data-v=reg]')&&!!q('.phone [data-act=nf-recon][data-v=none]')&&!q('.phone [data-act=nf-manual-go]')&&!!q('.phone [data-act=nf-open-dips]'));
   T('エラー→内容を直して再送（確認画面へ戻る）。内容は残っている旨',()=>{
     H.APP().root('home');toFinal();act('nf-send-go');act('nf-result','[data-k=err]');
     const ok=txt().includes('受け付けられませんでした')&&txt().includes('内容を直して、もう一度送信してください');act('nf-fix');return ok&&route()==='nf'&&page()==='review';
@@ -130,7 +133,7 @@ suite('新規飛行',H=>{
   T('Google Driveが閲覧のみ: 送信できない',()=>{H.APP().root('home');toFinal();A().gAccess='view';H.APP().render();act('nf-send-go');const stay=route()==='nf';A().gAccess='edit';return stay});
   /* ---- 通報しない飛行 ---- */
   T('通報しない飛行: 日時・保険・連絡先を飛ばし、通報の選択肢がない',()=>{
-    H.APP().root('home');act('nf-new');act('start-nodips');
+    H.APP().root('home');newNf();act('start-nodips');
     const ps=window.pages().map(p=>p.key);const skip=S().noDips&&!ps.includes('time')&&!ps.includes('master')&&ps.includes('review');
     window.nfGo('final');return skip&&txt().includes('DIPSへ通報しません')&&!txt().includes('アプリからDIPSへ送信する')&&!!q('[data-act=nf-nodips-go]');
   });
@@ -138,8 +141,8 @@ suite('新規飛行',H=>{
   /* ---- 既存の機能 ---- */
   H.hash('scn=personal');
   T('過去の飛行を複製／現場プリセットから始める',()=>{
-    act('nf-new');act('nf-layout','[data-v=app]');act('start-past');const a=page()==='use'&&S().aircraft.length===1&&S().auto.aircraft.includes('前回')&&S().geom.done;
-    H.APP().root('home');act('nf-new');act('nf-layout','[data-v=app]');act('start-preset');return a&&page()==='use'&&S().auto.area==='現場プリセット'&&S().alt===30;
+    newNf();act('nf-layout','[data-v=app]');act('start-past');const a=page()==='use'&&S().aircraft.length===1&&S().auto.aircraft.includes('前回')&&S().geom.done;
+    H.APP().root('home');newNf();act('nf-layout','[data-v=app]');act('start-preset');return a&&page()==='use'&&S().auto.area==='現場プリセット'&&S().alt===30;
   });
   T('抹消済み機体・期限切れ許可は選べない。許可の照合の目安が出る',()=>{
     act('pick-ac','[data-id=a3]');act('pick-pm','[data-id=m0]');const blocked=!S().aircraft.includes('a3')&&S().permit!=='m0';
@@ -152,7 +155,7 @@ suite('新規飛行',H=>{
   });
   T('カレンダー（複数日）／仮データで全部埋める（右側の操作）',()=>{
     window.nfGo('time');act('cal');act('cal-day','[data-d]:not([disabled])');const ok=S().multi.length===1;act('close');
-    H.APP().root('home');act('nf-new');act('fill');return ok&&page()==='review'&&txt().includes('大きな不足はありません');
+    H.APP().root('home');newNf();act('fill');return ok&&page()==='review'&&txt().includes('大きな不足はありません');
   });
   T('使う場所を切り替えると、入力途中の内容は破棄される',()=>{H.APP().ACTS['ob-normal']();qa('[data-act=env-pick]')[1].click();return route()==='home'&&S()===null});
 });

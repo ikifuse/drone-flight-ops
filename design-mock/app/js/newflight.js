@@ -419,9 +419,9 @@ function needSheetHtml(){
 /* ---------- 通報後の画面（送信・Manual・結果） ---------- */
 const planLink=()=>{const E=ENV();return E.plans.find(p=>p.id===(A.nfResult&&A.nfResult.planId))};
 function commitPlan(dips){
-  const E=ENV();const snap=clone(S);snap.masters=recordMasters(S.aircraft,[...S.pilots,E.meId]);snap.permitRecord=clone(E.permits.find(p=>p.id===S.permit)||null);
+  const E=ENV();const snap=clone(S);delete snap.fromUnknown;snap.masters=recordMasters(S.aircraft,[...S.pilots,E.meId]);snap.permitRecord=clone(E.permits.find(p=>p.id===S.permit)||null);
   const pl={id:uid('pl'),name:S.planName,snap,start:startDT(),place:S.to||S.from||'（場所未入力）',ac:S.aircraft.slice(),pl:S.pilots.slice(),rep:E.meId,dips,kml:A.online?'saved':'pending'};
-  E.plans.unshift(pl);delete E.planDraft;return pl;
+  E.plans.unshift(pl);if(S.fromUnknown)delete E.unknownPlan;else delete E.planDraft;return pl;
 }
 def('nf-send',{t:'DIPSへ通報する内容の確認',st:'アプリからDIPSへ送信する',env:false,back:false,
   goal:'通報する内容を確認し、［通報する］で正常受付を疑似実行する。右側では重複・結果不明・エラーも確認できる。',
@@ -464,11 +464,25 @@ def('nf-manual-confirm',{t:'通報後の確認',st:'DIPSで登録を確認する
    +'<button class="tgl'+(A.ui.mconf==='list'?' sel':'')+'" data-act="nf-mconf" data-v="list"><span class="box">'+(A.ui.mconf==='list'?'✓':'')+'</span><span><b>一覧で、日時・機体・範囲を照合した</b><br><small class="note">番号を取得できない場合はこちら</small></span></button></div>',
   foot:()=>'<button class="btn" data-act="back">戻る</button><button class="btn primary" data-act="nf-mconf-ok"'+(A.ui.mconf?'':' disabled')+'>DIPSで確認できた</button>'
 });
+/* 結果不明の画面で、DIPS Webの一覧で確かめた結果を選ぶ。確認方法は手動通報の確認と同じ2つ（受付番号・一覧照合。番号は必須にしない） */
+function reconHtml(){
+  const r=A.ui.recon,m=A.ui.mconf;
+  let h='<div class="sec"><h3>DIPS Webで確かめた結果</h3>'
+   +'<button class="tgl'+(r==='reg'?' sel':'')+'" data-act="nf-recon" data-v="reg"><span class="box">'+(r==='reg'?'✓':'')+'</span><span><b>登録されていた</b></span></button>'
+   +'<button class="tgl'+(r==='none'?' sel':'')+'" data-act="nf-recon" data-v="none"><span class="box">'+(r==='none'?'✓':'')+'</span><span><b>登録されていなかった</b></span></button>';
+  if(r==='reg')h+='<p class="lead">どのように確認しましたか？</p>'
+   +'<button class="tgl'+(m==='num'?' sel':'')+'" data-act="nf-mconf" data-v="num"><span class="box">'+(m==='num'?'✓':'')+'</span><span><b>受付番号で確認した</b></span></button>'
+   +(m==='num'?'<div class="row"><label>番号</label><input class="in" data-bind="#mnum" value="'+esc(A.ui.mnum||'')+'" placeholder="DIPSの計画ID"></div>':'')
+   +'<button class="tgl'+(m==='list'?' sel':'')+'" data-act="nf-mconf" data-v="list"><span class="box">'+(m==='list'?'✓':'')+'</span><span><b>一覧で、日時・機体・範囲を照合した</b><br><small class="note">番号を取得できない場合はこちら</small></span></button>'
+   +'<div class="row"><button class="btn primary wide" data-act="nf-recon-ok"'+(m?'':' disabled')+'>DIPSで確認できた</button></div>';
+  if(r==='none')h+='<p class="note">登録されていないことを確認したときだけ、送信し直します。内容を確かめてから、もう一度［通報する］を押します。</p><div class="row"><button class="btn primary wide" data-act="nf-recon-resend">送信し直す</button></div>';
+  return h+'</div>';
+}
 def('nf-accepted',{t:()=>({clean:'通報完了・重複なし',dup:'通報済み・重複あり',manual:'通報確認済み',unknown:'結果不明',err:'受け付けられませんでした'})[(A.nfResult||{}).kind]||'通報の結果',
   st:'DIPSからの結果',env:false,back:false,
   goal:'正常受付と重複の有無を確認し、今から点検するか、あとで続けるか選ぶ。結果不明・エラーは、通常の通報済みとして扱わない。',
   doc:'34d §3（正常受付・重複なし画面の10項目）／§2（正常応答時点が共有リストへの掲載契機。［後で飛行する］は掲載済み計画を残してホームへ戻る操作）／33b・24b §4（結果不明・重複ありは通常系と混ぜない）。',state:'spec',
-  tmp:['受付ID等の詳細配置は未確定（34d §3項目3）','PENDING: 重複・調整後にどう再開するか（PENDING-S7B-DUPLICATE-ADJUST）。状態名・解除方法・調整完了方法はオーナー確認待ち。Manual確認だけで重複なしとは扱わない','KMLの状態行は、27eの生成契機（通報時に作成・保存）を見せるための表示（仮）'],
+  tmp:['受付ID等の詳細配置は未確定（34d §3項目3）','PENDING: 重複・調整後にどう再開するか（PENDING-S7B-DUPLICATE-ADJUST）。状態名・解除方法・調整完了方法はオーナー確認待ち。Manual確認だけで重複なしとは扱わない','KMLの状態行は、27eの生成契機（通報時に作成・保存）を見せるための表示（仮）','結果不明のあとの照合は、13bの「照合が必要→利用者がDIPS画面で登録確認／未登録を確認して再送」と33bの「未登録を確認できたときだけ再送」を、利用者のDIPS Web確認として表す。結果不明は端末に残し、［新規飛行］から確認の画面へ戻れる。照合APIの利用条件・結果判定はVERIFY-S4-API-CONTRACT','結果不明のあと登録を確認した計画は、手動の確認と同じく通報確認済みとして扱い、34d §7により通常運航へのボタンを出さない（進める条件はPENDING-S5-MANUAL-LIST／PENDING-S7B-DUPLICATE-ADJUST）'],
   ask:[],
   ui:['正常受付の画面に出す情報の量と、［後で飛行する］のあとの戻り先は標準案'],
   body:()=>{
@@ -479,7 +493,7 @@ def('nf-accepted',{t:()=>({clean:'通報完了・重複なし',dup:'通報済み
       +'<div class="msg info">通報完了は、飛行できることの保証ではありません（離陸前の確認は別に行います）。この計画は、共有の飛行リストに載りました。'+(r.kind==='manual'?'':'')+'</div>';
     if(r.kind==='dup')return '<div class="msg warn big">通報済み・重複あり</div>'+sum+kml+'<div class="msg warn">ここで運航への移行を止めます。他の計画と重複しています。飛行リストには「通報済み・重複あり」で載ります。<b>重複の調整は、この画面ではまだできません。</b>DIPS Webで確認してください。</div>';
     if(r.kind==='unknown')return '<div class="msg ng big">結果不明</div><div class="msg ng">通信が途切れ、DIPSに登録されたかどうかが分かりません。<b>通常の「通報済み」として扱わず、同じ内容を自動で再送もしません</b>（二重通報を避けるため）。</div>'
-      +'<div class="sec"><h3>次にすること</h3><ul style="margin:0;padding-left:1.2em;font-size:13px"><li>DIPS Webの飛行計画一覧で、登録されているか確認する</li><li>登録されていれば、「DIPS Webで確認する」から、確認できたことを記録する</li><li>登録されていなければ、確認したうえで送信し直す</li></ul></div>';
+      +'<div class="sec"><h3>次にすること</h3><ul style="margin:0;padding-left:1.2em;font-size:13px"><li>DIPS Webの飛行計画一覧で、登録されているか確認する</li><li>確認した結果を、下で選ぶ</li></ul><p class="note">この計画は、この端末に残っています。あとで確認する場合も、［新規飛行］からこの画面に戻れます。</p></div>'+reconHtml();
     return '<div class="msg ng big">DIPSに受け付けられませんでした</div><div class="msg ng">内容に問題があります（例: 許可の期間外・必須項目の不足）。内容を直して、もう一度送信してください。</div>';
   },
   foot:()=>{
@@ -487,7 +501,7 @@ def('nf-accepted',{t:()=>({clean:'通報完了・重複なし',dup:'通報済み
     if(r.kind==='clean')return '<button class="btn" data-act="nf-later">後で飛行する</button><button class="btn primary" data-act="nf-to-op">飛行前点検へ</button>';
     if(r.kind==='manual')return '<button class="btn" data-act="nf-open-list">飛行リストで確認</button>';
     if(r.kind==='dup')return '<button class="btn" data-act="root" data-s="home">ホームへ</button><button class="btn primary" data-act="nf-open-list">飛行リストで確認</button>';
-    if(r.kind==='unknown')return '<button class="btn" data-act="root" data-s="home">ホームへ（あとで確認）</button><button class="btn primary" data-act="nf-manual-go">DIPS Webで確認する</button>';
+    if(r.kind==='unknown')return '<button class="btn" data-act="root" data-s="home">ホームへ（あとで確認）</button><button class="btn" data-act="nf-open-dips">DIPS Webを開く</button>';
     return '<button class="btn primary" data-act="nf-fix">内容を直す（確認画面へ）</button>';
   }
 });
@@ -549,7 +563,7 @@ const NF_RET={
   insurance:()=>{const i=ENV().insurance;S.ins={mode:'auto',company:i.company,product:i.product,pUnl:i.pUnl,pAmt:i.pAmt,oUnl:i.oUnl,oAmt:i.oAmt,ability:''}}
 };
 Object.assign(ACTS,{
-  'nf-new':()=>{if(ENV().planDraft){openSheet(()=>'<h3>入力途中の飛行計画があります</h3><p>保存したところから再開できます。</p><div class="row"><button class="btn primary" data-act="nf-resume-draft">続きを入力する</button><button class="btn" data-act="nf-discard-draft">下書きを取り消す…</button><button class="btn" data-act="close">閉じる</button></div>');return}if(nfMissing().length){nav('nf-need');return}S=blankNF(ENV());S.cur='start';nav('nf')},
+  'nf-new':t=>{if(ENV().unknownPlan&&!(t&&t.dataset&&t.dataset.skip)){openSheet(()=>'<h3>結果が分からない通報があります</h3><p>「'+esc(ENV().unknownPlan.planName)+'」は、DIPSに登録されたかどうか分かっていません。DIPS Webの一覧で確認し、結果を記録してください。同じ内容を自動で送り直すことはしません。</p><div class="row"><button class="btn primary" data-act="nf-resume-unknown">確認の画面を開く</button><button class="btn" data-act="nf-new" data-skip="1">新しい飛行計画を作る</button><button class="btn" data-act="close">閉じる</button></div>');return}A.modal=null;if(ENV().planDraft){openSheet(()=>'<h3>入力途中の飛行計画があります</h3><p>保存したところから再開できます。</p><div class="row"><button class="btn primary" data-act="nf-resume-draft">続きを入力する</button><button class="btn" data-act="nf-discard-draft">下書きを取り消す…</button><button class="btn" data-act="close">閉じる</button></div>');return}if(nfMissing().length){nav('nf-need');return}A.ui.resumedDraft=false;S=blankNF(ENV());S.cur='start';nav('nf')},
   'nf-need-set':t=>{const m=nfMissing();if(!m.length){ACTS['nf-need-go']();return}const target=m.find(x=>x.type===t?.dataset.t)||m[0];const o={ret:{label:'新規飛行',apply:()=>{}}};if(target.type==='person')o.roles=['操縦者'];openReg(target.type,o)},
   'nf-need-go':()=>{S=blankNF(ENV());S.cur='start';rep('nf')},
   'nf-back':()=>{if(S.cur==='start')back();else nfStep(-1)},
@@ -597,7 +611,12 @@ Object.assign(ACTS,{
   'jump':t=>{if(A.route==='nf-send'){back();}nfGo(t.dataset.s)},
   'rv':t=>{S.reviewView=t.dataset.v;render()},
   'nf-draft':()=>{ENV().planDraft=clone(S);root('home');toast('下書きを保存しました。［新規飛行］から続けられます')},
-  'nf-resume-draft':()=>{S=clone(ENV().planDraft);nav('nf')},
+  'nf-resume-draft':()=>{S=clone(ENV().planDraft);A.ui.resumedDraft=true;nav('nf')},
+  'nf-resume-unknown':()=>{S=clone(ENV().unknownPlan);delete S.unknownAt;A.nfResult={kind:'unknown'};A.ui.recon=null;A.ui.mconf=null;A.ui.mnum='';A.modal=null;nav('nf-accepted')},
+  /* 結果不明のあとの照合（13b: 照合が必要な状態から、利用者のDIPS画面での確認で「登録確認」か「未登録を確認して再送」へ。33b: 未登録を確認できたときだけ再送） */
+  'nf-recon':t=>{A.ui.recon=t.dataset.v;render()},
+  'nf-recon-ok':()=>{if(!canWrite()||!A.ui.mconf||(A.ui.mconf==='num'&&!(A.ui.mnum||'').trim())){toast('DIPSでの確認内容を入れてください');return}const pl=commitPlan('manual');pl.confirmation={method:A.ui.mconf,number:A.ui.mconf==='num'?A.ui.mnum.trim():null,at:new Date().toISOString(),after:'unknown'};A.nfResult={kind:'manual',planId:pl.id};rep('nf-accepted')},
+  'nf-recon-resend':()=>{if(!A.online){toast('オフラインのため送信できません。この計画は、この端末に残っています');return}A.nfResult=null;A.ui.recon=null;rep('nf-send');toast('登録されていないことを確認しました。内容を確かめて、もう一度［通報する］を押してください')},
   'nf-discard-draft':()=>openSheet(()=>'<h3>下書きを取り消しますか</h3><p>この飛行計画の入力内容を取り消します。通報済みの計画や飛行記録は消えません。</p><div class="row"><button class="btn" data-act="close">戻る</button><button class="btn danger" data-act="nf-discard-draft-ok">下書きを取り消す</button></div>'),
   'nf-discard-draft-ok':()=>{delete ENV().planDraft;S=null;A.modal=null;ACTS['nf-new']()},
   'nf-send-go':()=>{
@@ -630,7 +649,7 @@ Object.assign(ACTS,{
   'nf-result':t=>{
     const k=t.dataset.k;
     if(k==='clean'||k==='dup'){const pl=commitPlan(k);A.nfResult={kind:k,planId:pl.id}}
-    else A.nfResult={kind:k};
+    else{A.nfResult={kind:k};if(k==='unknown'){A.ui.recon=null;A.ui.mconf=null;A.ui.mnum='';if(A.ui.resumedDraft){delete ENV().planDraft;A.ui.resumedDraft=false}S.fromUnknown=true;ENV().unknownPlan=Object.assign(clone(S),{unknownAt:new Date().toISOString()})}}
     rep('nf-accepted');
   },
   'nf-manual-go':()=>{A.ui.mconf=null;A.ui.mnum='';nav('nf-manual')},
